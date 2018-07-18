@@ -6,7 +6,7 @@ BITMAIN
 DATE: 05/05/2018
 /****************************************************************/
 #include"xc.h"
-#define VERSION			0x04
+#define VERSION			0x05
 #define    TMR0_Value     177
 #define __16F18854
 
@@ -36,7 +36,7 @@ DATE: 05/05/2018
 #define INDEX_TIME_H		10
 //#define INDEX_LTIME_L		11
 //#define INDEX_LTIME_H		12
-//#define INDEX_DOG_TIME_OUT	13
+#define INDEX_DOG_TIME_OUT	13
 #define INDEX_POWERDOWN_REASON 15
 
 #define POWERDOWN_REASON_TMP	0x0E

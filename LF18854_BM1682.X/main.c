@@ -98,6 +98,34 @@ uart_cmd_t
 }uart_cmd;
 int needfanspeed = 0;
 int needpowerup = 0;
+int needreset = 0;
+
+unsigned long int	last_feed_time	= 0;
+static char			watch_dog_run	= 0;
+int watch_dog_isrun()
+{
+	return watch_dog_run;
+}
+int watch_dog_isbite()
+{
+	return Sencond_Count-last_feed_time >  I2C_Array[INDEX_DOG_TIME_OUT];
+}
+void watch_dog_stop()
+{
+	I2C_Array[INDEX_DOG_TIME_OUT] = 0;
+	watch_dog_run = 0;
+}
+void watch_dog_start(unsigned char time)
+{
+	I2C_Array[INDEX_DOG_TIME_OUT] = time;
+	last_feed_time = Sencond_Count;
+	watch_dog_run = 1;
+}
+void watch_dog_feed()
+{
+	last_feed_time = Sencond_Count;
+}
+
 void reboot()
 {
 	GIE = 0;
@@ -191,19 +219,26 @@ void main(void)
 //                Initial_TMR1_FAN();
 //                T1GGO_nDONE = 1;
  //               break;
+			case(0x11):
+				watch_dog_feed();
+				I2C_Array[INDEX_INSTRUCTION] = 0;
+				break;
             case(0x12)://reboot
+				watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
 				reboot();
 				I2C_Array[INDEX_RESET_COUNT]++;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
+	            watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 				doreset();
                 I2C_Array[INDEX_RESET_COUNT]++;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
             case(0xF7)://System power down
+	            watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWERDOWN;
 				dopowerdown();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
@@ -245,12 +280,28 @@ void main(void)
 			
 			switch(pcmd->cmd)
 			{
+				case(0x10):
+					if (pcmd->value)
+					{
+						watch_dog_start(pcmd->value);
+					}
+					else
+					{
+						watch_dog_stop();
+					}
+					break;
+				case(0x11):
+					watch_dog_feed();
+					ret  = 0;
+					break;
 				case(0x12)://reboot
+					watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
 					reboot();
 					I2C_Array[INDEX_RESET_COUNT]++;
 					break;
 				case(0x66)://BM1682 reset
+					watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 					doreset();
 					I2C_Array[INDEX_RESET_COUNT]++;
@@ -307,6 +358,11 @@ uart_handle_fin:
 				Power_Up();
 			}
 			needpowerup = 0;
+		}
+		if (needreset == 1)
+		{
+			Reset();
+			needreset = 0;
 		}
    }
 }
@@ -394,7 +450,34 @@ void interrupt ISR(void)
         needfanspeed = 1;
         //*/
         TMR0IF = 0;
+		if (watch_dog_isrun())
+		{
+			if ( I2C_Array[INDEX_DOG_TIME_OUT])
+			{
+				if ( watch_dog_isbite())
+				{
+					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
+					needreset = 1;
+					watch_dog_stop();
+
+				}
+			
+			}
+			else//request to stop wd
+			{
+				watch_dog_stop();
+			}
+		}
+		else
+		{
+			if ( I2C_Array[INDEX_DOG_TIME_OUT])//request to start wd
+			{
+				watch_dog_start(I2C_Array[INDEX_DOG_TIME_OUT]);
+
+			}
+		}
     }
+	
     if (C2IF)//12V down or up
     {
         if (CM2CON0bits.C2OUT == 1)//power down
@@ -486,6 +569,11 @@ void interrupt ISR(void)
     }
 	if (uart_isr())
 	{
+		//uart recv some data 
+		if (watch_dog_isrun())
+		{
+			watch_dog_feed();
+		}
 	}
 
 }// end of ISR 
