@@ -518,7 +518,7 @@ int uart_recv_bmcmd(unsigned char* precv,int buflen)
 {
 	int i = 0;
 	int ret;
-	static gettag = 0;
+	static int gettag = 0;
 	static int nr = 0;
 
 	unsigned char value;

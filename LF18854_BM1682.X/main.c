@@ -50,6 +50,10 @@ DATE: 05/05/2018
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
 
+// global err
+#define GERR_UART_MAGIC	0x01
+#define GERR_UART_HSIZE	0x02
+int g_err = 0;
 
 // array for master to write to, reserved
 volatile unsigned char I2C_Array_Rx[RX_ELMNTS] = 0;
@@ -76,7 +80,22 @@ char MEM_read[4];
 //char MEM_p[4];
 int r1, r2, i;
 
-
+#define UART_CMD_MAGIC 0x4D42
+// uart ret
+#define ERR_UART_OK		0x00
+#define ERR_UART_CMD	0x01
+typedef struct 
+uart_cmd_t
+{
+	unsigned short	magic;	//"BM"	// 0x42 0x4D //0x4D42
+	unsigned short	hlen;	// head len 0x0C
+	unsigned short	mark;	//	ret cmd same as request cmd
+	unsigned char	cmd;	//	
+	unsigned char	ret;	//	cmd respond 0 success
+	unsigned short	value;	// 
+	unsigned short	dlen;	//	data len
+	//unsigned char	data[0];	//
+}uart_cmd;
 int needfanspeed = 0;
 int needpowerup = 0;
 void reboot()
@@ -90,7 +109,14 @@ void reboot()
 	GIE = 1;
 	IOCIE = 1;
 }
-
+void doreset()
+{
+	GIE = 0;
+	IOCIE = 0;
+	Reset();
+	GIE = 1;
+	IOCIE = 1;
+}
 void dopowerdown()
 {
 	GIE = 0;
@@ -99,9 +125,13 @@ void dopowerdown()
 	GIE = 1;
 	IOCIE = 1;
 }
+
 /**************************** MAIN ROUTINE ************************************/
 void main(void)
-{ 
+{
+	int ret;
+	unsigned char uartrecv_buf[16];
+	
     Initial_sys();
     Initial_FVR();
     Initial_TIMER();
@@ -154,6 +184,7 @@ void main(void)
 		//uart_send_bytes(uart_send_buf,sizeof(uart_send_buf));
 		//delayms(40);
 //        asm("CLRWDT");          // clear WDT
+		// handle I2C cmd
         switch(I2C_Array[INDEX_INSTRUCTION])
         {
 //            case(0x2C):
@@ -167,13 +198,9 @@ void main(void)
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
-                GIE = 0;
-                IOCIE = 0;
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
-				Reset();
+				doreset();
                 I2C_Array[INDEX_RESET_COUNT]++;
-                GIE = 1;
-                IOCIE = 1;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
             case(0xF7)://System power down
@@ -198,6 +225,46 @@ void main(void)
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
         }
+		
+		// handle UART cmd
+		uart_cmd *pcmd;
+		ret = uart_recv_bmcmd(&uartrecv_buf, sizeof(uartrecv_buf));
+		if (ret == sizeof(uart_cmd))
+		{
+			pcmd = &uartrecv_buf;
+			if (pcmd->magic != 0x4D42)
+			{
+				g_err = GERR_UART_MAGIC;
+				goto uart_handle_fin;
+			}
+			if (pcmd->hlen != sizeof(uart_cmd))
+			{
+				g_err = GERR_UART_HSIZE;
+				goto uart_handle_fin;
+			}
+			
+			switch(pcmd->cmd)
+			{
+				case(0x12)://reboot
+					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
+					reboot();
+					I2C_Array[INDEX_RESET_COUNT]++;
+					break;
+				case(0x66)://BM1682 reset
+					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
+					doreset();
+					I2C_Array[INDEX_RESET_COUNT]++;
+					break;   
+				default:
+					ret  = ERR_UART_CMD;
+			}
+			pcmd->ret = ret;
+			//uart_send_bmcmd(&uartrecv_buf, sizeof(uart_cmd));
+			//uart_send_bytes("\n",1);
+		}
+uart_handle_fin:
+		
+		
 		if (status == STATUS_POWERUP)
 		{
 			if(I2C_Array[INDEX_TMP_1682] >= 75 || I2C_Array[INDEX_TMP_461] >= 70)//over temperature warning
@@ -417,7 +484,8 @@ void interrupt ISR(void)
     	}
         IOCAF3 = 0;
     }
+	if (uart_isr())
+	{
+	}
 
-    
-    
 }// end of ISR 
