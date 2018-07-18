@@ -47,8 +47,6 @@ unsigned char first = 1;               // used to determine whether data address
                                        // location or actual data
 unsigned char LED_Status = 0;
 unsigned long int Sencond_Count = 0;
-unsigned long int last_watch_time = 0;
-char				watch_begin	=0;
 //unsigned long int MEM_write = 0x1234ABCD;
 char MEM_write[4] = {0x12,0x34,0xAB,0xCD};
 char MEM_read[4];
@@ -56,13 +54,36 @@ char MEM_read[4];
 int r1, r2;
 void initialize(void);           // initialize routine
 
-/**************************** MAIN ROUTINE ************************************/
+
+int needpowerup = 0;
 int needreset = 0;
+
+unsigned long int	last_feed_time	= 0;
+static char			watch_dog_run	= 0;
+int watch_dog_isrun()
+{
+	return watch_dog_run;
+}
+int watch_dog_isbite()
+{
+	return Sencond_Count-last_feed_time >  I2C_Array[INDEX_DOG_TIME_OUT];
+}
 void watch_dog_stop()
 {
-	watch_begin = 0;
 	I2C_Array[INDEX_DOG_TIME_OUT] = 0;
+	watch_dog_run = 0;
 }
+void watch_dog_start(unsigned char time)
+{
+	I2C_Array[INDEX_DOG_TIME_OUT] = time;
+	last_feed_time = Sencond_Count;
+	watch_dog_run = 1;
+}
+void watch_dog_feed()
+{
+	last_feed_time = Sencond_Count;
+}
+
 void reboot()
 {
 	GIE = 0;
@@ -73,7 +94,14 @@ void reboot()
 	delayms(200);
 	GIE = 1;
 	IOCIE = 1;
-
+}
+void doreset()
+{
+	GIE = 0;
+	IOCIE = 0;
+	Reset();
+	GIE = 1;
+	IOCIE = 1;
 }
 void dopowerdown()
 {
@@ -82,8 +110,8 @@ void dopowerdown()
 	Power_Down();
 	GIE = 1;
 	IOCIE = 1;
-
 }
+/**************************** MAIN ROUTINE ************************************/
 void main(void)
 { 
     Initial_sys();
@@ -142,25 +170,21 @@ void main(void)
 //                Initial_TMR1_FAN();
 //                T1GGO_nDONE = 1;
  //               break;
- 			case(0x11):
-				last_watch_time = Sencond_Count;
+			case(0x11):
+				watch_dog_feed();
 				I2C_Array[INDEX_INSTRUCTION] = 0;
 				break;
             case(0x12)://reboot
-	            watch_dog_stop();
+				watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
 				reboot();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
 	            watch_dog_stop();
-                GIE = 0;
-                IOCIE = 0;
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
-				Reset();
+				doreset();
                 I2C_Array[INDEX_RESET_COUNT]++;
-                GIE = 1;
-                IOCIE = 1;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
             case(0xF7)://System power down
@@ -171,6 +195,7 @@ void main(void)
                 break;
             case(0x86)://Clear abnormal status
                 MCU_ERR_INT = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
         }
         if(Sencond_Count % 2 == 0)//measure Fan speed every 2s
@@ -183,13 +208,23 @@ void main(void)
             else
                 T1GGO_nDONE = 1;
         }
+		if (needpowerup)
+		{
+			delayms(50);
+			if(C2OUT == 1)
+			{
+				//I2C_Array[0] = 0xB0;
+				MCU_ERR_INT = 1;
+				Power_Up();
+			}
+			needpowerup = 0;
+		}
 		if (needreset == 1)
 		{
 			Reset();
 			needreset = 0;
 		}
-        
-    }
+   }
 }
 
 void interrupt ISR(void) 
@@ -203,14 +238,14 @@ void interrupt ISR(void)
                 SSPBUF = I2C_Array[index_i2c++]; // load with value from array
                 SSPCON1bits.CKP = 1;             // Release CLK
             }
-            if (SSPSTATbits.D_nA)               // Last byte was data (D_nA = 1)
+            else//if (SSPSTATbits.D_nA)               // Last byte was data (D_nA = 1)
             {
                 SSPBUF = I2C_Array[index_i2c++]; // load with value from array
                 SSPCON1bits.CKP = 1;             // Release CLK
             }
 
         }
-        if (!SSPSTATbits.R_nW) //  Master write (R_nW = 0)
+        else //if (!SSPSTATbits.R_nW) //  Master write (R_nW = 0)
         {
             if (!SSPSTATbits.D_nA) // Last byte was an address (D_nA = 0)
             {
@@ -218,14 +253,13 @@ void interrupt ISR(void)
                 junk = SSPBUF;                  // read buffer to clear BF
                 SSPCON1bits.CKP = 1;            // Release CLK
             }
-            if (SSPSTATbits.D_nA)               // Last byte was data (D_nA = 1)
+            else//if (SSPSTATbits.D_nA)               // Last byte was data (D_nA = 1)
             {
                 if (first) 
                 {
                     index_i2c = SSPBUF;      // load index with array location
                     first = 0;               // now clear this since we have 
                 }                            //location to read from/write to
-                
                 else
                 {
                     if (index_i2c < RX_ELMNTS)       // make sure index is not
@@ -261,37 +295,34 @@ void interrupt ISR(void)
         I2C_Array[INDEX_TIME_L] = Sencond_Count;
         I2C_Array[INDEX_TIME_H] = Sencond_Count >> 8;
         NCO1IF = 0;
-		if (watch_begin)
+		if (watch_dog_isrun())
 		{
 			if ( I2C_Array[INDEX_DOG_TIME_OUT])
 			{
-				if ( Sencond_Count-last_watch_time >  I2C_Array[INDEX_DOG_TIME_OUT])
+				if ( watch_dog_isbite())
 				{
-					last_watch_time = Sencond_Count;
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
 					needreset = 1;
-					
 					watch_dog_stop();
 
 				}
 			
 			}
-			else
+			else//request to stop wd
 			{
-				watch_begin = 0;
+				watch_dog_stop();
 			}
 		}
 		else
 		{
-			if ( I2C_Array[INDEX_DOG_TIME_OUT])
+			if ( I2C_Array[INDEX_DOG_TIME_OUT])//request to start wd
 			{
-				watch_begin = 1;
-				last_watch_time = Sencond_Count;
+				watch_dog_start(I2C_Array[INDEX_DOG_TIME_OUT]);
+
 			}
 		}
-
-
-    }    
+    }
+	
     if (C2IF)//12V down or up
     {
         if (C2OUT == 1)//power down
@@ -304,16 +335,10 @@ void interrupt ISR(void)
         }
 
         else if (C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
-            {   
-                delayms(50);
-                if(C2OUT == 1)
-                {
-                    //I2C_Array[0] = 0xB0;
-                    MCU_ERR_INT = 1;
-                    Power_Up();
-                }
-                C2IF = 0;
-            }
+        {
+			needpowerup = 1;
+			C2IF = 0;
+        }
 
         C2IF = 0;//Clear interrupt bit
             
