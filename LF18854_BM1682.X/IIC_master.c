@@ -37,11 +37,11 @@ unsigned char I2CMasterRead (unsigned char go_on)
 	SSP2IF = 0;
 	SSP2CON2bits.RCEN = 1;
 	while (!SSP2IF);
-
+    SSP2IF = 0;	
+    
 	SSP2CON2bits.ACKDT = (go_on & 0x01);
 	SSP2CON2bits.ACKEN = 1;	
-
-	SSP2IF = 0;	
+	
 	while (!SSP2IF);
 	SSP2IF = 0;
 	return (SSP2BUF);
@@ -49,11 +49,11 @@ unsigned char I2CMasterRead (unsigned char go_on)
 
 unsigned char I2CMasterWrite (unsigned char data)
 {
-	SSP2CON1bits.WCOL = 0;
-	SSP2CON1bits.SSPOV = 0;
+	SSP2CON1bits.WCOL = 0;  // Write Collision Detect bit
+	SSP2CON1bits.SSPOV = 0; // Receive Overflow Indicator bit
+    
 	SSP2IF = 0;	
 	SSP2BUF = data;		
-
 	while (!SSP2IF);
 	SSP2IF = 0;
 	return (SSP2CON2bits.ACKSTAT);

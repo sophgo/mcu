@@ -240,6 +240,11 @@ void interrupt ISR(void)
 {
     if (SSP1IF)                              // check to see if SSP interrupt I2C
     {
+    	// fix IIC stuck bug
+    	if (SSP1CON1bits.SSPOV)
+    	{
+    		SSP1CON1bits.SSPOV = 0;
+    	}
         if (SSP1STATbits.R_nW)               // Master read (R_nW = 1)
         {
             if (!SSP1STATbits.D_nA)        // Last byte was an address (D_nA = 0)
