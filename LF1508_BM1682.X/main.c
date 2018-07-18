@@ -154,9 +154,7 @@ void main(void)
 	            watch_dog_stop();
                 GIE = 0;
                 IOCIE = 0;
-                SYS_RST = 0;
-                delayms(200);
-                SYS_RST = 1;
+				Reset();
                 I2C_Array[INDEX_RESET_COUNT]++;
                 GIE = 1;
                 IOCIE = 1;
