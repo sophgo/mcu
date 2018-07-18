@@ -178,30 +178,40 @@ void main(void)
                 I2C_Array[1] = 0;
                 break;
         }
-		if(I2C_Array[0x02] >= 75 || I2C_Array[0x03] >= 70)//over temperature warning
+		if (status == STATUS_POWERUP)
 		{
-			MCU_ERR_INT = 0;
-            I2C_Array[5] = I2C_Array[5] | 0x04;
+			if(I2C_Array[0x02] >= 75 || I2C_Array[0x03] >= 70)//over temperature warning
+			{
+				MCU_ERR_INT = 0;
+	            I2C_Array[5] = I2C_Array[5] | 0x04;
+			}
+			if(I2C_Array[0x02] >= 85 || I2C_Array[0x03] >= 75)//over temperature shutdown
+			{
+				MCU_ERR_INT = 0;
+	            if(SYS_RST == 1)
+	            {   
+	                GIE = 0;
+	                IOCIE = 0;
+	                Power_Down();
+	                I2C_Array[5] = I2C_Array[5] | 0x08;
+	                GIE = 1;
+	                IOCIE = 1;
+	            }			
+			}
+			
+			if (needfanspeed)
+			{
+				I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
+		        I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
+				needfanspeed =0;
+			}
 		}
-		if(I2C_Array[0x02] >= 85 || I2C_Array[0x03] >= 75)//over temperature shutdown
+		else
 		{
-			MCU_ERR_INT = 0;
-            if(SYS_RST == 1)
-            {   
-                GIE = 0;
-                IOCIE = 0;
-                Power_Down();
-                I2C_Array[5] = I2C_Array[5] | 0x08;
-                GIE = 1;
-                IOCIE = 1;
-            }			
+			I2C_Array[0x02] = 0;
+			I2C_Array[0x03] = 0;
 		}
-		if (needfanspeed)
-		{
-			I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
-	        I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
-			needfanspeed =0;
-		}
+
 		if (needpowerdown)
 		{
 			 Power_Down();
@@ -335,20 +345,24 @@ void interrupt ISR(void)
         }
         IOCAF0 = 0;
     }
-*/    
-    if(IOCAF3)//DDR4 1.2V abnormal
+*/  
+
+    if(IOCAF1)//ISL68127 voltage abnormal
     {
         delayms(5);
-        if(PG_DDR4_1V2 == 0)
-        {
-            MCU_ERR_INT = 0;
-            I2C_Array[4] = I2C_Array[4] | 0x02;
-        }
-        else if(PG_DDR4_1V2 == 1)
-        {
-            I2C_Array[4] = I2C_Array[4] & 0xFD;
-        }
-        IOCAF3 = 0;
+		if (status == STATUS_POWERUP)
+		{
+	        if(PG_VDD_C == 0)
+	        {
+	            MCU_ERR_INT = 0;
+	            I2C_Array[4] = I2C_Array[4] | 0x01;
+	        }
+	        else if(PG_VDD_C == 1)
+	        {
+	            I2C_Array[4] = I2C_Array[4] & 0xFE;
+	        }
+		}
+        IOCAF1 = 0;
     }
     
     if(IOCAF6)//ISL68127 temperature abnormal
@@ -365,21 +379,25 @@ void interrupt ISR(void)
         }
         IOCAF6 = 0;
     }
-    
-    if(IOCAF1)//ISL68127 voltage abnormal
+	
+    if(IOCAF3)//DDR4 1.2V abnormal
     {
         delayms(5);
-        if(PG_VDD_C == 0)
-        {
-            MCU_ERR_INT = 0;
-            I2C_Array[4] = I2C_Array[4] | 0x01;
-        }
-        else if(PG_VDD_C == 1)
-        {
-            I2C_Array[4] = I2C_Array[4] & 0xFE;
-        }
-        IOCAF1 = 0;
+		if (status == STATUS_POWERUP)
+		{
+	        if(PG_DDR4_1V2 == 0)
+	        {
+	            MCU_ERR_INT = 0;
+	            I2C_Array[4] = I2C_Array[4] | 0x02;
+	        }
+	        else if(PG_DDR4_1V2 == 1)
+	        {
+	            I2C_Array[4] = I2C_Array[4] & 0xFD;
+	        }
+    	}
+        IOCAF3 = 0;
     }
+
     
     
 }// end of ISR 

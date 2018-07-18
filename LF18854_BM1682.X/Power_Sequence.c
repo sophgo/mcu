@@ -7,6 +7,8 @@ DATE: 05/05/2018
 /****************************************************************/
 #include"User_define.h"
 #include"xc.h"
+int status = STATUS_POWERDOWN;
+
 void Reset(void)
 {
 	SYS_RST = 0;
@@ -31,11 +33,12 @@ void Power_Up(void)
 	delayms(5);
 	Reset();
     LED0 = 1;
-
+	status = STATUS_POWERUP;
 }
 
 void Power_Down(void)
 {
+	status = STATUS_POWERDOWN;
     LED0 = 0;
     SYS_RST = 0;
     delayms(5);    
