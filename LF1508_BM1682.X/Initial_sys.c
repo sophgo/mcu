@@ -12,7 +12,13 @@ DATE: 21/03/2018
 
  void Initial_sys()
 {
-     OSCCON = 0b01111010; // set 4MHZ internal clock
+	//////////////////////////////////////////////////////
+	// CLK
+	//////////////////////////////////////////////////////
+    //OSCCON = 0b01111010; // set 16MHZ internal clock
+	OSCCONbits.IRCF		= 0b1111;	//16MHZ  internal clock
+	OSCCONbits.SCS		= 0b10;		// System Clock Select bits: Internal oscillator block
+	// wait colck stable
      while(OSCSTATbits.HFIOFR==0);// wait colck stable
 //     APFCONbits.T1GSEL=0;//T1G function is on RA4
 
@@ -72,7 +78,7 @@ DATE: 21/03/2018
                                 // speed mode (100 kHz and 1 MHz)
      SSP1CON1 = 0b00100110; 		// Enable serial port, I2C slave mode,  7-bit address
      SSP1CON2bits.SEN = 0;        // Clock stretching is enabled
-     SSP1CON3bits.BOEN = 0;       // SSPBUF is updated and NACK is generated cpf
+     SSP1CON3bits.BOEN = 0;       // SSP1BUF is updated and NACK is generated cpf
      SSP1ADD = I2C_slave_address; // Load the slave address
 
      SSP1IF = 0;                  // Clear the serial port interrupt flag
