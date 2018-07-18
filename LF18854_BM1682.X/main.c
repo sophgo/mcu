@@ -8,7 +8,8 @@ DATE: 05/05/2018
 /****************************************************************/
 #include <pic.h> 
 #include <xc.h>
-#include"User_define.h"
+#include "User_define.h"
+#include "uart.h"
 //#include "Flash.h"
 //#include "HEFlash.h"
 //__PROG_CONFIG (1,0x3FDC);
@@ -106,6 +107,9 @@ void main(void)
     Initial_TIMER();
     Power_Up();
     delayms(1000);//wait 1 second for stable
+
+	uart_init();
+	
 //    if(B_TEMP_ALR_N & PG_DDR4_1V2 & TWARN_VDD_C & PG_VDD_C)//system Power and Temperature OK
     if(PG_DDR4_1V2 & TWARN_VDD_C & PG_VDD_C)//system Power and Temperature OK, temporary disable B_TEMP_ALR_N
     {
@@ -143,9 +147,12 @@ void main(void)
     IOCBN = 0b10100000;//Enable PORTB positive edge interrupt
  */
     IOCIE = 1;//after all power on, enable IO interrupt
-
+	//unsigned char uart_send_buf[] = "123";
     while(1)                    // main while() loop
     {                           // program will wait here for ISR to be called
+
+		//uart_send_bytes(uart_send_buf,sizeof(uart_send_buf));
+		//delayms(40);
 //        asm("CLRWDT");          // clear WDT
         switch(I2C_Array[INDEX_INSTRUCTION])
         {
@@ -225,17 +232,18 @@ void main(void)
 
 		if (needpowerup)
 		{
-		    delayms(50);
-            if(CM2CON0bits.C2OUT == 1)
-            {
-                I2C_Array[0] = 0xB0;
-                MCU_ERR_INT = 0;
-			    Power_Up();
-            }
+			delayms(50);
+			if(CM2CON0bits.C2OUT == 1)
+			{
+				I2C_Array[0] = 0xB0;
+				MCU_ERR_INT = 0;
+				Power_Up();
+			}
 			needpowerup = 0;
 		}
    }
 }
+
 void interrupt ISR(void) 
 {
     if (SSP1IF)                              // check to see if SSP interrupt I2C
@@ -333,8 +341,8 @@ void interrupt ISR(void)
 
         else if (CM2CON0bits.C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
         {
-            needpowerup = 1;
-            C2IF = 0;
+			needpowerup = 1;
+			C2IF = 0;
         }
 
         C2IF = 0;//Clear interrupt bit
