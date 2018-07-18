@@ -57,7 +57,7 @@ int r1, r2;
 void initialize(void);           // initialize routine
 
 /**************************** MAIN ROUTINE ************************************/
-int needreboot = 0;
+int needreset = 0;
 void watch_dog_stop()
 {
 	watch_begin = 0;
@@ -65,14 +65,15 @@ void watch_dog_stop()
 }
 void reboot()
 {
-    GIE = 0;
-    IOCIE = 0;
-    Power_Down();
-    delayms(1000);
-    Power_Up();
-    delayms(200);
-    GIE = 1;
-    IOCIE = 1;
+	GIE = 0;
+	IOCIE = 0;
+	Power_Down();
+	delayms(1000);
+	Power_Up();
+	delayms(200);
+	GIE = 1;
+	IOCIE = 1;
+
 }
 void dopowerdown()
 {
@@ -148,7 +149,7 @@ void main(void)
             case(0x12)://reboot
 	            watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
-                reboot();
+				reboot();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
@@ -182,10 +183,10 @@ void main(void)
             else
                 T1GGO_nDONE = 1;
         }
-		if (needreboot == 1)
+		if (needreset == 1)
 		{
-			reboot();
-			needreboot = 0;
+			Reset();
+			needreset = 0;
 		}
         
     }
@@ -268,7 +269,7 @@ void interrupt ISR(void)
 				{
 					last_watch_time = Sencond_Count;
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
-					needreboot = 1;
+					needreset = 1;
 					
 					watch_dog_stop();
 
