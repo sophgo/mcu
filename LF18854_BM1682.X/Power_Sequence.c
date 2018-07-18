@@ -47,6 +47,6 @@ void Power_Down(void)
     delayms(5);
     EN0_ISL68127 = 1;
     delayms(5);
-    EN_B_3V3 = 0;
+    //EN_B_3V3 = 0;
 
 }
