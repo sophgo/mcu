@@ -77,7 +77,6 @@ int r1, r2, i;
 
 
 int needfanspeed = 0;
-int needpowerdown = 0;
 int needpowerup = 0;
 /**************************** MAIN ROUTINE ************************************/
 void main(void)
@@ -218,11 +217,6 @@ void main(void)
 			I2C_Array[INDEX_TMP_461] = 0;
 		}
 
-		if (needpowerdown)
-		{
-			 Power_Down();
-			 needpowerdown = 0;
-		}
 		if (needpowerup)
 		{
 		    delayms(50);
@@ -321,7 +315,8 @@ void interrupt ISR(void)
         {
             I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
 //            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
-			needpowerdown = 1;
+			
+			Power_Down();
             C2IF = 0;
         }
 
