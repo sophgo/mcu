@@ -72,7 +72,7 @@ DATE: 21/03/2018
                                 // speed mode (100 kHz and 1 MHz)
      SSP1CON1 = 0b00100110; 		// Enable serial port, I2C slave mode,  7-bit address
      SSP1CON2bits.SEN = 0;        // Clock stretching is enabled
-     SSP1CON3bits.BOEN = 0;       // SSPBUF is updated and NACK is generated cpf
+     SSP1CON3bits.BOEN = 0;       // SSP1BUF is updated and NACK is generated cpf
      SSP1ADD = I2C_slave_address; // Load the slave address
 
      SSP1IF = 0;                  // Clear the serial port interrupt flag

@@ -231,62 +231,67 @@ void interrupt ISR(void)
 {
     if (SSP1IF)                              // check to see if SSP interrupt I2C
     {
-        if (SSPSTATbits.R_nW)               // Master read (R_nW = 1)
+    	// fix IIC stuck bug
+    	if (SSP1CON1bits.SSPOV)
+    	{
+    		SSP1CON1bits.SSPOV = 0;
+    	}
+        if (SSP1STATbits.R_nW)               // Master read (R_nW = 1)
         {
-            if (!SSPSTATbits.D_nA)        // Last byte was an address (D_nA = 0)
+            if (!SSP1STATbits.D_nA)        // Last byte was an address (D_nA = 0)
             {
-                SSPBUF = I2C_Array[index_i2c++]; // load with value from array
-                SSPCON1bits.CKP = 1;             // Release CLK
+                SSP1BUF = I2C_Array[index_i2c++]; // load with value from array
+                SSP1CON1bits.CKP = 1;             // Release CLK
             }
-            else//if (SSPSTATbits.D_nA)               // Last byte was data (D_nA = 1)
+            else//if (SSP1STATbits.D_nA)               // Last byte was data (D_nA = 1)
             {
-                SSPBUF = I2C_Array[index_i2c++]; // load with value from array
-                SSPCON1bits.CKP = 1;             // Release CLK
+                SSP1BUF = I2C_Array[index_i2c++]; // load with value from array
+                SSP1CON1bits.CKP = 1;             // Release CLK
             }
 
         }
-        else //if (!SSPSTATbits.R_nW) //  Master write (R_nW = 0)
+        else //if (!SSP1STATbits.R_nW) //  Master write (R_nW = 0)
         {
-            if (!SSPSTATbits.D_nA) // Last byte was an address (D_nA = 0)
+            if (!SSP1STATbits.D_nA) // Last byte was an address (D_nA = 0)
             {
                 first = 1; //last byte was address, next will be data location
-                junk = SSPBUF;                  // read buffer to clear BF
-                SSPCON1bits.CKP = 1;            // Release CLK
+                junk = SSP1BUF;                  // read buffer to clear BF
+                SSP1CON1bits.CKP = 1;            // Release CLK
             }
-            else//if (SSPSTATbits.D_nA)               // Last byte was data (D_nA = 1)
+            else//if (SSP1STATbits.D_nA)               // Last byte was data (D_nA = 1)
             {
                 if (first) 
                 {
-                    index_i2c = SSPBUF;      // load index with array location
+                    index_i2c = SSP1BUF;      // load index with array location
                     first = 0;               // now clear this since we have 
                 }                            //location to read from/write to
                 else
                 {
                     if (index_i2c < RX_ELMNTS)       // make sure index is not
                     {                                //out of range of array
-                        I2C_Array[index_i2c++] = SSPBUF; //load array with data
+                        I2C_Array[index_i2c++] = SSP1BUF; //load array with data
                     } 
                     else
                     {
-                        junk = SSPBUF; //array location not valid, discard data
+                        junk = SSP1BUF; //array location not valid, discard data
                     }
                 }
-                if (SSPCON1bits.WCOL)           // Did a write collision occur?
+                if (SSP1CON1bits.WCOL)           // Did a write collision occur?
                 {
-                    SSPCON1bits.WCOL = 0;       //  clear WCOL
-                    junk = SSPBUF;              // dummy read to clear BF bit
+                    SSP1CON1bits.WCOL = 0;       //  clear WCOL
+                    junk = SSP1BUF;              // dummy read to clear BF bit
                 }
-                SSPCON1bits.CKP = 1;            // Release CLK
+                SSP1CON1bits.CKP = 1;            // Release CLK
             }
         }
+         SSP1IF = 0;                              // clear SSP1IF flag bit
     }
     if (BCL1IF)                                  // Did a bus collision occur?
     {
-        junk = SSPBUF;                      // dummy read SSPBUF to clear BF bit
+        junk = SSP1BUF;                      // dummy read SSP1BUF to clear BF bit
         BCL1IF = 0;                          // clear bus collision Int Flag bit
-        SSPCON1bits.CKP = 1;                // Release CLK
+        SSP1CON1bits.CKP = 1;                // Release CLK
     }
-    SSP1IF = 0;                              // clear SSPIF flag bit
     if(NCO1IF)//NCO overflow interrupt
     {
         if(MCU_ERR_INT)
