@@ -8,7 +8,7 @@
  */
 #include "xc.h"
 
-#define VERSION			0x06
+#define VERSION			0x07
 
 #define    TMR0_Value     177
 #define __16F1508

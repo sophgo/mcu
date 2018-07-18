@@ -12,7 +12,13 @@ DATE: 21/03/2018
 
  void Initial_sys()
 {
-     OSCCON = 0b01111010; // set 4MHZ internal clock
+	//////////////////////////////////////////////////////
+	// CLK
+	//////////////////////////////////////////////////////
+    //OSCCON = 0b01111010; // set 16MHZ internal clock
+	OSCCONbits.IRCF		= 0b1111;	//16MHZ  internal clock
+	OSCCONbits.SCS		= 0b10;		// System Clock Select bits: Internal oscillator block
+	// wait colck stable
      while(OSCSTATbits.HFIOFR==0);// wait colck stable
 //     APFCONbits.T1GSEL=0;//T1G function is on RA4
 
