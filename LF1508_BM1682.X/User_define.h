@@ -69,6 +69,7 @@
 #define INDEX_LTIME_L		11
 #define INDEX_LTIME_H		12
 #define INDEX_DOG_TIME_OUT	13
+#define INDEX_POWERDOWN_REASON 15
 
 #define RX_ELMNTS	32
 //void Initial_sys(void);

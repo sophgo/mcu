@@ -291,14 +291,14 @@ void interrupt ISR(void)
     {
         if (C2OUT == 1)//power down
         {
-            I2C_Array[15] = 0x0F;
-            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
+            I2C_Array[INDEX_POWERDOWN_REASON] = 0x0F;
+            r1 = HEFLASH_writeBlock( 0,I2C_Array+INDEX_TIME_L , 2);
             Power_Down();
             
             C2IF = 0;
         }
 
-        else if (C2OUT == 0 && I2C_Array[15] == 0x0F)//voltage too low to normal, reboot
+        else if (C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == 0x0F)//voltage too low to normal, reboot
             {   
                 delayms(50);
                 if(C2OUT == 1)
