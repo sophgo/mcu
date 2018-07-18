@@ -1,5 +1,3 @@
-#include"User_define.h"
-#include"xc.h"
 /*******************************************************************************
 PIC16F1508 BM1682 SINGLE CHIP
 POWER SEQUENCE CODE 
@@ -7,6 +5,15 @@ Author: Patrick Chen(CPF)
 BITMAIN 
 DATE: 21/03/2018
 /****************************************************************/
+#include"User_define.h"
+#include"xc.h"
+void Reset(void)
+{
+	SYS_RST = 0;
+	delayms(20);
+	SYS_RST = 1;
+}
+
 void Power_Up(void)
 {
     SYS_RST = 0;
@@ -21,7 +28,8 @@ void Power_Up(void)
     EN_RGMII_3V3 = 0;//for new single chip
     delayms(3);
     SYS_RST = 1;
-
+    delayms(10);
+	Reset();
 }
 
 void Power_Down(void)
