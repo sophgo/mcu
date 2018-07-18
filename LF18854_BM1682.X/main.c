@@ -76,8 +76,9 @@ char MEM_read[4];
 int r1, r2, i;
 
 
-
-
+int needfanspeed = 0;
+int needpowerdown = 0;
+int needpowerup = 0;
 /**************************** MAIN ROUTINE ************************************/
 void main(void)
 { 
@@ -197,10 +198,30 @@ void main(void)
                 IOCIE = 1;
             }			
 		}
-
-        }   
+		if (needfanspeed)
+		{
+			I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
+	        I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
+			needfanspeed =0;
+		}
+		if (needpowerdown)
+		{
+			 Power_Down();
+			 needpowerdown = 0;
+		}
+		if (needpowerup)
+		{
+		    delayms(50);
+            if(CM2CON0bits.C2OUT == 1)
+            {
+                I2C_Array[0] = 0xB0;
+                MCU_ERR_INT = 0;
+			    Power_Up();
+            }
+			needpowerup = 0;
+		}
+   }
 }
-
 void interrupt ISR(void) 
 {
     if (SSP1IF)                              // check to see if SSP interrupt I2C
@@ -212,14 +233,14 @@ void interrupt ISR(void)
                 SSP1BUF = I2C_Array[index_i2c++]; // load with value from array
                 SSP1CON1bits.CKP = 1;             // Release CLK
             }
-            if (SSP1STATbits.D_nA)               // Last byte was data (D_nA = 1)
+            else//if (SSP1STATbits.D_nA)               // Last byte was data (D_nA = 1)
             {
                 SSP1BUF = I2C_Array[index_i2c++]; // load with value from array
                 SSP1CON1bits.CKP = 1;             // Release CLK
             }
 
         }
-        if (!SSP1STATbits.R_nW) //  Master write (R_nW = 0)
+        else //if (!SSP1STATbits.R_nW) //  Master write (R_nW = 0)
         {
             if (!SSP1STATbits.D_nA) // Last byte was an address (D_nA = 0)
             {
@@ -227,14 +248,13 @@ void interrupt ISR(void)
                 junk = SSP1BUF;                  // read buffer to clear BF
                 SSP1CON1bits.CKP = 1;            // Release CLK
             }
-            if (SSP1STATbits.D_nA)               // Last byte was data (D_nA = 1)
+            else//if (SSP1STATbits.D_nA)               // Last byte was data (D_nA = 1)
             {
                 if (first) 
                 {
                     index_i2c = SSP1BUF;      // load index with array location
                     first = 0;               // now clear this since we have 
                 }                            //location to read from/write to
-                
                 else
                 {
                     if (index_i2c < RX_ELMNTS)       // make sure index is not
@@ -254,6 +274,7 @@ void interrupt ISR(void)
                 SSP1CON1bits.CKP = 1;            // Release CLK
             }
         }
+         SSP1IF = 0;                              // clear SSPIF flag bit
     }
     if (BCL1IF)                                  // Did a bus collision occur?
     {
@@ -261,7 +282,7 @@ void interrupt ISR(void)
         BCL1IF = 0;                          // clear bus collision Int Flag bit
         SSP1CON1bits.CKP = 1;                // Release CLK
     }
-    SSP1IF = 0;                              // clear SSPIF flag bit
+   
 
 //    SSP2IF = 0;     
 //IIC master config ended
@@ -269,11 +290,15 @@ void interrupt ISR(void)
     {
         if(MCU_ERR_INT == 0)
             LED0 = ~LED0;        
+        /*commit by zdh Temporary*/
+        //*
         Sencond_Count++;
         I2C_Array[9] = Sencond_Count;
         I2C_Array[10] = Sencond_Count >> 8;
-        I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
-        I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
+        //I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
+        //I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
+        needfanspeed = 1;
+        //*/
         TMR0IF = 0;
     }
     if (C2IF)//12V down or up
@@ -282,22 +307,15 @@ void interrupt ISR(void)
         {
             I2C_Array[15] = 0x0F;
 //            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
-            Power_Down();
-            
+			needpowerdown = 1;
             C2IF = 0;
         }
 
         else if (CM2CON0bits.C2OUT == 0 && I2C_Array[15] == 0x0F)//voltage too low to normal, reboot
-            {   
-                delayms(50);
-                if(CM2CON0bits.C2OUT == 1)
-                {
-                    I2C_Array[0] = 0xB0;
-                    MCU_ERR_INT = 0;
-                    Power_Up();
-                }
-                C2IF = 0;
-            }
+        {
+            needpowerup = 1;
+            C2IF = 0;
+        }
 
         C2IF = 0;//Clear interrupt bit
             
