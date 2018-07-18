@@ -47,6 +47,8 @@ unsigned char first = 1;               // used to determine whether data address
                                        // location or actual data
 unsigned char LED_Status = 0;
 unsigned long int Sencond_Count = 0;
+unsigned long int last_watch_time = 0;
+char				watch_begin	=0;
 //unsigned long int MEM_write = 0x1234ABCD;
 char MEM_write[4] = {0x12,0x34,0xAB,0xCD};
 char MEM_read[4];
@@ -55,6 +57,32 @@ int r1, r2;
 void initialize(void);           // initialize routine
 
 /**************************** MAIN ROUTINE ************************************/
+int needreboot = 0;
+void watch_dog_stop()
+{
+	watch_begin = 0;
+	I2C_Array[INDEX_DOG_TIME_OUT] = 0;
+}
+void reboot()
+{
+    GIE = 0;
+    IOCIE = 0;
+    Power_Down();
+    delayms(1000);
+    Power_Up();
+    delayms(200);
+    GIE = 1;
+    IOCIE = 1;
+}
+void dopowerdown()
+{
+	GIE = 0;
+	IOCIE = 0;
+	Power_Down();
+	GIE = 1;
+	IOCIE = 1;
+
+}
 void main(void)
 { 
     Initial_sys();
@@ -113,18 +141,17 @@ void main(void)
 //                Initial_TMR1_FAN();
 //                T1GGO_nDONE = 1;
  //               break;
+ 			case(0x11):
+				last_watch_time = Sencond_Count;
+				I2C_Array[INDEX_INSTRUCTION] = 0;
+				break;
             case(0x12)://reboot
-                GIE = 0;
-                IOCIE = 0;
-                Power_Down();
-                delayms(1000);
-                Power_Up();
-                delayms(200);
-                GIE = 1;
-                IOCIE = 1;
+	            watch_dog_stop();
+                reboot();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
+	            watch_dog_stop();
                 GIE = 0;
                 IOCIE = 0;
                 SYS_RST = 0;
@@ -136,11 +163,8 @@ void main(void)
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
             case(0xF7)://System power down
-                GIE = 0;
-                IOCIE = 0;
-                Power_Down();
-                GIE = 1;
-                IOCIE = 1;
+	            watch_dog_stop();
+				dopowerdown();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x86)://Clear abnormal status
@@ -157,6 +181,11 @@ void main(void)
             else
                 T1GGO_nDONE = 1;
         }
+		if (needreboot == 1)
+		{
+			reboot();
+			needreboot = 0;
+		}
         
     }
 }
@@ -230,6 +259,35 @@ void interrupt ISR(void)
         I2C_Array[INDEX_TIME_L] = Sencond_Count;
         I2C_Array[INDEX_TIME_H] = Sencond_Count >> 8;
         NCO1IF = 0;
+		if (watch_begin)
+		{
+			if ( I2C_Array[INDEX_DOG_TIME_OUT])
+			{
+				if ( Sencond_Count-last_watch_time >  I2C_Array[INDEX_DOG_TIME_OUT])
+				{
+					last_watch_time = Sencond_Count;
+					needreboot = 1;
+
+					watch_dog_stop();
+
+				}
+			
+			}
+			else
+			{
+				watch_begin = 0;
+			}
+		}
+		else
+		{
+			if ( I2C_Array[INDEX_DOG_TIME_OUT])
+			{
+				watch_begin = 1;
+				last_watch_time = Sencond_Count;
+			}
+		}
+
+
     }    
     if (C2IF)//12V down or up
     {
