@@ -62,7 +62,7 @@ void main(void)
     Initial_TMR1_FAN();
     Initial_NCO();
     Power_Up();
-    r2 = HEFLASH_readBlock(I2C_Array+11, 0, 2);//read last time work time
+    r2 = HEFLASH_readBlock(I2C_Array+INDEX_LTIME_L, 0, 2);//read last time work time
     delayms(1000);//wait 1 second for stable
 //    r1 = HEFLASH_writeBlock( 1,MEM_write+2 , 2);
     if(B_TEMP_ALR_N & PG_DDR4_1V2 & TWARN_VDD_C & PG_VDD_C)//system Power and Temperature OK
@@ -75,19 +75,19 @@ void main(void)
         MCU_ERR_INT = 1;
         if(!B_TEMP_ALR_N)
         {
-            I2C_Array[5] = I2C_Array[5] | 0x01;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x01;
         }
         if(!PG_DDR4_1V2)
         {
-            I2C_Array[4] = I2C_Array[4] | 0x02;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x02;
         }
         if(!PG_VDD_C)
         {
-            I2C_Array[4] = I2C_Array[4] | 0x01;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x01;
         }
         if(!TWARN_VDD_C)
         {
-            I2C_Array[5] = I2C_Array[5] | 0x02;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x02;
         }        
     }
     //when not use pickit
@@ -107,7 +107,7 @@ void main(void)
     while(1)                    // main while() loop
     {                           // program will wait here for ISR to be called
 //        asm("CLRWDT");          // clear WDT
-        switch(I2C_Array[1])
+        switch(I2C_Array[INDEX_INSTRUCTION])
         {
 //            case(0x2C):
 //                Initial_TMR1_FAN();
@@ -122,7 +122,7 @@ void main(void)
                 delayms(200);
                 GIE = 1;
                 IOCIE = 1;
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
                 GIE = 0;
@@ -130,10 +130,10 @@ void main(void)
                 SYS_RST = 0;
                 delayms(200);
                 SYS_RST = 1;
-                I2C_Array[7]++;
+                I2C_Array[INDEX_RESET_COUNT]++;
                 GIE = 1;
                 IOCIE = 1;
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
             case(0xF7)://System power down
                 GIE = 0;
@@ -141,7 +141,7 @@ void main(void)
                 Power_Down();
                 GIE = 1;
                 IOCIE = 1;
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x86)://Clear abnormal status
                 MCU_ERR_INT = 0;
@@ -152,7 +152,7 @@ void main(void)
             if(T1GGO_nDONE == 1)//last measurement error
             {
                 MCU_ERR_INT = 1;
-                I2C_Array[8] = 0x01;
+                I2C_Array[INDEX_FAN_ST] = 0x01;
             }  
             else
                 T1GGO_nDONE = 1;
@@ -227,9 +227,8 @@ void interrupt ISR(void)
         if(MCU_ERR_INT)
             LED0 = ~LED0;
         Sencond_Count++;
-        I2C_Array[9] = Sencond_Count;
-        I2C_Array[10] = Sencond_Count >> 8;
-
+        I2C_Array[INDEX_TIME_L] = Sencond_Count;
+        I2C_Array[INDEX_TIME_H] = Sencond_Count >> 8;
         NCO1IF = 0;
     }    
     if (C2IF)//12V down or up
@@ -271,7 +270,7 @@ void interrupt ISR(void)
         else if(RST_REQ == 1)
         {
             SYS_RST = 1;
-            I2C_Array[7]++;
+            I2C_Array[INDEX_RESET_COUNT]++;
             delayms(20);//wait 1 second for stable
             LED0 = 1;
         }
@@ -285,11 +284,11 @@ void interrupt ISR(void)
         if(B_TEMP_ALR_N == 0)
         {
             MCU_ERR_INT = 1;
-            I2C_Array[5] = I2C_Array[5] | 0x01;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x01;
         }
         else if(B_TEMP_ALR_N == 1)
         {
-             I2C_Array[5] = I2C_Array[5] & 0xFE;//clear bit
+             I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] & 0xFE;//clear bit
         }
         IOCAF2 = 0;
     }
@@ -300,11 +299,11 @@ void interrupt ISR(void)
         if(PG_DDR4_1V2 == 0)
         {
             MCU_ERR_INT = 1;
-            I2C_Array[4] = I2C_Array[4] | 0x02;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x02;
         }
         else if(PG_DDR4_1V2 == 1)
         {
-            I2C_Array[4] = I2C_Array[4] & 0xFD;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFD;
         }
         IOCAF5 = 0;
     }
@@ -315,11 +314,11 @@ void interrupt ISR(void)
         if(TWARN_VDD_C == 0)
         {
             MCU_ERR_INT = 1;
-            I2C_Array[5] = I2C_Array[5] | 0x02;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x02;
         }
         else if(TWARN_VDD_C == 1)
         {
-            I2C_Array[5] = I2C_Array[5]  & 0xFD;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST]  & 0xFD;
         }
         IOCBF5 = 0;
     }
@@ -330,29 +329,29 @@ void interrupt ISR(void)
         if(PG_VDD_C == 0)
         {
             MCU_ERR_INT = 1;
-            I2C_Array[4] = I2C_Array[4] | 0x01;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x01;
         }
         else if(PG_VDD_C == 1)
         {
-            I2C_Array[4] = I2C_Array[4] & 0xFE;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFE;
         }
         IOCBF7 = 0;
     }
     
     if(TMR1GIF)//fan speed measure
     {
-        I2C_Array[2] = TMR1L;
-        I2C_Array[3] = TMR1H;
+        I2C_Array[INDEX_FAN_SPEEDS_L] = TMR1L;
+        I2C_Array[INDEX_FAN_SPEEDS_H] = TMR1H;
         TMR1H = 0b0;
         TMR1L = 0b0;
-        I2C_Array[8] = 0x0;
+        I2C_Array[INDEX_FAN_ST] = 0x0;
         TMR1GIF = 0;
     }
     if(TMR1IF)//TM1 overflow, something wrong with FAN
     {
         MCU_ERR_INT = 1;
         TMR1IF = 0;
-        I2C_Array[8] = 0x01;
+        I2C_Array[INDEX_FAN_ST] = 0x01;
     }
         
 }// end of ISR 
