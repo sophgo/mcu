@@ -22,11 +22,16 @@ void Initial_sys()
     OSCCON1bits.NDIV = 0b0000;
 	
 	//HFINTOSC is explicitly enabled
-    OSCENbits.HFOEN = 1;		
-
+    OSCENbits.HFOEN = 1;
 	// wait colck stable
 	while(OSCSTATbits.HFOR == 0);//HFINTOSC Oscillator Ready bit
 
+
+	//MFINTOSC Oscillator Manual Request Enable bit
+	OSCENbits.MFOEN = 1;
+	// wait colck stable
+	while(OSCSTATbits.MFOR == 0);//MFINTOSC Oscillator Ready bit
+	
     //////////////////////////////////////////////////////
 	// ??
 	//////////////////////////////////////////////////////
@@ -143,4 +148,7 @@ void Initial_sys()
 	PEIE = 1;                   // Enable peripheral interrupts
 	C2IE = 1;                   //Enable Compare2 
 	GIE = 1; 					// Enable global interrupts
+
+
+	
 }

@@ -34,7 +34,7 @@ DATE: 05/05/2018
 
 // CONFIG3
 #pragma config WDTCPS = WDTCPS_31// WDT Period Select bits (Divider ratio 1:65536; software control of WDTPS)
-#pragma config WDTE = OFF       // WDT operating mode (WDT Disabled, SWDTEN is ignored)
+#pragma config WDTE = SWDTEN	// WDT operating mode (WDT Disabled, SWDTEN is ignored)
 #pragma config WDTCWS = WDTCWS_7// WDT Window Select bits (window always open (100%); software control; keyed access not required)
 #pragma config WDTCCS = SC      // WDT input clock selector (Software Control)
 
@@ -153,6 +153,23 @@ void dopowerdown()
 	GIE = 1;
 	IOCIE = 1;
 }
+void mcu_watch_dog_start()
+{
+	//Watchdog Timer Clock Select bits
+	WDTCON1bits.WDTCS	= 0b001;//INTOSC/16 (31.25 kHz)
+	//WDT OPERATING MODES 
+	//CONFIG3bits.WDTE	= 0b01;//WDT CONTROLLED BY SOFTWARE
+
+	// Watchdog Timer Prescale Select bits
+	WDTCON0bits.WDTPS	= 0b01100;//Interval 4s nominal
+
+	WDTCON0bits.SEN		= 1;//active watch dog
+
+}
+void mcu_watch_dog_feed()
+{
+	asm("CLRWDT");
+}
 
 /**************************** MAIN ROUTINE ************************************/
 void main(void)
@@ -167,6 +184,7 @@ void main(void)
     delayms(1000);//wait 1 second for stable
 
 	uart_init();
+	mcu_watch_dog_start();
 	
 //    if(B_TEMP_ALR_N & PG_DDR4_1V2 & TWARN_VDD_C & PG_VDD_C)//system Power and Temperature OK
     if(PG_DDR4_1V2 & TWARN_VDD_C & PG_VDD_C)//system Power and Temperature OK, temporary disable B_TEMP_ALR_N
@@ -211,8 +229,10 @@ void main(void)
 
 		//uart_send_bytes(uart_send_buf,sizeof(uart_send_buf));
 		//delayms(40);
-//        asm("CLRWDT");          // clear WDT
+        //asm("CLRWDT");          // clear WDT
+        mcu_watch_dog_feed();
 		// handle I2C cmd
+        //CLRWDT;
         switch(I2C_Array[INDEX_INSTRUCTION])
         {
 //            case(0x2C):
@@ -353,7 +373,7 @@ uart_handle_fin:
 			delayms(50);
 			if(CM2CON0bits.C2OUT == 1)
 			{
-				I2C_Array[0] = 0xB0;
+				//I2C_Array[0] = 0xB0;
 				MCU_ERR_INT = 0;
 				Power_Up();
 			}
@@ -424,11 +444,11 @@ void interrupt ISR(void)
                 SSP1CON1bits.CKP = 1;            // Release CLK
             }
         }
-         SSP1IF = 0;                              // clear SSPIF flag bit
+         SSP1IF = 0;                              // clear SSP1IF flag bit
     }
     if (BCL1IF)                                  // Did a bus collision occur?
     {
-        junk = SSP1BUF;                      // dummy read SSPBUF to clear BF bit
+        junk = SSP1BUF;                      // dummy read SSP1BUF to clear BF bit
         BCL1IF = 0;                          // clear bus collision Int Flag bit
         SSP1CON1bits.CKP = 1;                // Release CLK
     }
