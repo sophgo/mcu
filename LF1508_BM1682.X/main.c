@@ -147,6 +147,7 @@ void main(void)
 				break;
             case(0x12)://reboot
 	            watch_dog_stop();
+				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
                 reboot();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
@@ -154,6 +155,7 @@ void main(void)
 	            watch_dog_stop();
                 GIE = 0;
                 IOCIE = 0;
+				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 				Reset();
                 I2C_Array[INDEX_RESET_COUNT]++;
                 GIE = 1;
@@ -162,6 +164,7 @@ void main(void)
                 break;                
             case(0xF7)://System power down
 	            watch_dog_stop();
+				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWERDOWN;
 				dopowerdown();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
@@ -264,8 +267,9 @@ void interrupt ISR(void)
 				if ( Sencond_Count-last_watch_time >  I2C_Array[INDEX_DOG_TIME_OUT])
 				{
 					last_watch_time = Sencond_Count;
+					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
 					needreboot = 1;
-
+					
 					watch_dog_stop();
 
 				}
@@ -291,19 +295,19 @@ void interrupt ISR(void)
     {
         if (C2OUT == 1)//power down
         {
-            I2C_Array[INDEX_POWERDOWN_REASON] = 0x0F;
+            I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
             r1 = HEFLASH_writeBlock( 0,I2C_Array+INDEX_TIME_L , 2);
             Power_Down();
             
             C2IF = 0;
         }
 
-        else if (C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == 0x0F)//voltage too low to normal, reboot
+        else if (C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
             {   
                 delayms(50);
                 if(C2OUT == 1)
                 {
-                    I2C_Array[0] = 0xB0;
+                    //I2C_Array[0] = 0xB0;
                     MCU_ERR_INT = 1;
                     Power_Up();
                 }
