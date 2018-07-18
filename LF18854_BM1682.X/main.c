@@ -137,6 +137,7 @@ void main(void)
             case(0x12)://reboot
                 GIE = 0;
                 IOCIE = 0;
+				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
                 Power_Down();
                 delayms(1000);
                 Power_Up();
@@ -149,6 +150,7 @@ void main(void)
             case(0x66)://BM1682 reset
                 GIE = 0;
                 IOCIE = 0;
+				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 				Reset();
                 I2C_Array[INDEX_RESET_COUNT]++;
                 GIE = 1;
@@ -158,11 +160,13 @@ void main(void)
             case(0xF7)://System power down
                 GIE = 0;
                 IOCIE = 0;
+				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWERDOWN;
                 Power_Down();
                 GIE = 1;
                 IOCIE = 1;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
+/*
             case(0xCC)://IIC master test
                 for(i = 0; i<0x24; i++)
 				I2C_Array[0x0D + i] = IIC_read_byte(0x98, i);
@@ -172,6 +176,7 @@ void main(void)
 //                IIC_write_byte(0x98, 0x0F, 0x11);    
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;           
+//*/
             case(0x86)://Clear abnormal status
                 MCU_ERR_INT = 1;
                 LED0 = 1;
@@ -192,6 +197,7 @@ void main(void)
 	            {   
 	                GIE = 0;
 	                IOCIE = 0;
+					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_TMP;
 	                Power_Down();
 	                I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
 	                GIE = 1;
@@ -313,13 +319,13 @@ void interrupt ISR(void)
     {
         if (CM2CON0bits.C2OUT == 1)//power down
         {
-            I2C_Array[INDEX_POWERDOWN_REASON] = 0x0F;
+            I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
 //            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
 			needpowerdown = 1;
             C2IF = 0;
         }
 
-        else if (CM2CON0bits.C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == 0x0F)//voltage too low to normal, reboot
+        else if (CM2CON0bits.C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
         {
             needpowerup = 1;
             C2IF = 0;
