@@ -7,6 +7,13 @@ DATE: 05/05/2018
 /****************************************************************/
 #include"User_define.h"
 #include"xc.h"
+void Reset(void)
+{
+	SYS_RST = 0;
+	delayms(20);
+	SYS_RST = 1;
+}
+
 void Power_Up(void)
 {
     SYS_RST = 0;
@@ -21,6 +28,8 @@ void Power_Up(void)
     EN_RGMII_3V3 = 1;
     delayms(5);
     SYS_RST = 1;
+	delayms(5);
+	Reset();
     LED0 = 1;
 
 }

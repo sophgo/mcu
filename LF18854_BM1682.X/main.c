@@ -149,9 +149,7 @@ void main(void)
             case(0x66)://BM1682 reset
                 GIE = 0;
                 IOCIE = 0;
-                SYS_RST = 0;
-                delayms(200);
-                SYS_RST = 1;
+				Reset();
                 I2C_Array[7]++;
                 GIE = 1;
                 IOCIE = 1;
