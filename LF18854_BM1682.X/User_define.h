@@ -22,7 +22,21 @@ DATE: 05/05/2018
 #define EN1_ISL68127 LATC2
 #define EN_RGMII_3V3 LATC5
 
-
+#define INDEX_VERSION		0
+#define INDEX_INSTRUCTION	1
+#define INDEX_TMP_1682		2
+#define INDEX_TMP_461		3
+#define INDEX_SYS_VOL_ST	4
+#define INDEX_SYS_TMP_ST	5
+#define INDEX_12V_ST		6
+#define INDEX_RESET_COUNT	7
+//#define INDEX_FAN_ST		8
+#define INDEX_TIME_L		9
+#define INDEX_TIME_H		10
+//#define INDEX_LTIME_L		11
+//#define INDEX_LTIME_H		12
+//#define INDEX_DOG_TIME_OUT	13
+#define INDEX_POWERDOWN_REASON 15
 #define RX_ELMNTS	64
 
 volatile unsigned char I2C_Array[RX_ELMNTS] =

@@ -66,7 +66,6 @@ unsigned int IIC_read_byte(unsigned int dev_addr, unsigned int reg_addr)
 	I2CMasterWrite (reg_addr);
 	I2CMasterRestart ();
 	I2CMasterWrite (dev_addr + 1);
-//	I2C_Array[0x0F] = I2CMasterRead (0x00);
     return I2CMasterRead(reg_addr);
 }
 unsigned int IIC_write_byte(unsigned int dev_addr, unsigned int reg_addr, unsigned int data)

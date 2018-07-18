@@ -98,19 +98,19 @@ void main(void)
         MCU_ERR_INT = 0;
         if(!B_TEMP_ALR_N)
         {
-            I2C_Array[5] = I2C_Array[5] | 0x01;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x01;
         }
         if(!PG_DDR4_1V2)
         {
-            I2C_Array[4] = I2C_Array[4] | 0x02;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x02;
         }
         if(!PG_VDD_C)
         {
-            I2C_Array[4] = I2C_Array[4] | 0x01;
+            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x01;
         }
         if(!TWARN_VDD_C)
         {
-            I2C_Array[5] = I2C_Array[5] | 0x02;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x02;
         }        
     }
     //when not use pickit
@@ -141,19 +141,19 @@ void main(void)
                 delayms(1000);
                 Power_Up();
                 delayms(200);
-                I2C_Array[7]++;
+                I2C_Array[INDEX_RESET_COUNT]++;
                 GIE = 1;
                 IOCIE = 1;
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
                 GIE = 0;
                 IOCIE = 0;
 				Reset();
-                I2C_Array[7]++;
+                I2C_Array[INDEX_RESET_COUNT]++;
                 GIE = 1;
                 IOCIE = 1;
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
             case(0xF7)://System power down
                 GIE = 0;
@@ -161,31 +161,31 @@ void main(void)
                 Power_Down();
                 GIE = 1;
                 IOCIE = 1;
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0xCC)://IIC master test
                 for(i = 0; i<0x24; i++)
 				I2C_Array[0x0D + i] = IIC_read_byte(0x98, i);
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0xDD)://IIC master write test
 //                IIC_write_byte(0x98, 0x0F, 0x11);    
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;           
             case(0x86)://Clear abnormal status
                 MCU_ERR_INT = 1;
                 LED0 = 1;
-                I2C_Array[1] = 0;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
         }
 		if (status == STATUS_POWERUP)
 		{
-			if(I2C_Array[0x02] >= 75 || I2C_Array[0x03] >= 70)//over temperature warning
+			if(I2C_Array[INDEX_TMP_1682] >= 75 || I2C_Array[INDEX_TMP_461] >= 70)//over temperature warning
 			{
 				MCU_ERR_INT = 0;
-	            I2C_Array[5] = I2C_Array[5] | 0x04;
+	            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x04;
 			}
-			if(I2C_Array[0x02] >= 85 || I2C_Array[0x03] >= 75)//over temperature shutdown
+			if(I2C_Array[INDEX_TMP_1682] >= 85 || I2C_Array[INDEX_TMP_461] >= 75)//over temperature shutdown
 			{
 				MCU_ERR_INT = 0;
 	            if(SYS_RST == 1)
@@ -193,7 +193,7 @@ void main(void)
 	                GIE = 0;
 	                IOCIE = 0;
 	                Power_Down();
-	                I2C_Array[5] = I2C_Array[5] | 0x08;
+	                I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
 	                GIE = 1;
 	                IOCIE = 1;
 	            }			
@@ -201,15 +201,15 @@ void main(void)
 			
 			if (needfanspeed)
 			{
-				I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
-		        I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
+				I2C_Array[INDEX_TMP_1682] = IIC_read_byte(0x98, 0x1);
+		        I2C_Array[INDEX_TMP_461] = IIC_read_byte(0x98, 0x0);
 				needfanspeed =0;
 			}
 		}
 		else
 		{
-			I2C_Array[0x02] = 0;
-			I2C_Array[0x03] = 0;
+			I2C_Array[INDEX_TMP_1682] = 0;
+			I2C_Array[INDEX_TMP_461] = 0;
 		}
 
 		if (needpowerdown)
@@ -301,8 +301,8 @@ void interrupt ISR(void)
         /*commit by zdh Temporary*/
         //*
         Sencond_Count++;
-        I2C_Array[9] = Sencond_Count;
-        I2C_Array[10] = Sencond_Count >> 8;
+        I2C_Array[INDEX_TIME_L] = Sencond_Count;
+        I2C_Array[INDEX_TIME_H] = Sencond_Count >> 8;
         //I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
         //I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
         needfanspeed = 1;
@@ -313,13 +313,13 @@ void interrupt ISR(void)
     {
         if (CM2CON0bits.C2OUT == 1)//power down
         {
-            I2C_Array[15] = 0x0F;
+            I2C_Array[INDEX_POWERDOWN_REASON] = 0x0F;
 //            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
 			needpowerdown = 1;
             C2IF = 0;
         }
 
-        else if (CM2CON0bits.C2OUT == 0 && I2C_Array[15] == 0x0F)//voltage too low to normal, reboot
+        else if (CM2CON0bits.C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == 0x0F)//voltage too low to normal, reboot
         {
             needpowerup = 1;
             C2IF = 0;
@@ -337,11 +337,11 @@ void interrupt ISR(void)
         if(B_TEMP_ALR_N == 0)
         {
             MCU_ERR_INT = 0;
-            I2C_Array[5] = I2C_Array[5] | 0x01;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x01;
         }
         else if(B_TEMP_ALR_N == 1)
         {
-             I2C_Array[5] = I2C_Array[5] & 0xFE;//clear bit
+             I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] & 0xFE;//clear bit
         }
         IOCAF0 = 0;
     }
@@ -355,11 +355,11 @@ void interrupt ISR(void)
 	        if(PG_VDD_C == 0)
 	        {
 	            MCU_ERR_INT = 0;
-	            I2C_Array[4] = I2C_Array[4] | 0x01;
+	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x01;
 	        }
 	        else if(PG_VDD_C == 1)
 	        {
-	            I2C_Array[4] = I2C_Array[4] & 0xFE;
+	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFE;
 	        }
 		}
         IOCAF1 = 0;
@@ -371,11 +371,11 @@ void interrupt ISR(void)
         if(TWARN_VDD_C == 0)
         {
             MCU_ERR_INT = 0;
-            I2C_Array[5] = I2C_Array[5] | 0x02;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x02;
         }
         else if(TWARN_VDD_C == 1)
         {
-            I2C_Array[5] = I2C_Array[5]  & 0xFD;
+            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST]  & 0xFD;
         }
         IOCAF6 = 0;
     }
@@ -388,11 +388,11 @@ void interrupt ISR(void)
 	        if(PG_DDR4_1V2 == 0)
 	        {
 	            MCU_ERR_INT = 0;
-	            I2C_Array[4] = I2C_Array[4] | 0x02;
+	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x02;
 	        }
 	        else if(PG_DDR4_1V2 == 1)
 	        {
-	            I2C_Array[4] = I2C_Array[4] & 0xFD;
+	            I2C_Array[4INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFD;
 	        }
     	}
         IOCAF3 = 0;
