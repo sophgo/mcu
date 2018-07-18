@@ -11,11 +11,19 @@ DATE: 05/05/2018
 
  void Initial_sys()
  {
-    OSCFRQbits.HFFRQ = 0b101;//16MHz 
-    OSCCON1bits.NOSC = 0b110; //HFINTOSC
+ 	//HFINTOSC Frequency Selection bits:16MHz 
+    OSCFRQbits.HFFRQ = 0b101;	
+    
+    // set new osc and div
+    OSCCON1bits.NOSC = 0b110;	//select NOSC HFINTOSC
     OSCCON1bits.NDIV = 0b0000;
-    OSCENbits.HFOEN = 1;
-     while(OSCSTATbits.HFOR == 0);// wait colck stable
+	//HFINTOSC is explicitly enabled
+    OSCENbits.HFOEN = 1;		
+
+	// wait colck stable
+     while(OSCSTATbits.HFOR == 0);//HFINTOSC Oscillator Ready bit
+     
+     
 //     APFCONbits.T1GSEL=0;//T1G function is on RA4
 
      EN_RGMII_3V3 = 0;
@@ -77,7 +85,8 @@ DATE: 05/05/2018
      RB1PPS = 0x16; // RB1->MSSP:SCL2
      SSP2CLKPPS = 0x09;//!!!!SB
      RB2PPS = 0x17; // RB2->MSSP:SDA2
-     
+
+	 // IIC1 Slave
      SSP1STAT = 0b00000000;       // Slew rate control disabled for standard
                                 // speed mode (100 kHz and 1 MHz)
      SSP1CON1 = 0b00100110; 		// Enable serial port, I2C slave mode,  7-bit address
@@ -89,12 +98,12 @@ DATE: 05/05/2018
      BCL1IE = 1;                  // Enable bus collision interrupts
      PIE3bits.SSP1IE = 1;                  // Enable serial port interrupts
 
-    //IIC master config
-     SSP2STAT = 0b10000000; 
-     SSP2CON1 = 0x28;
-     SSP2CON3 = 0x00;  
+    //IIC2 master config
+	SSP2STAT = 0b10000000; 
+	SSP2CON1 = 0b00101000;//0x28;
+	SSP2CON3 = 0x00;  
      //SSP2ADD = 0x27;
-     SSP2ADD = 0x09;
+     SSP2ADD = 0x09;		//osc/40=2
 //     SSP2CON3bits.SDAHT = 1;						// Minimum of 300 ns hold time on SDA
 												// after the falling edge of SCL
      SSP2IF = 0;                  // Clear the serial port interrupt flag

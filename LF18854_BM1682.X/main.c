@@ -78,6 +78,26 @@ int r1, r2, i;
 
 int needfanspeed = 0;
 int needpowerup = 0;
+void reboot()
+{
+	GIE = 0;
+	IOCIE = 0;
+	Power_Down();
+	delayms(1000);
+	Power_Up();
+	delayms(200);
+	GIE = 1;
+	IOCIE = 1;
+}
+
+void dopowerdown()
+{
+	GIE = 0;
+	IOCIE = 0;
+	Power_Down();
+	GIE = 1;
+	IOCIE = 1;
+}
 /**************************** MAIN ROUTINE ************************************/
 void main(void)
 { 
@@ -127,23 +147,16 @@ void main(void)
     while(1)                    // main while() loop
     {                           // program will wait here for ISR to be called
 //        asm("CLRWDT");          // clear WDT
-        switch(I2C_Array[1])
+        switch(I2C_Array[INDEX_INSTRUCTION])
         {
 //            case(0x2C):
 //                Initial_TMR1_FAN();
 //                T1GGO_nDONE = 1;
  //               break;
             case(0x12)://reboot
-                GIE = 0;
-                IOCIE = 0;
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
-                Power_Down();
-                delayms(1000);
-                Power_Up();
-                delayms(200);
-                I2C_Array[INDEX_RESET_COUNT]++;
-                GIE = 1;
-                IOCIE = 1;
+				reboot();
+				I2C_Array[INDEX_RESET_COUNT]++;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0x66)://BM1682 reset
@@ -157,12 +170,8 @@ void main(void)
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
             case(0xF7)://System power down
-                GIE = 0;
-                IOCIE = 0;
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWERDOWN;
-                Power_Down();
-                GIE = 1;
-                IOCIE = 1;
+				dopowerdown();
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
 /*
@@ -194,13 +203,10 @@ void main(void)
 				MCU_ERR_INT = 0;
 	            if(SYS_RST == 1)
 	            {   
-	                GIE = 0;
-	                IOCIE = 0;
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_TMP;
-	                Power_Down();
+					dopowerdown();
 	                I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
-	                GIE = 1;
-	                IOCIE = 1;
+
 	            }			
 			}
 			
