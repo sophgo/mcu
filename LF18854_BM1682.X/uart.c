@@ -1,65 +1,13 @@
 #include "uart.h"
 #include <pic.h> 
 #include <string.h>
-/*********************************************************
-*         PIC24串口发送和接收    
-*
-* 文    件: main.c
-* 作    者: ZhnJa
-* 修改日期: 2013-4-6
-* 说明： 9600波特率，暂时关闭发送。
-************************************************************/
+
 #define RELAY1  LATBbits.LATB14
 #define RELAY2  LATBbits.LATB13
-// Setup configuration bits
-//_CONFIG1(JTAGEN_OFF & GCP_OFF & GWRP_OFF & COE_OFF & FWDTEN_OFF &  FWPSA_PR32 & WDTPS_PS2048 & ICS_PGx3)    // JTAG/Code Protect/Write Protect/Clip-on Emulation mode/ Watchdog Timer/ICD pins select
-//_CONFIG2(FCKSM_CSDCMD & OSCIOFNC_OFF & POSCMOD_HS & FNOSC_PRI)  // Disable CLK switch and CLK monitor, OSCO or Fosc/2, HS oscillator,Primary oscillator
     
 void uart_init(void);
 void Delay(unsigned int t);
     
-unsigned char Rev[6];//接收数组
-unsigned char Send[10]={0x69,1,2,3,4,5,6,7,8,9};//发送数组
-//unsigned char i=0;//发送位
-unsigned char Index=0;//接收位
-   /*
-int main(void)
-{
-    TRISBbits.TRISB13 = 0;//IO方向初始化
-    TRISBbits.TRISB14 = 0;
-    TRISBbits.TRISB5 = 1;
-    uart_init();
-    while(1)
-    {           
-     //接收判断
-        if(Rev[0]==0x68 && Rev[2]==0x69)
-        {
-            if(Rev[3]==0x01)
-            {
-                if(Rev[4] == 1)
-                RELAY1 = 1;
-                if(Rev[4] == 0)
-                RELAY1 = 0;
-            }   
-            if(Rev[3]==0x02)
-            {
-                if(Rev[4] == 1)
-                RELAY2 = 1;
-                if(Rev[4] == 0)
-                RELAY2 = 0;
-            }   
-        }
-    }   
-    return 0;
-}*/
-/*****************************************************************
-** Name:    uart_init
-** Function: 串口2初始化
-** Input:    
-** Output:   
-** Time:     2013.4.05
-** Attention: 11.0596MHz,9600bunds
-******************************************************************/
 void uart_init(void)
 {
 	RXPPS	= 0x17;
@@ -108,85 +56,9 @@ void uart_init(void)
 	
 	TX1STAbits.TXEN = 1;
 
-	/*
-    TRISCbits.TRISC5 = 1;//IO口方向
-    TRISCbits.TRISC4 = 0;
-    RPINR19bits.U2RXR = 21;//RP21
-    RPOR10bits.RP20R = 5;//RP20
-        
-    U2MODEbits.BRGH = 1;//高速
-    U2BRG = 143;    //波特率
-    U2STAbits.UTXISEL0 = 0;//当最后一个字符被移出发送移位寄存器时产生中断
-    U2STAbits.UTXISEL1 = 0;
-    U2MODEbits.UARTEN = 1;
-    SRbits.IPL = 3; //CPU优先级3
-    IPC7bits.U2TXIP = 4; //发送中断优先级4
-    IEC1bits.U2TXIE = 1; //允许发送中断
-    IFS1bits.U2TXIF = 0; //清标志位
-        
-    IPC7bits.U2RXIP=5; //接收中断优先级
-    IEC1bits.U2RXIE=1; //允许接收中断
-    IFS1bits.U2RXIF=0; //清标志位
-            
-//  U2STAbits.UTXEN = 1; //使能发送，同时产生发送中断
-    */
 }   
     
-/*****************************************************************
-** Name:     _U2TXInterrupt
-** Function: 串口2接收中断
-** Input:    
-** Output:   
-** Time:     2013.4.05
-** Attention: 
-******************************************************************/
-/*
-void __attribute__((interrupt, no_auto_psv)) _U2RXInterrupt(void)
-{
-    unsigned char temp; 
-    IFS1bits.U2RXIF=0; //清标志位
-    temp=U2RXREG;
-    if(temp == 0x68)    //判断是否为第一位
-        Index = 0;
-    if(Index>=sizeof(Rev)) Index=0;
-    Rev[Index]=temp;
-    Index++;
-}//*/
-    
-    
-/*****************************************************************
-** Name:     _U2TXInterrupt
-** Function: 串口2发送中断
-** Input:    
-** Output:   
-** Time:     2013.4.05
-** Attention: 
-******************************************************************/
-/*
-void __attribute__((interrupt, no_auto_psv)) _U2TXInterrupt(void)
-{
-    
-    IFS1bits.U2TXIF = 0; //清中断标志        
-    U2TXREG = Send[i] ;  //发送数据 
-    while(U2STAbits.TRMT == 0); 
-    Nop();Nop();Nop();Nop();        
-    i++;
-    if(i==10)
-    {
-        i=0;    
-    }       
-}
-    
-    
-void Delay(unsigned int t)
-{
- unsigned int i,j;
-    for(i=t;i>4;i--)
-    for(j=1;j<10000;j++);
-}
-
-//*/
-
+   
 
 static unsigned char uart_recv_buf[UART_RECV_BUF_LEN];
 static int beg	= 0;
@@ -520,6 +392,7 @@ int uart_recv_bmcmd(unsigned char* precv,int buflen)
 	int ret;
 	static int gettag = 0;
 	static int nr = 0;
+	int retry;
 
 	unsigned char value;
 	unsigned char buf[UART_PACKET_MAX];
@@ -527,13 +400,15 @@ int uart_recv_bmcmd(unsigned char* precv,int buflen)
 	{
 		if (gettag)
 		{
+			retry = 100;
 			do
 			{
 				ret = uart_recv_byte(&value);
+				retry--;
 			}
-			while (ret <= 0);
+			while ((ret <= 0 ) && retry);
 			
-			if (isxdigit(value))
+			if ( (retry) && (isxdigit(value)) )
 			{
 				buf[i++] = value;
 			}
