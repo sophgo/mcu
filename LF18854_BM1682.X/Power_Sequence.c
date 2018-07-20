@@ -15,7 +15,7 @@ void Reset(void)
 	delayms(20);
 	SYS_RST = 1;
 }
-
+//3.3V EN后要等30ms以上再EN ISL68127
 void Power_Up(void)
 {
     SYS_RST = 0;

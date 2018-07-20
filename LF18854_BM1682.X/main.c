@@ -98,7 +98,7 @@ uart_cmd_t
 }uart_cmd;
 int needfanspeed = 0;
 int needpowerup = 0;
-int needreset = 0;
+int needbite = 0;
 
 unsigned long int	last_feed_time	= 0;
 static char			watch_dog_run	= 0;
@@ -126,7 +126,7 @@ void watch_dog_feed()
 	last_feed_time = Sencond_Count;
 }
 
-void reboot()
+void doreboot()
 {
 	GIE = 0;
 	IOCIE = 0;
@@ -239,6 +239,10 @@ void main(void)
 //                Initial_TMR1_FAN();
 //                T1GGO_nDONE = 1;
  //               break;
+ 			case(0x0D):
+				//enable watch dog debug mode
+				I2C_Array[INDEX_MCU_STATUS] |= 0x01;
+				break;
 			case(0x11):
 				watch_dog_feed();
 				I2C_Array[INDEX_INSTRUCTION] = 0;
@@ -246,7 +250,7 @@ void main(void)
             case(0x12)://reboot
 				watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
-				reboot();
+				doreboot();
 				I2C_Array[INDEX_RESET_COUNT]++;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
@@ -317,14 +321,16 @@ void main(void)
 				case(0x12)://reboot
 					watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
-					reboot();
+					doreboot();
 					I2C_Array[INDEX_RESET_COUNT]++;
+					ret  = 0;
 					break;
 				case(0x66)://BM1682 reset
 					watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 					doreset();
 					I2C_Array[INDEX_RESET_COUNT]++;
+					ret  = 0;
 					break;   
 				default:
 					ret  = ERR_UART_CMD;
@@ -379,10 +385,18 @@ uart_handle_fin:
 			}
 			needpowerup = 0;
 		}
-		if (needreset == 1)
+		if (needbite == 1)
 		{
-			Reset();
-			needreset = 0;
+			if (I2C_Array[INDEX_MCU_STATUS] & 0x01)
+			{
+				doreset();
+			}
+			else
+			{
+				doreboot();
+			}
+			
+			needbite = 0;
 		}
    }
 }
@@ -477,7 +491,7 @@ void interrupt ISR(void)
 				if ( watch_dog_isbite())
 				{
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
-					needreset = 1;
+					needbite = 1;
 					watch_dog_stop();
 
 				}
@@ -537,7 +551,7 @@ void interrupt ISR(void)
     }
 */  
 
-    if(IOCAF1)//ISL68127 voltage abnormal
+    if(IOCAF1)//ISL68127 voltage abnormal //0.9V
     {
         delayms(5);
 		if (status == STATUS_POWERUP)
