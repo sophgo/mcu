@@ -6,14 +6,7 @@ Author: Patrick Chen(CPF)
 BITMAIN 
 DATE: 05/05/2018
 /****************************************************************/
-#include <pic.h> 
-#include <xc.h>
-#include "User_define.h"
-#include "uart.h"
-//#include "Flash.h"
-//#include "HEFlash.h"
-//__PROG_CONFIG (1,0x3FDC);
-//__PROG_CONFIG (2,0x3FFF);
+
 
 // CONFIG1
 #pragma config FEXTOSC = OFF    // External Oscillator mode selection bits (Oscillator not enabled)
@@ -50,6 +43,13 @@ DATE: 05/05/2018
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
 
+#include <pic.h> 
+#include <xc.h>
+#include "User_define.h"
+#include "uart.h"
+//#include "Flash.h"
+//#include "HEFlash.h"
+
 // global err
 #define GERR_UART_MAGIC	0x01
 #define GERR_UART_HSIZE	0x02
@@ -61,8 +61,6 @@ volatile unsigned char I2C_Array_Rx[RX_ELMNTS] = 0;
 //slave IIC variable
 unsigned char index_i2c = 0;     // index pointer
 unsigned char junk = 0;          // used to place unnecessary data
-unsigned char clear = 0x00;      // used to clear array location once
-                                 // it has been read
 unsigned char first = 1;               // used to determine whether data address 
                                        // location or actual data
 
@@ -78,7 +76,7 @@ unsigned long int Sencond_Count = 0;
 char MEM_write[4] = {0x12,0x34,0xAB,0xCD};
 char MEM_read[4];
 //char MEM_p[4];
-int r1, r2, i;
+int r1, r2;
 
 #define UART_CMD_MAGIC 0x4D42
 // uart ret
@@ -157,9 +155,6 @@ void mcu_watch_dog_start()
 {
 	//Watchdog Timer Clock Select bits
 	WDTCON1bits.WDTCS	= 0b001;//INTOSC/16 (31.25 kHz)
-	//WDT OPERATING MODES 
-	//CONFIG3bits.WDTE	= 0b01;//WDT CONTROLLED BY SOFTWARE
-
 	// Watchdog Timer Prescale Select bits
 	WDTCON0bits.WDTPS	= 0b01100;//Interval 4s nominal
 
@@ -229,10 +224,8 @@ void main(void)
 
 		//uart_send_bytes(uart_send_buf,sizeof(uart_send_buf));
 		//delayms(40);
-        //asm("CLRWDT");          // clear WDT
-        mcu_watch_dog_feed();
+		mcu_watch_dog_feed();
 		// handle I2C cmd
-        //CLRWDT;
         switch(I2C_Array[INDEX_INSTRUCTION])
         {
 //            case(0x2C):

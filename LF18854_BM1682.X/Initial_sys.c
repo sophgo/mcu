@@ -33,7 +33,7 @@ void Initial_sys()
 	while(OSCSTATbits.MFOR == 0);//MFINTOSC Oscillator Ready bit
 	
     //////////////////////////////////////////////////////
-	// ??
+	// POWER
 	//////////////////////////////////////////////////////
 
 	//     APFCONbits.T1GSEL=0;//T1G function is on RA4
