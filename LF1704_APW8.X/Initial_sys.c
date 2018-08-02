@@ -72,12 +72,13 @@ void Initial_sys()
 
 
 	IOCCP=0;				//disable positive edge interrupt
-	IOCCN=0;				//disable positive edge interrupt
+	IOCCN=0;				// Negative Edge Enable bits
+	IOCCPbits.IOCCP4 = 1;
 	IOCCNbits.IOCCN4 = 1;
 	IOCCF=0;				//Clear interrupt flag
 	
 	IOCIE	= 1;			// Interrupt-on-Change Enable bit
-	//PEIE	= 0;			// Peripheral Interrupt Enable bit
+	PEIE	= 1;			// Peripheral Interrupt Enable bit
 	GIE		= 1;			// Global Interrupt Enable 
 #endif
 	//MCU_ERR_INT = 1;//clear Error indicate bit
@@ -94,7 +95,8 @@ void Initial_sys()
 	RC0PPS		= 0b10000;		//IIC_CLK->RC0
 	RC1PPS		= 0b10001;		//IIC_SDA->RC1
 
-	
+	//PWM
+	RC5PPS		= 0b01110;		//PWM3->RC5
 
 	PPSLOCKbits.PPSLOCKED = 0x01; // lock PPS 
 #endif

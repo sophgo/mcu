@@ -1,6 +1,6 @@
 #include "ADC.h"
 #include <xc.h>
-
+#define _XTAL_FREQ 16000000
 /**
   Section: ADC Module APIs
 */
@@ -28,7 +28,7 @@ void ADC_init(unsigned char pref,unsigned char nref)
     ADRESH = 0x00;
     
 }
-void delay5us(int time)
+static void delay48us(int time)
 //delay about 5us @ 16MHz CLK
 { 
     long int i=0;
@@ -43,7 +43,7 @@ void ADC_start(unsigned char channel)
     ADCON0bits.ADON = 1;
 	
     // Acquisition time delay
-    delay5us(1);
+    __delay_ms(1);
 
     // Start the conversion
     ADCON0bits.GO_nDONE = 1;

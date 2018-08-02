@@ -10,7 +10,7 @@ void DAC1_init(unsigned char pref,unsigned char nref)
 
 void DAC1_set(unsigned char dacsel)
 {
-	DAC1CON0bits.DAC1OE1	= 1;// DAC1 Voltage Output 1 Enable bit
+	DAC1CON0bits.DAC1OE1	= 0;// DAC1 Voltage Output 1 Enable bit
 	DAC1CON0bits.DAC1OE2	= 0;// DAC1 Voltage Output 2 Enable bit
 
 	DAC1CON1bits.DAC1R		= dacsel;

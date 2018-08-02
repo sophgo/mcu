@@ -4,7 +4,7 @@
 
 // CONFIG1
 #pragma config FOSC = INTOSC    // Oscillator Selection Bits (INTOSC oscillator: I/O function on CLKIN pin)
-#pragma config WDTE = ON        // Watchdog Timer Enable (WDT enabled)
+#pragma config WDTE = SWDTEN    // Watchdog Timer Enable (WDT controlled by the SWDTEN bit in the WDTCON register)
 #pragma config PWRTE = OFF      // Power-up Timer Enable (PWRT disabled)
 #pragma config MCLRE = ON       // MCLR Pin Function Select (MCLR/VPP pin function is MCLR)
 #pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
@@ -38,6 +38,9 @@
 #include "IIC.h"
 #include "TIMER.h"
 #include "PWM.h"
+// work with __delay_ms __delay_us
+#define _XTAL_FREQ 16000000
+
 #if 0
 #include "uart.h"
 //#include "Flash.h"
@@ -172,79 +175,181 @@ volatile unsigned char I2C_Array[RX_ELMNTS] =
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
-#define DEFAULT_VOL 10000
+
+#define STATUS_POWERUP		1
+#define STATUS_POWERDOWN	0
+int status_cur = 0;
+int status_need = 0;
+
+#define MV_DEF 9550
+void delay5us(int time)
+//delay about 5us @ 16MHz CLK
+{ 
+    long int i=0;
+    for(i=0;i<time ; i++) ; 
+}
+void delayms(int time)
+//delay about 5us @ 16MHz CLK
+{ 
+    long int i,j;
+    for(i=0;i<time;i++)
+        for(j=0; j<79; j++);
+}
+
+void power_change(unsigned int mv_cur,	unsigned int mv_need)
+{
+	unsigned int dacset;
+	unsigned int pwmset;
+    if (mv_need < 9550)// < 9.55V
+    {
+        mv_need = 9550;
+    }
+    if (mv_need > 10880)// > 10.88V
+    {
+        mv_need = 10880;
+    }
+	dacset = 2082.7125-191.325*mv_need/1000;
+	pwmset = (256-dacset)*1.5625;//pwmset = (256-dacset)/256*400
+
+	if (mv_cur < mv_need)
+	{
+		PWM_set(pwmset);//max 400
+		__delay_ms(200);
+		DAC1_set(dacset);//max 255
+	}
+	else
+	{
+		DAC1_set(dacset);//max 255
+		__delay_ms(200);
+		PWM_set(pwmset);//max 400
+	}
+}
+void power_on()
+{
+	PIC_EN = 1;
+	status_cur = STATUS_POWERUP;
+}
+void power_off()
+{
+	
+	status_cur = STATUS_POWERDOWN;
+	PIC_EN = 0;
+}
+
+
 void main(void)
 {
 	int ret;
-	unsigned short adcret;
-	unsigned short dacset;
+	int adcret;
 	unsigned int tmp1,tmp2;
-	unsigned int vcheck;
-	unsigned int vset;
+	unsigned int mv_check;
+	unsigned int mv_cur;
+	unsigned int mv_need;
+	power_off();
     Initial_sys();
 	IIC1_slave_init(I2C_slave_address);
+
 	//set FVR_BUFFER2 2.048v
 	FVR_set(FVR_OFF,FVR_2048);
-	
-	ADC_init(ADC_PSEL_VDD,ADC_NSEL_VSS);
 	
 	DAC1_init(DAC_PSEL_FVR_BUF2, DAC_NSEl_VSS);
 
 	OPA_set(OPA_PSEL_DAC_OUT,OPA_NSEL_OUT);
 
+	ADC_init(ADC_PSEL_VDD,ADC_NSEL_VSS);
+
 	TIMER2_set();
 	TIMER_PWM_sel();
 
-	
-	I2C_Array[1] = 50;
-	
-	I2C_Array[8] = DEFAULT_VOL & 0xFF;
-	I2C_Array[9] = (DEFAULT_VOL>>8)&0xff;
+	mv_cur	= 0;//
+	mv_need = MV_DEF;//
+    //PWM_set(200);
 	while(1)
 	{
-		//func 2 temperature protection
-		adcret = ADC_run(ADC_CHN_AN4);
-		tmp1 = adcret*3300/1024;//mv
-		I2C_Array[2] = tmp1 & 0xFF;
-		I2C_Array[3] = (tmp1>>8)&0xff;
-
-		
-		adcret = ADC_run(ADC_CHN_AN3);
-		tmp2 = adcret*3300/1024;//mv
-		I2C_Array[4] = tmp2 & 0xFF;
-		I2C_Array[5] = (tmp2>>8)&0xff;
-		
-		if ((tmp1 > 1650) || (tmp2 > 1650))
+		switch(I2C_Array[1])
 		{
-			PIC_EN = 0;
+			case(0x13)://set mv_need
+			{
+				mv_need  = I2C_Array[2] + (I2C_Array[3]<<8);
+				I2C_Array[1] = 0;
+				break;
+			}
 		}
-		else if ((tmp1 < 800) && (tmp2 < 800))
+	//*
+		//func 2 temperature protection
+		adcret = ADC_run(ADC_CHN_AN3);
+		tmp1 = adcret*3.27;//*3350/1024
+		I2C_Array[0x10] = tmp1 & 0xFF;
+		I2C_Array[0x11] = (tmp1>>8)&0xff;
+
+		adcret = ADC_run(ADC_CHN_AN7);
+		tmp2 = adcret*3.27;//*3350/1024;//mv
+		I2C_Array[0x12] = tmp2 & 0xFF;
+		I2C_Array[0x13] = (tmp2>>8)&0xff;
+
+		if (PORTCbits.RC4 == 0)
 		{
-			PIC_EN = 1;
+			if ((tmp1 > 1650) || (tmp2 > 1650))
+			{
+				status_need = STATUS_POWERDOWN;
+			}
+			else if ((tmp1 < 800) && (tmp2 < 800))
+			{
+				status_need = STATUS_POWERUP;
+			}
+		}
+		else
+		{
+			status_need = STATUS_POWERDOWN;
+		}
+		if (status_cur != status_need)
+		{
+			if (status_need == STATUS_POWERUP)
+			{
+				power_on();
+			}
+			else
+			{
+				power_off();
+			}
+			status_cur = status_need;
 		}
 
 		//func 5 Voltage calibration
 		adcret = ADC_run(ADC_CHN_AN2);
-		vcheck = adcret*3300/1024;	//mv		
-		vcheck = vcheck*201/51;		//12V check point mv
-		I2C_Array[6] = vcheck & 0xFF;
-		I2C_Array[7] = (vcheck>>8)&0xff;
+		mv_check = adcret*3.27;//*3350/1024;	//mv
+		mv_check = mv_check*201/51;		//12V check point mv
 		
 		//func 4
-		vset = I2C_Array[8] + (I2C_Array[9]<<8);
-		dacset = (2082713-191325*vset)/1000;
-		I2C_Array[10] = dacset & 0xFF;
-		I2C_Array[11] = (dacset>>8)&0xff;
-		DAC1_set(dacset);
+		//mv_cur = I2C_Array[8] + (I2C_Array[9]<<8);
+		if (mv_need < 9550)// < 9.55V
+		{
+			mv_need = 9550;
+		}
+		if (mv_need > 10800)// > 10.8V
+		{
+			mv_need = 10800;
+		}
 
-		//func 6
-		PWM_set(I2C_Array[1]);
+		if (mv_cur != mv_need)
+		{
+			power_change(mv_cur,mv_need);
+			mv_cur = mv_need;
+		}
 		
+		// update status
+		I2C_Array[0x0F] = status_cur;
+		I2C_Array[0x14] = mv_cur & 0xFF;
+		I2C_Array[0x15] = (mv_cur>>8)&0xff;
+		I2C_Array[0x16] = mv_check & 0xFF;
+		I2C_Array[0x17] = (mv_check>>8)&0xff;
+		//*/
 	}
 }
 
 void interrupt ISR(void) 
 {
+    //*
 	// fun3 IIC
     if (SSP1IF)                              // check to see if SSP interrupt I2C
     {
@@ -322,9 +427,18 @@ void interrupt ISR(void)
 			if (IOCCFbits.IOCCF4)
 			{
 				// func 1 power on
-				PIC_EN = 1;//??
+				if (PORTCbits.RC4 == 0)
+				{
+					
+					//PIC_EN = 1;//
+				}
+				else
+				{
+					//PIC_EN = 0;//
+				}
 				IOCCFbits.IOCCF4 = 0;
 			}
 		}
 	}
+    //*/
 }// end of ISR 

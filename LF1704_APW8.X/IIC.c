@@ -20,6 +20,7 @@ void IIC1_slave_init(int slave_address)
 	SSP1CON3bits.DHEN	= 0;	//Data holding is disabled
 	
 	SSP1ADD = (slave_address << 1); // Load the slave address
+	SSP1IE = 1;
 	SSP1IF = 0;                  // Synchronous Serial Port (MSSP) Interrupt Flag bit
 	BCL1IF = 0;                  // MSSP Bus Collision Interrupt Flag bit
 	BCL1IE = 1;                  // MSSP Bus Collision Interrupt Enable bit
