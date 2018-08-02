@@ -1,5 +1,6 @@
 #include "ADC.h"
 #include <xc.h>
+// work with __delay_ms __delay_us
 #define _XTAL_FREQ 16000000
 /**
   Section: ADC Module APIs
