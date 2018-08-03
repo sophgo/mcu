@@ -63,7 +63,7 @@ volatile unsigned char I2C_Array[RX_ELMNTS] =
 };
 unsigned char Timer_Status = 0;
 
-#define I2C_slave_address 0x60//MCU as a slave,Master read as 0x17
+#define I2C_slave_address 0x30	//MCU as a slave,Master read as 0x30 ~ 0x37
 
 #define STATUS_POWERUP		1
 #define STATUS_POWERDOWN	0

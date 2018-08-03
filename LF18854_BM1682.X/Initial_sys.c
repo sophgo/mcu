@@ -116,11 +116,11 @@ void Initial_sys()
 	SSP1CON1 = 0b00100110; 		// Enable serial port, I2C slave mode,  7-bit address
 	SSP1CON2bits.SEN = 0;        // Clock stretching is enabled
 	SSP1CON3bits.BOEN = 0;       // SSPBUF is updated and NACK is generated cpf
-	SSP1ADD = I2C_slave_address + (RB5 << 1) + (RB4 << 2) + (RB3 << 3); // Load the slave address
+	SSP1ADD = (I2C_slave_address << 1) + (RB5 << 1) + (RB4 << 2) + (RB3 << 3); // Load the slave address
 	SSP1IF = 0;                  // Clear the serial port interrupt flag
 	BCL1IF = 0;                  // Clear the bus collision interrupt flag
 	BCL1IE = 1;                  // Enable bus collision interrupts
-	PIE3bits.SSP1IE = 1;                  // Enable serial port interrupts
+	SSP1IE = 1;                  // Enable serial port interrupts
 
 
 
