@@ -408,7 +408,7 @@ int uart_recv_bmcmd(unsigned char* precv,int buflen)
 			}
 			while ((ret <= 0 ) && retry);
 			
-			if ( (retry) && (isxdigit(value)) )
+			if ( (retry) && (isxdigit(value)) && (i<UART_PACKET_MAX) )
 			{
 				buf[i++] = value;
 			}

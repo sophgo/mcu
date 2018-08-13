@@ -19,7 +19,7 @@ DATE: 05/05/2018
 #pragma config MCLRE = ON       // Master Clear Enable bit (MCLR pin is Master Clear function)
 #pragma config PWRTE = ON      // Power-up Timer Enable bit (PWRT disabled)
 #pragma config LPBOREN = OFF    // Low-Power BOR enable bit (ULPBOR disabled)
-#pragma config BOREN = ON       // Brown-out reset enable bits (Brown-out Reset Enabled, SBOREN bit is ignored)
+#pragma config BOREN = OFF      // Brown-out reset enable bits (Brown-out reset disabled)
 #pragma config BORV = LO        // Brown-out Reset Voltage Selection (Brown-out Reset Voltage (VBOR) set to 1.9V on LF, and 2.45V on F Devices)
 #pragma config ZCD = OFF        // Zero-cross detect disable (Zero-cross detect circuit is disabled at POR.)
 #pragma config PPS1WAY = OFF    // Peripheral Pin Select one-way control (The PPSLOCK bit can be set and cleared repeatedly by software)
@@ -156,7 +156,7 @@ void mcu_watch_dog_start()
 	//Watchdog Timer Clock Select bits
 	WDTCON1bits.WDTCS	= 0b001;//INTOSC/16 (31.25 kHz)
 	// Watchdog Timer Prescale Select bits
-	WDTCON0bits.WDTPS	= 0b01100;//Interval 4s nominal
+	WDTCON0bits.WDTPS	= 0b01111;//Interval 32s nominal
 
 	WDTCON0bits.SEN		= 1;//active watch dog
 
