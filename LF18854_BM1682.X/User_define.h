@@ -6,7 +6,7 @@ BITMAIN
 DATE: 05/05/2018
 /****************************************************************/
 #include"xc.h"
-#define VERSION			0x07
+#define VERSION			0x08
 #define    TMR0_Value     177
 #define __16F18854
 
