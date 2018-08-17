@@ -36,6 +36,8 @@ DATE: 21/03/2018
 #include "User_define.h"
 #include "Flash.h"
 #include "HEFlash.h"
+// work with __delay_ms __delay_us
+#define _XTAL_FREQ 16000000
 
 
 // array for master to write to, reserved
@@ -257,7 +259,7 @@ void main(void)
 		}
    }
 }
-
+unsigned char low_power_count = 0;
 void interrupt ISR(void) 
 {
     if (SSP1IF)                              // check to see if SSP interrupt I2C
@@ -363,21 +365,31 @@ void interrupt ISR(void)
     {
         if (C2OUT == 1)//power down
         {
-            I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
-            r1 = HEFLASH_writeBlock( 0,I2C_Array+INDEX_TIME_L , 2);
-            Power_Down();
-            
-            C2IF = 0;
+			for (low_power_count=0; low_power_count < 3; low_power_count++)
+			{
+				__delay_ms(1);
+				if (C2OUT == 0)
+				{
+					break;
+				}
+			}
+			if (low_power_count == 3)
+			{
+				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
+	            r1 = HEFLASH_writeBlock( 0,I2C_Array+INDEX_TIME_L , 2);
+	            Power_Down();
+			}
+			C2IF = 0;//Clear interrupt bit
         }
-
-        else if (C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
+        else 
         {
-			needpowerup = 1;
+        	if (I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
+	        {
+				needpowerup = 1;
+        	}
+            low_power_count = 0;
 			C2IF = 0;
         }
-
-        C2IF = 0;//Clear interrupt bit
-            
 
     }
     if(IOCAF1)//RST Request   
