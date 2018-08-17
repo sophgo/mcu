@@ -12,9 +12,12 @@ DATE: 05/05/2018
 void Initial_TIMER()//overflow every second
 {
     //overflow cannot clear by HW
-    T0CON1bits.T0CS = 0b100;//LFINTOSC
-    T0CON1bits.T0CKPS = 0b11110;//1:16834 Prescaler
-    TMR0H = 1;//8bit mode TMR0H as comparator T = (TMR0H+1)x0.5
+    T0CON1bits.T0CS = 0b100;//LFINTOSC  31~32kHz
+	//T0CON1bits.T0CKPS = 0b1110;//1:16384 Prescaler
+	//TMR0H = 1;//8bit mode TMR0H as comparator T = (TMR0H+1)/(32K/16384)
+	
+    T0CON1bits.T0CKPS = 0b0111;//1:128 Prescaler
+    TMR0H = 249;//8bit mode TMR0H as comparator T = (TMR0H+1)/(32K/128)
     T0CON0bits.T0OUTPS = 0;//1:1 Postscaler
     TMR0IE = 1;
     T0EN = 1;    
