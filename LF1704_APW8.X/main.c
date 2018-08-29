@@ -185,7 +185,7 @@ void main(void)
 
 		if (PORTCbits.RC4 == 0)
 		{
-			if ((tmp1 > 1650) || (tmp2 > 1650))
+			if ((tmp1 > 1900) || (tmp2 > 1900))
 			{
 				status_need = STATUS_POWERDOWN;
 			}
