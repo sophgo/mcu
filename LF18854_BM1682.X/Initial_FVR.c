@@ -21,4 +21,7 @@ void Initial_FVR()
     CM2CON0bits.C2HYS=1;//Enable Hysteresis
     CM2NSELbits.C2NCH = 0b110;///CxVN connects to FVR Voltage reference C2IN-
     CM2PSELbits.C2PCH=0b000;//CxVP connects to CxIN+ pin C2IN+
+
+    while (FVRCONbits.FVRRDY == 0 )
+	{}
 }
