@@ -6,6 +6,8 @@ BITMAIN
 DATE: 05/05/2018
 /****************************************************************/
 #include"xc.h"
+#include"delay.h"
+
 #define VERSION			0x08
 #define    TMR0_Value     177
 #define __16F18854
@@ -69,9 +71,6 @@ unsigned char Timer_Status = 0;
 #define STATUS_POWERDOWN	0
 extern int status;
 
-void delay5us(int time);
-void delayms(long int time);
-void delays(int time);
 void Reset(void);
 void Power_Up(void);
 void Power_Down(void);

@@ -129,9 +129,9 @@ void doreboot()
 	GIE = 0;
 	IOCIE = 0;
 	Power_Down();
-	delayms(1000);
+	__delay_ms(1000);
 	Power_Up();
-	delayms(200);
+	__delay_ms(200);
 	GIE = 1;
 	IOCIE = 1;
 }
@@ -176,7 +176,7 @@ void main(void)
     Initial_FVR();
     Initial_TIMER();
     Power_Up();
-    delayms(1000);//wait 1 second for stable
+    __delay_ms(1000);//wait 1 second for stable
 
 	uart_init();
 	mcu_watch_dog_start();
@@ -369,7 +369,7 @@ uart_handle_fin:
 
 		if (needpowerup)
 		{
-			delayms(50);
+			__delay_ms(50);
 			if(CM2CON0bits.C2OUT == 1)
 			{
 				//I2C_Array[0] = 0xB0;
@@ -546,7 +546,7 @@ void interrupt ISR(void)
 
     if(IOCAF1)//ISL68127 voltage abnormal //0.9V
     {
-        delayms(5);
+        __delay_ms(5);
 		if (status == STATUS_POWERUP)
 		{
 	        if(PG_VDD_C == 0)
@@ -564,7 +564,7 @@ void interrupt ISR(void)
     
     if(IOCAF6)//ISL68127 temperature abnormal
     {
-        delayms(5);
+        __delay_ms(5);
         if(TWARN_VDD_C == 0)
         {
             MCU_ERR_INT = 0;
@@ -579,7 +579,7 @@ void interrupt ISR(void)
 	
     if(IOCAF3)//DDR4 1.2V abnormal
     {
-        delayms(5);
+        __delay_ms(5);
 		if (status == STATUS_POWERUP)
 		{
 	        if(PG_DDR4_1V2 == 0)

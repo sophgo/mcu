@@ -6,6 +6,7 @@ BITMAIN
 DATE: 05/05/2018
 /****************************************************************/
 #include"User_define.h"
+/*
 void delay5us(int time)
 //delay about 5us @ 16MHz CLK
 { 
@@ -14,7 +15,6 @@ void delay5us(int time)
 }
 
 void delayms(long int time)
-//?????? time ms??
 { 
     long int i=0,j =0;
 //    j = time *1000;
@@ -23,10 +23,10 @@ void delayms(long int time)
 }
 
 void delays(int time)
-//?????? time s??
 { 
     long int i=0,j =0;
     j = time *1000;
     for(i=0;i<j;i++) 
         delayms(1); 
 }
+*/
