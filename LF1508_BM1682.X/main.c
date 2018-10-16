@@ -16,7 +16,7 @@ DATE: 21/03/2018
 #pragma config PWRTE = OFF      // Power-up Timer Enable (PWRT disabled)
 #pragma config MCLRE = ON       // MCLR Pin Function Select (MCLR/VPP pin function is MCLR)
 #pragma config CP = OFF         // Flash Program Memory Code Protection (Program memory code protection is disabled)
-#pragma config BOREN = ON       // Brown-out Reset Enable (Brown-out Reset enabled)
+#pragma config BOREN = OFF      // Brown-out Reset Enable (Brown-out Reset disabled)
 #pragma config CLKOUTEN = OFF   // Clock Out Enable (CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin)
 #pragma config IESO = OFF       // Internal/External Switchover Mode (Internal/External Switchover Mode is disabled)
 #pragma config FCMEN = OFF      // Fail-Safe Clock Monitor Enable (Fail-Safe Clock Monitor is disabled)
@@ -365,6 +365,7 @@ void interrupt ISR(void)
     {
         if (C2OUT == 1)//power down
         {
+        	/*
 			for (low_power_count=0; low_power_count < 3; low_power_count++)
 			{
 				__delay_ms(1);
@@ -379,15 +380,18 @@ void interrupt ISR(void)
 	            r1 = HEFLASH_writeBlock( 0,I2C_Array+INDEX_TIME_L , 2);
 	            Power_Down();
 			}
+			//*/
 			C2IF = 0;//Clear interrupt bit
         }
         else 
         {
+        	/*
         	if (I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
 	        {
 				needpowerup = 1;
         	}
             low_power_count = 0;
+			//*/
 			C2IF = 0;
         }
 

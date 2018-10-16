@@ -12,6 +12,8 @@ void Initial_FVR()
     FVRCONbits.TSEN=0;
     FVRCONbits.CDAFVR=0b01;// set 1024v
     FVRCONbits.ADFVR=0;// trun off AD FVR
+	while (FVRCONbits.FVRRDY == 0 )
+	{}
     //********initial comparator**********************
     CM2CON0bits.C2ON=1;//enable comparator 2
     CM2CON0bits.C2POL=1;//Comparator output is inverted
@@ -22,4 +24,5 @@ void Initial_FVR()
     CM2CON0bits.C2HYS=1;//Enable Hysteresis
     CM2CON1bits.C2PCH=00;//CxVP connects to CxIN+ pin C2IN+
     CM2CON1bits.C2NCH=0b100;//CxVN connects to FVR Voltage reference C2IN-
+
 }
