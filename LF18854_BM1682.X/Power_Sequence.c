@@ -20,17 +20,14 @@ void Reset(void)
 void Power_Up(void)
 {
 	SYS_RST = 0;
-	EN_B_3V3 = 0;
-	__delay_ms(100);
+	EN_VDD_IO_1V8 = 1;
+	__delay_ms(1);
 	EN_B_3V3 = 1;
-	__delay_ms(40);//May 15 update,fulfill the 68127's spec
+	EN_RGMII_3V3 = 1;
+	__delay_ms(5);
 	EN0_ISL68127 = 0;//EN0_ISL68127_3.3V->0.9V
 	__delay_ms(5);
 	EN1_ISL68127 = 0;//EN1_ISL68127_3.3V->1.2V
-	__delay_ms(5);
-	EN_VDD_IO_1V8 = 1;
-	__delay_ms(5);
-	EN_RGMII_3V3 = 1;
 	__delay_ms(5);
 	SYS_RST = 1;
 	__delay_ms(5);

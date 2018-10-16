@@ -8,7 +8,7 @@ DATE: 05/05/2018
 #include"xc.h"
 #include"delay.h"
 
-#define VERSION			0x08
+#define VERSION			0x09
 #define    TMR0_Value     177
 #define __16F18854
 
