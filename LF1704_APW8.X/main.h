@@ -6,7 +6,7 @@ BITMAIN
 DATE: 05/05/2018
 /****************************************************************/
 #include"xc.h"
-#define VERSION			0x00
+#define VERSION			0x01
 
 #define PIC_EN	LATA5
 
