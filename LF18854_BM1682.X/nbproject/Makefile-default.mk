@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=Initial_FVR.c Initial_sys.c delay.c Power_Sequence.c main.c IIC_master.c Initial_TIMER.c uart.c
+SOURCEFILES_QUOTED_IF_SPACED=Initial_FVR.c Initial_sys.c delay.c Power_Sequence.c main.c IIC_master.c Initial_TIMER.c uart.c recovery.c
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/Initial_FVR.p1 ${OBJECTDIR}/Initial_sys.p1 ${OBJECTDIR}/delay.p1 ${OBJECTDIR}/Power_Sequence.p1 ${OBJECTDIR}/main.p1 ${OBJECTDIR}/IIC_master.p1 ${OBJECTDIR}/Initial_TIMER.p1 ${OBJECTDIR}/uart.p1
-POSSIBLE_DEPFILES=${OBJECTDIR}/Initial_FVR.p1.d ${OBJECTDIR}/Initial_sys.p1.d ${OBJECTDIR}/delay.p1.d ${OBJECTDIR}/Power_Sequence.p1.d ${OBJECTDIR}/main.p1.d ${OBJECTDIR}/IIC_master.p1.d ${OBJECTDIR}/Initial_TIMER.p1.d ${OBJECTDIR}/uart.p1.d
+OBJECTFILES_QUOTED_IF_SPACED=${OBJECTDIR}/Initial_FVR.p1 ${OBJECTDIR}/Initial_sys.p1 ${OBJECTDIR}/delay.p1 ${OBJECTDIR}/Power_Sequence.p1 ${OBJECTDIR}/main.p1 ${OBJECTDIR}/IIC_master.p1 ${OBJECTDIR}/Initial_TIMER.p1 ${OBJECTDIR}/uart.p1 ${OBJECTDIR}/recovery.p1
+POSSIBLE_DEPFILES=${OBJECTDIR}/Initial_FVR.p1.d ${OBJECTDIR}/Initial_sys.p1.d ${OBJECTDIR}/delay.p1.d ${OBJECTDIR}/Power_Sequence.p1.d ${OBJECTDIR}/main.p1.d ${OBJECTDIR}/IIC_master.p1.d ${OBJECTDIR}/Initial_TIMER.p1.d ${OBJECTDIR}/uart.p1.d ${OBJECTDIR}/recovery.p1.d
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/Initial_FVR.p1 ${OBJECTDIR}/Initial_sys.p1 ${OBJECTDIR}/delay.p1 ${OBJECTDIR}/Power_Sequence.p1 ${OBJECTDIR}/main.p1 ${OBJECTDIR}/IIC_master.p1 ${OBJECTDIR}/Initial_TIMER.p1 ${OBJECTDIR}/uart.p1
+OBJECTFILES=${OBJECTDIR}/Initial_FVR.p1 ${OBJECTDIR}/Initial_sys.p1 ${OBJECTDIR}/delay.p1 ${OBJECTDIR}/Power_Sequence.p1 ${OBJECTDIR}/main.p1 ${OBJECTDIR}/IIC_master.p1 ${OBJECTDIR}/Initial_TIMER.p1 ${OBJECTDIR}/uart.p1 ${OBJECTDIR}/recovery.p1
 
 # Source Files
-SOURCEFILES=Initial_FVR.c Initial_sys.c delay.c Power_Sequence.c main.c IIC_master.c Initial_TIMER.c uart.c
+SOURCEFILES=Initial_FVR.c Initial_sys.c delay.c Power_Sequence.c main.c IIC_master.c Initial_TIMER.c uart.c recovery.c
 
 
 CFLAGS=
@@ -157,6 +157,14 @@ ${OBJECTDIR}/uart.p1: uart.c  nbproject/Makefile-${CND_CONF}.mk
 	@-${MV} ${OBJECTDIR}/uart.d ${OBJECTDIR}/uart.p1.d 
 	@${FIXDEPS} ${OBJECTDIR}/uart.p1.d $(SILENT) -rsi ${MP_CC_DIR}../  
 	
+${OBJECTDIR}/recovery.p1: recovery.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/recovery.p1.d 
+	@${RM} ${OBJECTDIR}/recovery.p1 
+	${MP_CC} --pass1 $(MP_EXTRA_CC_PRE) --chip=$(MP_PROCESSOR_OPTION) -Q -G  -D__DEBUG=1 --debugger=pickit3  --double=24 --float=24 --opt=+asm,+asmfile,-speed,+space,-debug,-local --addrqual=ignore --mode=free -P -N255 --warn=-3 --asmlist -DXPRJ_default=$(CND_CONF)  --summary=default,-psect,-class,+mem,-hex,-file --output=default,-inhx032 --runtime=default,+clear,+init,-keep,-no_startup,-osccal,-resetbits,-download,-stackcall,+clib $(COMPARISON_BUILD)  --output=-mcof,+elf:multilocs --stack=compiled:auto:auto "--errformat=%f:%l: error: (%n) %s" "--warnformat=%f:%l: warning: (%n) %s" "--msgformat=%f:%l: advisory: (%n) %s"    -o${OBJECTDIR}/recovery.p1  recovery.c 
+	@-${MV} ${OBJECTDIR}/recovery.d ${OBJECTDIR}/recovery.p1.d 
+	@${FIXDEPS} ${OBJECTDIR}/recovery.p1.d $(SILENT) -rsi ${MP_CC_DIR}../  
+	
 else
 ${OBJECTDIR}/Initial_FVR.p1: Initial_FVR.c  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
@@ -221,6 +229,14 @@ ${OBJECTDIR}/uart.p1: uart.c  nbproject/Makefile-${CND_CONF}.mk
 	${MP_CC} --pass1 $(MP_EXTRA_CC_PRE) --chip=$(MP_PROCESSOR_OPTION) -Q -G  --double=24 --float=24 --opt=+asm,+asmfile,-speed,+space,-debug,-local --addrqual=ignore --mode=free -P -N255 --warn=-3 --asmlist -DXPRJ_default=$(CND_CONF)  --summary=default,-psect,-class,+mem,-hex,-file --output=default,-inhx032 --runtime=default,+clear,+init,-keep,-no_startup,-osccal,-resetbits,-download,-stackcall,+clib $(COMPARISON_BUILD)  --output=-mcof,+elf:multilocs --stack=compiled:auto:auto "--errformat=%f:%l: error: (%n) %s" "--warnformat=%f:%l: warning: (%n) %s" "--msgformat=%f:%l: advisory: (%n) %s"    -o${OBJECTDIR}/uart.p1  uart.c 
 	@-${MV} ${OBJECTDIR}/uart.d ${OBJECTDIR}/uart.p1.d 
 	@${FIXDEPS} ${OBJECTDIR}/uart.p1.d $(SILENT) -rsi ${MP_CC_DIR}../  
+	
+${OBJECTDIR}/recovery.p1: recovery.c  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} ${OBJECTDIR}/recovery.p1.d 
+	@${RM} ${OBJECTDIR}/recovery.p1 
+	${MP_CC} --pass1 $(MP_EXTRA_CC_PRE) --chip=$(MP_PROCESSOR_OPTION) -Q -G  --double=24 --float=24 --opt=+asm,+asmfile,-speed,+space,-debug,-local --addrqual=ignore --mode=free -P -N255 --warn=-3 --asmlist -DXPRJ_default=$(CND_CONF)  --summary=default,-psect,-class,+mem,-hex,-file --output=default,-inhx032 --runtime=default,+clear,+init,-keep,-no_startup,-osccal,-resetbits,-download,-stackcall,+clib $(COMPARISON_BUILD)  --output=-mcof,+elf:multilocs --stack=compiled:auto:auto "--errformat=%f:%l: error: (%n) %s" "--warnformat=%f:%l: warning: (%n) %s" "--msgformat=%f:%l: advisory: (%n) %s"    -o${OBJECTDIR}/recovery.p1  recovery.c 
+	@-${MV} ${OBJECTDIR}/recovery.d ${OBJECTDIR}/recovery.p1.d 
+	@${FIXDEPS} ${OBJECTDIR}/recovery.p1.d $(SILENT) -rsi ${MP_CC_DIR}../  
 	
 endif
 

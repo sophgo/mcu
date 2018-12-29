@@ -23,6 +23,8 @@
       <itemPath>Initial_TIMER.c</itemPath>
       <itemPath>uart.c</itemPath>
       <itemPath>uart.h</itemPath>
+      <itemPath>recovery.h</itemPath>
+      <itemPath>recovery.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -43,7 +45,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC8</languageToolchain>
-        <languageToolchainVersion>1.45</languageToolchainVersion>
+        <languageToolchainVersion>2.00</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>

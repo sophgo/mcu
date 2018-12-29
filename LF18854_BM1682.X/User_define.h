@@ -49,7 +49,7 @@ DATE: 05/05/2018
 #define POWERDOWN_REASON_RESET	0x66
 #define POWERDOWN_REASON_POWERDOWN	0xF7
 
-
+#define POWERDOWN_REASON_RECOVERY 0x15
 
 #define RX_ELMNTS	64
 
@@ -70,6 +70,9 @@ unsigned char Timer_Status = 0;
 #define STATUS_POWERUP		1
 #define STATUS_POWERDOWN	0
 extern int status;
+
+extern int uart_send = 0;
+extern int test_reboot = 1;
 
 void Reset(void);
 void Power_Up(void);

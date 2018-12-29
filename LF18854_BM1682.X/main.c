@@ -47,6 +47,7 @@ DATE: 05/05/2018
 #include <xc.h>
 #include "User_define.h"
 #include "uart.h"
+#include "recovery.h"
 //#include "Flash.h"
 //#include "HEFlash.h"
 
@@ -276,8 +277,23 @@ void main(void)
                 LED0 = 1;
                 I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
+            case(0x15)://recovery mode
+                watch_dog_stop();
+                I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RECOVERY;
+                doreboot();
+                I2C_Array[INDEX_RESET_COUNT]++;
+                I2C_Array[INDEX_INSTRUCTION] = 0;
+                uart_send_recovery();
+                break;
         }
 		
+        //send recovery string 5s
+        while (uart_send == 1)
+        {
+            uart_send_bytes(&recovery,sizeof(recovery));
+            uart_issend();
+        }
+
 		// handle UART cmd
 		uart_cmd *pcmd;
 		ret = uart_recv_bmcmd(&uartrecv_buf, sizeof(uartrecv_buf));
@@ -324,7 +340,7 @@ void main(void)
 					doreset();
 					I2C_Array[INDEX_RESET_COUNT]++;
 					ret  = 0;
-					break;   
+					break;
 				default:
 					ret  = ERR_UART_CMD;
 			}
