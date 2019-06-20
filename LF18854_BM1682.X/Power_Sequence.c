@@ -22,7 +22,6 @@ void Power_Up(void)
 	SYS_RST = 0;
 	EN_VDD_IO_1V8 = 1;
 	__delay_ms(1);
-	EN_B_3V3 = 1;
 	EN_RGMII_3V3 = 1;
 	__delay_ms(5);
 	EN0_ISL68127 = 0;//EN0_ISL68127_3.3V->0.9V
@@ -49,7 +48,4 @@ void Power_Down(void)
 	EN1_ISL68127 = 1;
 	__delay_ms(5);
 	EN0_ISL68127 = 1;
-	__delay_ms(5);
-	//EN_B_3V3 = 0;
-
 }

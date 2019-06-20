@@ -27,6 +27,8 @@
       <itemPath>recovery.c</itemPath>
       <itemPath>util.c</itemPath>
       <itemPath>util.h</itemPath>
+      <itemPath>utc.c</itemPath>
+      <itemPath>utc.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

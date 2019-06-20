@@ -182,9 +182,9 @@ void main(void)
     Initial_sys();
     Initial_FVR();
     Initial_TIMER();
-    Power_Up();
-	I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
-    __delay_ms(1000);//wait 1 second for stable
+
+	EN_B_3V3 = 1;//3.3V support Voltage conversion of IIC 
+	__delay_ms(1000);
 
 	uart_init();
 	mcu_watch_dog_start();
