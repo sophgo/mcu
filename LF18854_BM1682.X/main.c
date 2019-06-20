@@ -48,6 +48,7 @@ DATE: 05/05/2018
 #include "User_define.h"
 #include "uart.h"
 #include "recovery.h"
+#include "utc.h"
 //#include "Flash.h"
 //#include "HEFlash.h"
 
@@ -99,6 +100,7 @@ uart_cmd_t
 }uart_cmd;
 int needfanspeed = 0;
 int needpowerup = 0;
+
 int needbite = 0;
 
 unsigned long last_feed_time	= 0;
@@ -170,6 +172,8 @@ void mcu_watch_dog_feed()
 }
 
 /**************************** MAIN ROUTINE ************************************/
+
+
 void main(void)
 {
 	int ret;
@@ -184,7 +188,7 @@ void main(void)
 
 	uart_init();
 	mcu_watch_dog_start();
-	
+
 //    if(B_TEMP_ALR_N & PG_DDR4_1V2 & TWARN_VDD_C & PG_VDD_C)//system Power and Temperature OK
     if(PG_DDR4_1V2 & TWARN_VDD_C & PG_VDD_C)//system Power and Temperature OK, temporary disable B_TEMP_ALR_N
     {
@@ -222,6 +226,10 @@ void main(void)
  */
     IOCIE = 1;//after all power on, enable IO interrupt
 	//unsigned char uart_send_buf[] = "123";
+	
+	//set def udc
+	utc_set(&I2C_Array[INDEX_SETUTC_00]);
+	utcsend_beg(Sencond_Count);
     while(1)                    // main while() loop
     {                           // program will wait here for ISR to be called
 
@@ -251,6 +259,7 @@ void main(void)
 				doreboot();
 				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 				I2C_Array[INDEX_RESET_COUNT]++;
+				utcsend_beg(Sencond_Count);
                 break;
             case(CMD_RESET)://BM1682 reset
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
@@ -258,6 +267,7 @@ void main(void)
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 				doreset();
                 I2C_Array[INDEX_RESET_COUNT]++;
+				utcsend_beg(Sencond_Count);
                 break;                
             case(CMD_POWERDOWN)://System power down
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
@@ -281,8 +291,17 @@ void main(void)
                 I2C_Array[INDEX_RESET_COUNT]++;
                 uart_send_recovery();
                 break;
-        }
-		
+
+			case CMD_SET_UTC:
+				{
+					I2C_Array[INDEX_INSTRUCTION] = 0;
+					utc_set(&I2C_Array[INDEX_SETUTC_00]);
+					//update utc
+					utc_get(&I2C_Array[INDEX_UTC_00]);
+				}
+				break;
+        }		
+				
         //send recovery string 5s
         while (uart_send == 1)
         {
@@ -330,6 +349,7 @@ void main(void)
 					I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 					I2C_Array[INDEX_RESET_COUNT]++;
 					ret  = 0;
+					utcsend_beg(Sencond_Count);
 					break;
 				case(CMD_RESET)://BM1682 reset
 					watch_dog_feed();
@@ -337,6 +357,7 @@ void main(void)
 					doreset();
 					I2C_Array[INDEX_RESET_COUNT]++;
 					ret  = 0;
+					utcsend_beg(Sencond_Count);
 					break;
 				default:
 					ret  = ERR_UART_CMD;
@@ -405,9 +426,11 @@ uart_handle_fin:
 				doreboot();
 				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 			}
-			
+			utcsend_beg(Sencond_Count);
 			needbite = 0;
 		}
+		utcsend_run(Sencond_Count);
+		
    }
 }
 
@@ -487,6 +510,10 @@ void interrupt ISR(void)
         /*commit by zdh Temporary*/
         //*
         Sencond_Count++;
+		
+		utc_inc();
+		utc_get(&I2C_Array[INDEX_UTC_00]);
+
         I2C_Array[INDEX_TIME_L] = Sencond_Count;
         I2C_Array[INDEX_TIME_H] = Sencond_Count >> 8;
         //I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
