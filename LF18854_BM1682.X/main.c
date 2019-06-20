@@ -252,7 +252,7 @@ void main(void)
                 break;
             case(CMD_RESET)://BM1682 reset
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
-	            watch_dog_stop();
+	            watch_dog_feed();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 				doreset();
                 I2C_Array[INDEX_RESET_COUNT]++;
@@ -335,7 +335,7 @@ void main(void)
 					ret  = 0;
 					break;
 				case(CMD_RESET)://BM1682 reset
-					watch_dog_stop();
+					watch_dog_feed();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 					doreset();
 					I2C_Array[INDEX_RESET_COUNT]++;
@@ -363,6 +363,7 @@ uart_handle_fin:
 				MCU_ERR_INT = 0;
 	            if(SYS_RST == 1)
 	            {   
+	            	watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_TMP;
 					dopowerdown();
 	                I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
@@ -395,7 +396,8 @@ uart_handle_fin:
 			needpowerup = 0;
 		}
 		if (needbite == 1)
-		{
+		{			
+			I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
 			if (I2C_Array[INDEX_MCU_STATUS] & 0x01)
 			{
 				doreset();
@@ -499,10 +501,8 @@ void interrupt ISR(void)
 			{
 				if ( watch_dog_isbite())
 				{
-					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
 					needbite = 1;
 					watch_dog_stop();
-
 				}
 			
 			}
@@ -525,9 +525,9 @@ void interrupt ISR(void)
     {
         if (CM2CON0bits.C2OUT == 1)//power down
         {
+        	watch_dog_stop();
             I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
 //            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
-			
 			Power_Down();
         }
 
