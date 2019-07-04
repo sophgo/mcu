@@ -53,6 +53,7 @@
 #include "wdt.h"
 #include "ds1307.h"
 #include "eeprom.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -238,21 +239,16 @@ void BM1684_RST(void)
 	return ;
 }
 
-typedef struct CURRENT_VAL_t
+void Clean_ERR_INT(void)
 {
-	float i_12v_atx;
-	float i_vddio5;
-	float i_vddio18;
-	float i_vddio33;
-	float i_vdd_phy;
-	float i_vdd_pcie;
-	float i_vdd_tpu_mem;
-	float i_ddr_vddq;
-	float i_ddr_vddqlp;
-	float i_ldo_pcie;
-}CURRENT_VAL;
-
+	return ;
+}
 CURRENT_VAL curr_evb;
+#define MCU_VERSION 0x01
+
+#define VENDER_SA5	0x01
+#define VENDER_SC5	0x02
+#define VENDER_SE5	0x03
 int ADC_Buf[10];
 
 void Scan_Cuerrent(void)
@@ -280,24 +276,12 @@ void Scan_Cuerrent(void)
 	  curr_evb.i_ddr_vddqlp 	= (float)ADC_Buf[8] * 2 /4096 / 0.5;
 	  curr_evb.i_ldo_pcie 		= (float)ADC_Buf[9] * 2 /4096 / 1.5;
 
+	  memcpy(&i2c_regs.current, &curr_evb, sizeof(CURRENT_VAL));
 
 //	  EEPROM_Write(addr, ADC_Buf[0]);
 
 	  HAL_ADC_Stop(&hadc);
 }
-
-typedef struct factory_info_t {
-	uint32_t manufacturer;
-	uint32_t board_type;
-	uint32_t date;
-	uint32_t Serial_number;
-	uint8_t  PCB_Ver;
-	uint8_t  PCBA_Ver;
-	uint8_t  sub_unit_Ver;
-	uint32_t MAC_Addr;
-}Factory_Info;
-
-Factory_Info fty_Info;
 
 void Factory_Info_get(void)
 {
@@ -345,6 +329,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  i2c_regs.vender = 0;
+  i2c_regs.sw_ver = MCU_VERSION;
 
   /* USER CODE END Init */
 
@@ -368,8 +354,8 @@ int main(void)
   mcu_init();
   wdt_init();
   i2c_slave_start();
+
   PowerON();
-//  Scan_Cuerrent();
 
   EEPROM_Write(addr, 0x08);
   HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
@@ -385,6 +371,30 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	switch(i2c_regs.cmd_reg) {
+	  case CMD_CPLD_PWR_ON:
+		  PowerON();
+		  break;
+	  case CMD_CPLD_PWR_DOWN:
+		  PowerDOWN();
+		  break;
+	  case CMD_CPLD_1684RST:
+		  BM1684_RST();
+		  i2c_regs.rst_1684_times++;
+		  break;
+	  case CMD_CPLD_SWRST:
+		  break;
+	  case CMD_CPLD_CLR:
+		  Clean_ERR_INT();
+		  break;
+	  case CMD_BM1684_REBOOT:
+		  break;
+	  case CMD_BM1684_RST:
+		  BM1684_RST();
+		  break;
+	  }
+
+	  //get current of ten channels
 	  Scan_Cuerrent();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST

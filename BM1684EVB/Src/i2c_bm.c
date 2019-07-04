@@ -55,6 +55,7 @@ struct i2c_isr_op {
 #define CR1_RXDMAEN		(1 << 15)
 #define CR1_TXDMAEN		(1 << 14)
 
+#define CR1_NOSTRETCH   (1 << 17)
 #define CR1_ERRIE		(1 << 7)
 #define CR1_TCIE		(1 << 6)
 #define CR1_STOPIE		(1 << 5)
@@ -73,6 +74,8 @@ struct i2c_isr_op {
 #define ISR_DIR_MASK		(1 << ISR_DIR_SHIFT)
 #define ISR_DIR_WRITE		I2C_SLAVE_WRITE
 #define ISR_DIR_READ		I2C_SLAVE_READ
+#define ISR_BUSY_SHIFT		(15)
+#define ISR_BUSY			(0X1 << ISR_BUSY_SHIFT)
 #define ISR_TXE				(1)
 
 static unsigned int i2c_intr_disable(void)
@@ -116,6 +119,8 @@ void isr_rxne_clr(struct i2c_isr_op *isr_op)
 	/* do nothing, read rxdr will clear this bit */
 }
 
+volatile int sequence_cnt = 0;
+
 void isr_rxne_cb(void)
 {
 	/* this will clear rxne bit */
@@ -123,6 +128,7 @@ void isr_rxne_cb(void)
 
 	if (i2c_ctx.slave)
 		i2c_ctx.slave->write(data);
+	sequence_cnt++;
 }
 
 void isr_txis_cb(void)
@@ -145,6 +151,7 @@ void isr_stopf_cb(void)
 	/* TODO: stop flag received */
 	if (i2c_ctx.slave)
 		i2c_ctx.slave->stop();
+	sequence_cnt = 0;
 }
 
 void isr_stopf_clr(struct i2c_isr_op *isr_op)

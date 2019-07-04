@@ -63,6 +63,33 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
+typedef struct factory_info_t {
+	uint32_t manufacturer;
+	uint32_t board_type;
+	uint32_t date;
+	uint32_t Serial_number;
+	uint8_t  PCB_Ver;
+	uint8_t  PCBA_Ver;
+	uint8_t  sub_unit_Ver;
+	uint32_t MAC_Addr;
+}Factory_Info;
+
+Factory_Info fty_Info;
+
+typedef struct CURRENT_VAL_t
+{
+	float i_12v_atx;
+	float i_vddio5;
+	float i_vddio18;
+	float i_vddio33;
+	float i_vdd_phy;
+	float i_vdd_pcie;
+	float i_vdd_tpu_mem;
+	float i_ddr_vddq;
+	float i_ddr_vddqlp;
+	float i_ldo_pcie;
+}CURRENT_VAL;
+
 void Convert_sysrst_gpio(int io);
 extern void PowerDOWN(void);
 extern void PowerON(void);
@@ -145,6 +172,123 @@ void Error_Handler(void);
 #define EN1_ISL68127_Pin GPIO_PIN_9
 #define EN1_ISL68127_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
+typedef struct I2C_REGS_t
+{
+	uint8_t vender;
+	uint8_t sw_ver;
+	uint8_t hw_ver;
+	uint8_t cmd_reg;
+
+	uint8_t temp1684;
+	uint8_t temp_board;
+	uint8_t intr_status1;
+	uint8_t intr_status2;
+
+	uint8_t intr_mask1;
+	uint8_t intr_mask2;
+	uint8_t rst_1684_times;
+	uint8_t uptime0;
+
+	uint8_t uptime1;
+	uint8_t cause_pwr_down;
+	uint8_t rtc[6];
+	uint8_t sn[4];
+	uint8_t mac0[8];
+	uint8_t mac1[8];
+	CURRENT_VAL current;
+}I2C_REGS;
+
+I2C_REGS i2c_regs;
+
+#define REG_NUMBER			32
+#define REG_VENDER			0x00
+#define REG_SW_VER			0x01
+#define REG_HW_VER			0x02
+#define REG_CMD_REG			0x03
+
+#define REG_TEMP1684		0X04
+#define REG_TEMP_BOARD		0x05
+#define REG_INTR_STATUS1	0x06
+#define REG_INTR_STATUS2	0x07
+
+#define REG_INTR_MASK1		0x08
+#define REG_INTR_MASK2		0x09
+#define REG_1684_RST_TIMES	0x0a
+#define REG_UPTIME0			0x0b
+
+#define REG_UPTIME1			0x0c
+#define REG_CAUSE_PWR_DOWN	0x0d
+#define REG_SYS_RTC_SEC		0x0e
+#define REG_SYS_RTC_MIN		0x0f
+
+#define REG_SYS_RTC_HOUR	0x10
+#define REG_SYS_RTC_DAY		0x11
+#define REG_SYS_RTC_MON		0x12
+#define REG_SYS_RTC_YEAR	0x13
+
+//SN  [17:14]   4*8 BIT
+#define REG_SN				0x14
+//MAC [1F:18]
+#define REG_MAC0			0x18
+//MAC [27:20]
+#define REG_MAC1			0x20
+#define I_12V_ATX			0x28
+#define I_VDDIO5			0x29
+#define I_VDDIO18			0x2a
+#define I_VDDIO33			0x2b
+#define I_VDD_PHY			0x2c
+#define I_VDD_PCIE			0x2d
+#define I_VDD_TPU_MEM		0x2e
+#define I_DDR_VDDQ			0x2f
+#define I_DDR_VDDQLP		0x30
+#define I_LDO_PCIE			0x31
+
+#define BIT0   (0X01 << 0)
+#define BIT1   (0X01 << 1)
+#define BIT2   (0X01 << 2)
+#define BIT3   (0X01 << 3)
+#define BIT4   (0X01 << 4)
+#define BIT5   (0X01 << 5)
+#define BIT6   (0X01 << 6)
+#define BIT7   (0X01 << 7)
+
+#define BOARD_OVER_TEMP BIT3
+#define BM1684_OVER_TEMP BIT4
+#define CPLD_CLR_ERR BIT5
+#define CPLD_SET_ERR BIT7
+
+
+//CPLD Command
+#define CMD_CPLD_PWR_ON			0x01       //1684 power on
+#define CMD_CPLD_PWR_DOWN		0x02	   //1684 power down
+#define CMD_CPLD_1684RST		0x03       //reset 1684
+#define CMD_CPLD_SWRST			0x04	   //soft resetting
+#define CMD_CPLD_CLR			0x05       // clean MCU_ERR_INT, set 0.
+//BM1684 Command
+#define CMD_BM1684_REBOOT		0x06       // power is always on
+#define CMD_BM1684_RST			0x07       // power down
+
+//EEPROM  FLASH
+#define EEPROM_BASE_ADDR	0x08080000
+#define EEPROM_BANK_SIZE	0x0BFF
+#define EEPROM_BANK1_START	0X08080000
+#define EEPROM_BANK1_END	0x08080BFF
+#define EEPROM_BANK2_START	0X08080C00
+#define EEPROM_BANK2_END	0x080817FF
+//
+//uint32_t writeFlashData = 0x55aa55aa;
+//uint8_t readFlashData[4] = {0};
+//uint32_t addr = 0x08080000;
+//uint16_t addr_offset = 0x0;
+//
+/*
+ *  SN Addr  : EEPROM_BANK1_START
+ *  MAC0 Addr: EEPROM_BANK1_START +  4
+ *  MAC1 Addr: EEPROM_BANK1_START + 12
+ */
+#define SN_Addr EEPROM_BANK1_START
+#define MAC0_Addr (EEPROM_BANK1_START +  4)
+#define MAC1_Addr (EEPROM_BANK1_START +  12)
 
 /* USER CODE END Private defines */
 
