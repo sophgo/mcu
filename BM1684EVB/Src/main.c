@@ -397,6 +397,8 @@ int main(void)
 		  HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 		  Convert_sysrst_gpio(1);
+
+		  HAL_Delay(1000);
 	  }
 //	  GET_Current_Voltage();
   }
