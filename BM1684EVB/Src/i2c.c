@@ -36,7 +36,7 @@ void MX_I2C1_Init(void)
   hi2c1.Init.OwnAddress1 = 46;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_ENABLE;
-  hi2c1.Init.OwnAddress2 = 208;
+  hi2c1.Init.OwnAddress2 = 224;
   hi2c1.Init.OwnAddress2Masks = I2C_OA2_MASK01;
   hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;

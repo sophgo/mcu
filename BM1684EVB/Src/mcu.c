@@ -76,9 +76,6 @@ static inline void idx_inc(void)
 #define CMD_BM1684_REBOOT		0x06       // power is always on
 #define CMD_BM1684_RST			0x07       // power down
 
-extern void PowerDOWN(void);
-extern void PowerON(void);
-
 static void mcu_write(volatile uint8_t data)
 {
 	if (mcu_ctx.set_idx) {

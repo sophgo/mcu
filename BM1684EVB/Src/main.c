@@ -158,7 +158,7 @@ void PowerON(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
-	HAL_Delay(20);//  2.3ms
+	HAL_Delay(1);//  2.3ms
 	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);//1.6ms
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_SET);
@@ -186,11 +186,11 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);//2.7ms
 	HAL_GPIO_WritePin(GPIOA, EN_VQPS18_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
+	//delay 30ms until power good and can detect SYS_RST signal
+	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
+	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
 }
 
 void PowerDOWN(void)
@@ -227,6 +227,14 @@ void PowerDOWN(void)
 
 void BM1684_RST(void)
 {
+	Convert_sysrst_gpio(0);
+
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	HAL_Delay(30);
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
+
+	Convert_sysrst_gpio(1);
+
 	return ;
 }
 
@@ -363,7 +371,7 @@ int main(void)
   PowerON();
 //  Scan_Cuerrent();
 
-  EEPROM_Write(addr, 0x06);
+  EEPROM_Write(addr, 0x08);
   HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
 
   //CHANGE SYS_RST FROM OUTPUT TO INPUT

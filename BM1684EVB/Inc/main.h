@@ -63,7 +63,10 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+void Convert_sysrst_gpio(int io);
+extern void PowerDOWN(void);
+extern void PowerON(void);
+extern void BM1684_RST(void);
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
