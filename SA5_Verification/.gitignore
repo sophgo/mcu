@@ -1,0 +1,13 @@
+
+
+tmp/
+*.tmp
+*.bak
+# Generated build artifact directories
+Debug/
+Release/
+# Generated build artifacts
+makefile
+*.mk
+*.o
+*.d
