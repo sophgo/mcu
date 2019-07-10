@@ -157,35 +157,67 @@ static uint8_t mcu_read(void)
 		offset = mcu_ctx.idx - REG_MAC1;
 		ret = ((uint8_t *)&mcu_ctx.map.mac1)[offset];
 		break;
-	case I_12V_ATX:
+	case I_12V_ATX_L:
 		ret = i2c_regs.current.i_12v_atx;
+//		ret = 0.66;
 		break;
-	case I_VDDIO5:
+	case I_12V_ATX_H:
+		ret = i2c_regs.current.i_12v_atx >> 8;
+//		ret = 0.66;
+		break;
+	case I_VDDIO5_L:
 		ret = i2c_regs.current.i_vddio5;
 		break;
-	case I_VDDIO18:
+	case I_VDDIO5_H:
+		ret = i2c_regs.current.i_vddio5 >> 8;
+		break;
+	case I_VDDIO18_L:
 		ret = i2c_regs.current.i_vddio18;
 		break;
-	case I_VDDIO33:
+	case I_VDDIO18_H:
+		ret = i2c_regs.current.i_vddio18 >> 8;
+		break;
+	case I_VDDIO33_L:
 		ret = i2c_regs.current.i_vddio33;
 		break;
-	case I_VDD_PHY:
+	case I_VDDIO33_H:
+		ret = i2c_regs.current.i_vddio33 >> 8;
+		break;
+	case I_VDD_PHY_L:
 		ret = i2c_regs.current.i_vdd_phy;
 		break;
-	case I_VDD_PCIE:
+	case I_VDD_PHY_H:
+		ret = i2c_regs.current.i_vdd_phy >> 8;
+		break;
+	case I_VDD_PCIE_L:
 		ret = i2c_regs.current.i_vdd_pcie;
 		break;
-	case I_VDD_TPU_MEM:
+	case I_VDD_PCIE_H:
+		ret = i2c_regs.current.i_vdd_pcie >> 8;
+		break;
+	case I_VDD_TPU_MEM_L:
 		ret = i2c_regs.current.i_vdd_tpu_mem;
 		break;
-	case I_DDR_VDDQ:
+	case I_VDD_TPU_MEM_H:
+		ret = i2c_regs.current.i_vdd_tpu_mem >> 8;
+		break;
+	case I_DDR_VDDQ_L:
 		ret = i2c_regs.current.i_ddr_vddq;
 		break;
-	case I_DDR_VDDQLP:
+	case I_DDR_VDDQ_H:
+		ret = i2c_regs.current.i_ddr_vddq >> 8;
+		break;
+	case I_DDR_VDDQLP_L:
 		ret = i2c_regs.current.i_ddr_vddqlp;
 		break;
-	case I_LDO_PCIE:
+	case I_DDR_VDDQLP_H:
+		ret = i2c_regs.current.i_ddr_vddqlp >> 8;
+		break;
+	case I_LDO_PCIE_L:
 		ret = i2c_regs.current.i_ldo_pcie;
+		break;
+	case I_LDO_PCIE_H:
+		ret = i2c_regs.current.i_ldo_pcie >> 8;
 		break;
 	default:
 		ret = i2c_regs.sw_ver;
@@ -211,7 +243,7 @@ static struct i2c_slave_op slave = {
 
 void mcu_init(void)
 {
-	assert(sizeof(I2C_REGS) == 0x50);
+	assert(sizeof(I2C_REGS) == 0x3c);
 	i2c_slave_register(&slave);
 }
 

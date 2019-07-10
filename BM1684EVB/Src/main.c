@@ -179,8 +179,12 @@ void PowerON(void)
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_Delay(1);
-	val = 0x7D;//1.8ms
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+	val = 0x87;//1.8ms
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.65v
+//	val = 0x7D;//1.8ms
+//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+//	val = 0xE5;//1.8ms
+//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
 	HAL_Delay(1);//5ms
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_L_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
@@ -263,7 +267,7 @@ void Scan_Cuerrent(void)
 			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
 		  }
 	  }
-
+#if 0
 	  //calculate voltage
 	  curr_evb.i_12v_atx 		= (float)ADC_Buf[0] * 2 /4096 / 0.3;  //0.18+ A
 	  curr_evb.i_vddio5 		= (float)ADC_Buf[1] * 2 /4096 / 0.6;
@@ -275,6 +279,18 @@ void Scan_Cuerrent(void)
 	  curr_evb.i_ddr_vddq 		= (float)ADC_Buf[7] * 2 /4096 / 0.8;
 	  curr_evb.i_ddr_vddqlp 	= (float)ADC_Buf[8] * 2 /4096 / 0.5;
 	  curr_evb.i_ldo_pcie 		= (float)ADC_Buf[9] * 2 /4096 / 1.5;
+#endif
+	  //calculate voltage
+	  curr_evb.i_12v_atx 		= ADC_Buf[0];  //0.18+ A
+	  curr_evb.i_vddio5 		= ADC_Buf[1];
+	  curr_evb.i_vddio18 		= ADC_Buf[2];
+	  curr_evb.i_vddio33 		= ADC_Buf[3];
+	  curr_evb.i_vdd_phy 		= ADC_Buf[4];
+	  curr_evb.i_vdd_pcie 		= ADC_Buf[5];
+	  curr_evb.i_vdd_tpu_mem 	= ADC_Buf[6];
+	  curr_evb.i_ddr_vddq 		= ADC_Buf[7];
+	  curr_evb.i_ddr_vddqlp 	= ADC_Buf[8];
+	  curr_evb.i_ldo_pcie 		= ADC_Buf[9];
 
 	  memcpy(&i2c_regs.current, &curr_evb, sizeof(CURRENT_VAL));
 
