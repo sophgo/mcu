@@ -125,6 +125,6 @@ static struct i2c_slave_op slave = {
 void ds1307_init(void)
 {
 	assert(sizeof(struct ds1307_map) == 0x40);
-	i2c_slave_register(&slave);
+	i2c_slave_register(&slave,i2c_ctx0);
 }
 

@@ -61,7 +61,10 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin|EN1_ISL68127_Pin|EN_PMIC_Pin|EN_VDDIO18_Pin 
                           |EN_VDDIO33_Pin|EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin|EN_VQPS18_Pin 
-                          |EN_VDD_TPU_MEM_Pin|TPU_I2C_ADD3_Pin, GPIO_PIN_RESET);
+                          |TPU_I2C_ADD3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(EN_VDD_TPU_MEM_GPIO_Port, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = SYS_RST_X_Pin;

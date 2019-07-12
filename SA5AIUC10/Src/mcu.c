@@ -180,10 +180,19 @@ static struct i2c_slave_op slave = {
 	.stop = mcu_stop,
 };
 
-void mcu_init(void)
+static struct i2c_slave_op slave3 = {
+	.addr = 0x18,	/* mcu common slave address */
+	.match = mcu_match,
+	.write = mcu_write,
+	.read = mcu_read,
+	.stop = mcu_stop,
+};
+
+void mcu_init(I2C_CTX i2c_ctx)
 {
 	assert(sizeof(I2C_REGS) == 0x30);
-	i2c_slave_register(&slave);
+	i2c_slave_register(&slave,i2c_ctx);
+	i2c_slave_register(&slave3,i2c_ctx);
 }
 
 

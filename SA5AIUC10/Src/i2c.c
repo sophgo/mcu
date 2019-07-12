@@ -34,7 +34,7 @@ void MX_I2C1_Init(void)
 
   hi2c1.Instance = I2C1;
   hi2c1.Init.Timing = 0x00000708;
-  hi2c1.Init.OwnAddress1 = 46;
+  hi2c1.Init.OwnAddress1 = 48;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_ENABLE;
   hi2c1.Init.OwnAddress2 = 208;
@@ -96,7 +96,7 @@ void MX_I2C3_Init(void)
 
   hi2c3.Instance = I2C3;
   hi2c3.Init.Timing = 0x00000708;
-  hi2c3.Init.OwnAddress1 = 0;
+  hi2c3.Init.OwnAddress1 = 46;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c3.Init.OwnAddress2 = 0;

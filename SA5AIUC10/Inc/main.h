@@ -179,6 +179,21 @@ typedef struct I2C_REGS_t
 
 I2C_REGS i2c_regs;
 
+#define I2C_SLAVE_MAX	(4)
+//extern struct i2c_isr_op;
+
+typedef struct i2c_ctx {
+	int dir;
+	int idx;
+	unsigned int isr_irq_mask;
+	struct i2c_reg *reg;
+	struct i2c_slave_op *slave_list[I2C_SLAVE_MAX];
+	struct i2c_slave_op *slave; /* current slave */
+} *I2C_CTX;
+
+I2C_CTX i2c_ctx0;
+I2C_CTX i2c_ctx3;
+
 #define REG_NUMBER			32
 #define REG_VENDER			0x00
 #define REG_SW_VER			0x01

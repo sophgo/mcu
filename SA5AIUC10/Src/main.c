@@ -178,13 +178,13 @@ void PowerON(void)
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_Delay(1);
-	val = 0xE5;//1.8ms
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
-//	val = 0x7D;//1.8ms
-//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+//	val = 0xE5;//1.8ms
+//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	val = 0x7D;//1.8ms
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
 	HAL_Delay(1);//5ms
-//	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_RESET);
-	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
@@ -439,12 +439,19 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
 //  Factory_Info_Get();
-  i2c_init(hi2c1.Instance);
-  i2c_init(hi2c3.Instance);
+  i2c_ctx0 = (struct i2c_ctx*)malloc(sizeof(struct i2c_ctx));
+  i2c_ctx3 = (struct i2c_ctx*)malloc(sizeof(struct i2c_ctx));
+  memset(i2c_ctx0, 0, sizeof(struct i2c_ctx));
+  memset(i2c_ctx3, 0, sizeof(struct i2c_ctx));
+
+  i2c_init(hi2c1.Instance,i2c_ctx0);
+  i2c_init(hi2c3.Instance,i2c_ctx3);
   ds1307_init();
-  mcu_init();
+  mcu_init(i2c_ctx0);
+  mcu_init(i2c_ctx3);
   wdt_init();
-  i2c_slave_start();
+  i2c_slave_start(i2c_ctx0);
+  i2c_slave_start(i2c_ctx3);
   // make sure PB6 is high
 //  HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOB, TPU_I2C_ADD3_Pin, GPIO_PIN_SET);
