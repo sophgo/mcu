@@ -353,6 +353,13 @@ uart_handle_fin:
 		
 		if (status == STATUS_POWERUP)
 		{
+			if (needfanspeed)
+			{
+				I2C_Array[INDEX_TMP_1682] = IIC_read_byte(0x98, 0x1);
+		        I2C_Array[INDEX_TMP_461] = IIC_read_byte(0x98, 0x0);
+				needfanspeed =0;
+			}
+			
 			if(I2C_Array[INDEX_TMP_1682] >= 75 || I2C_Array[INDEX_TMP_461] >= 70)//over temperature warning
 			{
 				MCU_ERR_INT = 0;
@@ -370,18 +377,11 @@ uart_handle_fin:
 
 	            }			
 			}
-			
-			if (needfanspeed)
-			{
-				I2C_Array[INDEX_TMP_1682] = IIC_read_byte(0x98, 0x1);
-		        I2C_Array[INDEX_TMP_461] = IIC_read_byte(0x98, 0x0);
-				needfanspeed =0;
-			}
 		}
 		else
 		{
-			I2C_Array[INDEX_TMP_1682] = 0;
-			I2C_Array[INDEX_TMP_461] = 0;
+			//I2C_Array[INDEX_TMP_1682] = 0;
+			//I2C_Array[INDEX_TMP_461] = 0;
 		}
 
 		if (needpowerup)
