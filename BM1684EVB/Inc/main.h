@@ -75,7 +75,7 @@ typedef struct factory_info_t {
 }Factory_Info;
 
 Factory_Info fty_Info;
-
+#if 0
 typedef struct CURRENT_VAL_t
 {
 	float i_12v_atx;
@@ -89,7 +89,22 @@ typedef struct CURRENT_VAL_t
 	float i_ddr_vddqlp;
 	float i_ldo_pcie;
 }CURRENT_VAL;
-
+#endif
+#if 1
+typedef struct CURRENT_VAL_t
+{
+	uint16_t i_12v_atx;
+	uint16_t i_vddio5;
+	uint16_t i_vddio18;
+	uint16_t i_vddio33;
+	uint16_t i_vdd_phy;
+	uint16_t i_vdd_pcie;
+	uint16_t i_vdd_tpu_mem;
+	uint16_t i_ddr_vddq;
+	uint16_t i_ddr_vddqlp;
+	uint16_t i_ldo_pcie;
+}CURRENT_VAL;
+#endif
 void Convert_sysrst_gpio(int io);
 extern void PowerDOWN(void);
 extern void PowerON(void);
@@ -232,16 +247,26 @@ I2C_REGS i2c_regs;
 #define REG_MAC0			0x18
 //MAC [27:20]
 #define REG_MAC1			0x20
-#define I_12V_ATX			0x28
-#define I_VDDIO5			0x29
-#define I_VDDIO18			0x2a
-#define I_VDDIO33			0x2b
-#define I_VDD_PHY			0x2c
-#define I_VDD_PCIE			0x2d
-#define I_VDD_TPU_MEM		0x2e
-#define I_DDR_VDDQ			0x2f
-#define I_DDR_VDDQLP		0x30
-#define I_LDO_PCIE			0x31
+#define I_12V_ATX_L			0x28
+#define I_12V_ATX_H			0x29
+#define I_VDDIO5_L			0x2a
+#define I_VDDIO5_H			0x2B
+#define I_VDDIO18_L			0x2c
+#define I_VDDIO18_H			0x2D
+#define I_VDDIO33_L			0x2e
+#define I_VDDIO33_H			0x2f
+#define I_VDD_PHY_L			0x30
+#define I_VDD_PHY_H			0x31
+#define I_VDD_PCIE_L		0x32
+#define I_VDD_PCIE_H		0x33
+#define I_VDD_TPU_MEM_L		0x34
+#define I_VDD_TPU_MEM_H		0x35
+#define I_DDR_VDDQ_L		0x36
+#define I_DDR_VDDQ_H		0x37
+#define I_DDR_VDDQLP_L		0x38
+#define I_DDR_VDDQLP_H		0x39
+#define I_LDO_PCIE_L		0x3a
+#define I_LDO_PCIE_H		0x3b
 
 #define BIT0   (0X01 << 0)
 #define BIT1   (0X01 << 1)
