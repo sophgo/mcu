@@ -25,6 +25,8 @@
       <itemPath>uart.h</itemPath>
       <itemPath>recovery.h</itemPath>
       <itemPath>recovery.c</itemPath>
+      <itemPath>util.c</itemPath>
+      <itemPath>util.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

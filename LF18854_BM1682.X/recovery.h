@@ -9,7 +9,7 @@
 #define	RECOVERY_H
 
 extern unsigned long int Sencond_Count;
-char recovery[] = {"recovery!recovery!recovery!"};
+char recovery[] = {"!recovery!recovery!recovery"};
 
 
 void uart_send_recovery();

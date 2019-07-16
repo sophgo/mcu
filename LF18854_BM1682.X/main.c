@@ -56,9 +56,6 @@ DATE: 05/05/2018
 #define GERR_UART_HSIZE	0x02
 int g_err = 0;
 
-// array for master to write to, reserved
-volatile unsigned char I2C_Array_Rx[RX_ELMNTS] = 0;
-//unsigned char I2C_Array_Rx[RX_ELMNTS] = 0;	
 //slave IIC variable
 unsigned char index_i2c = 0;     // index pointer
 unsigned char junk = 0;          // used to place unnecessary data
@@ -66,23 +63,28 @@ unsigned char first = 1;               // used to determine whether data address
                                        // location or actual data
 
 //to be added
-unsigned char iic_write_data;
-unsigned char iic_reg_addr;
-unsigned char iic_read_data;
-unsigned char iic_dev_addr;
 
-unsigned char LED_Status = 0;
-unsigned long int Sencond_Count = 0;
-//unsigned long int MEM_write = 0x1234ABCD;
-char MEM_write[4] = {0x12,0x34,0xAB,0xCD};
-char MEM_read[4];
-//char MEM_p[4];
-int r1, r2;
+unsigned long Sencond_Count = 0;
 
 #define UART_CMD_MAGIC 0x4D42
 // uart ret
 #define ERR_UART_OK		0x00
 #define ERR_UART_CMD	0x01
+
+//BTMAIN 424D 0C00 0102 66 00 0000 0000Z
+
+//reset
+//BTMAIN 424D 0C00 0102 66 00 0000 0000Z
+
+//start watch dog 30s
+//BTMAIN 424D 0C00 0102 10 00 1E00 0000Z
+
+//start watch dog 10s
+//BTMAIN 424D 0C00 0102 10 00 0A00 0000Z
+
+//stop watch dog
+//BTMAIN 424D 0C00 0102 10 00 0000 0000Z
+
 typedef struct 
 uart_cmd_t
 {
@@ -99,7 +101,7 @@ int needfanspeed = 0;
 int needpowerup = 0;
 int needbite = 0;
 
-unsigned long int	last_feed_time	= 0;
+unsigned long last_feed_time	= 0;
 static char			watch_dog_run	= 0;
 int watch_dog_isrun()
 {
@@ -189,7 +191,6 @@ void main(void)
     }
     else
     {
-        LED_Status = 1;
         MCU_ERR_INT = 0;
         if(!B_TEMP_ALR_N)
         {
@@ -233,56 +234,55 @@ void main(void)
 //                Initial_TMR1_FAN();
 //                T1GGO_nDONE = 1;
  //               break;
- 			case(0x0D):
+ 			case(CMD_DEBUG_MODE):
+				I2C_Array[INDEX_INSTRUCTION] = 0;
 				//enable watch dog debug mode
 				I2C_Array[INDEX_MCU_STATUS] |= 0x01;
 				break;
-			case(0x11):
-				watch_dog_feed();
+			case(CMD_DOG_FEED):
 				I2C_Array[INDEX_INSTRUCTION] = 0;
+				watch_dog_feed();
 				break;
-            case(0x12)://reboot
+            case(CMD_REBOOT)://reboot
+	            I2C_Array[INDEX_INSTRUCTION] = 0;
 				watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
 				doreboot();
 				I2C_Array[INDEX_RESET_COUNT]++;
-                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
-            case(0x66)://BM1682 reset
+            case(CMD_RESET)://BM1682 reset
+	            I2C_Array[INDEX_INSTRUCTION] = 0;
 	            watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 				doreset();
                 I2C_Array[INDEX_RESET_COUNT]++;
-                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;                
-            case(0xF7)://System power down
+            case(CMD_POWERDOWN)://System power down
+	            I2C_Array[INDEX_INSTRUCTION] = 0;
 	            watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWERDOWN;
 				dopowerdown();
-                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
 /*
             case(0xCC)://IIC master test
                 for(i = 0; i<0x24; i++)
 				I2C_Array[0x0D + i] = IIC_read_byte(0x98, i);
-                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
             case(0xDD)://IIC master write test
 //                IIC_write_byte(0x98, 0x0F, 0x11);    
-                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;           
 //*/
-            case(0x86)://Clear abnormal status
+            case(CMD_CLRERR)://Clear abnormal status
+	            I2C_Array[INDEX_INSTRUCTION] = 0;
                 MCU_ERR_INT = 1;
                 LED0 = 1;
-                I2C_Array[INDEX_INSTRUCTION] = 0;
                 break;
-            case(0x15)://recovery mode
+            case(CMD_RECOVERY)://recovery mode
+	            I2C_Array[INDEX_INSTRUCTION] = 0;
                 watch_dog_stop();
                 I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RECOVERY;
                 doreboot();
                 I2C_Array[INDEX_RESET_COUNT]++;
-                I2C_Array[INDEX_INSTRUCTION] = 0;
                 uart_send_recovery();
                 break;
         }
@@ -313,7 +313,7 @@ void main(void)
 			
 			switch(pcmd->cmd)
 			{
-				case(0x10):
+				case(CMD_DOG_ONOFF):
 					if (pcmd->value)
 					{
 						watch_dog_start(pcmd->value);
@@ -323,18 +323,18 @@ void main(void)
 						watch_dog_stop();
 					}
 					break;
-				case(0x11):
+				case(CMD_DOG_FEED):
 					watch_dog_feed();
 					ret  = 0;
 					break;
-				case(0x12)://reboot
+				case(CMD_REBOOT)://reboot
 					watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
 					doreboot();
 					I2C_Array[INDEX_RESET_COUNT]++;
 					ret  = 0;
 					break;
-				case(0x66)://BM1682 reset
+				case(CMD_RESET)://BM1682 reset
 					watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
 					doreset();
@@ -529,18 +529,14 @@ void interrupt ISR(void)
 //            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
 			
 			Power_Down();
-            C2IF = 0;
         }
 
         else if (CM2CON0bits.C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
         {
 			needpowerup = 1;
-			C2IF = 0;
         }
 
         C2IF = 0;//Clear interrupt bit
-            
-
     }
 
 /* Temporary disable  

@@ -25,6 +25,16 @@ DATE: 05/05/2018
 #define EN1_ISL68127 LATC2
 #define EN_RGMII_3V3 LATC5
 
+#define CMD_DEBUG_MODE		0x0D
+#define CMD_DOG_ONOFF		0x10
+#define CMD_DOG_FEED		0x11
+#define CMD_REBOOT			0x12		// include power on/off
+#define CMD_RESET			0x66		//
+#define CMD_POWERDOWN		0xF7
+#define CMD_CLRERR			0x86
+#define CMD_RECOVERY		0x15
+#define CMD_SET_UTC			0x16
+
 #define INDEX_VERSION		0x00
 #define INDEX_INSTRUCTION	0x01
 #define INDEX_TMP_1682		0x02
@@ -63,7 +73,6 @@ volatile unsigned char I2C_Array[RX_ELMNTS] =
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 };
-unsigned char Timer_Status = 0;
 
 #define I2C_slave_address 0x30	//MCU as a slave,Master read as 0x30 ~ 0x37
 

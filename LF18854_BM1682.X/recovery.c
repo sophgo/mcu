@@ -10,7 +10,7 @@ DATE: 12/12/2018
 #include "uart.h"
 
 
-int last_send_time = 0;
+unsigned long last_send_time = 0;
 
 int uart_issend()
 {
