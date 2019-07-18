@@ -64,6 +64,19 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 
+typedef struct CURRENT_VAL_t
+{
+	uint16_t i_12v_atx;
+	uint16_t i_vddio5;
+	uint16_t i_vddio18;
+	uint16_t i_vddio33;
+	uint16_t i_vdd_phy;
+	uint16_t i_vdd_pcie;
+	uint16_t i_vdd_tpu_mem;
+	uint16_t i_ddr_vddq;
+	uint16_t i_ddr_vddqlp;
+	uint16_t i_ldo_pcie;
+}CURRENT_VAL;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -171,13 +184,13 @@ typedef struct I2C_REGS_t
 	uint8_t uptime1;
 	uint8_t cause_pwr_down;
 	uint8_t rtc[6];
-	uint8_t sn[4];
-	uint8_t mac0[8];
-	uint8_t mac1[8];
-	uint8_t reserved[8];
+	uint8_t cmd;
+	uint8_t reserved0[3];
+	uint8_t reserved1[16];
+	CURRENT_VAL current;
 }I2C_REGS;
 
-I2C_REGS i2c_regs;
+extern I2C_REGS i2c_regs;
 
 #define I2C_SLAVE_MAX	(4)
 //extern struct i2c_isr_op;
@@ -191,10 +204,9 @@ typedef struct i2c_ctx {
 	struct i2c_slave_op *slave; /* current slave */
 } *I2C_CTX;
 
-I2C_CTX i2c_ctx0;
-I2C_CTX i2c_ctx3;
+extern I2C_CTX i2c_ctx0;
+extern I2C_CTX i2c_ctx3;
 
-#define REG_NUMBER			32
 #define REG_VENDER			0x00
 #define REG_SW_VER			0x01
 #define REG_HW_VER			0x02
@@ -220,12 +232,29 @@ I2C_CTX i2c_ctx3;
 #define REG_SYS_RTC_MON		0x12
 #define REG_SYS_RTC_YEAR	0x13
 
-//SN  [17:14]   4*8 BIT
-#define REG_SN				0x14
-//MAC [1F:18]
-#define REG_MAC0			0x18
-//MAC [27:20]
-#define REG_MAC1			0x20
+#define REG_CMD				0x14
+/* some reserved here, original MAC0 and MAC1 */
+#define I_12V_ATX_L			0x28
+#define I_12V_ATX_H			0x29
+#define I_VDDIO5_L			0x2a
+#define I_VDDIO5_H			0x2B
+#define I_VDDIO18_L			0x2c
+#define I_VDDIO18_H			0x2D
+#define I_VDDIO33_L			0x2e
+#define I_VDDIO33_H			0x2f
+#define I_VDD_PHY_L			0x30
+#define I_VDD_PHY_H			0x31
+#define I_VDD_PCIE_L		0x32
+#define I_VDD_PCIE_H		0x33
+#define I_VDD_TPU_MEM_L		0x34
+#define I_VDD_TPU_MEM_H		0x35
+#define I_DDR_VDDQ_L		0x36
+#define I_DDR_VDDQ_H		0x37
+#define I_DDR_VDDQLP_L		0x38
+#define I_DDR_VDDQLP_H		0x39
+#define I_LDO_PCIE_L		0x3a
+#define I_LDO_PCIE_H		0x3b
+#define REG_NUMBER		sizeof(I2C_REGS)
 
 #define BIT0   (0X01 << 0)
 #define BIT1   (0X01 << 1)
@@ -253,12 +282,9 @@ I2C_CTX i2c_ctx3;
 #define CMD_BM1684_RST			0x07       // power down
 
 //EEPROM  FLASH
-#define EEPROM_BASE_ADDR	0x08080000
-#define EEPROM_BANK_SIZE	0x0BFF
-#define EEPROM_BANK1_START	0X08080000
-#define EEPROM_BANK1_END	0x08080BFF
-#define EEPROM_BANK2_START	0X08080C00
-#define EEPROM_BANK2_END	0x080817FF
+#define EEPROM_BASE_ADDR	0x08080C00
+#define EEPROM_BANK_SIZE	0x0C00
+
 //
 //uint32_t writeFlashData = 0x55aa55aa;
 //uint8_t readFlashData[4] = {0};
@@ -270,9 +296,9 @@ I2C_CTX i2c_ctx3;
  *  MAC0 Addr: EEPROM_BANK1_START +  4
  *  MAC1 Addr: EEPROM_BANK1_START + 12
  */
-#define SN_Addr EEPROM_BANK1_START
-#define MAC0_Addr (EEPROM_BANK1_START +  4)
-#define MAC1_Addr (EEPROM_BANK1_START +  12)
+#define SN_Addr		(EEPROM_BASE_ADDR + 32 * 2)
+#define MAC0_Addr	(EEPROM_BASE_ADDR + 32 * 0)
+#define MAC1_Addr	(EEPROM_BASE_ADDR + 32 * 1)
 
 /* USER CODE END Private defines */
 

@@ -19,6 +19,8 @@ static struct mcu_ctx {
 	I2C_REGS map;
 } mcu_ctx;
 
+#define MCU_REG_MAX REG_NUMBER
+// #define MCU_REG_CTL 3
 
 static void mcu_match(int dir)
 {
@@ -27,19 +29,14 @@ static void mcu_match(int dir)
 	}
 }
 
-#define MCU_REG_MAX 20
-
 static inline void idx_set(uint8_t idx)
 {
 	mcu_ctx.idx = idx % MCU_REG_MAX;
 }
-
 static inline void idx_inc(void)
 {
 	mcu_ctx.idx = (mcu_ctx.idx + 1) % MCU_REG_MAX;
 }
-
-extern volatile int sequence_cnt;
 
 static void mcu_write(volatile uint8_t data)
 {
@@ -70,23 +67,12 @@ static void mcu_write(volatile uint8_t data)
 		offset = mcu_ctx.idx - REG_SYS_RTC_SEC;
 		((uint8_t *)&mcu_ctx.map.rtc)[offset] = data;
 		break;
-	case REG_SN ... (REG_SN + 3):
-		i2c_regs.sn[sequence_cnt] = data;
-		EEPROM_Write(SN_Addr + sequence_cnt, data);
-		break;
-	case REG_MAC0 ... (REG_MAC0 + 7):
-		i2c_regs.mac0[sequence_cnt] = data;
-		EEPROM_Write(MAC0_Addr + sequence_cnt, data);
-		break;
-	case REG_MAC1 ... (REG_MAC1 + 7):
-		i2c_regs.mac1[sequence_cnt] = data;
-		EEPROM_Write(MAC1_Addr + sequence_cnt, data);
+	case REG_CMD:
+		mcu_ctx.map.cmd = data;
 		break;
 	default:
 		break;
 	}
-
-	mcu_ctx.idx = (mcu_ctx.idx + 1) % sizeof(I2C_REGS);
 
 	idx_inc();
 }
@@ -96,7 +82,7 @@ static uint8_t mcu_read(void)
 	uint8_t ret = 0;
 	int offset;
 
-	uint8_t tmp = *((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx);
+	//uint8_t tmp = *((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx);
 
 
 	switch (mcu_ctx.idx) {
@@ -146,24 +132,14 @@ static uint8_t mcu_read(void)
 		offset = mcu_ctx.idx - REG_SYS_RTC_SEC;
 		ret = ((uint8_t *)&mcu_ctx.map.rtc)[offset];
 		break;
-	case REG_SN ... (REG_SN + 3):
-		offset = mcu_ctx.idx - REG_SN;
-		ret = ((uint8_t *)&mcu_ctx.map.sn)[offset];
-		break;
-	case REG_MAC0 ... (REG_MAC0 + 7):
-		offset = mcu_ctx.idx - REG_MAC0;
-		ret = ((uint8_t *)&mcu_ctx.map.mac0)[offset];
-		break;
-	case REG_MAC1 ... (REG_MAC1 + 7):
-		offset = mcu_ctx.idx - REG_MAC1;
-		ret = ((uint8_t *)&mcu_ctx.map.mac1)[offset];
+	case REG_CMD:
+		ret = mcu_ctx.map.cmd;
 		break;
 	default:
 		ret = i2c_regs.sw_ver;
 		break;
 	}
 
-	mcu_ctx.idx = (mcu_ctx.idx + 1) % sizeof(I2C_REGS);
 	idx_inc();
 	return ret;
 }
@@ -188,11 +164,11 @@ static struct i2c_slave_op slave3 = {
 	.stop = mcu_stop,
 };
 
-void mcu_init(I2C_CTX i2c_ctx)
+void mcu_init(void)
 {
-	assert(sizeof(I2C_REGS) == 0x30);
-	i2c_slave_register(&slave,i2c_ctx);
-	i2c_slave_register(&slave3,i2c_ctx);
+	assert(sizeof(I2C_REGS) == 0x3c);
+	i2c_slave_register(&slave,i2c_ctx0);
+	i2c_slave_register(&slave3,i2c_ctx3);
 }
 
 

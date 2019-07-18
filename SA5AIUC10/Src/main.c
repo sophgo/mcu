@@ -52,7 +52,10 @@
 #include "mcu.h"
 #include "wdt.h"
 #include "ds1307.h"
+#include "soc_eeprom.h"
 #include "eeprom.h"
+#include "stdlib.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,7 +76,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+I2C_REGS i2c_regs;
+I2C_CTX i2c_ctx0;
+I2C_CTX i2c_ctx3;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -447,9 +452,9 @@ int main(void)
   i2c_init(hi2c1.Instance,i2c_ctx0);
   i2c_init(hi2c3.Instance,i2c_ctx3);
   ds1307_init();
-  mcu_init(i2c_ctx0);
-  mcu_init(i2c_ctx3);
+  mcu_init();
   wdt_init();
+  eeprom_init();
   i2c_slave_start(i2c_ctx0);
   i2c_slave_start(i2c_ctx3);
   // make sure PB6 is high

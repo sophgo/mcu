@@ -15,9 +15,6 @@
 #include <sys/_stdint.h>
 #include "stm32l0xx_hal.h"
 
-#define EEPROM_BASE_ADDR 0x08080000
-#define EEPROM_BYTE_SIZE 0x0FFF
-
 /*
  * EEPROM read data by Bytes & Words
  */

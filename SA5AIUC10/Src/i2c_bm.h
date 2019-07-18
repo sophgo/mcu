@@ -25,6 +25,7 @@ typedef uint8_t (*i2c_slave_read)(void);
 typedef void (*i2c_slave_write)(uint8_t data);
 typedef void (*i2c_slave_match)(int dir);
 typedef void (*i2c_slave_stop)(void);
+typedef void (*i2c_slave_nack)(void);
 
 struct i2c_slave_op {
 	uint16_t addr;
@@ -32,6 +33,7 @@ struct i2c_slave_op {
 	i2c_slave_write	write;
 	i2c_slave_read	read;
 	i2c_slave_stop	stop;
+	i2c_slave_nack	nack;
 };
 
 typedef uint8_t (*i2c_slave_mcu_read)(I2C_CTX i2c_ctx);

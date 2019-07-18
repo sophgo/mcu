@@ -52,7 +52,9 @@
 #include "mcu.h"
 #include "wdt.h"
 #include "ds1307.h"
+#include "soc_eeprom.h"
 #include "eeprom.h"
+#include "stdlib.h"
 #include "string.h"
 /* USER CODE END Includes */
 
@@ -74,7 +76,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+I2C_REGS i2c_regs;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,13 +104,6 @@ void SystemClock_Config(void);
 #define BUCK4_VOUTFBDIV		0x8c
 #define BUCK4_DVS0CFG1		0x96
 #define BUCK4_DVS0CFG0 		0x97
-
-#define EEPROM_BASE_ADDR	0x08080000
-#define EEPROM_BANK_SIZE	0x0BFF
-#define EEPROM_BANK1_START	0X08080000
-#define EEPROM_BANK1_END	0x08080BFF
-#define EEPROM_BANK2_START	0X08080C00
-#define EEPROM_BANK2_END	0x080817FF
 
 uint32_t writeFlashData = 0x55aa55aa;
 uint8_t readFlashData[4] = {0};
@@ -302,7 +297,7 @@ void Scan_Cuerrent(void)
 void Factory_Info_get(void)
 {
 //	  EEPROM_Write(addr, writeFlashData);
-	  EEPROM_ReadBytes(addr_offset, &(fty_Info.board_type), sizeof(Factory_Info));
+	  EEPROM_ReadBytes(addr_offset, (void *)&(fty_Info.board_type), sizeof(Factory_Info));
 }
 
 void Convert_sysrst_gpio(int io)
@@ -366,14 +361,15 @@ int main(void)
   MX_ADC_Init();
   /* USER CODE BEGIN 2 */
   i2c_init(hi2c1.Instance);
-  ds1307_init();
+  /* EVB board has a real ds1307, donot enable this pseudo one */
+  // ds1307_init();
   mcu_init();
   wdt_init();
+  eeprom_init();
   i2c_slave_start();
 
   PowerON();
 
-  EEPROM_Write(addr, 0x08);
   HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
 
   //CHANGE SYS_RST FROM OUTPUT TO INPUT

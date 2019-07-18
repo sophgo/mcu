@@ -106,7 +106,7 @@ void isr_##name##_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx) 		\
 ISR_OP_DEFAULT(tcr)
 ISR_OP_DEFAULT(tc)
 //ISR_OP_DEFAULT(addr)
-ISR_OP_DEFAULT(nackf)
+//ISR_OP_DEFAULT(nackf)
 ISR_OP_DEFAULT(berr)
 ISR_OP_DEFAULT(arlo)
 ISR_OP_DEFAULT(ovr)
@@ -114,12 +114,21 @@ ISR_OP_DEFAULT(pecerr)
 ISR_OP_DEFAULT(timeout)
 ISR_OP_DEFAULT(alert)
 
+void isr_nackf_cb(I2C_CTX i2c_ctx)
+{
+	if (i2c_ctx->slave)
+		if (i2c_ctx->slave->nack)
+			i2c_ctx->slave->nack();
+}
+void isr_nackf_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
+{
+	i2c_ctx->reg->icr |= 1 << isr_op->bit;
+}
+
 void isr_rxne_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
 	/* do nothing, read rxdr will clear this bit */
 }
-
-volatile int sequence_cnt = 0;
 
 void isr_rxne_cb(I2C_CTX i2c_ctx)
 {
@@ -128,7 +137,6 @@ void isr_rxne_cb(I2C_CTX i2c_ctx)
 
 	if (i2c_ctx->slave)
 		i2c_ctx->slave->write(data);
-	sequence_cnt++;
 }
 
 void isr_txis_cb(I2C_CTX i2c_ctx)
@@ -151,7 +159,6 @@ void isr_stopf_cb(I2C_CTX i2c_ctx)
 	/* TODO: stop flag received */
 	if (i2c_ctx->slave)
 		i2c_ctx->slave->stop();
-	sequence_cnt = 0;
 }
 
 void isr_stopf_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)

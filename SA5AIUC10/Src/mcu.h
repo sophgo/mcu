@@ -8,7 +8,7 @@
 #ifndef MCU_H_
 #define MCU_H_
 
-extern void mcu_init(I2C_CTX i2c_ctx);
+extern void mcu_init(void);
 
 #endif /* MCU_H_ */
 

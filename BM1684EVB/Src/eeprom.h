@@ -1,7 +1,7 @@
 /*
  * eeprom.h
  *
- *  Created on: 2019Äê4ÔÂ10ÈÕ
+ *  Created on: 2019ï¿½ï¿½4ï¿½ï¿½10ï¿½ï¿½
  *      Author: taiqiang.cao
  */
 
@@ -14,9 +14,6 @@
 
 #include <sys/_stdint.h>
 #include "stm32l0xx_hal.h"
-
-#define EEPROM_BASE_ADDR 0x08080000
-#define EEPROM_BYTE_SIZE 0x0FFF
 
 /*
  * EEPROM read data by Bytes & Words

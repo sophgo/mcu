@@ -6,6 +6,7 @@
  */
 
 #include "eeprom.h"
+#include "main.h"
 
 /*
  * EEPROM read data by Bytes

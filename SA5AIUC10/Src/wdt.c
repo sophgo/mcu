@@ -155,6 +155,6 @@ void wdt_init(void)
 
 	HAL_LPTIM_PWM_Start_IT(&hlptim1, wdt_ctx.clock, wdt_ctx.clock);
 
-	i2c_slave_register(&slave,i2c_ctx0);
+	i2c_slave_register(&slave,i2c_ctx3);
 }
 

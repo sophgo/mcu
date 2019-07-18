@@ -1,11 +1,12 @@
 /*
  * eeprom.c
  *
- *  Created on: 2019Äê4ÔÂ10ÈÕ
+ *  Created on: 2019ï¿½ï¿½4ï¿½ï¿½10ï¿½ï¿½
  *      Author: taiqiang.cao
  */
 
 #include "eeprom.h"
+#include "main.h"
 
 /*
  * EEPROM read data by Bytes
