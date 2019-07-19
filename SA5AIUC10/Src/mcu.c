@@ -173,7 +173,7 @@ static void mcu_stop(void)
 }
 
 static struct i2c_slave_op slave = {
-	.addr = 0x17,	/* mcu common slave address */
+	.addr = 0x18,	/* mcu common slave address */
 	.match = mcu_match,
 	.write = mcu_write,
 	.read = mcu_read,
@@ -181,7 +181,7 @@ static struct i2c_slave_op slave = {
 };
 
 static struct i2c_slave_op slave3 = {
-	.addr = 0x18,	/* mcu common slave address */
+	.addr = 0x17,	/* mcu common slave address */
 	.match = mcu_match,
 	.write = mcu_write,
 	.read = mcu_read,

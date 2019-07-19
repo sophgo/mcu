@@ -114,7 +114,7 @@ void MX_FREERTOS_Init(void) {
 		HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
 		HAL_ADC_Start(&hadc);
 		HAL_Delay(500);
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17 << 1, 0x03, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Write(&hi2c1, 0x18 << 1, 0x03, 1, data, 1, 100)
 				!= HAL_OK)
 			Error("[initial] I2C write error");
 		HAL_Delay(100);
@@ -128,7 +128,7 @@ void MX_FREERTOS_Init(void) {
 	// auto power-up detect
 	if (tStage == STAGE_FULLIN) {
 		*data = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, 0x03, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Read(&hi2c1, 0x18 << 1, 0x03, 1, data, 1, 100)
 				!= HAL_OK)
 			Error("[initial] I2C read error");
 		Info("[initial] REG[0x03]=0x%02X", *data);
