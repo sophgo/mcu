@@ -274,7 +274,7 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	} else if (stage == 1) { // write power up command
 		osDelay(100);
 		*data = 0x01;
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17 << 1, 0x03, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
 				== HAL_OK) {
 			sprintf(pcWriteBuffer, "[reset] Power-up command issued\r\n");
 			osDelay(500);
@@ -288,7 +288,7 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		}
 	} else if (stage == 2) { //verify power up result REG
 		*data = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, 0x03, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
 				!= HAL_OK) {
 			sprintf(pcWriteBuffer,
 					"[reset] I2C Read Error\r\nQA_FAIL_RST\r\n");
@@ -323,7 +323,7 @@ static BaseType_t prvPowerUpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	static uint8_t stage, data[1];
 	if (stage == 0) { // write power up command
 		*data = 0x01;
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17 << 1, 0x03, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
 				!= HAL_OK) {
 			sprintf(pcWriteBuffer,
 					"[powerup] I2C Write Error\r\nQA_FAIL_PWR\r\n");
@@ -335,7 +335,7 @@ static BaseType_t prvPowerUpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		return pdTRUE;
 	} else if (stage == 1) { // verify powerup register
 		*data = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, 0x03, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
 				!= HAL_OK) {
 			sprintf(pcWriteBuffer,
 					"[powerup] I2C Read Error\r\nQA_FAIL_PWR\r\n");
@@ -461,7 +461,7 @@ static BaseType_t prvReadCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		stage = 1;
 		return pdTRUE;
 	} else { // loop to issue command
-		if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, addr + stage - 1, 1, buf, 1, 100)
+		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, addr + stage - 1, 1, buf, 1, 100)
 				!= HAL_OK) {
 			stage = 0;
 			sprintf(pcWriteBuffer, "[read] I2C Read Error\r\n");
@@ -501,7 +501,7 @@ static BaseType_t prvWriteCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		stage = 1;
 		return pdTRUE;
 	} else {
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17 << 1, addr, 1, &data, 1, 100)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, addr, 1, &data, 1, 100)
 				!= HAL_OK) {
 			stage = 0;
 			sprintf(pcWriteBuffer, "[write] I2C Read Error\r\n");
@@ -516,7 +516,7 @@ static BaseType_t prvWriteCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvBTempCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
 	uint8_t data[1];
-	if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, 0x04, 1, data, 1, 100) != HAL_OK)
+	if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_BTEMP_IIC, 1, data, 1, 100) != HAL_OK)
 		sprintf(pcWriteBuffer, "[btemp] I2C Read Error\r\n");
 	else
 		sprintf(pcWriteBuffer, "[btemp] Board temp: 0x%02X\r\n", *data);
@@ -526,7 +526,7 @@ static BaseType_t prvBTempCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvCTempCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
 	uint8_t data[1];
-	if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, 0x05, 1, data, 1, 100) != HAL_OK)
+	if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_CTEMP_IIC, 1, data, 1, 100) != HAL_OK)
 		sprintf(pcWriteBuffer, "[ctemp] I2C Read Error\r\n");
 	else
 		sprintf(pcWriteBuffer, "[ctemp] 1684 Temp: 0x%02X\r\n", *data);
@@ -550,7 +550,7 @@ static BaseType_t prvGetRegCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvGetSNCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
 	char data[17] = {0};
-	if(HAL_I2C_Mem_Read(&hi2c1, 0x17<<1, 0x10, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
+	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_SN_IIC, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
 		sprintf(pcWriteBuffer, "[getsn] I2C Read Error\r\nsn[]\r\n");
 		return pdFALSE;
 	}
@@ -574,7 +574,7 @@ static BaseType_t prvSetSNCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		stage = 1;
 		return pdTRUE;
 	} else {
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17<<1, 0x10, 1, (uint8_t *)pPara, 17, 100) != HAL_OK)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_SN_IIC, 1, (uint8_t *)pPara, 17, 100) != HAL_OK)
 			sprintf(pcWriteBuffer, "[setsn] I2C write error\r\nQA_FAIL_SN\r\n");
 		else
 			sprintf(pcWriteBuffer, "QA_PASS_SN\r\n");
@@ -587,7 +587,7 @@ static BaseType_t prvSetSNCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvGetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
 	char data[6] = {0};
-	if(HAL_I2C_Mem_Read(&hi2c1, 0x17<<1, 0x11, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
+	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_MAC0_IIC, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
 		sprintf(pcWriteBuffer, "[getmac0] I2C Read Error\r\nmac0[]\r\n");
 		return pdFALSE;
 	}
@@ -602,7 +602,7 @@ static BaseType_t prvGetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvGetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
 	char data[6] = {0};
-	if(HAL_I2C_Mem_Read(&hi2c1, 0x17<<1, 0x12, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
+	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_MAC1_IIC, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
 		sprintf(pcWriteBuffer, "[getmac1] I2C Read Error\r\nmac1[]\r\n");
 		return pdFALSE;
 	}
@@ -641,7 +641,7 @@ static BaseType_t prvSetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 			}
 			data[i] = strtol(buf, NULL, 16);
 		}
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17<<1, 0x11, 1, data, 6, 100) != HAL_OK)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_MAC0_IIC, 1, data, 6, 100) != HAL_OK)
 			sprintf(pcWriteBuffer, "[setmac0] I2C write error\r\nQA_FAIL_MAC0\r\n");
 		else
 			sprintf(pcWriteBuffer, "QA_PASS_MAC0\r\n");
@@ -677,7 +677,7 @@ static BaseType_t prvSetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 			}
 			data[i] = strtol(buf, NULL, 16);
 		}
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17<<1, 0x12, 1, data, 6, 100) != HAL_OK)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_MAC1_IIC, 1, data, 6, 100) != HAL_OK)
 			sprintf(pcWriteBuffer, "[setmac1] I2C write error\r\nQA_FAIL_MAC1\r\n");
 		else
 			sprintf(pcWriteBuffer, "QA_PASS_MAC1\r\n");
@@ -689,7 +689,7 @@ static BaseType_t prvSetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvI2cMcuCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
 	uint8_t data[1] = {0};
-	if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, 0x01, 1, data, 1, 100) != HAL_OK)
+	if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_VERSION_IIC, 1, data, 1, 100) != HAL_OK)
 		sprintf(pcWriteBuffer, "[i2cmcu] I2C Read Error\r\nQA_FAIL_IMCU\r\n");
 	else if (*data == 0x01)
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nQA_PASS_IMCU\r\n",
@@ -866,7 +866,7 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	HAL_NVIC_DisableIRQ(MCU_CPLD_ERR_EXTI_IRQn);
 	if (stage == 0) { // write err interrupt register
 		*data = SET<<1;
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17 << 1, 0x07, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_INTR_IIC, 1, data, 1, 100)
 				!= HAL_OK) {
 			sprintf(pcWriteBuffer, "[err] I2C Write Error\r\nQA_FAIL_ERR\r\n");
 			return pdFALSE;
@@ -891,7 +891,7 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	} else { // clear error register
 		osDelay(50);
 		*data = 0x05;
-		if (HAL_I2C_Mem_Write(&hi2c1, 0x17 << 1, 0x03, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
 				!= HAL_OK)
 			sprintf(pcWriteBuffer, "[err] I2C Write Error\r\nQA_FAIL_ERR\r\n");
 		else
