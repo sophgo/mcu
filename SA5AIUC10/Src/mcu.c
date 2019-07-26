@@ -53,15 +53,15 @@ static void mcu_write(volatile uint8_t data)
 	switch (mcu_ctx.idx) {
 	case REG_CMD_REG:
 		i2c_regs.cmd_reg = data;
-//		if (CPLD_CLR_ERR | i2c_regs.cmd_reg) {
-//			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
-//		}
+		if (CPLD_CLR_ERR | i2c_regs.cmd_reg) {
+			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
+		}
 		break;
 	case REG_INTR_STATUS2:
 		i2c_regs.intr_status2 = data;
-//		if (CPLD_SET_ERR | i2c_regs.intr_status2) {
-//			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_SET);
-//		}
+		if (CPLD_SET_ERR | i2c_regs.intr_status2) {
+			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_SET);
+		}
 		break;
 	case REG_SYS_RTC_SEC ... (REG_SYS_RTC_SEC + 5):
 		offset = mcu_ctx.idx - REG_SYS_RTC_SEC;
@@ -104,17 +104,17 @@ static uint8_t mcu_read(void)
 	case REG_TEMP_BOARD:
 		ret = i2c_regs.temp_board;
 		break;
-	case REG_INTR_MASK1:
-		ret = i2c_regs.intr_mask1;
-		break;
-	case REG_INTR_MASK2:
-		ret = i2c_regs.intr_mask2;
-		break;
 	case REG_INTR_STATUS1:
 		ret = i2c_regs.intr_status1;
 		break;
 	case REG_INTR_STATUS2:
 		ret = i2c_regs.intr_status2;
+		break;
+	case REG_INTR_MASK1:
+		ret = i2c_regs.intr_mask1;
+		break;
+	case REG_INTR_MASK2:
+		ret = i2c_regs.intr_mask2;
 		break;
 	case REG_1684_RST_TIMES:
 		ret = i2c_regs.rst_1684_times;
