@@ -49,6 +49,7 @@ DATE: 05/05/2018
 #include "uart.h"
 #include "recovery.h"
 #include "utc.h"
+#include "NVM.h"
 //#include "Flash.h"
 //#include "HEFlash.h"
 
@@ -177,14 +178,29 @@ void mcu_watch_dog_feed()
 void main(void)
 {
 	int ret;
+	unsigned char retc;
 	unsigned char uartrecv_buf[16];
+
+	unsigned char flashbuf[32];
 	
     Initial_sys();
     Initial_FVR();
     Initial_TIMER();
 
 	EN_B_3V3 = 1;//3.3V support Voltage conversion of IIC 
-	__delay_ms(1000);
+
+	//read factory mode
+    retc = NVM_read_eeprom(NVM_EEPROM_BASE);
+	if (retc == 0xFF)
+	{
+		I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_FACTORY_MODE;
+		
+		Power_Up();
+		I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
+	}
+	
+	__delay_ms(1000);//wait 1 second for stable
+
 
 	uart_init();
 	mcu_watch_dog_start();
@@ -230,6 +246,9 @@ void main(void)
 	//set def udc
 	utc_set(&I2C_Array[INDEX_SETUTC_00]);
 	utcsend_beg(Sencond_Count);
+
+
+
     while(1)                    // main while() loop
     {                           // program will wait here for ISR to be called
 
@@ -300,6 +319,18 @@ void main(void)
 					utc_get(&I2C_Array[INDEX_UTC_00]);
 				}
 				break;
+			case CMD_CLEAN_FACTORY_MODE:
+				{
+					I2C_Array[INDEX_INSTRUCTION] = 0;
+					NVM_write_eeprom(NVM_EEPROM_BASE,0x01);
+					break;
+				}
+			case CMD_SET_FACTORY_MODE:
+				{
+					I2C_Array[INDEX_INSTRUCTION] = 0;
+					NVM_write_eeprom(NVM_EEPROM_BASE,0xFF);
+					break;
+				}
         }		
 				
         //send recovery string 5s

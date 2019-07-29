@@ -29,6 +29,8 @@
       <itemPath>util.h</itemPath>
       <itemPath>utc.c</itemPath>
       <itemPath>utc.h</itemPath>
+      <itemPath>NVM.c</itemPath>
+      <itemPath>NVM.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
