@@ -38,6 +38,15 @@ static inline void idx_inc(void)
 	mcu_ctx.idx = (mcu_ctx.idx + 1) % MCU_REG_MAX;
 }
 
+static inline uint16_t eeprom_offset(void)
+{
+	uint16_t offset_base = mcu_ctx.map.eeprom_offset_l |
+		(mcu_ctx.map.eeprom_offset_h << 8);
+	uint16_t offset_off =
+		mcu_ctx.idx - REG_EEPROM_DATA;
+	return offset_base + offset_off;
+}
+
 static void mcu_write(volatile uint8_t data)
 {
 	int offset;
@@ -69,6 +78,16 @@ static void mcu_write(volatile uint8_t data)
 		break;
 	case REG_CMD:
 		mcu_ctx.map.cmd = data;
+		break;
+	case REG_EEPROM_OFFSET_L:
+		mcu_ctx.map.eeprom_offset_l = data;
+		break;
+	case REG_EEPROM_OFFSET_H:
+		mcu_ctx.map.eeprom_offset_h = data;
+		break;
+	case REG_EEPROM_DATA ...
+		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
+		EEPROM_WriteBytes(eeprom_offset(), (uint8_t *)&data, 1);
 		break;
 	default:
 		break;
@@ -135,6 +154,16 @@ static uint8_t mcu_read(void)
 	case REG_CMD:
 		ret = mcu_ctx.map.cmd;
 		break;
+	case REG_EEPROM_OFFSET_L:
+		ret = mcu_ctx.map.eeprom_offset_l;
+		break;
+	case REG_EEPROM_OFFSET_H:
+		ret = mcu_ctx.map.eeprom_offset_h;
+		break;
+	case REG_EEPROM_DATA ...
+		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
+		EEPROM_ReadBytes(eeprom_offset(), &ret, 1);
+		break;
 	default:
 		ret = i2c_regs.sw_ver;
 		break;
@@ -166,7 +195,7 @@ static struct i2c_slave_op slave3 = {
 
 void mcu_init(void)
 {
-	assert(sizeof(I2C_REGS) == 0x3c);
+	assert(sizeof(I2C_REGS) == 0x60);
 	i2c_slave_register(&slave,i2c_ctx0);
 	i2c_slave_register(&slave3,i2c_ctx3);
 }

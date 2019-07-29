@@ -163,6 +163,9 @@ void Error_Handler(void);
 #define CPLD_MCU_SCL_GPIO_Port GPIOB
 #define CPLD_MCU_SDA_Pin GPIO_PIN_9
 #define CPLD_MCU_SDA_GPIO_Port GPIOB
+
+#define MCU_EEPROM_DATA_MAX	(32)
+
 /* USER CODE BEGIN Private defines */
 typedef struct I2C_REGS_t
 {
@@ -188,6 +191,10 @@ typedef struct I2C_REGS_t
 	uint8_t reserved0[3];
 	uint8_t reserved1[16];
 	CURRENT_VAL current;
+	uint8_t reserved2[2];
+	uint8_t eeprom_offset_l;
+	uint8_t eeprom_offset_h;
+	uint8_t eeprom_data[MCU_EEPROM_DATA_MAX];
 }I2C_REGS;
 
 extern I2C_REGS i2c_regs;
@@ -254,6 +261,9 @@ extern I2C_CTX i2c_ctx3;
 #define I_DDR_VDDQLP_H		0x39
 #define I_LDO_PCIE_L		0x3a
 #define I_LDO_PCIE_H		0x3b
+#define REG_EEPROM_OFFSET_L	0x3e	/* 16bit eeprom address, low 8bits */
+#define REG_EEPROM_OFFSET_H	0x3f	/* 16bit eeprom address, high 8bits */
+#define REG_EEPROM_DATA		0x40	/* eeprom data */
 #define REG_NUMBER		sizeof(I2C_REGS)
 
 #define BIT0   (0X01 << 0)
