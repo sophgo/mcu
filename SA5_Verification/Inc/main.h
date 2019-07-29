@@ -55,7 +55,7 @@ extern "C" {
 #define SET 1
 #define RESET 0
 
-#define MAX_REG_SIZE 8
+#define MAX_REG_SIZE 255
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -122,7 +122,7 @@ typedef enum testStage_t {
 	STAGE_IDLE = 0x00,
 	STAGE_FULLIN,
 	STAGE_POWER,
-	STAGE_KERNAL
+	STAGE_KERNEL
 } testStage;
 extern volatile testStage tStage;
 /* USER CODE END Private defines */

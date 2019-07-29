@@ -69,7 +69,7 @@ static BaseType_t prvI2cMcuCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
 static BaseType_t prvI2c1684Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
-static BaseType_t prvI2cDebugCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+static BaseType_t prvI2CDbgCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
 static BaseType_t prvSlotIDCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
@@ -85,6 +85,15 @@ static BaseType_t prvSdioCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
 static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
+static BaseType_t prvRegReadCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString);
+static BaseType_t prvI2CDbgAddrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString);
+static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString);
+static BaseType_t prvSUartCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString);
+
 
 static uint8_t isHexChar(char data);
 
@@ -179,10 +188,10 @@ static const CLI_Command_Definition_t xI2c1684Command = {
 		"\r\ni2c1684:\r\n Test the I2C of 1684\r\n",
 		prvI2c1684Command,
 		0 };
-static const CLI_Command_Definition_t xI2cDebugCommand = {
-		"i2cdebug",
+static const CLI_Command_Definition_t xIDbgCommand = {
+		"i2cdbg",
 		"\r\ni2cdebug:\r\n Test the I2C of CPLD_TPU\r\n",
-		prvI2cDebugCommand,
+		prvI2CDbgCommand,
 		0 };
 static const CLI_Command_Definition_t xSlotIDCommand = {
 		"slotid",
@@ -219,6 +228,27 @@ static const CLI_Command_Definition_t xErrCommand = {
 		"\r\nerr:\r\n Test the MCU Error interrupt\r\n",
 		prvErrCommand,
 		0 };
+static const CLI_Command_Definition_t xRegReadCommand = {
+		"regread",
+		"\r\nregread:\r\n read test mcu reg values\r\n",
+		prvRegReadCommand,
+		0 };
+static const CLI_Command_Definition_t xI2CDbgAddrCommand = {
+		"i2cdbgaddr",
+		"\r\ni2cdbgaddr:\r\n Test debug i2c addr\r\n",
+		prvI2CDbgAddrCommand,
+		0 };
+static const CLI_Command_Definition_t xGPIOCommand = {
+		"gpio",
+		"\r\ngpio:\r\n gpio test\r\n",
+		prvGPIOCommand,
+		0 };
+static const CLI_Command_Definition_t xSUartCommand = {
+		"suart",
+		"\r\nsuart:\r\n suart test\r\n",
+		prvSUartCommand,
+		1 };
+
 
 
 /** Source Code **/
@@ -243,7 +273,7 @@ void Shell_RegisterCommand(void) {
 	FreeRTOS_CLIRegisterCommand(&xSetMac1Command);
 	FreeRTOS_CLIRegisterCommand(&xI2cMcuCommand);
 	FreeRTOS_CLIRegisterCommand(&xI2c1684Command);
-	FreeRTOS_CLIRegisterCommand(&xI2cDebugCommand);
+	FreeRTOS_CLIRegisterCommand(&xIDbgCommand);
 	FreeRTOS_CLIRegisterCommand(&xSlotIDCommand);
 	FreeRTOS_CLIRegisterCommand(&xUart0Command);
 	FreeRTOS_CLIRegisterCommand(&xUart1Command);
@@ -251,6 +281,10 @@ void Shell_RegisterCommand(void) {
 	FreeRTOS_CLIRegisterCommand(&xPcieCommand);
 	FreeRTOS_CLIRegisterCommand(&xSdioCommand);
 	FreeRTOS_CLIRegisterCommand(&xErrCommand);
+	FreeRTOS_CLIRegisterCommand(&xRegReadCommand);
+	FreeRTOS_CLIRegisterCommand(&xI2CDbgAddrCommand);
+	FreeRTOS_CLIRegisterCommand(&xGPIOCommand);
+	FreeRTOS_CLIRegisterCommand(&xSUartCommand);
 }
 
 /*-----------------------------------------------------------*/
@@ -549,10 +583,18 @@ static BaseType_t prvGetRegCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 /*-----------------------------------------------------------*/
 static BaseType_t prvGetSNCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	char data[17] = {0};
-	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_SN_IIC, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
-		sprintf(pcWriteBuffer, "[getsn] I2C Read Error\r\nsn[]\r\n");
-		return pdFALSE;
+	uint8_t data[32] = {0};
+	data[0] = LOW_U16(MCU_EEPROM_SN_ADDR);
+    data[1] = HIGH_U16(MCU_EEPROM_SN_ADDR);
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC,1,data, 2, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[getsn] write address failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
+	}
+	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 17, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[getsn] read sn failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
 	}
 	sprintf(pcWriteBuffer, "sn[%s]\r\n", data);
 	return pdFALSE;
@@ -574,43 +616,47 @@ static BaseType_t prvSetSNCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		stage = 1;
 		return pdTRUE;
 	} else {
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_SN_IIC, 1, (uint8_t *)pPara, 17, 100) != HAL_OK)
-			sprintf(pcWriteBuffer, "[setsn] I2C write error\r\nQA_FAIL_SN\r\n");
-		else
-			sprintf(pcWriteBuffer, "QA_PASS_SN\r\n");
-		stage = 0;
-		return pdFALSE;
-	}
+	    stage = 0;
+	    uint8_t data[32] = {0};
 
+        data[0] = LOW_U16(MCU_EEPROM_SN_ADDR);
+        data[1] = HIGH_U16(MCU_EEPROM_SN_ADDR);
+        if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC, 1, data, 2, MCU_I2C_TIMEOUT)!= HAL_OK)
+        {
+            sprintf(pcWriteBuffer, "[setsn] write address failed\r\nQA_FAIL_SN\r\n");
+            return pdFALSE;
+        }
+        if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, (uint8_t *)pPara, 17, MCU_I2C_TIMEOUT) != HAL_OK)
+        {
+            sprintf(pcWriteBuffer, "[setsn] write sn failed\r\nQA_FAIL_SN\r\n");
+            return pdFALSE;
+        }
+        sprintf(pcWriteBuffer, "QA_PASS_SN\r\n");
+        return pdFALSE;
+	}
 }
 /*-----------------------------------------------------------*/
 static BaseType_t prvGetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	char data[6] = {0};
-	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_MAC0_IIC, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
-		sprintf(pcWriteBuffer, "[getmac0] I2C Read Error\r\nmac0[]\r\n");
-		return pdFALSE;
+	uint8_t data[32] = {0};
+
+	data[0] = LOW_U16(MCU_EEPROM_MAC0_ADDR);
+    data[1] = HIGH_U16(MCU_EEPROM_MAC0_ADDR);
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC, 1, data, 2, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[getsn] write address failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
+	}
+	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 6, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[getsn] read mac0 failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
 	}
 	if (data[0] != 0x00)
 		sprintf(pcWriteBuffer, "mac0[%02X%02X%02X%02X%02X%02X]\r\n",
 				data[0], data[1], data[2], data[3], data[4], data[5]);
 	else
 		sprintf(pcWriteBuffer, "mac0[]\r\n");
-	return pdFALSE;
-}
-/*-----------------------------------------------------------*/
-static BaseType_t prvGetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
-		const char *pcCommandString) {
-	char data[6] = {0};
-	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_MAC1_IIC, 1, (uint8_t*)data, 17, 100) != HAL_OK) {
-		sprintf(pcWriteBuffer, "[getmac1] I2C Read Error\r\nmac1[]\r\n");
-		return pdFALSE;
-	}
-	if (data[0] != 0x00)
-		sprintf(pcWriteBuffer, "mac1[%02X%02X%02X%02X%02X%02X]\r\n",
-				data[0], data[1], data[2], data[3], data[4], data[5]);
-	else
-		sprintf(pcWriteBuffer, "mac1[]\r\n");
 	return pdFALSE;
 }
 /*-----------------------------------------------------------*/
@@ -630,8 +676,16 @@ static BaseType_t prvSetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		stage = 1;
 		return pdTRUE;
 	} else {
-		uint8_t data[6] = {0};
-		for (uint8_t i = 0; i < 6; i++) { // convert string to hex
+		stage = 0;
+        uint8_t data[32] = {0};
+        data[0] = LOW_U16(MCU_EEPROM_MAC0_ADDR);
+        data[1] = HIGH_U16(MCU_EEPROM_MAC0_ADDR);
+        if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC, 1, data, 2, MCU_I2C_TIMEOUT)!= HAL_OK)
+        {
+            sprintf(pcWriteBuffer, "[setmac0] write address failed\r\nQA_FAIL_MAC0\r\n");
+            return pdFALSE;
+        }
+        for (uint8_t i = 0; i < 6; i++) { // convert string to hex
 			char buf[2] = {pPara[2*i],pPara[2*i+1]};
 			if (!isHexChar(buf[0]) || !isHexChar(buf[1])) { // check is hex char
 				sprintf(pcWriteBuffer, "[setmac0] Invaild char %c%c\r\nQA_FAIL_MAC0\r\n",
@@ -641,14 +695,39 @@ static BaseType_t prvSetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 			}
 			data[i] = strtol(buf, NULL, 16);
 		}
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_MAC0_IIC, 1, data, 6, 100) != HAL_OK)
-			sprintf(pcWriteBuffer, "[setmac0] I2C write error\r\nQA_FAIL_MAC0\r\n");
-		else
-			sprintf(pcWriteBuffer, "QA_PASS_MAC0\r\n");
-		stage = 0;
+    	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 6, MCU_I2C_TIMEOUT)!= HAL_OK)
+    	{
+    	    sprintf(pcWriteBuffer, "[setmac0] write mac0 failed\r\nQA_FAIL_MAC0\r\n");
+    	    return pdFALSE;
+    	}
+		sprintf(pcWriteBuffer, "QA_PASS_MAC0\r\n");
 		return pdFALSE;
 	}
 }
+/*-----------------------------------------------------------*/
+static BaseType_t prvGetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString) {
+	uint8_t data[32] = {0};
+	data[0] = LOW_U16(MCU_EEPROM_MAC1_ADDR);
+    data[1] = HIGH_U16(MCU_EEPROM_MAC1_ADDR);
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC, 1, data, 2, MCU_I2C_TIMEOUT)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[getsn] write address failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
+	}
+    if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 6, MCU_I2C_TIMEOUT)!= HAL_OK)
+    {
+        sprintf(pcWriteBuffer, "[getsn] read mac1 failed\r\nQA_FAIL_IDBG\r\n");
+        return pdFALSE;
+    }
+	if (data[0] != 0x00)
+		sprintf(pcWriteBuffer, "mac1[%02X%02X%02X%02X%02X%02X]\r\n",
+				data[0], data[1], data[2], data[3], data[4], data[5]);
+	else
+		sprintf(pcWriteBuffer, "mac1[]\r\n");
+	return pdFALSE;
+}
+
 /*-----------------------------------------------------------*/
 static BaseType_t prvSetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
@@ -666,8 +745,16 @@ static BaseType_t prvSetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		stage = 1;
 		return pdTRUE;
 	} else {
-		uint8_t data[6] = {0};
-		for (uint8_t i = 0; i < 6; i++) { // convert string to hex
+		stage = 0;
+        uint8_t data[32] = {0};
+        data[0] = LOW_U16(MCU_EEPROM_MAC1_ADDR);
+        data[1] = HIGH_U16(MCU_EEPROM_MAC1_ADDR);
+        if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC, 1, data, 2, MCU_I2C_TIMEOUT)!= HAL_OK)
+        {
+            sprintf(pcWriteBuffer, "[setmac1] write address failed\r\nQA_FAIL_MAC1\r\n");
+            return pdFALSE;
+        }
+        for (uint8_t i = 0; i < 6; i++) { // convert string to hex
 			char buf[2] = {pPara[2*i],pPara[2*i+1]};
 			if (!isHexChar(buf[0]) || !isHexChar(buf[1])) { // check is hex char
 				sprintf(pcWriteBuffer, "[setmac1] Invaild char %c%c\r\nQA_FAIL_MAC1\r\n",
@@ -677,11 +764,12 @@ static BaseType_t prvSetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 			}
 			data[i] = strtol(buf, NULL, 16);
 		}
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_MAC1_IIC, 1, data, 6, 100) != HAL_OK)
-			sprintf(pcWriteBuffer, "[setmac1] I2C write error\r\nQA_FAIL_MAC1\r\n");
-		else
-			sprintf(pcWriteBuffer, "QA_PASS_MAC1\r\n");
-		stage = 0;
+        if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 6, MCU_I2C_TIMEOUT)!= HAL_OK)
+        {
+            sprintf(pcWriteBuffer, "[setmac1] write mac1 failed\r\nQA_FAIL_MAC1\r\n");
+            return pdFALSE;
+        }
+		sprintf(pcWriteBuffer, "QA_PASS_MAC1\r\n");
 		return pdFALSE;
 	}
 }
@@ -692,87 +780,286 @@ static BaseType_t prvI2cMcuCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_VERSION_IIC, 1, data, 1, 100) != HAL_OK)
 		sprintf(pcWriteBuffer, "[i2cmcu] I2C Read Error\r\nQA_FAIL_IMCU\r\n");
 	else if (*data == 0x01)
-		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nQA_PASS_IMCU\r\n",
-				*data);
+		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sa5\r\nQA_PASS_IMCU\r\n",	*data);
+	else if (*data == 0x04)
+		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sm5\r\nQA_PASS_IMCU\r\n", *data);
 	else
-		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nQA_FAIL_IMCU\r\n",
-				*data);
+		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type unknow\r\nQA_FAIL_IMCU\r\n", *data);
 	return pdFALSE;
 }
 /*-----------------------------------------------------------*/
 static BaseType_t prvI2c1684Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	if (tStage == STAGE_KERNAL) { // test all ready passed
+	static uint8_t scnt;
+	if (tStage == STAGE_KERNEL) { // test all ready passed
 		sprintf(pcWriteBuffer, "[i2c1684] Int REG[0x00]=0x%02X\r\nQA_PASS_I1684\r\n",
 						reg[0x00]);
 		osDelay(500);
 		return pdFALSE;
 	}
-	for (uint8_t counter = 0; counter < 12; counter ++) { // test every 10 second
-		osDelay(10000);
-		if (tStage == STAGE_KERNAL) { // test all ready passed
+	if(scnt < 60)
+	{
+	    osDelay(1000);
+	    if (tStage == STAGE_KERNEL) { // test all ready passed
 			sprintf(pcWriteBuffer, "[i2c1684] Int REG[0x00]=0x%02X\r\nQA_PASS_I1684\r\n",
 					reg[0x00]);
 			osDelay(500);
 			return pdFALSE;
 		}
-	} // still not passed
+		else
+		{
+		    sprintf(pcWriteBuffer, "[i2c1684] wait 1684 enter kernel, %ds\r\n", scnt);
+			return pdTRUE;
+		}
+	}
 	sprintf(pcWriteBuffer, "[i2c1684] Timeout\r\nQA_FAIL_I1684\r\n");
 	return pdFALSE;
 }
 /*-----------------------------------------------------------*/
-static BaseType_t prvI2cDebugCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+static BaseType_t prvI2CDbgCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	static uint8_t stage;
-	if (stage == 0) { // check the address sent
-		for (uint8_t counter = 0; counter < 10; counter++) {
-			osDelay(50);
-			if (reg[0x04] == 0x05) { // correct slot id
-				sprintf(pcWriteBuffer, "[i2cdebug] Int REG[0x04]=0x05\r\n");
-				stage = 1;
-				return pdTRUE;
-			}
-			else if (reg[0x04] != 0xFF) { // incorrect slot id
-				sprintf(pcWriteBuffer, "[i2cdebug] address not match: 0x%02X\r\nQA_FAIL_IDEBUG\r\n",
-						reg[0x04]);
-				return pdFALSE;
-			}
-		}
-		sprintf(pcWriteBuffer, "[i2cdebug] Get address timeout\r\nQA_FAIL_IDEBUG\r\n");
-		return pdFALSE;
-	} else if (stage == 1) { // got correct address
-		//TODO add function to check the i2c connectivity
-		stage = 0;
-		return pdFALSE;
+    uint8_t data[32] = {0};
+	data[0] = 0x10;
+    data[1] = 0x00;
+    data[2] = 0x20;
+    data[3] = 0x00;
+    data[4] = 0x10;
+    data[5] = 0x25;
+    if(HAL_I2C_Master_Transmit(&hi2c3, I2C3_SLAVE_ADDR(5), data, 6, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg write failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
 	}
-	stage = 0;
+    data[0] = 0x23;
+    if(HAL_I2C_Master_Transmit(&hi2c3, I2C3_SLAVE_ADDR(5), data, 1, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg set mode failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
+	}
+	data[0] = 0x12;
+    data[1] = 0x00;
+    data[2] = 0x00;
+    data[3] = 0x01;
+    data[4] = 0x50;
+    if(HAL_I2C_Master_Transmit(&hi2c3, I2C3_SLAVE_ADDR(5), data, 5, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg transmit failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
+	}
+	if(HAL_I2C_Master_Receive(&hi2c3, I2C3_SLAVE_ADDR(5), data, 4, 100)!= HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg receive failed\r\nQA_FAIL_IDBG\r\n");
+	    return pdFALSE;
+	}
+	if((data[2] == 0x84)&&(data[3] == 0x16))
+	{
+	    sprintf(pcWriteBuffer, "[i2cdbg] reg[0x50010000] = %02x %02x %02x %02x\r\nQA_PASS_IDBG\r\n", data[3],data[2],data[1],data[0]);
+	}
+	else
+	{
+	    sprintf(pcWriteBuffer, "[i2cdbg] reg[0x50010000] = %02x %02x %02x %02x\r\nQA_FAIL_IDBG\r\n", data[3],data[2],data[1],data[0]);
+	}
 	return pdFALSE;
-
-
 }
 /*-----------------------------------------------------------*/
 static BaseType_t prvSlotIDCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	for (uint8_t counter = 0; counter < 10; counter++) {
-		osDelay(50);
-		if (reg[0x03] == 0x03) { // correct slot id
-			sprintf(pcWriteBuffer, "[slotid] Int REG[0x03]=0x03X\r\nQA_PASS_SLOTID\r\n");
+	if (tStage == STAGE_KERNEL) 
+    {
+        if (reg[0x03] != 2)
+        {
+            sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x\r\nQA_FAIL_SLOTID\r\n", reg[0x03]);
+            return pdFALSE;
+        }
+		HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
+		reg[0x05] = 0xfa;
+		for(int i = 10; i > 0; i--)
+		{
+		    osDelay(1000);
+		    if ((reg[0x03] == 1))
+		    {
+		        sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x\r\nQA_PASS_SLOTID\r\n", reg[0x03]);
+		        return pdFALSE;
+		    }
+		}
+        sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x\r\nQA_FAIL_SLOTID\r\n", reg[0x03]);
+        return pdFALSE;
+    }
+
+    sprintf(pcWriteBuffer, "[gpio] 1684 not in kernel\r\nQA_FAIL_SLOTID\r\n");
+    return pdFALSE;
+}
+/*----------------------------------------------------------------------------------*/
+static BaseType_t prvI2CDbgAddrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString){
+    if (tStage == STAGE_KERNEL)
+    {
+        if (reg[0x04] != 5)
+        {
+            sprintf(pcWriteBuffer, "[i2cdbgaddr] reg4 = 0x%x\r\nQA_FAIL_IDBGADDR\r\n", reg[0x04]);
+            return pdFALSE;
+        }
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+		reg[0x05] = 0xfa;
+		for(int i = 10; i > 0; i--)
+		{
+		    osDelay(1000);
+		    if (reg[0x04] == 2)
+		    {
+		        sprintf(pcWriteBuffer, "[i2cdbgaddr] reg4 = 0x%x\r\nQA_PASS_IDBGADDR\r\n", reg[0x04]);
+		        HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
+		        HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+		        return pdFALSE;
+		    }
+		}
+        sprintf(pcWriteBuffer, "[i2cdbgaddr] reg4 = 0x%x\r\nQA_FAIL_IDBGADDR\r\n", reg[0x04]);
+        HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+        return pdFALSE;
+    }
+    sprintf(pcWriteBuffer, "[i2cdbgaddr] 1684 not in kernel\r\nQA_FAIL_IDBGADDR\r\n");
+    return pdFALSE;
+}
+/*----------------------------------------------------------------------------------*/
+static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString){
+	if (tStage == STAGE_KERNEL)
+    {
+        if ((reg[0x03] != 2)||(reg[0x04] != 5))
+        {
+            sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x, reg4 = 0x%x\r\nQA_FAIL_GPIO\r\n", reg[0x03], reg[0x04]);
+            return pdFALSE;
+        }
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
+		reg[0x05] = 0xfa;
+		for(int i = 10; i > 0; i--)
+		{
+		    osDelay(1000);
+		    if ((reg[0x03] == 1)&&(reg[0x04] == 2))
+		    {
+		        sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x, reg4 = 0x%x\r\nQA_PASS_GPIO\r\n", reg[0x03], reg[0x04]);
+		        return pdFALSE;
+		    }
+		}
+        sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x, reg4 = 0x%x\r\nQA_FAIL_GPIO\r\n", reg[0x03], reg[0x04]);
+        return pdFALSE;
+    }
+    HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
+    sprintf(pcWriteBuffer, "[gpio] 1684 not in kernel\r\nQA_FAIL_GPIO\r\n");
+    return pdFALSE;
+}
+/*-----------------------------------------------------------*/
+static BaseType_t prvPcieCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString) {
+	if (tStage == STAGE_KERNEL)
+    {
+		for(int i = 10; i > 0; i--)
+		{
+		    osDelay(50);
+		    if (reg[0x01] == 1)
+		    {
+		        sprintf(pcWriteBuffer, "[pcie] reg4 = 0x%x\r\nQA_PASS_PCIE\r\n", reg[0x01]);
+		        return pdFALSE;
+		    }
+		}
+        sprintf(pcWriteBuffer, "[pcie] timeout\r\nQA_FAIL_PCIE\r\n");
+        return pdFALSE;
+    }
+    sprintf(pcWriteBuffer, "[pcie] 1684 not in kernel\r\nQA_FAIL_PCIE\r\n");
+    return pdFALSE;
+}
+/*-----------------------------------------------------------*/
+static BaseType_t prvSdioCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString) {
+	if (tStage == STAGE_KERNEL)
+    {
+		for(int i = 10; i > 0; i--)
+		{
+		    osDelay(50);
+		    if (reg[0x02] == 1)
+		    {
+		        sprintf(pcWriteBuffer, "[sdio] reg4 = 0x%x\r\nQA_PASS_SDIO\r\n", reg[0x02]);
+		        return pdFALSE;
+		    }
+		}
+        sprintf(pcWriteBuffer, "[sdio] timeout\r\nQA_FAIL_SDIO\r\n");
+        return pdFALSE;
+    }
+    sprintf(pcWriteBuffer, "[sdio] 1684 not in kernel\r\nQA_FAIL_SDIO\r\n");
+    return pdFALSE;
+}
+/*-----------------------------------------------------------*/
+static BaseType_t prvSUartCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString) {
+	static uint8_t stage;
+	static const char *pPara;
+	static char sbuf[64] = {0};
+	char rbuf[64] = {0};
+	if (stage == 0) {
+		BaseType_t ParaStrLen;
+		pPara = FreeRTOS_CLIGetParameter(pcCommandString, 1, &ParaStrLen);
+		if (ParaStrLen == 0) { // incorrect length
+			sprintf(pcWriteBuffer, "[suart] null cmd\r\n");
 			return pdFALSE;
 		}
-		else if (reg[0x03] != 0xFF) { // incorrect slot id
-			sprintf(pcWriteBuffer, "[slotid] Int REG[0x03]=0x%02X\r\nQA_FAIL_SLOTID\r\n",
-					reg[0x03]);
-			return pdFALSE;
-		}
+		sprintf(sbuf, "%s\n", pPara);
+		sprintf(pcWriteBuffer, "[suart]T:%s\r\n", sbuf);
+		stage = 1;
+		return pdTRUE;
 	}
-	sprintf(pcWriteBuffer, "[slotid] Timeout\r\nQA_FAIL_SLOTID\r\n");
-	return pdFALSE;
+	else
+	{
+	    stage = 0;
+		HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)rbuf, 64);
+		osDelay(100);
+		if (HAL_UART_Transmit(&hlpuart1, (uint8_t *)sbuf, strlen(sbuf), 100) != HAL_OK) {
+			sprintf(pcWriteBuffer, "[suart] HAL Error\r\n");
+			HAL_UART_Abort(&hlpuart1);
+			memset(rbuf, 0x00, 64);
+			sprintf(pcWriteBuffer, "[suart] cmd send failed\r\n");
+			return pdFALSE;
+		}
+		osDelay(100);
+        sprintf(pcWriteBuffer, "[suart]R:%s\r\n", rbuf);
+		HAL_UART_Abort(&hlpuart1);
+		memset(rbuf, 0x00, 64);
+		return pdFALSE;
+    }
+    return pdFALSE;
 }
 /*-----------------------------------------------------------*/
 static BaseType_t prvUart0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	return pdFALSE;
+	const char *tbuf = "/usr/sbin/testboard 0x34 4\n";
+	if (HAL_UART_Transmit(&hlpuart1, (uint8_t *)tbuf, strlen(tbuf), 100) != HAL_OK)
+	{
+	    sprintf(pcWriteBuffer, "[uart0] uart0 transmit failed\r\nQA_FAIL_UART0\r\n");
+		HAL_UART_Abort(&hlpuart1);
+		return pdFALSE;
+	}
+	for(int i = 0; i < 10; i++)
+	{
+	    osDelay(1000);
+	    if(tStage == STAGE_KERNEL)
+	    {
+	        HAL_UART_Abort(&hlpuart1);
+	        sprintf(pcWriteBuffer, "[uart0] cmd response received\r\nQA_PASS_UART0\r\n");
+		    return pdFALSE;
+	    }
+	}
+	HAL_UART_Abort(&hlpuart1);
+    sprintf(pcWriteBuffer, "[uart0] cmd response timeout\r\nQA_FAIL_UART0\r\n");
+    return pdFALSE;
 }
+
 /*-----------------------------------------------------------*/
 static BaseType_t prvUart1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
@@ -823,42 +1110,7 @@ static BaseType_t prvUart2Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 	sprintf(pcWriteBuffer, "QA_FAIL_UART2\r\n");
 	return pdFALSE;
 }
-/*-----------------------------------------------------------*/
-static BaseType_t prvPcieCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
-		const char *pcCommandString) {
-	for (uint8_t counter = 0; counter < 10; counter++) {
-		osDelay(50);
-		if (reg[0x01] == 0x01) { // correct slot id
-			sprintf(pcWriteBuffer, "[pcie] Int REG[0x01]=0x01\r\nQA_PASS_PCIE\r\n");
-			return pdFALSE;
-		}
-		else if (reg[0x01] != 0xFF) { // incorrect slot id
-			sprintf(pcWriteBuffer, "[pcie] Int REG[0x01]=0x%02X\r\nQA_FAIL_PCIE\r\n",
-					reg[0x01]);
-			return pdFALSE;
-		}
-	}
-	sprintf(pcWriteBuffer, "[pcie] Timeout\r\nQA_FAIL_PCIE\r\n");
-	return pdFALSE;
-}
-/*-----------------------------------------------------------*/
-static BaseType_t prvSdioCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
-		const char *pcCommandString) {
-	for (uint8_t counter = 0; counter < 10; counter++) {
-		osDelay(50);
-		if (reg[0x02] == 0x01) { // correct slot id
-			sprintf(pcWriteBuffer, "[sdio] Int REG[0x02]=0x01\r\nQA_PASS_SDIO\r\n");
-			return pdFALSE;
-		}
-		else if (reg[0x02] != 0xFF) { // incorrect slot id
-			sprintf(pcWriteBuffer, "[sdio] Int REG[0x02]=0x%02X\r\nQA_FAIL_SDIO\r\n",
-					reg[0x02]);
-			return pdFALSE;
-		}
-	}
-	sprintf(pcWriteBuffer, "[sdio] Timeout\r\nQA_FAIL_SDIO\r\n");
-	return pdFALSE;
-}
+
 /*-----------------------------------------------------------*/
 static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
@@ -901,6 +1153,13 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	}
 
 }
+/*----------------------------------------------------------------------------------*/
+static BaseType_t prvRegReadCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString){
+		sprintf(pcWriteBuffer, "[regread] Reg[0-4]=0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\r\n",reg[0],reg[1],reg[2],reg[3],reg[4],reg[5]);
+		return pdFALSE;
+}
+
 
 static uint8_t isHexChar(char data) {
 	if (data < '0') return pdFALSE;

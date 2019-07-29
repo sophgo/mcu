@@ -43,7 +43,7 @@
 
 typedef enum signalFlag_t {
 	SIGNAL_ERROR = 0x01,
-	SIGNAL_KERNAL
+	SIGNAL_KERNEL
 } signalFlag;
 /* USER CODE END PTD */
 
@@ -136,7 +136,8 @@ void MX_FREERTOS_Init(void) {
 		Info("[initial] VCC=%dmV", adValue);
 		if (adValue > 3100 && *data == 0x01) {
 			tStage = STAGE_POWER;
-			if (I2CReg_SlaveInit(&hi2c3, reg, MAX_REG_SIZE) != HAL_OK)
+            memset(reg, 0xFF, MAX_REG_SIZE);
+			if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
 				Info("[initial] I2C Slave initial failed");
 			Info("QA_PASS_INIT");
 		} else {
@@ -299,7 +300,7 @@ void runShell(void const * argument)
 			}
 			osSemaphoreRelease(uartTxSemHandle);
 		}
-
+        //osSemaphoreRelease(uartTxSemHandle);
 	}
   /* USER CODE END runShell */
 }
@@ -324,15 +325,15 @@ void runExec(void const * argument)
 			Notify("[notify] MCU_CPLD_ERR Detected");
 			*data = 0x00;
 			*(data + 1) = 0x00;
-			if (HAL_I2C_Mem_Read(&hi2c1, 0x17 << 1, 0x06, 1, data, 2, 100)
+			if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, 0x06, 1, data, 2, 100)
 					!= HAL_OK)
 				Error("[notify] I2C Read Error");
 			Notify("[notify] REG[0x06]=0b%08b\r\n[notify] REG[0x07]=0b%08b",
 					*data, *(data + 1));
 			break;
-		case SIGNAL_KERNAL:
+		case SIGNAL_KERNEL:
 			if (LOW_U16(evt.value.signals) == 0x01)
-				tStage = STAGE_KERNAL;
+				tStage = STAGE_KERNEL;
 			break;
 
 		}
@@ -404,15 +405,15 @@ void Notify(const char *fmt, ...) {
 }
 
 void I2CReg_SlaveTxCallback(I2C_HandleTypeDef *hi2c, uint8_t addr) {
-	Notify("Slave Tx triggered\r\n");
+	//Notify("Slave Tx triggered\r\n");
 }
 
 void I2CReg_SlaveRxCallback(I2C_HandleTypeDef *hi2c, uint8_t addr) {
 	switch (addr) {
 	case 0x00:
-		osSignalSet(ExecThreadHandle, FORM_U16(SIGNAL_KERNAL, reg[0x00]));
+		osSignalSet(ExecThreadHandle, FORM_U16(SIGNAL_KERNEL, reg[0x00]));
 	}
-	Notify("Slave Rx triggered\r\n");
+	//Notify("Slave Rx triggered %x\r\n",reg[0x00]);
 }
 /* USER CODE END Application */
 

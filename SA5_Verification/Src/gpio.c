@@ -51,7 +51,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(TPU_IIC_ADD1_GPIO_Port, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_SET);
@@ -60,7 +60,8 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin|SLOT_ID1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin */
   GPIO_InitStruct.Pin = TPU_IIC_ADD0_Pin|TPU_IIC_ADD1_Pin|TPU_IIC_ADD2_Pin;
