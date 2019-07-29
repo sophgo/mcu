@@ -385,14 +385,13 @@ uart_handle_fin:
 		if (needpowerup)
 		{
 			__delay_ms(50);
-			if(CM2CON0bits.C2OUT == 1)
+			if(CM2CON0bits.C2OUT == 0)
 			{
-				//I2C_Array[0] = 0xB0;
+				needpowerup = 0;
 				MCU_ERR_INT = 0;
 				Power_Up();
 				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 			}
-			needpowerup = 0;
 		}
 		if (needbite == 1)
 		{			
@@ -527,17 +526,10 @@ void interrupt ISR(void)
         {
         	watch_dog_stop();
             I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
-//            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
 			Power_Down();
 			I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
-
-        }
-
-        else if (CM2CON0bits.C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
-        {
 			needpowerup = 1;
         }
-
         C2IF = 0;//Clear interrupt bit
     }
 
