@@ -2,7 +2,7 @@
 #include "uart.h"
 #include "util.h"
 
-static char utc_str[20] = "!DATETIME[01234567]";
+static char utc_str[] = "!DATETIME[01234567]";
 
 static char needutc = 0;
 static unsigned long last_utc_time = 0;

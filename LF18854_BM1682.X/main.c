@@ -179,6 +179,7 @@ void main(void)
     Initial_FVR();
     Initial_TIMER();
     Power_Up();
+	I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
     __delay_ms(1000);//wait 1 second for stable
 
 	uart_init();
@@ -237,7 +238,7 @@ void main(void)
  			case(CMD_DEBUG_MODE):
 				I2C_Array[INDEX_INSTRUCTION] = 0;
 				//enable watch dog debug mode
-				I2C_Array[INDEX_MCU_STATUS] |= 0x01;
+				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_DEBUGMOD;
 				break;
 			case(CMD_DOG_FEED):
 				I2C_Array[INDEX_INSTRUCTION] = 0;
@@ -248,6 +249,7 @@ void main(void)
 				watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
 				doreboot();
+				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 				I2C_Array[INDEX_RESET_COUNT]++;
                 break;
             case(CMD_RESET)://BM1682 reset
@@ -262,16 +264,9 @@ void main(void)
 	            watch_dog_stop();
 				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWERDOWN;
 				dopowerdown();
+				I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
                 break;
-/*
-            case(0xCC)://IIC master test
-                for(i = 0; i<0x24; i++)
-				I2C_Array[0x0D + i] = IIC_read_byte(0x98, i);
-                break;
-            case(0xDD)://IIC master write test
-//                IIC_write_byte(0x98, 0x0F, 0x11);    
-                break;           
-//*/
+
             case(CMD_CLRERR)://Clear abnormal status
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
                 MCU_ERR_INT = 1;
@@ -282,6 +277,7 @@ void main(void)
                 watch_dog_stop();
                 I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RECOVERY;
                 doreboot();
+				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
                 I2C_Array[INDEX_RESET_COUNT]++;
                 uart_send_recovery();
                 break;
@@ -331,6 +327,7 @@ void main(void)
 					watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
 					doreboot();
+					I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 					I2C_Array[INDEX_RESET_COUNT]++;
 					ret  = 0;
 					break;
@@ -373,9 +370,10 @@ uart_handle_fin:
 	            	watch_dog_stop();
 					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_TMP;
 					dopowerdown();
+					I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
 	                I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
 
-	            }			
+	            }
 			}
 		}
 		else
@@ -392,19 +390,21 @@ uart_handle_fin:
 				//I2C_Array[0] = 0xB0;
 				MCU_ERR_INT = 0;
 				Power_Up();
+				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 			}
 			needpowerup = 0;
 		}
 		if (needbite == 1)
 		{			
 			I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
-			if (I2C_Array[INDEX_MCU_STATUS] & 0x01)
+			if (I2C_Array[INDEX_MCU_STATUS] & MCU_STATUS_DEBUGMOD)
 			{
 				doreset();
 			}
 			else
 			{
 				doreboot();
+				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
 			}
 			
 			needbite = 0;
@@ -529,6 +529,8 @@ void interrupt ISR(void)
             I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
 //            r1 = HEFLASH_writeBlock( 0,I2C_Array+9 , 2);
 			Power_Down();
+			I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
+
         }
 
         else if (CM2CON0bits.C2OUT == 0 && I2C_Array[INDEX_POWERDOWN_REASON] == POWERDOWN_REASON_POWER)//voltage too low to normal, reboot
@@ -601,7 +603,7 @@ void interrupt ISR(void)
 	        }
 	        else if(PG_DDR4_1V2 == 1)
 	        {
-	            I2C_Array[4INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFD;
+	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFD;
 	        }
     	}
         IOCAF3 = 0;
