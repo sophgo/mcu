@@ -130,32 +130,41 @@ void watch_dog_feed()
 	last_feed_time = Sencond_Count;
 }
 
-void doreboot()
+void reboot()
 {
-	GIE = 0;
-	IOCIE = 0;
 	Power_Down();
 	__delay_ms(1000);
 	Power_Up();
 	__delay_ms(200);
-	GIE = 1;
-	IOCIE = 1;
 }
-void doreset()
+
+void doreboot(unsigned char reason)
 {
-	GIE = 0;
-	IOCIE = 0;
+	watch_dog_stop();
+	I2C_Array[INDEX_POWERDOWN_REASON] = reason;
+	reboot();
+	I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
+	I2C_Array[INDEX_RESET_COUNT]++;
+}
+void doreset(unsigned char reason)
+{
+	watch_dog_feed();//?
+	I2C_Array[INDEX_POWERDOWN_REASON] = reason;
 	Reset();
-	GIE = 1;
-	IOCIE = 1;
+    I2C_Array[INDEX_RESET_COUNT]++;
 }
-void dopowerdown()
+
+void dopowerup()
 {
-	GIE = 0;
-	IOCIE = 0;
+	Power_Up();
+	I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
+}
+void dopowerdown(unsigned char reason)
+{
+    watch_dog_stop();
+	I2C_Array[INDEX_POWERDOWN_REASON] = reason;
 	Power_Down();
-	GIE = 1;
-	IOCIE = 1;
+	I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
 }
 void mcu_watch_dog_start()
 {
@@ -194,9 +203,7 @@ void main(void)
 	if (retc == 0xFF)
 	{
 		I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_FACTORY_MODE;
-		
-		Power_Up();
-		I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
+		dopowerup();	
 	}
 	
 	__delay_ms(1000);//wait 1 second for stable
@@ -273,27 +280,18 @@ void main(void)
 				break;
             case(CMD_REBOOT)://reboot
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
-				watch_dog_stop();
-				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
-				doreboot();
-				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
-				I2C_Array[INDEX_RESET_COUNT]++;
+				doreboot(POWERDOWN_REASON_REBOOT);
+
 				utcsend_beg(Sencond_Count);
                 break;
             case(CMD_RESET)://BM1682 reset
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
-	            watch_dog_feed();
-				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
-				doreset();
-                I2C_Array[INDEX_RESET_COUNT]++;
+				doreset(POWERDOWN_REASON_RESET);
 				utcsend_beg(Sencond_Count);
                 break;                
             case(CMD_POWERDOWN)://System power down
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
-	            watch_dog_stop();
-				I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWERDOWN;
-				dopowerdown();
-				I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
+				dopowerdown(POWERDOWN_REASON_POWERDOWN);
                 break;
 
             case(CMD_CLRERR)://Clear abnormal status
@@ -303,11 +301,7 @@ void main(void)
                 break;
             case(CMD_RECOVERY)://recovery mode
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
-                watch_dog_stop();
-                I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RECOVERY;
-                doreboot();
-				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
-                I2C_Array[INDEX_RESET_COUNT]++;
+				doreboot(POWERDOWN_REASON_RECOVERY);
                 uart_send_recovery();
                 break;
 
@@ -374,19 +368,12 @@ void main(void)
 					ret  = 0;
 					break;
 				case(CMD_REBOOT)://reboot
-					watch_dog_stop();
-					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_REBOOT;
-					doreboot();
-					I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
-					I2C_Array[INDEX_RESET_COUNT]++;
+					doreboot(POWERDOWN_REASON_REBOOT);
 					ret  = 0;
 					utcsend_beg(Sencond_Count);
 					break;
 				case(CMD_RESET)://BM1682 reset
-					watch_dog_feed();
-					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_RESET;
-					doreset();
-					I2C_Array[INDEX_RESET_COUNT]++;
+					doreset(POWERDOWN_REASON_RESET);
 					ret  = 0;
 					utcsend_beg(Sencond_Count);
 					break;
@@ -419,12 +406,8 @@ uart_handle_fin:
 				MCU_ERR_INT = 0;
 	            if(SYS_RST == 1)
 	            {   
-	            	watch_dog_stop();
-					I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_TMP;
-					dopowerdown();
-					I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
+					dopowerdown(POWERDOWN_REASON_TMP);
 	                I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
-
 	            }
 			}
 		}
@@ -441,21 +424,19 @@ uart_handle_fin:
 			{
 				needpowerup = 0;
 				MCU_ERR_INT = 0;
-				Power_Up();
-				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
+				dopowerup();
 			}
 		}
 		if (needbite == 1)
 		{			
-			I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_DOG;
+			
 			if (I2C_Array[INDEX_MCU_STATUS] & MCU_STATUS_DEBUGMOD)
 			{
-				doreset();
+				doreset(POWERDOWN_REASON_DOG);
 			}
 			else
 			{
-				doreboot();
-				I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_POWER_ON;
+				doreboot(POWERDOWN_REASON_DOG);
 			}
 			utcsend_beg(Sencond_Count);
 			needbite = 0;
@@ -582,10 +563,7 @@ void interrupt ISR(void)
     {
         if (CM2CON0bits.C2OUT == 1)//power down
         {
-        	watch_dog_stop();
-            I2C_Array[INDEX_POWERDOWN_REASON] = POWERDOWN_REASON_POWER;
-			Power_Down();
-			I2C_Array[INDEX_MCU_STATUS] &= ~MCU_STATUS_POWER_ON;
+        	dopowerdown(POWERDOWN_REASON_POWER);
 			needpowerup = 1;
         }
         C2IF = 0;//Clear interrupt bit

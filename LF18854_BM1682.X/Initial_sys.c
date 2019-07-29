@@ -147,8 +147,5 @@ void Initial_sys()
 	SSP2BUF = 0;
 	PEIE = 1;                   // Enable peripheral interrupts
 	C2IE = 1;                   //Enable Compare2 
-	GIE = 1; 					// Enable global interrupts
-
-
-	
+	GIE = 1; 					// Enable global interrupts	
 }
