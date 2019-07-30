@@ -55,7 +55,7 @@ extern "C" {
 #define SET 1
 #define RESET 0
 
-#define MAX_REG_SIZE 255
+#define MAX_REG_SIZE 32
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
