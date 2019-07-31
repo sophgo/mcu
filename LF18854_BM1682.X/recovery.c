@@ -11,7 +11,7 @@ DATE: 12/12/2018
 
 
 unsigned long last_send_time = 0;
-
+int uart_send = 0;
 int uart_issend()
 {
     int a;

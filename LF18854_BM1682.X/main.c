@@ -64,6 +64,8 @@ unsigned char junk = 0;          // used to place unnecessary data
 unsigned char first = 1;               // used to determine whether data address 
                                        // location or actual data
 
+unsigned char factorymode = 0;
+
 //to be added
 
 unsigned long Sencond_Count = 0;
@@ -203,6 +205,7 @@ void main(void)
 	if (retc == 0xFF)
 	{
 		I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_FACTORY_MODE;
+		factorymode = 1;
 		dopowerup();	
 	}
 	
@@ -253,7 +256,6 @@ void main(void)
 	//set def udc
 	utc_set(&I2C_Array[INDEX_SETUTC_00]);
 	utcsend_beg(Sencond_Count);
-
 
 
     while(1)                    // main while() loop
@@ -441,8 +443,10 @@ uart_handle_fin:
 			utcsend_beg(Sencond_Count);
 			needbite = 0;
 		}
-		utcsend_run(Sencond_Count);
-		
+		if (factorymode == 0)
+		{
+			utcsend_run(Sencond_Count);
+		}
    }
 }
 

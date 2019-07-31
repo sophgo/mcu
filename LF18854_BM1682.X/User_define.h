@@ -99,7 +99,9 @@ INTERNAL_VERSION,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
 #define STATUS_POWERDOWN	0
 extern int status;
 
-extern int uart_send = 0;
+extern unsigned char factorymode;
+
+extern int uart_send;
 extern int test_reboot = 1;
 
 void Reset(void);
