@@ -171,7 +171,7 @@ static inline struct i2c_slave_op *find_slave(unsigned int addr,I2C_CTX i2c_ctx)
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(i2c_ctx->slave_list); ++i) {
-		if (i2c_ctx->slave_list[i]->addr == addr)
+		if ((i2c_ctx->slave_list[i]->addr == addr) || (addr >= 0x38 && addr <= 0x3f))
 			return *(i2c_ctx->slave_list + i);
 	}
 	return NULL;
