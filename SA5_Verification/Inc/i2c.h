@@ -35,7 +35,8 @@ extern I2C_HandleTypeDef hi2c2;
 extern I2C_HandleTypeDef hi2c3;
 
 /* USER CODE BEGIN Private defines */
-#define CORE_MCU_ADDR           (0x18 << 1)
+#define CORE_MCU_ADDR           (0x38 << 1)
+#define MCU_TYPE_IIC            0x00
 #define MCU_VERSION_IIC         0x01
 #define MCU_RESET_IIC           0x03
 #define MCU_CTEMP_IIC           0x04   //bm1684 chip temperature register
@@ -48,6 +49,7 @@ extern I2C_HandleTypeDef hi2c3;
 #define MCU_EEPROM_SN_ADDR      0x0000
 #define MCU_EEPROM_MAC0_ADDR    0x0020
 #define MCU_EEPROM_MAC1_ADDR    0x0040
+#define MCU_EEPROM_TYPE_ADDR    0x0060
 
 #define I2C2_SLAVE_ADDR    (0x34 << 1)
 

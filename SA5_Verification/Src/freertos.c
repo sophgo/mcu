@@ -49,7 +49,7 @@ typedef enum signalFlag_t {
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define cmdMAX_INPUT_SIZE		50
+#define cmdMAX_INPUT_SIZE		64
 #define cmdASCII_DEL	0x7F
 #define cmdASCII_ETX	0x03
 
@@ -74,7 +74,7 @@ char cRxBuffer[MAX_INPUT_BUF_SIZE] = { 0 };
 volatile testStage tStage = STAGE_IDLE;
 volatile uint8_t cmdRunning = 0;
 volatile uint8_t uartBuf[6] = {0};
-uint8_t reg[MAX_REG_SIZE] = { 0xFF };
+uint8_t reg[MAX_REG_SIZE] = { 0xAA };
 
 uint8_t ucInputIndex = 0;
 char cInputString[cmdMAX_INPUT_SIZE];
@@ -136,7 +136,7 @@ void MX_FREERTOS_Init(void) {
 		Info("[initial] VCC=%dmV", adValue);
 		if (adValue > 3100 && *data == 0x01) {
 			tStage = STAGE_POWER;
-            memset(reg, 0xFF, MAX_REG_SIZE);
+            memset(reg, 0xAA, MAX_REG_SIZE);
 			if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
 				Info("[initial] I2C Slave initial failed");
 			Info("QA_PASS_INIT");
@@ -207,6 +207,9 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_runShell */
 void runShell(void const * argument)
 {
+    
+    
+    
 
   /* USER CODE BEGIN runShell */
 	osEvent evt;
@@ -322,13 +325,13 @@ void runExec(void const * argument)
 		evt = osSignalWait(0x00, osWaitForever);
 		switch (HIGH_U16(evt.value.signals)) {
 		case SIGNAL_ERROR:
-			Notify("[notify] MCU_CPLD_ERR Detected");
+			//Notify("[notify] MCU_CPLD_ERR Detected");
 			*data = 0x00;
 			*(data + 1) = 0x00;
 			if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, 0x06, 1, data, 2, 100)
 					!= HAL_OK)
 				Error("[notify] I2C Read Error");
-			Notify("[notify] REG[0x06]=0b%08b\r\n[notify] REG[0x07]=0b%08b",
+			Notify("[notify] REG[0x06]=0x%02x\r\n[notify] REG[0x07]=0x%02x",
 					*data, *(data + 1));
 			break;
 		case SIGNAL_KERNEL:

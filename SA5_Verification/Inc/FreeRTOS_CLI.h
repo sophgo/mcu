@@ -88,6 +88,7 @@ char *FreeRTOS_CLIGetOutputBuffer( void );
  * Return a pointer to the xParameterNumber'th word in pcCommandString.
  */
 const char *FreeRTOS_CLIGetParameter( const char *pcCommandString, UBaseType_t uxWantedParameter, BaseType_t *pxParameterStringLength );
+int8_t prvGetNumberOfParameters(const char *pcCommandString);
 
 #endif /* COMMAND_INTERPRETER_H */
 

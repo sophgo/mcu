@@ -61,7 +61,7 @@ static BaseType_t prvHelpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 /*
  * Return the number of parameters that follow the command name.
  */
-static int8_t prvGetNumberOfParameters(const char *pcCommandString);
+int8_t prvGetNumberOfParameters(const char *pcCommandString);
 
 /* The definition of the "help" command.  This command is always at the front
  of the list of registered commands. */
@@ -172,7 +172,7 @@ BaseType_t FreeRTOS_CLIProcessCommand(const char * const pcCommandInput,
 					if (pxCommand->pxCommandLineDefinition->cExpectedNumberOfParameters
 							>= 0) {
 						if (prvGetNumberOfParameters(pcCommandInput)
-								!= pxCommand->pxCommandLineDefinition->cExpectedNumberOfParameters) {
+								> pxCommand->pxCommandLineDefinition->cExpectedNumberOfParameters) {
 							xReturn = pdFALSE;
 						}
 					}
@@ -296,7 +296,7 @@ static BaseType_t prvHelpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 }
 /*-----------------------------------------------------------*/
 
-static int8_t prvGetNumberOfParameters(const char *pcCommandString) {
+int8_t prvGetNumberOfParameters(const char *pcCommandString) {
 	int8_t cParameters = 0;
 	BaseType_t xLastCharacterWasSpace = pdFALSE;
 
