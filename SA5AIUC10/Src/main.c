@@ -209,11 +209,11 @@ void PowerON(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
-	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
-		power_on_good = 1;
-	} else {
-		PowerDOWN();
-	}
+//	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
+//		power_on_good = 1;
+//	} else {
+//		PowerDOWN();
+//	}
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
@@ -554,6 +554,7 @@ int main(void)
 	  // response CPLD's commands
 	  switch(i2c_regs.cmd_reg) {
 	  case CMD_CPLD_PWR_ON:
+		  i2c_regs.cmd_reg = 0;
 		  PowerON();
 		  break;
 	  case CMD_CPLD_PWR_DOWN:
@@ -579,7 +580,7 @@ int main(void)
 		  break;
 	  }
 
-	  if ((power_on_good == 1) && (i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP))
+	  if (/*(power_on_good == 1) && */(i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP))
 		  led_filcker();
 	  // read temperature every 2 seconds
 	  READ_Temper();
