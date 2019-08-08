@@ -100,9 +100,11 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin 
-                           PBPin PBPin PBPin PBPin */
+                           PBPin PBPin PBPin PBPin 
+                           PBPin */
   GPIO_InitStruct.Pin = EN0_ISL68127_Pin|EN1_ISL68127_Pin|EN_PMIC_Pin|EN_VDDIO18_Pin 
-                          |EN_VDDIO33_Pin|EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin|EN_VQPS18_Pin;
+                          |EN_VDDIO33_Pin|EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin|EN_VQPS18_Pin 
+                          |TPU_I2C_ADD3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -127,12 +129,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(TWARN_VDD_TPU_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = EN_VDD_TPU_MEM_Pin|TPU_I2C_ADD3_Pin;
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = EN_VDD_TPU_MEM_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(EN_VDD_TPU_MEM_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
