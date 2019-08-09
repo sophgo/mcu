@@ -145,7 +145,7 @@ void Clean_ERR_INT(void);
 #define BUCK4_DVS0CFG0 		0x97
 
 uint8_t val;
-static uint8_t power_on_good;
+volatile static uint8_t power_on_good;
 void led_on(void);
 void led_filcker(void);
 void clean_pmic(void);
@@ -209,11 +209,13 @@ void PowerON(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
-//	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
-//		power_on_good = 1;
-//	} else {
-//		PowerDOWN();
-//	}
+	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
+		power_on_good = 1;
+		i2c_regs.power_good = 1;
+	} else {
+		i2c_regs.power_good = 0;
+		PowerDOWN();
+	}
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
@@ -293,7 +295,7 @@ uint8_t pg_core = 0;
 
 uint8_t sec_count = 0;
 
-#define MCU_VERSION 0x02
+#define MCU_VERSION 0x03
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
@@ -580,7 +582,7 @@ int main(void)
 		  break;
 	  }
 
-	  if (/*(power_on_good == 1) && */(i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP))
+	  if ((power_on_good == 1) && (i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP))
 		  led_filcker();
 	  // read temperature every 2 seconds
 	  READ_Temper();

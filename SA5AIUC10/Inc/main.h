@@ -189,7 +189,8 @@ typedef struct I2C_REGS_t
 	uint8_t rtc[6];
 	uint8_t cmd;
 	uint8_t ddr;//0x15,21
-	uint8_t reserved0[2];
+	uint8_t power_good;
+	uint8_t reserved0[1];
 	uint8_t reserved1[16];
 	CURRENT_VAL current;
 	uint8_t reserved2[2];
