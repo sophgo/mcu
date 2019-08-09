@@ -133,6 +133,9 @@ void MX_FREERTOS_Init(void) {
 			Error("[initial] I2C read error");
 		Info("[initial] REG[0x03]=0x%02X", *data);
 		int adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
+		while (adValue < 3100) {
+			adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
+		}
 		Info("[initial] VCC=%dmV", adValue);
 		if (adValue > 3100 && *data == 0x01) {
 			tStage = STAGE_POWER;
