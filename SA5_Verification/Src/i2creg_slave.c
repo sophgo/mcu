@@ -117,7 +117,7 @@ static HAL_StatusTypeDef I2CReg_SlaveISR(I2C_HandleTypeDef *hi2c,
 			hi2c->pBuffPtr += addr;
 			hi2c->XferCount = addr;
 		} else if (hi2c->XferCount != 0xFFFF
-				&& hi2c->XferCount < hi2c->XferSize) { // write reg
+				/*&& hi2c->XferCount < hi2c->XferSize*/) { // write reg
 				/* Increment Buffer pointer */
 			*hi2c->pBuffPtr = buf;
 			hi2c->pBuffPtr++;
@@ -134,7 +134,7 @@ static HAL_StatusTypeDef I2CReg_SlaveISR(I2C_HandleTypeDef *hi2c,
 		ITFlags &= ~I2C_FLAG_TXIS;
 		if (hi2c->XferCount == 0xFFFF)
 			hi2c->XferCount = 0; // start from beginning
-		if (hi2c->XferCount < hi2c->XferSize) { // or a specific addr
+		if (1/*hi2c->XferCount < hi2c->XferSize*/) { // or a specific addr
 			hi2c->Instance->TXDR = *hi2c->pBuffPtr;
 			/* Increment Buffer pointer */
 			hi2c->pBuffPtr++;
