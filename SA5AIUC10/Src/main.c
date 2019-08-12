@@ -273,6 +273,10 @@ void PowerDOWN(void)
 
 void BM1684_RST(void)
 {
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	HAL_Delay(30);
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
+
 	return ;
 }
 void Clean_ERR_INT(void)
@@ -295,7 +299,7 @@ uint8_t pg_core = 0;
 
 uint8_t sec_count = 0;
 
-#define MCU_VERSION 0x03
+#define MCU_VERSION 0x04
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
@@ -437,12 +441,13 @@ void SET_HW_Ver(void)
 	  HAL_ADC_Stop(&hadc);
 }
 
+#define TMP451_SLAVE_ADDR (0x98)
 void READ_Temper(void)
 {
 	if (sec_count == 1) {
 		// detection of temperature value
-		HAL_I2C_Mem_Read(&hi2c2,0x98, 0x0,1, &i2c_regs.temp1684, 1, 1000);
-		HAL_I2C_Mem_Read(&hi2c2,0x4c, 0x0,1, &i2c_regs.temp_board, 1, 1000);
+		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &i2c_regs.temp1684, 1, 1000);
+		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000);
 		if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
 			led_on();
 			i2c_regs.intr_status1 = BOARD_OVER_TEMP;
@@ -560,25 +565,36 @@ int main(void)
 		  PowerON();
 		  break;
 	  case CMD_CPLD_PWR_DOWN:
+		  i2c_regs.cmd_reg = 0;
 		  PowerDOWN();
 		  break;
 	  case CMD_CPLD_1684RST:
+		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
 		  i2c_regs.rst_1684_times++;
 		  break;
 	  case CMD_CPLD_SWRST:
+		  i2c_regs.cmd_reg = 0;
 		  break;
 	  case CMD_CPLD_CLR:
+		  i2c_regs.cmd_reg = 0;
 		  Clean_ERR_INT();
 		  break;
 	  case CMD_BM1684_REBOOT:
+		  i2c_regs.cmd_reg = 0;
+		  BM1684_RST();
 		  break;
 	  case CMD_BM1684_RST:
+		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
 		  break;
 	  case CMD_MCU_UPDATE:
+		  i2c_regs.cmd_reg = 0;
 		  Buffer = 0x08;
 		  EEPROM_WriteBytes(addr, &Buffer,1);
+		  break;
+	  default:
+		  i2c_regs.cmd_reg = 0;
 		  break;
 	  }
 

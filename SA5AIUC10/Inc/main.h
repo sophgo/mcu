@@ -242,6 +242,9 @@ extern I2C_CTX i2c_ctx3;
 #define REG_SYS_RTC_YEAR	0x13
 
 #define REG_CMD				0x14
+
+#define REG_DDR				0x15
+#define REG_PWR_GOOD		0x16
 /* some reserved here, original MAC0 and MAC1 */
 #define I_12V_ATX_L			0x28
 #define I_12V_ATX_H			0x29

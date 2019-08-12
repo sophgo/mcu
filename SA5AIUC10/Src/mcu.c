@@ -154,6 +154,12 @@ static uint8_t mcu_read(void)
 	case REG_CMD:
 		ret = mcu_ctx.map.cmd;
 		break;
+	case REG_DDR:
+		ret = i2c_regs.ddr;
+		break;
+	case REG_PWR_GOOD:
+		ret = i2c_regs.power_good;
+		break;
 	case REG_EEPROM_OFFSET_L:
 		ret = mcu_ctx.map.eeprom_offset_l;
 		break;
@@ -165,7 +171,7 @@ static uint8_t mcu_read(void)
 		EEPROM_ReadBytes(eeprom_offset(), &ret, 1);
 		break;
 	default:
-		ret = i2c_regs.sw_ver;
+		ret = 0xff;
 		break;
 	}
 
