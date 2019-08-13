@@ -24,13 +24,13 @@ void led_hdd_switch(void)
 {
     if (I2C_Array[0] > 3)//process in ISR
     {
-       if (I2C_Array[0] & BIT0 == 0)
-       {
-           one_hot_led = BIT0;
-       }
-       else {
-           one_hot_led = BIT1;
-       }
+//       if (I2C_Array[0] & BIT0 == 0)
+//       {
+//           one_hot_led = BIT0;
+//       }
+//       else {
+//           one_hot_led = BIT1;
+//       }
        return ;       
     }
     
@@ -45,13 +45,13 @@ void led_eth_switch(void)
 {
     if (I2C_Array[1] > 3)//process in ISR
     {
-       if (I2C_Array[1] & BIT0 == 0)
-       {
-           one_hot_led = BIT2;
-       }
-       else {
-           one_hot_led = BIT3;
-       }
+//       if (I2C_Array[1] & BIT0 == 0)
+//       {
+//           one_hot_led = BIT2;
+//       }
+//       else {
+//           one_hot_led = BIT3;
+//       }
        return ;       
     }
         
@@ -66,13 +66,13 @@ void led_sys_switch(void)
 {
     if (I2C_Array[2] > 3)//process in ISR
     {
-       if (I2C_Array[2] & BIT0 == 0)
-       {
-           one_hot_led = BIT4;
-       }
-       else {
-           one_hot_led = BIT5;
-       }
+//       if (I2C_Array[2] & BIT0 == 0)
+//       {
+//           one_hot_led = BIT4;
+//       }
+//       else {
+//           one_hot_led = BIT5;
+//       }
        return ;       
     }
         
@@ -87,13 +87,13 @@ void led_fan_switch(void)
 {
     if (I2C_Array[3] > 3)//process in ISR
     {
-       if (I2C_Array[3] & BIT0 == 0)
-       {
-           one_hot_led = BIT6;
-       }
-       else {
-           one_hot_led = BIT7;
-       }
+//       if (I2C_Array[3] & BIT0 == 0)
+//       {
+//           one_hot_led = BIT6;
+//       }
+//       else {
+//           one_hot_led = BIT7;
+//       }
        return ;       
     }
         
@@ -108,13 +108,13 @@ void led_pwr_switch(void)
 {
     if (I2C_Array[4] > 3)//process in ISR
     {
-       if (I2C_Array[4] & BIT0 == 0)
-       {
-           one_hot_led = BIT8;
-       }
-       else {
-           one_hot_led = BIT9;
-       }
+//       if (I2C_Array[4] & BIT0 == 0)
+//       {
+//           one_hot_led = BIT8;
+//       }
+//       else {
+//           one_hot_led = BIT9;
+//       }
        return ;       
     }
         

@@ -143,6 +143,7 @@ void interrupt ISR(void)
         if(I2C_Array[6] == 0)
         {
             LED_UID_P = ~LED_UID_P;
+            LED_UID_N = ~LED_UID_N;
         }
 
 #if 1       
