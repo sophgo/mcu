@@ -75,6 +75,8 @@ struct i2c_isr_op {
 #define ISR_DIR_WRITE		I2C_SLAVE_WRITE
 #define ISR_DIR_READ		I2C_SLAVE_READ
 #define ISR_BUSY_SHIFT		(15)
+#define ISR_STOPF			(0x1UL << 5)
+#define ISR_NACKF			(0x1UL << 4)
 #define ISR_BUSY			(0X1 << ISR_BUSY_SHIFT)
 #define ISR_TXE				(1)
 
@@ -123,6 +125,7 @@ void isr_nackf_cb(I2C_CTX i2c_ctx)
 void isr_nackf_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
 	i2c_ctx->reg->icr |= 1 << isr_op->bit;
+	i2c_ctx->reg->txdr = 0x00U;
 }
 
 void isr_rxne_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
@@ -151,11 +154,13 @@ void isr_txis_cb(I2C_CTX i2c_ctx)
 void isr_txis_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
 	/* this bit ill clear when txdr write to some data */
+	i2c_ctx->reg->txdr = 0x00U;
 }
 
 void isr_stopf_cb(I2C_CTX i2c_ctx)
 {
-	i2c_ctx->reg->isr |= 1;
+	//This bit can be written to ¡®1¡¯ by software in order to flush the transmit data register I2C_TXDR.
+	i2c_ctx->reg->isr |= ISR_TXE;
 	/* TODO: stop flag received */
 	if (i2c_ctx->slave)
 		i2c_ctx->slave->stop();
