@@ -299,7 +299,7 @@ uint8_t pg_core = 0;
 
 uint8_t sec_count = 0;
 
-#define MCU_VERSION 0x04
+#define MCU_VERSION 0x05
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
@@ -444,10 +444,22 @@ void SET_HW_Ver(void)
 #define TMP451_SLAVE_ADDR (0x98)
 void READ_Temper(void)
 {
+	float t_remote, terr1, t3;
+	uint8_t temp1684, temp_board;
+
 	if (sec_count == 1) {
 		// detection of temperature value
-		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &i2c_regs.temp1684, 1, 1000);
+		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000);
 		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000);
+		//1 t_remote = t_register - 6.947;
+		t_remote = temp1684 - 6.947;
+		//2 Terr1 = ((n-1.008)/1.008) *(273.15 + T1); n = 1.11, T1 = 25
+		terr1 = ((1.11 - 1.008)/1.008)*(273.15 + 25);
+		//3 T3=((1.008*(Ttremote + Terr1) - (1.11 -1.008) * 273.15)/1.11);
+	    t3 = (1.008*(t_remote + terr1) - (1.11 - 1.008)*273.15)/1.11;
+
+	    i2c_regs.temp1684 = (uint8_t)t3;
+
 		if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
 			led_on();
 			i2c_regs.intr_status1 = BOARD_OVER_TEMP;
