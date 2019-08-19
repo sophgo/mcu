@@ -145,7 +145,7 @@ void Clean_ERR_INT(void);
 #define BUCK4_DVS0CFG0 		0x97
 
 uint8_t val;
-volatile static uint8_t power_on_good;
+volatile uint8_t power_on_good;
 void led_on(void);
 void led_filcker(void);
 void clean_pmic(void);
@@ -445,7 +445,7 @@ void SET_HW_Ver(void)
 void READ_Temper(void)
 {
 	float t_remote, terr1, t3;
-	uint8_t temp1684, temp_board;
+	uint8_t temp1684;
 
 	if (sec_count == 1) {
 		// detection of temperature value
@@ -573,6 +573,8 @@ int main(void)
 	  // response CPLD's commands
 	  switch(i2c_regs.cmd_reg) {
 	  case CMD_CPLD_PWR_ON:
+		  if (power_on_good == 1)
+			  break;
 		  i2c_regs.cmd_reg = 0;
 		  PowerON();
 		  break;
