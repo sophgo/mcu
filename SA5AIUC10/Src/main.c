@@ -241,6 +241,12 @@ void clean_pmic(void)
 
 void PowerDOWN(void)
 {
+	clean_pmic();
+	HAL_Delay(100);
+
+	power_on_good = 0;
+	i2c_regs.power_good = 0;
+
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
@@ -249,7 +255,7 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
@@ -275,6 +281,8 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
+
+	led_on();
 }
 
 void BM1684_RST(void)
@@ -290,26 +298,19 @@ void Clean_ERR_INT(void)
 	return ;
 }
 
-//CPLD Command
-#define CMD_CPLD_PWR_ON			0x01       //1684 power on
-#define CMD_CPLD_PWR_DOWN		0x02	   //1684 power down
-#define CMD_CPLD_1684RST		0x03       //reset 1684
-#define CMD_CPLD_SWRST			0x04	   //soft resetting
-#define CMD_CPLD_CLR			0x05       // clean MCU_ERR_INT, set 0.
-//BM1684 Command
-#define CMD_BM1684_REBOOT		0x06       // power is always on
-#define CMD_BM1684_RST			0x07       // power down
-#define CMD_MCU_UPDATE			0x08       // MCU UPDATE
-
 uint8_t pg_core = 0;
 
 uint8_t sec_count = 0;
 
 #define MCU_VERSION 0x05
 
-#define VENDER_SA5	0x01
-#define VENDER_SC5	0x02
-#define VENDER_SE5	0x03
+#define VENDER_EVB 	(0x00)
+#define VENDER_SA5	(0x01)
+#define VENDER_SC5	(0x02)
+#define VENDER_SE5	(0x03)
+#define VENDER_SM5P	(0x04)
+#define VENDER_SM5S	(0x05)
+#define VENDER_SA6	(0X06)
 
 
 void led_filcker(void)

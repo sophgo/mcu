@@ -154,7 +154,6 @@ void isr_txis_cb(I2C_CTX i2c_ctx)
 void isr_txis_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
 	/* this bit ill clear when txdr write to some data */
-	i2c_ctx->reg->txdr = 0x00U;
 }
 
 void isr_stopf_cb(I2C_CTX i2c_ctx)
