@@ -152,9 +152,10 @@ void clean_pmic(void);
 
 void PowerON(void)
 {
+	i2c_regs.power_on1 = 1;
 	clean_pmic();
 	HAL_Delay(100);
-
+	i2c_regs.power_on = 1;
 	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin, GPIO_PIN_SET);
@@ -209,6 +210,7 @@ void PowerON(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
+	i2c_regs.power_good1 = 1;
 	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
 		i2c_regs.power_good = 1;
 		power_on_good = 1;
@@ -243,9 +245,6 @@ void PowerDOWN(void)
 {
 	clean_pmic();
 	HAL_Delay(100);
-
-	power_on_good = 0;
-	i2c_regs.power_good = 0;
 
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
@@ -287,6 +286,8 @@ void PowerDOWN(void)
 
 void BM1684_RST(void)
 {
+	i2c_regs.intr_status1 |= RESET_OP;
+
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
@@ -302,7 +303,7 @@ uint8_t pg_core = 0;
 
 uint8_t sec_count = 0;
 
-#define MCU_VERSION 0x05
+#define MCU_VERSION 0x86
 
 #define VENDER_EVB 	(0x00)
 #define VENDER_SA5	(0x01)
@@ -324,6 +325,11 @@ void led_filcker(void)
 void led_on(void)
 {
 	HAL_GPIO_WritePin(GPIOA, MCU_LED_Pin, GPIO_PIN_SET);
+}
+
+void led_off(void)
+{
+	HAL_GPIO_WritePin(GPIOA, MCU_LED_Pin, GPIO_PIN_RESET);
 }
 /**
   * @brief  EXTI line detection callbacks.
@@ -473,16 +479,16 @@ void READ_Temper(void)
 #else
 	    // detection of temperature value
 	    HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, (uint8_t*)&i2c_regs.temp1684, 1, 1000);
+	    i2c_regs.temp1684 -= 7; //rough handling of tempareture calibration
 	    HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
 #endif //CAL_TEMPARETURE
 
 		if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
 			led_on();
-			i2c_regs.intr_status1 = BOARD_OVER_TEMP;
+			i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
 		} else if ((i2c_regs.temp1684 > 85) || (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
-			i2c_regs.intr_status1 = BM1684_OVER_TEMP;
+			i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
 			PowerDOWN();
-			led_on();
 		}
 		sec_count = 0;
 	} else {
@@ -510,7 +516,6 @@ void Factory_Info_Get(void)
 //	  EEPROM_ReadWords(addr_offset, &fty_Info.manufacturer, sizeof(Factory_Info));
 }
 
-uint32_t addr = 0xBF0;
 /* USER CODE END 0 */
 
 /**
@@ -520,7 +525,9 @@ uint32_t addr = 0xBF0;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint8_t Buffer;
+  uint8_t board_type;
+//  uint16_t board_type_addr = BOARD_TYPE;
   /* USER CODE END 1 */
   
 
@@ -571,11 +578,12 @@ int main(void)
   // set PCB & BOM version by voltage value
   SET_HW_Ver();
 
-  uint8_t Buffer;
-  EEPROM_ReadBytes(addr, &Buffer, 1);
+  EEPROM_ReadBytes(0x60, &board_type, 1);
+
+  EEPROM_ReadBytes(UPDATE_FLAG_OFFSET, &Buffer, 1);
 
   if (Buffer == 8) {
-	  EEPROM_WriteBytes(addr, 0x0, 1);
+	  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, 0x0, 1);
   }
 
 //  PowerON();
@@ -589,47 +597,48 @@ int main(void)
 	  // response CPLD's commands
 	  switch(i2c_regs.cmd_reg) {
 	  case CMD_CPLD_PWR_ON:
-		  if (power_on_good == 1)
-			  break;
-		  i2c_regs.cmd_reg = 0;
+		  i2c_regs.power_on2 = 1;
 		  PowerON();
 		  break;
 	  case CMD_CPLD_PWR_DOWN:
-		  i2c_regs.cmd_reg = 0;
+//		  i2c_regs.cmd_reg = 0;
 		  PowerDOWN();
 		  break;
 	  case CMD_CPLD_1684RST:
-		  i2c_regs.cmd_reg = 0;
+//		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
 		  i2c_regs.rst_1684_times++;
 		  break;
 	  case CMD_CPLD_SWRST:
-		  i2c_regs.cmd_reg = 0;
+//		  i2c_regs.cmd_reg = 0;
 		  break;
 	  case CMD_CPLD_CLR:
-		  i2c_regs.cmd_reg = 0;
+//		  i2c_regs.cmd_reg = 0;
 		  Clean_ERR_INT();
 		  break;
 	  case CMD_BM1684_REBOOT:
-		  i2c_regs.cmd_reg = 0;
+//		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
 		  break;
 	  case CMD_BM1684_RST:
-		  i2c_regs.cmd_reg = 0;
+//		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
 		  break;
 	  case CMD_MCU_UPDATE:
-		  i2c_regs.cmd_reg = 0;
+//		  i2c_regs.cmd_reg = 0;
 		  Buffer = 0x08;
-		  EEPROM_WriteBytes(addr, &Buffer,1);
+		  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, &Buffer,1);
 		  break;
 	  default:
-		  i2c_regs.cmd_reg = 0;
+		  i2c_regs.cmd_save = i2c_regs.cmd_reg;
+//		  i2c_regs.cmd_reg = 0;
 		  break;
 	  }
 
-	  if ((power_on_good == 1) && (i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP))
+	  if ((power_on_good == 1) && (i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP)) {
+		  i2c_regs.cmd_reg = 0;
 		  led_filcker();
+	  }
 	  // read temperature every 2 seconds
 	  READ_Temper();
     /* USER CODE END WHILE */

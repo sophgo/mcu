@@ -61,7 +61,8 @@ static void mcu_write(volatile uint8_t data)
 
 	switch (mcu_ctx.idx) {
 	case REG_CMD_REG:
-		i2c_regs.cmd_reg = data;
+//		if (i2c_regs.cmd_reg == 0)
+			i2c_regs.cmd_reg = data;
 		if (CPLD_CLR_ERR | i2c_regs.cmd_reg) {
 			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
 		}
@@ -102,7 +103,7 @@ static uint8_t mcu_read(void)
 	uint8_t ret = 0;
 	int offset;
 
-	//uint8_t tmp = *((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx);
+//	uint8_t tmp = *((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx);
 
 	switch (mcu_ctx.idx) {
 	case REG_VENDER:
@@ -167,6 +168,30 @@ static uint8_t mcu_read(void)
 //				PowerDOWN();
 			}
 		ret = i2c_regs.power_good;
+		break;
+	case REG_PWR_CNT:
+		ret = i2c_regs.power_cnt;
+		break;
+	case REG_CMD_SAVE:
+		ret = i2c_regs.cmd_save;
+		break;
+	case REG_ISR:
+		ret = i2c_regs.isr;
+		break;
+	case REG_PWR_GOOD1:
+		ret = i2c_regs.power_good1;
+		break;
+	case REG_ZERO_REG:
+		ret = i2c_regs.zero_reg;
+		break;
+	case REG_POWERON:
+		ret = i2c_regs.power_on;
+		break;
+	case REG_POWERON1:
+		ret = i2c_regs.power_on1;
+		break;
+	case REG_POWERON2:
+		ret = i2c_regs.power_on2;
 		break;
 	case REG_EEPROM_OFFSET_L:
 		ret = mcu_ctx.map.eeprom_offset_l;

@@ -126,6 +126,8 @@ void isr_nackf_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
 	i2c_ctx->reg->icr |= 1 << isr_op->bit;
 	i2c_ctx->reg->txdr = 0x00U;
+	//This bit can be written to ¡®1¡¯ by software in order to flush the transmit data register I2C_TXDR.
+	i2c_ctx->reg->isr |= ISR_TXE;
 }
 
 void isr_rxne_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
@@ -144,6 +146,7 @@ void isr_rxne_cb(I2C_CTX i2c_ctx)
 
 void isr_txis_cb(I2C_CTX i2c_ctx)
 {
+	i2c_ctx->reg->cr1 &=~I2C_CR1_TXIE; /*Disable transmit IT*/
 	/* TODO: send another bit */
 	if (i2c_ctx->slave)
 		i2c_ctx->reg->txdr = i2c_ctx->slave->read();
@@ -153,7 +156,7 @@ void isr_txis_cb(I2C_CTX i2c_ctx)
 
 void isr_txis_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
-	/* this bit ill clear when txdr write to some data */
+	/* this bit will auto clear when txdr write to some data */
 }
 
 void isr_stopf_cb(I2C_CTX i2c_ctx)
@@ -168,6 +171,7 @@ void isr_stopf_cb(I2C_CTX i2c_ctx)
 void isr_stopf_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
 	i2c_ctx->reg->icr |= 1 << isr_op->bit;
+	i2c_regs.zero_reg = i2c_regs.cmd_reg;
 }
 
 static inline struct i2c_slave_op *find_slave(unsigned int addr,I2C_CTX i2c_ctx)
@@ -191,8 +195,10 @@ void isr_addr_cb(I2C_CTX i2c_ctx)
 	i2c_ctx->slave = find_slave(addr,i2c_ctx);
 	if (i2c_ctx->slave) {
 		i2c_ctx->slave->match(dir);
-		if (dir == I2C_SLAVE_READ)
+		if (dir == I2C_SLAVE_READ) {
+			i2c_ctx->reg->cr1 |= I2C_CR1_TXIE; /*Set transmit IT*/
 			i2c_ctx->reg->txdr = i2c_ctx->slave->read();
+		}
 	}
 }
 
