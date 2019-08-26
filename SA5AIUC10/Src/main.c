@@ -210,15 +210,21 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
-		power_on_good = 1;
 		i2c_regs.power_good = 1;
+		power_on_good = 1;
 	} else {
 		i2c_regs.power_good = 0;
+		i2c_regs.intr_status1 |= POWERON_ERR;
 		PowerDOWN();
+		goto poweron_fail;
 	}
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
+
+poweron_fail:
+	i2c_regs.cmd_reg = 0;
+	return;
 }
 
 void clean_pmic(void)
@@ -444,10 +450,13 @@ void SET_HW_Ver(void)
 #define TMP451_SLAVE_ADDR (0x98)
 void READ_Temper(void)
 {
+#ifdef CAL_TEMPARETURE
 	float t_remote, terr1, t3;
 	uint8_t temp1684;
+#endif //CAL_TEMPARETURE
 
 	if (sec_count == 1) {
+#ifdef CAL_TEMPARETURE
 		// detection of temperature value
 		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000);
 		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000);
@@ -459,6 +468,12 @@ void READ_Temper(void)
 	    t3 = (1.008*(t_remote + terr1) - (1.11 - 1.008)*273.15)/1.11;
 
 	    i2c_regs.temp1684 = (uint8_t)t3;
+
+#else
+	    // detection of temperature value
+	    HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, (uint8_t*)&i2c_regs.temp1684, 1, 1000);
+	    HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
+#endif //CAL_TEMPARETURE
 
 		if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
 			led_on();

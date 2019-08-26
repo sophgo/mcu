@@ -282,6 +282,8 @@ extern I2C_CTX i2c_ctx3;
 
 #define BOARD_OVER_TEMP BIT3
 #define BM1684_OVER_TEMP BIT4
+#define POWERON_ERR	BIT5
+
 #define CPLD_CLR_ERR BIT5
 #define CPLD_SET_ERR BIT7
 

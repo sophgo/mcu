@@ -104,7 +104,6 @@ static uint8_t mcu_read(void)
 
 	//uint8_t tmp = *((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx);
 
-
 	switch (mcu_ctx.idx) {
 	case REG_VENDER:
 		ret = i2c_regs.vender;

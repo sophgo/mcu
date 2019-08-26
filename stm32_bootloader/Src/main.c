@@ -250,8 +250,11 @@ int main(void)
 //	  while(1);
 
 	  while(1) {
-		  if (reg[7] == 1)
+		  if (reg[7] == 1){
+			  Buffer = 0;
+			  EEPROM_WriteBytes(addr, &Buffer, 1);
 			  break;
+		  }
 	  }
   }
   /* Test if user code is programmed starting from address "APPLICATION_ADDRESS" */
@@ -262,7 +265,6 @@ int main(void)
     /* Initialize user application's Stack Pointer */
     __set_MSP(*(__IO uint32_t*) APPLICATION_ADDRESS);
     JumpToApplication();
-    EEPROM_Write(EEPROM_BASE + 8, 3);
   }
 
   /* USER CODE END 2 */
