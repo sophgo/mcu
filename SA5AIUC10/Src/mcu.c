@@ -90,6 +90,10 @@ static void mcu_write(volatile uint8_t data)
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
 		EEPROM_WriteBytes(eeprom_offset(), (uint8_t *)&data, 1);
 		break;
+	case REG_VENDER_VAL:
+		i2c_regs.vender_val = data;
+		EEPROM_WriteBytes(VENDER_Addr, (uint8_t *)&data, 1);
+		break;
 	default:
 		break;
 	}
@@ -169,30 +173,6 @@ static uint8_t mcu_read(void)
 			}
 		ret = i2c_regs.power_good;
 		break;
-	case REG_PWR_CNT:
-		ret = i2c_regs.power_cnt;
-		break;
-	case REG_CMD_SAVE:
-		ret = i2c_regs.cmd_save;
-		break;
-	case REG_ISR:
-		ret = i2c_regs.isr;
-		break;
-	case REG_PWR_GOOD1:
-		ret = i2c_regs.power_good1;
-		break;
-	case REG_ZERO_REG:
-		ret = i2c_regs.zero_reg;
-		break;
-	case REG_POWERON:
-		ret = i2c_regs.power_on;
-		break;
-	case REG_POWERON1:
-		ret = i2c_regs.power_on1;
-		break;
-	case REG_POWERON2:
-		ret = i2c_regs.power_on2;
-		break;
 	case REG_EEPROM_OFFSET_L:
 		ret = mcu_ctx.map.eeprom_offset_l;
 		break;
@@ -202,6 +182,9 @@ static uint8_t mcu_read(void)
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
 		EEPROM_ReadBytes(eeprom_offset(), &ret, 1);
+		break;
+	case REG_VENDER_VAL:
+		ret = i2c_regs.vender_val;
 		break;
 	default:
 		ret = 0xff;

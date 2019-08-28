@@ -171,7 +171,6 @@ void isr_stopf_cb(I2C_CTX i2c_ctx)
 void isr_stopf_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
 	i2c_ctx->reg->icr |= 1 << isr_op->bit;
-	i2c_regs.zero_reg = i2c_regs.cmd_reg;
 }
 
 static inline struct i2c_slave_op *find_slave(unsigned int addr,I2C_CTX i2c_ctx)

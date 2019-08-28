@@ -181,23 +181,18 @@ typedef struct I2C_REGS_t
 	uint8_t intr_mask1;
 	uint8_t intr_mask2;
 	uint8_t rst_1684_times;
-	uint8_t uptime0;  //0x0B
 
-	uint8_t uptime1;  //0x0c
-	uint8_t cause_pwr_down; //0x0D
-	uint8_t rtc[6];  //0x0e-0x13
-	uint8_t cmd;     //0x14
-	volatile uint8_t ddr;//0x15,21
-	volatile uint8_t power_good;
-	volatile uint8_t power_cnt;
-	uint8_t cmd_save;
-	volatile uint8_t isr;
-	volatile uint8_t power_good1;//0x1a
-	uint8_t zero_reg;
-	volatile uint8_t power_on;
-	volatile uint8_t power_on1;
-	volatile uint8_t power_on2;
-	uint8_t reserved1[9];
+	uint8_t uptime0;
+
+	uint8_t uptime1;
+	uint8_t cause_pwr_down;
+	uint8_t rtc[6];
+	uint8_t cmd;
+	uint8_t ddr;//0x15,21
+	uint8_t power_good;
+	uint8_t pmic_status;
+	uint8_t vender_val;
+	uint8_t reserved1[15];
 	CURRENT_VAL current;
 	uint8_t reserved2[2];
 	uint8_t eeprom_offset_l;
@@ -251,14 +246,8 @@ extern I2C_CTX i2c_ctx3;
 
 #define REG_DDR				0x15
 #define REG_PWR_GOOD		0x16
-#define REG_PWR_CNT			0x17
-#define REG_CMD_SAVE		0x18
-#define REG_ISR				0x19
-#define REG_PWR_GOOD1		0x1a
-#define REG_ZERO_REG		0x1b
-#define REG_POWERON			0x1c
-#define REG_POWERON1		0x1d
-#define REG_POWERON2		0x1e
+#define REG_VENDER_VAL		0x17
+
 /* some reserved here, original MAC0 and MAC1 */
 #define I_12V_ATX_L			0x28
 #define I_12V_ATX_H			0x29
@@ -327,15 +316,25 @@ extern I2C_CTX i2c_ctx3;
 //uint16_t addr_offset = 0x0;
 //
 /*
- *  SN Addr  : EEPROM_BANK1_START
- *  MAC0 Addr: EEPROM_BANK1_START +  32
- *  MAC1 Addr: EEPROM_BANK1_START +  32 * 2
+ *  MAC0 Addr: EEPROM_BANK1_START
+ *  MAC1 Addr: EEPROM_BANK1_START +  4
+ *   SN Addr  : EEPROM_BANK1_START + 12
  */
-#define SN_Addr		(EEPROM_BASE_ADDR + 32 * 0)
-#define MAC0_Addr	(EEPROM_BASE_ADDR + 32 * 1)
-#define MAC1_Addr	(EEPROM_BASE_ADDR + 32 * 2)
-#define BOARD_TYPE_OFFSET	(32 * 3)
-#define UPDATE_FLAG_OFFSET	(0xBF0)
+#define MAC0_Addr	(EEPROM_BASE_ADDR + 32 * 0)
+#define MAC1_Addr	(EEPROM_BASE_ADDR + 32 * 1)
+#define SN_Addr		(EEPROM_BASE_ADDR + 32 * 2)
+#define VENDER_Addr	(32 * 3)
+
+#define UPDATE_FLAG_OFFSET (0xbf0)
+
+#define MCU_VERSION (0x86)
+
+#define VENDER_SA5	0x01
+#define VENDER_SC5	0x02
+#define VENDER_SE5	0x03
+#define VENDER_SM5_P	0x04
+#define VENDER_SM5_S	0x05
+#define VENDER_SA6	0x06
 
 /* USER CODE END Private defines */
 

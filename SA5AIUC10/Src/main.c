@@ -152,10 +152,9 @@ void clean_pmic(void);
 
 void PowerON(void)
 {
-	i2c_regs.power_on1 = 1;
 	clean_pmic();
 	HAL_Delay(100);
-	i2c_regs.power_on = 1;
+
 	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin, GPIO_PIN_SET);
@@ -210,7 +209,6 @@ void PowerON(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
-	i2c_regs.power_good1 = 1;
 	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
 		i2c_regs.power_good = 1;
 		power_on_good = 1;
@@ -302,17 +300,6 @@ void Clean_ERR_INT(void)
 uint8_t pg_core = 0;
 
 uint8_t sec_count = 0;
-
-#define MCU_VERSION 0x86
-
-#define VENDER_EVB 	(0x00)
-#define VENDER_SA5	(0x01)
-#define VENDER_SC5	(0x02)
-#define VENDER_SE5	(0x03)
-#define VENDER_SM5P	(0x04)
-#define VENDER_SM5S	(0x05)
-#define VENDER_SA6	(0X06)
-
 
 void led_filcker(void)
 {
@@ -526,7 +513,6 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint8_t Buffer;
-  uint8_t board_type;
 //  uint16_t board_type_addr = BOARD_TYPE;
   /* USER CODE END 1 */
   
@@ -578,7 +564,11 @@ int main(void)
   // set PCB & BOM version by voltage value
   SET_HW_Ver();
 
-  EEPROM_ReadBytes(0x60, &board_type, 1);
+  EEPROM_ReadBytes(VENDER_Addr, &i2c_regs.vender, 1);
+
+  if (i2c_regs.vender != VENDER_SA5) {
+	  PowerON();
+  }
 
   EEPROM_ReadBytes(UPDATE_FLAG_OFFSET, &Buffer, 1);
 
@@ -586,7 +576,6 @@ int main(void)
 	  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, 0x0, 1);
   }
 
-//  PowerON();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -597,7 +586,6 @@ int main(void)
 	  // response CPLD's commands
 	  switch(i2c_regs.cmd_reg) {
 	  case CMD_CPLD_PWR_ON:
-		  i2c_regs.power_on2 = 1;
 		  PowerON();
 		  break;
 	  case CMD_CPLD_PWR_DOWN:
@@ -630,7 +618,6 @@ int main(void)
 		  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, &Buffer,1);
 		  break;
 	  default:
-		  i2c_regs.cmd_save = i2c_regs.cmd_reg;
 //		  i2c_regs.cmd_reg = 0;
 		  break;
 	  }
