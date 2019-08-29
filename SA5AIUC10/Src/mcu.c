@@ -218,7 +218,9 @@ static struct i2c_slave_op slave3 = {
 void mcu_init(void)
 {
 	assert(sizeof(I2C_REGS) == 0x60);
-	i2c_slave_register(&slave,i2c_ctx0);
+	if (i2c_regs.vender == VENDER_SA5) {
+		i2c_slave_register(&slave,i2c_ctx0);
+	}
 	i2c_slave_register(&slave3,i2c_ctx3);
 }
 

@@ -209,6 +209,7 @@ void PowerON(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
+#ifndef PCBV1
 	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
 		i2c_regs.power_good = 1;
 		power_on_good = 1;
@@ -217,6 +218,11 @@ void PowerON(void)
 		i2c_regs.intr_status1 |= POWERON_ERR;
 		PowerDOWN();
 		goto poweron_fail;
+	}
+#endif
+	if (i2c_regs.vender != VENDER_SA5) {
+		i2c_regs.power_good = 1;
+		power_on_good = 1;
 	}
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
@@ -503,6 +509,44 @@ void Factory_Info_Get(void)
 //	  EEPROM_ReadWords(addr_offset, &fty_Info.manufacturer, sizeof(Factory_Info));
 }
 
+#define TCA6416A_ADDR 0x40
+#define INPUT_PORT0	0X00
+#define INPUT_PORT1	0X01
+#define OUTPUT_PORT0 0X02
+#define OUTPUT_PORT1 0X03
+#define POLARITY_INVERSION0 0X04
+#define POLARITY_INVERSION1 0X05
+#define CONFIGURATION0 0x06
+#define CONFIGURATION1 0x07
+
+void TCA6416_init(void)
+{
+	uint8_t val;
+	val = 0xf6;
+	HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, CONFIGURATION0,1, &val, 1, 1000);
+	HAL_Delay(1);
+	val = 0x9;
+	HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, OUTPUT_PORT0,1, &val, 1, 1000);
+}
+
+
+void TCA6416_Deinit(void)
+{
+	uint8_t val;
+
+	HAL_I2C_Mem_Read(&hi2c1,TCA6416A_ADDR, INPUT_PORT0,1, &val, 1, 1000);
+
+	if (((val >> 5) & 0x01) == 0)
+	{
+		HAL_Delay(5000);
+		//power off
+		val = HAL_I2C_Mem_Read(&hi2c1,TCA6416A_ADDR, OUTPUT_PORT0,1, &val, 2, 1000);
+		val &= ~0x09;
+		HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, OUTPUT_PORT0,1, &val, 2, 1000);
+	}
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -526,6 +570,8 @@ int main(void)
   i2c_regs.vender = VENDER_SA5;
   i2c_regs.sw_ver = MCU_VERSION;
 
+  EEPROM_ReadBytes(VENDER_Addr, &i2c_regs.vender, 1);
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -539,24 +585,39 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C2_Init();
-  MX_I2C1_Init();
+  if (i2c_regs.vender != VENDER_SA5) {
+	  BM_MX_I2C1_Init();
+  } else {
+	  MX_I2C1_Init();
+  }
   MX_I2C3_Init();
   MX_LPTIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+
 //  Factory_Info_Get();
-  i2c_ctx0 = (struct i2c_ctx*)malloc(sizeof(struct i2c_ctx));
+  if (i2c_regs.vender == VENDER_SA5) {
+	  i2c_ctx0 = (struct i2c_ctx*)malloc(sizeof(struct i2c_ctx));
+  }
   i2c_ctx3 = (struct i2c_ctx*)malloc(sizeof(struct i2c_ctx));
-  memset(i2c_ctx0, 0, sizeof(struct i2c_ctx));
+  if (i2c_regs.vender == VENDER_SA5) {
+	  memset(i2c_ctx0, 0, sizeof(struct i2c_ctx));
+  }
   memset(i2c_ctx3, 0, sizeof(struct i2c_ctx));
 
-  i2c_init(hi2c1.Instance,i2c_ctx0);
+  if (i2c_regs.vender == VENDER_SA5) {
+	  i2c_init(hi2c1.Instance,i2c_ctx0);
+  }
   i2c_init(hi2c3.Instance,i2c_ctx3);
-  ds1307_init();
+  if (i2c_regs.vender == VENDER_SA5) {
+	  ds1307_init();
+  }
   mcu_init();
   wdt_init();
   eeprom_init();
-  i2c_slave_start(i2c_ctx0);
+  if (i2c_regs.vender == VENDER_SA5) {
+	  i2c_slave_start(i2c_ctx0);
+  }
   i2c_slave_start(i2c_ctx3);
   // make sure PB6 is high
 //  HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
@@ -564,9 +625,8 @@ int main(void)
   // set PCB & BOM version by voltage value
   SET_HW_Ver();
 
-  EEPROM_ReadBytes(VENDER_Addr, &i2c_regs.vender, 1);
-
   if (i2c_regs.vender != VENDER_SA5) {
+	  TCA6416_init();
 	  PowerON();
   }
 
