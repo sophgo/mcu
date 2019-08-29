@@ -202,7 +202,7 @@ typedef struct I2C_REGS_t
 
 extern I2C_REGS i2c_regs;
 
-#define I2C_SLAVE_MAX	(4)
+#define I2C_SLAVE_MAX	(8)
 //extern struct i2c_isr_op;
 
 typedef struct i2c_ctx {

@@ -118,9 +118,8 @@ ISR_OP_DEFAULT(alert)
 
 void isr_nackf_cb(I2C_CTX i2c_ctx)
 {
-	if (i2c_ctx->slave)
-		if (i2c_ctx->slave->nack)
-			i2c_ctx->slave->nack();
+	if (i2c_ctx->slave && i2c_ctx->slave->nack)
+		i2c_ctx->slave->nack();
 }
 void isr_nackf_clr(struct i2c_isr_op *isr_op,I2C_CTX i2c_ctx)
 {
@@ -140,7 +139,7 @@ void isr_rxne_cb(I2C_CTX i2c_ctx)
 	/* this will clear rxne bit */
 	uint8_t data = i2c_ctx->reg->rxdr;
 
-	if (i2c_ctx->slave)
+	if (i2c_ctx->slave && i2c_ctx->slave->write)
 		i2c_ctx->slave->write(data);
 }
 
@@ -148,7 +147,7 @@ void isr_txis_cb(I2C_CTX i2c_ctx)
 {
 	i2c_ctx->reg->cr1 &=~I2C_CR1_TXIE; /*Disable transmit IT*/
 	/* TODO: send another bit */
-	if (i2c_ctx->slave)
+	if (i2c_ctx->slave && i2c_ctx->slave->read)
 		i2c_ctx->reg->txdr = i2c_ctx->slave->read();
 	else
 		i2c_ctx->reg->txdr = 0;
@@ -164,7 +163,7 @@ void isr_stopf_cb(I2C_CTX i2c_ctx)
 	//This bit can be written to ¡®1¡¯ by software in order to flush the transmit data register I2C_TXDR.
 	i2c_ctx->reg->isr |= ISR_TXE;
 	/* TODO: stop flag received */
-	if (i2c_ctx->slave)
+	if (i2c_ctx->slave && i2c_ctx->slave->stop)
 		i2c_ctx->slave->stop();
 }
 
@@ -193,8 +192,9 @@ void isr_addr_cb(I2C_CTX i2c_ctx)
 	i2c_ctx->dir = dir;
 	i2c_ctx->slave = find_slave(addr,i2c_ctx);
 	if (i2c_ctx->slave) {
-		i2c_ctx->slave->match(dir);
-		if (dir == I2C_SLAVE_READ) {
+		if (i2c_ctx->slave->match)
+			i2c_ctx->slave->match(dir);
+		if (dir == I2C_SLAVE_READ && i2c_ctx->slave->read) {
 			i2c_ctx->reg->cr1 |= I2C_CR1_TXIE; /*Set transmit IT*/
 			i2c_ctx->reg->txdr = i2c_ctx->slave->read();
 		}
@@ -222,19 +222,31 @@ struct i2c_isr_op i2c_isr_table[] = {
 	{isr_alert_cb, isr_alert_clr, 13},
 };
 
+#define ISR_TXE_SHIFT		0
+#define ISR_TXIS_SHIFT		1
+#define ISR_RXNE_SHIFT		2
+#define ISR_ADDR_SHIFT		3
+#define ISR_NACK_SHIFT		4
+#define ISR_STOP_SHIFT		5
+
 void i2c_isr(I2C_CTX i2c_ctx)
 {
 	unsigned int old;
 	unsigned int sts;
-	int i, j;
+	int i, j, isr;
+	int p[6] = {
+		ISR_TXE_SHIFT, ISR_TXIS_SHIFT, ISR_RXNE_SHIFT,
+		ISR_NACK_SHIFT, ISR_STOP_SHIFT, ISR_ADDR_SHIFT,
+	};
 
 	old = i2c_intr_disable(i2c_ctx);
 	sts = i2c_ctx->reg->isr & i2c_ctx->isr_irq_mask;
 
 	for (i = 0; i < 6; ++i) {
-		if ((sts >> i) & 1) {
+		isr = p[i];
+		if ((sts >> isr) & 1) {
 			for (j = 0; j < ARRAY_SIZE(i2c_isr_table); ++j) {
-				if (i2c_isr_table[j].bit == i) {
+				if (i2c_isr_table[j].bit == isr) {
 					if (i2c_isr_table[j].cb)
 						i2c_isr_table[j].cb(i2c_ctx);
 					if (i2c_isr_table[j].clr)

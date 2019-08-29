@@ -202,23 +202,35 @@ struct i2c_isr_op i2c_isr_table[] = {
 	{isr_alert_cb, isr_alert_clr, 13},
 };
 
+#define ISR_TXE_SHIFT		0
+#define ISR_TXIS_SHIFT		1
+#define ISR_RXNE_SHIFT		2
+#define ISR_ADDR_SHIFT		3
+#define ISR_NACK_SHIFT		4
+#define ISR_STOP_SHIFT		5
+
 void i2c_isr(void)
 {
 	unsigned int old;
 	unsigned int sts;
-	int i, j;
+	int i, j, isr;
+	int p[6] = {
+		ISR_TXE_SHIFT, ISR_TXIS_SHIFT, ISR_RXNE_SHIFT,
+		ISR_NACK_SHIFT, ISR_STOP_SHIFT, ISR_ADDR_SHIFT,
+	};
 
 	old = i2c_intr_disable();
 	sts = i2c_ctx.reg->isr & i2c_ctx.isr_irq_mask;
 
 	for (i = 0; i < 6; ++i) {
-		if ((sts >> i) & 1) {
+		isr = p[i];
+		if ((sts >> isr) & 1) {
 			for (j = 0; j < ARRAY_SIZE(i2c_isr_table); ++j) {
-				if (i2c_isr_table[j].bit == i) {
+				if (i2c_isr_table[j].bit == isr) {
 					if (i2c_isr_table[j].cb)
-						i2c_isr_table[j].cb();
+						i2c_isr_table[j].cb(i2c_ctx);
 					if (i2c_isr_table[j].clr)
-						i2c_isr_table[j].clr(i2c_isr_table + j);
+						i2c_isr_table[j].clr(i2c_isr_table + j,i2c_ctx);
 				}
 			}
 		}

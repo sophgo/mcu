@@ -52,6 +52,7 @@
 #include "mcu.h"
 #include "wdt.h"
 #include "ds1307.h"
+#include "tmp451.h"
 #include "soc_eeprom.h"
 #include "eeprom.h"
 #include "stdlib.h"
@@ -448,32 +449,30 @@ void SET_HW_Ver(void)
 }
 
 #define TMP451_SLAVE_ADDR (0x98)
+uint8_t temp1684;	// before calibration
 void READ_Temper(void)
 {
 #ifdef CAL_TEMPARETURE
 	float t_remote, terr1, t3;
-	uint8_t temp1684;
 #endif //CAL_TEMPARETURE
 
 	if (sec_count == 1) {
-#ifdef CAL_TEMPARETURE
 		// detection of temperature value
 		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000);
+#ifdef CAL_TEMPARETURE
 		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000);
 		//1 t_remote = t_register - 6.947;
 		t_remote = temp1684 - 6.947;
 		//2 Terr1 = ((n-1.008)/1.008) *(273.15 + T1); n = 1.11, T1 = 25
 		terr1 = ((1.11 - 1.008)/1.008)*(273.15 + 25);
 		//3 T3=((1.008*(Ttremote + Terr1) - (1.11 -1.008) * 273.15)/1.11);
-	    t3 = (1.008*(t_remote + terr1) - (1.11 - 1.008)*273.15)/1.11;
+		t3 = (1.008*(t_remote + terr1) - (1.11 - 1.008)*273.15)/1.11;
 
-	    i2c_regs.temp1684 = (uint8_t)t3;
+		i2c_regs.temp1684 = (uint8_t)t3;
 
 #else
-	    // detection of temperature value
-	    HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, (uint8_t*)&i2c_regs.temp1684, 1, 1000);
-	    i2c_regs.temp1684 -= 7; //rough handling of tempareture calibration
-	    HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
+		i2c_regs.temp1684 = temp1684 - 7; //rough handling of tempareture calibration
+		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
 #endif //CAL_TEMPARETURE
 
 		if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
@@ -614,6 +613,7 @@ int main(void)
   if (i2c_regs.vender == VENDER_SA5) {
 	  ds1307_init();
   }
+  tmp451_init();
   mcu_init();
   wdt_init();
   eeprom_init();
