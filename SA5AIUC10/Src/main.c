@@ -192,7 +192,7 @@ void PowerON(void)
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_Delay(1);
-#if 1  //DDR4
+#if 0  //DDR4
 	val = 0xE5;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
 	i2c_regs.ddr = 1;
@@ -209,17 +209,17 @@ void PowerON(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
-#ifndef PCBV1
-	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
-		i2c_regs.power_good = 1;
-		power_on_good = 1;
-	} else {
-		i2c_regs.power_good = 0;
-		i2c_regs.intr_status1 |= POWERON_ERR;
-		PowerDOWN();
-		goto poweron_fail;
-	}
-#endif
+//#ifndef PCBV1
+//	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
+//		i2c_regs.power_good = 1;
+//		power_on_good = 1;
+//	} else {
+//		i2c_regs.power_good = 0;
+//		i2c_regs.intr_status1 |= POWERON_ERR;
+//		PowerDOWN();
+//		goto poweron_fail;
+//	}
+//#endif
 	if (i2c_regs.vender != VENDER_SA5) {
 		i2c_regs.power_good = 1;
 		power_on_good = 1;
