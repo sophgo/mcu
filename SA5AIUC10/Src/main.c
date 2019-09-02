@@ -567,10 +567,12 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  i2c_regs.vender = VENDER_SA5;
-  i2c_regs.sw_ver = MCU_VERSION;
-
   EEPROM_ReadBytes(VENDER_Addr, &i2c_regs.vender, 1);
+
+  if (i2c_regs.vender == 0)
+	  i2c_regs.vender = VENDER_SA5;
+
+  i2c_regs.sw_ver = MCU_VERSION;
 
   /* USER CODE END Init */
 
