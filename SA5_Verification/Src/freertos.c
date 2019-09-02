@@ -128,10 +128,10 @@ void MX_FREERTOS_Init(void) {
 	// auto power-up detect
 	if (tStage == STAGE_FULLIN) {
 		*data = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
+		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_TYPE_IIC, 1, data, 1, 100)
 				!= HAL_OK)
 			Error("[initial] I2C read error");
-		Info("[initial] REG[0x03]=0x%02X", *data);
+		Info("[initial] REG[0x00]=0x%02X", *data);
 		int adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
 		while (adValue < 3100) {
 			adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));

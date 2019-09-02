@@ -622,16 +622,27 @@ static BaseType_t prvGetSNCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	uint8_t data[32] = {0};
 	data[0] = LOW_U16(MCU_EEPROM_SN_ADDR);
     data[1] = HIGH_U16(MCU_EEPROM_SN_ADDR);
-	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC,1,data, 2, 100)!= HAL_OK)
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC,1,data, 2, MCU_I2C_TIMEOUT)!= HAL_OK)
 	{
 	    sprintf(pcWriteBuffer, "[getsn] write address failed\r\nQA_FAIL_IDBG\r\n");
 	    return pdFALSE;
 	}
-	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 17, 100)!= HAL_OK)
+	#if 0
+	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 17, MCU_I2C_TIMEOUT)!= HAL_OK)
 	{
 	    sprintf(pcWriteBuffer, "[getsn] read sn failed\r\nQA_FAIL_IDBG\r\n");
 	    return pdFALSE;
 	}
+	#else
+	for(int i =0;i < 17;i ++)
+	{
+	    if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC+i, 1, data+i, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+	    {
+	        sprintf(pcWriteBuffer, "[getsn] read sn failed\r\nQA_FAIL_IDBG\r\n");
+	        return pdFALSE;
+	    }
+	}
+	#endif
 	sprintf(pcWriteBuffer, "sn[%s]\r\n", data);
 	return pdFALSE;
 }
@@ -683,12 +694,22 @@ static BaseType_t prvGetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 	    sprintf(pcWriteBuffer, "[getmac0] write low address failed\r\nQA_FAIL_MAC0\r\n");
 	    return pdFALSE;
 	}
-
+    #if 0
 	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 6, MCU_I2C_TIMEOUT)!= HAL_OK)
 	{
 	    sprintf(pcWriteBuffer, "[getmac0] read mac0 failed\r\nQA_FAIL_MAC0\r\n");
 	    return pdFALSE;
 	}
+	#else
+	for(int i = 0;i < 6; i++)
+	{
+    	if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC+i, 1, data+i, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+    	{
+    	    sprintf(pcWriteBuffer, "[getmac0] read mac0 failed\r\nQA_FAIL_MAC0\r\n");
+    	    return pdFALSE;
+    	}
+	}
+	#endif
 	if (data[0] != 0x00)
 		sprintf(pcWriteBuffer, "mac0[%02X%02X%02X%02X%02X%02X]\r\n",
 				data[0], data[1], data[2], data[3], data[4], data[5]);
@@ -759,11 +780,22 @@ static BaseType_t prvGetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 	    sprintf(pcWriteBuffer, "[getsn] write address failed\r\nQA_FAIL_IDBG\r\n");
 	    return pdFALSE;
 	}
+	#if 0
     if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC, 1, data, 6, MCU_I2C_TIMEOUT)!= HAL_OK)
     {
         sprintf(pcWriteBuffer, "[getsn] read mac1 failed\r\nQA_FAIL_IDBG\r\n");
         return pdFALSE;
     }
+    #else
+    for(int i = 0; i < 6;i++)
+    {
+        if(HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_DATA_IIC+i, 1, data+i, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+        {
+            sprintf(pcWriteBuffer, "[getsn] read mac1 failed\r\nQA_FAIL_IDBG\r\n");
+            return pdFALSE;
+        }
+    }
+    #endif
 	if (data[0] != 0x00)
 		sprintf(pcWriteBuffer, "mac1[%02X%02X%02X%02X%02X%02X]\r\n",
 				data[0], data[1], data[2], data[3], data[4], data[5]);
