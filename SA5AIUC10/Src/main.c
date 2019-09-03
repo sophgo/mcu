@@ -146,6 +146,7 @@ void Clean_ERR_INT(void);
 #define BUCK4_DVS0CFG0 		0x97
 
 uint8_t val;
+volatile uint8_t chk_val;
 volatile uint8_t power_on_good;
 void led_on(void);
 void led_filcker(void);
@@ -168,6 +169,9 @@ void PowerON(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	val = 0xD0;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
@@ -192,14 +196,23 @@ void PowerON(void)
 	HAL_Delay(1);
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR_VDDQ 1.1v
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_Delay(1);
 #if 0  //DDR4
 	val = 0xE5;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
 	i2c_regs.ddr = 1;
 #else //ddr4x
 	val = 0x7D;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
 	i2c_regs.ddr = 0;
 #endif
 	HAL_Delay(1);//5ms
@@ -299,6 +312,14 @@ void BM1684_RST(void)
 
 	return ;
 }
+
+void BM1684_REBOOT(void)
+{
+	PowerDOWN();
+	HAL_Delay(5);
+	PowerON();
+}
+
 void Clean_ERR_INT(void)
 {
 	return ;
@@ -666,13 +687,13 @@ int main(void)
 //		  i2c_regs.cmd_reg = 0;
 		  Clean_ERR_INT();
 		  break;
-	  case CMD_BM1684_REBOOT:
-//		  i2c_regs.cmd_reg = 0;
-		  BM1684_RST();
-		  break;
 	  case CMD_BM1684_RST:
 //		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
+		  break;
+	  case CMD_BM1684_REBOOT:
+//		  i2c_regs.cmd_reg = 0;
+		  BM1684_REBOOT();
 		  break;
 	  case CMD_MCU_UPDATE:
 //		  i2c_regs.cmd_reg = 0;

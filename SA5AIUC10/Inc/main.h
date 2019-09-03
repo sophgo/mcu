@@ -301,8 +301,8 @@ extern I2C_CTX i2c_ctx3;
 #define CMD_CPLD_SWRST			0x04	   //soft resetting
 #define CMD_CPLD_CLR			0x05       // clean MCU_ERR_INT, set 0.
 //BM1684 Command
-#define CMD_BM1684_REBOOT		0x06       // power is always on
-#define CMD_BM1684_RST			0x07       // power down
+#define CMD_BM1684_RST			0x06       // power is always on
+#define CMD_BM1684_REBOOT		0x07       // power down
 #define CMD_MCU_UPDATE			0x08       // MCU UPDATE
 
 //EEPROM  FLASH
