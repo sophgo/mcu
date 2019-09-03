@@ -111,7 +111,7 @@ uint32_t addr = 0x08080000;
 uint16_t addr_offset = 0x0;
 
 uint8_t val;
-
+volatile uint8_t chk_val;
 
 /**
   * @brief This function provides minimum delay (in milliseconds) based
@@ -142,8 +142,23 @@ void HAL_Delay(uint32_t Delay)
   }
 }
 
+void clean_pmic(void)
+{
+	val = 0;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+}
+
 void PowerON(void)
 {
+	clean_pmic();
+	HAL_Delay(100);
+
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
 	val = 0;
@@ -152,6 +167,9 @@ void PowerON(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	val = 0xD0;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);//  2.3ms
@@ -173,16 +191,25 @@ void PowerON(void)
 	HAL_Delay(1);//4.3ms
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR_VDDQ 1.1v
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_Delay(1);
-	val = 0x87;//1.8ms
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.65v
+//	val = 0x87;//1.8ms
+//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.65v
 #if 1
 	val = 0x7D;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
 	i2c_regs.ddr = 0;
 #else
 	val = 0xE5;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	if (chk_val != val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
 	i2c_regs.ddr = 1;
 #endif
 	HAL_Delay(1);//5ms
@@ -200,6 +227,9 @@ void PowerON(void)
 
 void PowerDOWN(void)
 {
+	clean_pmic();
+	HAL_Delay(100);
+
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin, GPIO_PIN_RESET);
@@ -241,6 +271,13 @@ void BM1684_RST(void)
 	Convert_sysrst_gpio(1);
 
 	return ;
+}
+
+void BM1684_REBOOT(void)
+{
+	PowerDOWN();
+	HAL_Delay(5);
+	PowerON();
 }
 
 void Clean_ERR_INT(void)
@@ -400,14 +437,16 @@ int main(void)
 		  i2c_regs.rst_1684_times++;
 		  break;
 	  case CMD_CPLD_SWRST:
+		  BM1684_RST();
 		  break;
 	  case CMD_CPLD_CLR:
 		  Clean_ERR_INT();
 		  break;
-	  case CMD_BM1684_REBOOT:
-		  break;
 	  case CMD_BM1684_RST:
 		  BM1684_RST();
+		  break;
+	  case CMD_BM1684_REBOOT:
+		  BM1684_REBOOT();
 		  break;
 	  }
 
