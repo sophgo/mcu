@@ -207,8 +207,12 @@ typedef struct I2C_REGS_t
 	uint8_t uptime1;
 	uint8_t cause_pwr_down;
 	uint8_t rtc[6];
+
 	uint8_t cmd;
-	uint8_t reserved0[3];
+	uint8_t ddr;  //0x15,21
+	uint8_t power_good;
+	uint8_t reserved0;
+
 	uint8_t reserved1[16];
 	CURRENT_VAL current;
 }I2C_REGS;
@@ -241,6 +245,7 @@ extern I2C_REGS i2c_regs;
 #define REG_SYS_RTC_YEAR	0x13
 
 #define REG_CMD				0x14
+#define REG_DDR				0x15
 /* some reserved here, original MAC0 and MAC1 */
 #define I_12V_ATX_L			0x28
 #define I_12V_ATX_H			0x29

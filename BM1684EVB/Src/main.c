@@ -176,10 +176,15 @@ void PowerON(void)
 	HAL_Delay(1);
 	val = 0x87;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.65v
-//	val = 0x7D;//1.8ms
-//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
-//	val = 0xE5;//1.8ms
-//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+#if 1
+	val = 0x7D;//1.8ms
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+	i2c_regs.ddr = 0;
+#else
+	val = 0xE5;//1.8ms
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	i2c_regs.ddr = 1;
+#endif
 	HAL_Delay(1);//5ms
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_L_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);

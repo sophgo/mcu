@@ -70,6 +70,10 @@ static void mcu_write(volatile uint8_t data)
 	case REG_CMD:
 		mcu_ctx.map.cmd = data;
 		break;
+	case REG_DDR:
+		mcu_ctx.map.ddr = data;
+		i2c_regs.ddr = data;
+		break;
 	default:
 		break;
 	}
@@ -196,6 +200,9 @@ static uint8_t mcu_read(void)
 		break;
 	case REG_CMD:
 		ret = mcu_ctx.map.cmd;
+		break;
+	case REG_DDR:
+		ret = i2c_regs.ddr;
 		break;
 	default:
 		ret = i2c_regs.sw_ver;
