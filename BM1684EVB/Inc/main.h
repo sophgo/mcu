@@ -283,6 +283,7 @@ extern I2C_REGS i2c_regs;
 #define CPLD_CLR_ERR BIT5
 #define CPLD_SET_ERR BIT7
 
+#define WDT_RST			BIT1
 
 //CPLD Command
 #define CMD_CPLD_PWR_ON			0x01       //1684 power on
