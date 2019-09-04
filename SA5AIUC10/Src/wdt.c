@@ -117,12 +117,13 @@ static struct i2c_slave_op slave = {
 	.stop = wdt_stop,
 };
 
-extern void BM1684_RST(void);
 /* system should implement this function for real soc reset */
 __weak void soc_wdt_reset(void)
 {
 //	printf("SoC watchdog reset\r\n");
-	BM1684_RST();
+//	BM1684_RST();
+	i2c_regs.intr_status2 = WDT_RST;
+	i2c_regs.cmd_reg = 0x03;
 }
 
 static void wdt_reset(void)

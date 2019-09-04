@@ -291,6 +291,8 @@ extern I2C_CTX i2c_ctx3;
 #define POWERON_ERR BIT5
 #define RESET_OP BIT7
 
+#define WDT_RST			BIT1
+
 #define CPLD_CLR_ERR	BIT5
 #define CPLD_SET_ERR	BIT7
 
