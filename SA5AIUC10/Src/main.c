@@ -673,41 +673,34 @@ int main(void)
 		  PowerON();
 		  break;
 	  case CMD_CPLD_PWR_DOWN:
-//		  i2c_regs.cmd_reg = 0;
 		  PowerDOWN();
 		  break;
 	  case CMD_CPLD_1684RST:
-//		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
 		  i2c_regs.rst_1684_times++;
 		  break;
 	  case CMD_CPLD_SWRST:
-//		  i2c_regs.cmd_reg = 0;
 		  break;
 	  case CMD_CPLD_CLR:
-//		  i2c_regs.cmd_reg = 0;
 		  Clean_ERR_INT();
 		  break;
 	  case CMD_BM1684_RST:
-//		  i2c_regs.cmd_reg = 0;
 		  BM1684_RST();
 		  break;
 	  case CMD_BM1684_REBOOT:
-//		  i2c_regs.cmd_reg = 0;
 		  BM1684_REBOOT();
 		  break;
 	  case CMD_MCU_UPDATE:
-//		  i2c_regs.cmd_reg = 0;
 		  Buffer = 0x08;
 		  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, &Buffer,1);
 		  break;
 	  default:
-//		  i2c_regs.cmd_reg = 0;
 		  break;
 	  }
 
+	  i2c_regs.cmd_reg = 0;
+
 	  if ((power_on_good == 1) && (i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP)) {
-		  i2c_regs.cmd_reg = 0;
 		  led_filcker();
 	  }
 	  // read temperature every 2 seconds

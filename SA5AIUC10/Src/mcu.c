@@ -163,14 +163,6 @@ static uint8_t mcu_read(void)
 		ret = i2c_regs.ddr;
 		break;
 	case REG_PWR_GOOD:
-		if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
-				power_on_good = 1;
-				i2c_regs.power_good = 1;
-			} else {
-				power_on_good = 0;
-				i2c_regs.power_good = 0;
-//				PowerDOWN();
-			}
 		ret = i2c_regs.power_good;
 		break;
 	case REG_EEPROM_OFFSET_L:
