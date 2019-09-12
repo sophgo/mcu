@@ -185,8 +185,11 @@ void PowerON(void)
 	led_on();
 }
 
-#define MAX_REG_SIZE 0x8
-volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,0,0,0,0,0,0,0 };
+#define MAX_REG_SIZE 0x20
+volatile uint8_t reg[MAX_REG_SIZE] = { 0x02,0,0,0,0,0,0,0, \
+									0,0,0,0,0,0,0,0, \
+									0,0,0,0,0,0,0,0, \
+									0,0,0,0,0,0,0,0};
 
 extern uint32_t ramsource;
 extern uint32_t packet_length;
@@ -196,7 +199,7 @@ extern uint32_t flashdestination;
 
 extern uint8_t flash_write;
 
-uint32_t addr = 0xBF0;
+uint32_t eeprom_addr = 0xBF0;
 
 /* USER CODE END 0 */
 
@@ -242,7 +245,7 @@ int main(void)
 
   uint8_t Buffer;
 //  EEPROM_WriteBytes(addr, &Buffer, 1);
-  EEPROM_ReadBytes(addr, &Buffer, 1);
+  EEPROM_ReadBytes(eeprom_addr, &Buffer, 1);
 
 //#if debug
   if (Buffer == 8) {
@@ -251,8 +254,8 @@ int main(void)
 
 	  while(1) {
 		  if (reg[7] == 1){
-			  Buffer = 0;
-			  EEPROM_WriteBytes(addr, &Buffer, 1);
+//			  Buffer = 0;
+//			  EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
 			  break;
 		  }
 	  }
