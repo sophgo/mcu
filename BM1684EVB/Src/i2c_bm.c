@@ -228,9 +228,9 @@ void i2c_isr(void)
 			for (j = 0; j < ARRAY_SIZE(i2c_isr_table); ++j) {
 				if (i2c_isr_table[j].bit == isr) {
 					if (i2c_isr_table[j].cb)
-						i2c_isr_table[j].cb(i2c_ctx);
+						i2c_isr_table[j].cb();
 					if (i2c_isr_table[j].clr)
-						i2c_isr_table[j].clr(i2c_isr_table + j,i2c_ctx);
+						i2c_isr_table[j].clr(i2c_isr_table + j);
 				}
 			}
 		}

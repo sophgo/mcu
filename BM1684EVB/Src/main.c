@@ -286,7 +286,7 @@ void Clean_ERR_INT(void)
 	return ;
 }
 CURRENT_VAL curr_evb;
-#define MCU_VERSION 0x01
+#define MCU_VERSION 0x02
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
@@ -465,7 +465,7 @@ int main(void)
 
 		  Convert_sysrst_gpio(1);
 
-		  HAL_Delay(1000);
+//		  HAL_Delay(1000);
 	  }
 //	  GET_Current_Voltage();
   }
