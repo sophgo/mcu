@@ -167,10 +167,13 @@ void PowerON(void)
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_Delay(1);
+#if 0//DDR4
 	val = 0xE5;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
-//	val = 0x7D;//1.8ms
-//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+#else
+	val = 0x7D;//1.8ms
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
+#endif
 	HAL_Delay(1);//5ms
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_RESET);
 //	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
@@ -185,8 +188,51 @@ void PowerON(void)
 	led_on();
 }
 
+void PowerDOWN(void)
+{
+	clean_pmic();
+	HAL_Delay(100);
+
+	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOA, EN_VQPS18_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN_VDD_PCIE_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOA, P08_PWR_GOOD_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN_VDD_PHY_Pin, GPIO_PIN_RESET);//EN_PHY
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 1, 1000);// LDO1V_IN
+	HAL_Delay(40);
+	HAL_GPIO_WritePin(GPIOB, EN_PMIC_Pin, GPIO_PIN_RESET);// EN_PMIC 1->0
+	HAL_Delay(3);
+	HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_RESET);
+	HAL_Delay(1);
+
+	led_on();
+}
+
 #define MAX_REG_SIZE 0x20
-volatile uint8_t reg[MAX_REG_SIZE] = { 0x02,0,0,0,0,0,0,0, \
+volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,2,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0};
@@ -254,8 +300,9 @@ int main(void)
 
 	  while(1) {
 		  if (reg[7] == 1){
-//			  Buffer = 0;
-//			  EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
+			  PowerDOWN();
+			  Buffer = 0;
+			  EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
 			  break;
 		  }
 	  }
