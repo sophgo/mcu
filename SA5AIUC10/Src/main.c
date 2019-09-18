@@ -705,6 +705,14 @@ int main(void)
 	  }
 	  // read temperature every 2 seconds
 	  READ_Temper();
+
+	  //POLL PCIEE_RST STATUS FOR SYS_RST
+	  if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
+	  {
+		  PowerDOWN();
+	  	  HAL_Delay(30);
+	  	  PowerON();
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
