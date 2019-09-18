@@ -384,31 +384,17 @@ __weak void i2c_cb(void)
 //	i2c_regs.cmd_reg = data;
 }
 
-uint8_t ADC_PCB_Ver0;
-uint8_t ADC_PCB_Ver1;
-uint8_t ADC_BOM_Ver0;
-uint8_t ADC_BOM_Ver1;
-uint32_t ADC_Buf[5];
-
-/* 0\1  0   0.5   1   1.5
- * 0    0   4     8   12
- * 0.5  1   5     9   13
- * 1    2   6     10  14
- * 1.5  3   7     11  15
- */
-
-uint8_t hw_version[4][4] = { \
-		{0, 4, 8, 12}, \
-		{1, 5, 9, 13}, \
-		{2, 6, 10, 14}, \
-		{3, 7, 11, 15}  \
-};
+float ADC_PCB_Ver0;
+float ADC_BOM_Ver0;
+uint8_t PCB_Ver0;
+uint8_t BOM_Ver0;
+uint32_t ADC_Buf[2];
 
 void SET_HW_Ver(void)
 {
 	  uint8_t i;
 
-	  for (i = 0; i < 5; i++) {
+	  for (i = 0; i < 2; i++) {
 		  HAL_ADC_Start(&hadc);
 		  HAL_ADC_PollForConversion(&hadc, 0XFFFF);
 
@@ -419,52 +405,34 @@ void SET_HW_Ver(void)
 
 	  //calculate voltage
 	  ADC_PCB_Ver0 = (float)ADC_Buf[0] /4096 * 2;
-	  ADC_PCB_Ver1 = (float)ADC_Buf[1] /4096 * 2;
-	  ADC_BOM_Ver0 = (float)ADC_Buf[2] /4096 * 2;
-	  ADC_BOM_Ver1 = (float)ADC_Buf[3] /4096 * 2;
+	  ADC_BOM_Ver0 = (float)ADC_Buf[1] /4096 * 2;
 
-	  if (ADC_PCB_Ver0 < 0.3) {
+	  if (ADC_PCB_Ver0 < 0.08) {
+		  PCB_Ver0 = 0;
+	  } else if ((ADC_PCB_Ver0 >= 0.1) && (ADC_PCB_Ver0 < 0.26)) {
+		  PCB_Ver0 = 1;
+	  } else if ((ADC_PCB_Ver0 >= 0.28) && (ADC_PCB_Ver0 < 0.38)){
+		  PCB_Ver0 = 2;
+	  } else if ((ADC_PCB_Ver0 >= 0.40) && (ADC_PCB_Ver0 < 0.50)){
+		  PCB_Ver0 = 3;
+	  } else {
 		  ADC_PCB_Ver0 = 0;
-	  } else if ((ADC_PCB_Ver0 >= 0.3) && (ADC_PCB_Ver0 < 0.8)) {
-		  ADC_PCB_Ver0 = 0.5;
-	  } else if ((ADC_PCB_Ver0 >= 0.8) && (ADC_PCB_Ver0 < 1.3)){
-		  ADC_PCB_Ver0 = 1;
+	  }
+//0, 0.18.0.33,0.46
+//0,   1,   2,  3
+	  if (ADC_BOM_Ver0 < 0.08) {
+		  BOM_Ver0 = 0;
+	  } else if ((ADC_BOM_Ver0 >= 0.1) && (ADC_BOM_Ver0 < 0.26)) {
+		  BOM_Ver0 = 1;
+	  } else if ((ADC_BOM_Ver0 >= 0.28) && (ADC_BOM_Ver0 < 0.38)){
+		  BOM_Ver0 = 2;
+	  } else if ((ADC_BOM_Ver0 >= 0.40) && (ADC_BOM_Ver0 < 0.50)){
+		  BOM_Ver0 = 3;
 	  } else {
-		  ADC_PCB_Ver0 = 1.5;
+		  BOM_Ver0 = 0;
 	  }
 
-	  if (ADC_PCB_Ver1 < 0.3) {
-		  ADC_PCB_Ver1 = 0;
-	  } else if ((ADC_PCB_Ver1 >= 0.3) && (ADC_PCB_Ver1 < 0.8)) {
-	      ADC_PCB_Ver1 = 0.5;
-	  } else if ((ADC_PCB_Ver1 >= 0.8) && (ADC_PCB_Ver1 < 1.3)){
-	  	  ADC_PCB_Ver1 = 1;
-	  } else {
-	  	  ADC_PCB_Ver1 = 1.5;
-	  }
-
-	  if (ADC_BOM_Ver0 < 0.3) {
-		  ADC_BOM_Ver0 = 0;
-	  } else if ((ADC_BOM_Ver0 >= 0.3) && (ADC_BOM_Ver0 < 0.8)) {
-		  ADC_BOM_Ver0 = 0.5;
-	  } else if ((ADC_BOM_Ver0 >= 0.8) && (ADC_BOM_Ver0 < 1.3)){
-		  ADC_BOM_Ver0 = 1;
-	  } else {
-		  ADC_BOM_Ver0 = 1.5;
-	  }
-
-	  if (ADC_BOM_Ver1 < 0.3) {
-		  ADC_BOM_Ver1 = 0;
-	  } else if ((ADC_BOM_Ver1 >= 0.3) && (ADC_BOM_Ver1 < 0.8)) {
-		  ADC_BOM_Ver1 = 0.5;
-	  } else if ((ADC_BOM_Ver1 >= 0.8) && (ADC_BOM_Ver1 < 1.3)){
-		  ADC_BOM_Ver1 = 1;
-	  } else {
-		  ADC_BOM_Ver1 = 1.5;
-	  }
-
-
-	  i2c_regs.hw_ver = (hw_version[ADC_PCB_Ver0 * 2][ADC_PCB_Ver1 * 2] << 4) | hw_version[ADC_BOM_Ver0][ADC_BOM_Ver1];
+	  i2c_regs.hw_ver = (PCB_Ver0 << 4) | BOM_Ver0;
 
 
 	  HAL_ADC_Stop(&hadc);
@@ -595,6 +563,7 @@ int main(void)
 
   i2c_regs.sw_ver = MCU_VERSION;
 
+  HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -643,6 +612,7 @@ int main(void)
 	  i2c_slave_start(i2c_ctx0);
   }
   i2c_slave_start(i2c_ctx3);
+
   // make sure PB6 is high
 //  HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
 //  HAL_GPIO_WritePin(GPIOB, TPU_I2C_ADD3_Pin, GPIO_PIN_SET);
@@ -707,7 +677,7 @@ int main(void)
 	  READ_Temper();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
-	  if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
+	  if ((i2c_regs.vender != VENDER_SA5) && (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin)))
 	  {
 		  PowerDOWN();
 	  	  HAL_Delay(30);

@@ -106,12 +106,8 @@ void Error_Handler(void);
 #define EN_5V_GPIO_Port GPIOH
 #define PCB_VER0_Pin GPIO_PIN_0
 #define PCB_VER0_GPIO_Port GPIOA
-#define PCB_VER1_Pin GPIO_PIN_1
-#define PCB_VER1_GPIO_Port GPIOA
-#define BOM_VER0_Pin GPIO_PIN_2
+#define BOM_VER0_Pin GPIO_PIN_1
 #define BOM_VER0_GPIO_Port GPIOA
-#define BOM_VER1_Pin GPIO_PIN_3
-#define BOM_VER1_GPIO_Port GPIOA
 #define MCU_LED_Pin GPIO_PIN_5
 #define MCU_LED_GPIO_Port GPIOA
 #define MCU_CPLD_ERR_Pin GPIO_PIN_6
@@ -329,7 +325,7 @@ extern I2C_CTX i2c_ctx3;
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0x8)
+#define MCU_VERSION (0x9)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
