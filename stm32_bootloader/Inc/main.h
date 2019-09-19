@@ -64,21 +64,20 @@ void Error_Handler(void);
 #define PCIE_RST_MCU_Pin GPIO_PIN_14
 #define PCIE_RST_MCU_GPIO_Port GPIOC
 #define PCIE_RST_MCU_EXTI_IRQn EXTI4_15_IRQn
-#define PG_CORE_Pin GPIO_PIN_15
-#define PG_CORE_GPIO_Port GPIOC
-#define PG_CORE_EXTI_IRQn EXTI4_15_IRQn
-#define EN_3P3_Pin GPIO_PIN_0
-#define EN_3P3_GPIO_Port GPIOH
-#define EN_5V_Pin GPIO_PIN_1
-#define EN_5V_GPIO_Port GPIOH
+#define PMIC_INT_Pin GPIO_PIN_15
+#define PMIC_INT_GPIO_Port GPIOC
+#define PG_VDDC_Pin GPIO_PIN_0
+#define PG_VDDC_GPIO_Port GPIOH
+#define PG_VDD_TPU_Pin GPIO_PIN_1
+#define PG_VDD_TPU_GPIO_Port GPIOH
 #define PCB_VER0_Pin GPIO_PIN_0
 #define PCB_VER0_GPIO_Port GPIOA
-#define PCB_VER1_Pin GPIO_PIN_1
-#define PCB_VER1_GPIO_Port GPIOA
-#define BOM_VER0_Pin GPIO_PIN_2
-#define BOM_VER0_GPIO_Port GPIOA
-#define BOM_VER1_Pin GPIO_PIN_3
-#define BOM_VER1_GPIO_Port GPIOA
+#define BOM_VRE0_Pin GPIO_PIN_1
+#define BOM_VRE0_GPIO_Port GPIOA
+#define PG_VDD_PHY_Pin GPIO_PIN_2
+#define PG_VDD_PHY_GPIO_Port GPIOA
+#define PG_VDDIO18_Pin GPIO_PIN_3
+#define PG_VDDIO18_GPIO_Port GPIOA
 #define MCU_LED_Pin GPIO_PIN_5
 #define MCU_LED_GPIO_Port GPIOA
 #define MCU_CPLD_ERR_Pin GPIO_PIN_6
@@ -89,8 +88,8 @@ void Error_Handler(void);
 #define EN0_ISL68127_GPIO_Port GPIOB
 #define EN1_ISL68127_Pin GPIO_PIN_1
 #define EN1_ISL68127_GPIO_Port GPIOB
-#define EN_PMIC_Pin GPIO_PIN_2
-#define EN_PMIC_GPIO_Port GPIOB
+#define PG_VDD_TPU_MEM_Pin GPIO_PIN_2
+#define PG_VDD_TPU_MEM_GPIO_Port GPIOB
 #define PMIC_SCL_Pin GPIO_PIN_10
 #define PMIC_SCL_GPIO_Port GPIOB
 #define PMIC_SDA_Pin GPIO_PIN_11
@@ -113,8 +112,8 @@ void Error_Handler(void);
 #define P08_PWR_GOOD_GPIO_Port GPIOA
 #define DDR_PWR_GOOD_Pin GPIO_PIN_12
 #define DDR_PWR_GOOD_GPIO_Port GPIOA
-#define TEMP_ALR_N_Pin GPIO_PIN_15
-#define TEMP_ALR_N_GPIO_Port GPIOA
+#define PG_VDDIO33_Pin GPIO_PIN_15
+#define PG_VDDIO33_GPIO_Port GPIOA
 #define EN_VQPS18_Pin GPIO_PIN_3
 #define EN_VQPS18_GPIO_Port GPIOB
 #define I2C1_SDA_Pin GPIO_PIN_4
@@ -124,14 +123,15 @@ void Error_Handler(void);
 #define TWARN_VDD_TPU_EXTI_IRQn EXTI4_15_IRQn
 #define EN_VDD_TPU_MEM_Pin GPIO_PIN_6
 #define EN_VDD_TPU_MEM_GPIO_Port GPIOB
-#define TPU_I2C_ADD3_Pin GPIO_PIN_7
-#define TPU_I2C_ADD3_GPIO_Port GPIOB
+#define PG_VDD_PCIE_Pin GPIO_PIN_7
+#define PG_VDD_PCIE_GPIO_Port GPIOB
 #define CPLD_MCU_SCL_Pin GPIO_PIN_8
 #define CPLD_MCU_SCL_GPIO_Port GPIOB
 #define CPLD_MCU_SDA_Pin GPIO_PIN_9
 #define CPLD_MCU_SDA_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
+#define MAX_REG_SIZE 0x20
+extern volatile uint8_t reg[MAX_REG_SIZE];
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

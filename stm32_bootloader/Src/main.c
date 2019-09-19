@@ -102,6 +102,8 @@ uint32_t JumpAddress;
 #define BUCK4_DVS0CFG0 		0x97
 
 uint8_t val;
+uint8_t origin_val;
+uint8_t chk_val;
 
 void led_filcker(void)
 {
@@ -133,10 +135,6 @@ void PowerON(void)
 	clean_pmic();
 	HAL_Delay(100);
 
-	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
 	val = 0;
@@ -185,6 +183,8 @@ void PowerON(void)
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
+
+	reg[22] = 1;
 	led_on();
 }
 
@@ -220,18 +220,11 @@ void PowerDOWN(void)
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 1, 1000);// LDO1V_IN
-	HAL_Delay(40);
-	HAL_GPIO_WritePin(GPIOB, EN_PMIC_Pin, GPIO_PIN_RESET);// EN_PMIC 1->0
-	HAL_Delay(3);
-	HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 
 	led_on();
 }
 
-#define MAX_REG_SIZE 0x20
 volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,2,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
@@ -300,7 +293,7 @@ int main(void)
 
 	  while(1) {
 		  if (reg[7] == 1){
-			  PowerDOWN();
+//			  PowerDOWN();
 			  Buffer = 0;
 			  EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
 			  break;
@@ -323,7 +316,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /* USER CODE END WHILE */
 
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }

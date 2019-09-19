@@ -52,16 +52,12 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin|EN_5V_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, MCU_LED_Pin|MCU_CPLD_ERR_Pin|GPIO1_Pin|GPIO2_Pin 
                           |GPIO3_Pin|P08_PWR_GOOD_Pin|DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin|EN1_ISL68127_Pin|EN_PMIC_Pin|EN_VDDIO18_Pin 
-                          |EN_VDDIO33_Pin|EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin|EN_VQPS18_Pin 
-                          |TPU_I2C_ADD3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin|EN1_ISL68127_Pin|EN_VDDIO18_Pin|EN_VDDIO33_Pin 
+                          |EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin|EN_VQPS18_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(EN_VDD_TPU_MEM_GPIO_Port, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
@@ -80,17 +76,22 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(PCIE_RST_MCU_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = PG_CORE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(PG_CORE_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = PMIC_INT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(PMIC_INT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PHPin PHPin */
-  GPIO_InitStruct.Pin = EN_3P3_Pin|EN_5V_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Pin = PG_VDDC_Pin|PG_VDD_TPU_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = PG_VDD_PHY_Pin|PG_VDDIO18_Pin|PG_VDDIO33_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin */
   GPIO_InitStruct.Pin = MCU_LED_Pin|GPIO1_Pin;
@@ -107,12 +108,18 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(MCU_CPLD_ERR_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin 
-                           PBPin PBPin PBPin PBPin */
-  GPIO_InitStruct.Pin = EN0_ISL68127_Pin|EN1_ISL68127_Pin|EN_PMIC_Pin|EN_VDDIO18_Pin 
-                          |EN_VDDIO33_Pin|EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin|EN_VQPS18_Pin;
+                           PBPin PBPin PBPin */
+  GPIO_InitStruct.Pin = EN0_ISL68127_Pin|EN1_ISL68127_Pin|EN_VDDIO18_Pin|EN_VDDIO33_Pin 
+                          |EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin|EN_VQPS18_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PBPin PBPin */
+  GPIO_InitStruct.Pin = PG_VDD_TPU_MEM_Pin|PG_VDD_PCIE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin PAPin */
@@ -123,23 +130,17 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = TEMP_ALR_N_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(TEMP_ALR_N_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = TWARN_VDD_TPU_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(TWARN_VDD_TPU_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = EN_VDD_TPU_MEM_Pin|TPU_I2C_ADD3_Pin;
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = EN_VDD_TPU_MEM_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(EN_VDD_TPU_MEM_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
