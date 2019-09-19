@@ -158,10 +158,6 @@ void PowerON(void)
 	clean_pmic();
 	HAL_Delay(100);
 
-	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
 	val = 0;
@@ -173,26 +169,57 @@ void PowerON(void)
 	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN
 	if (chk_val != origin_val)
 		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
+
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
-
-	HAL_GPIO_WritePin(GPIOB, TPU_I2C_ADD3_Pin, GPIO_PIN_SET);
+	if (HAL_GPIO_ReadPin(EN_VDDIO18_GPIO_Port, EN_VDDIO18_Pin) == GPIO_PIN_RESET) {
+		i2c_regs.cause_pwr_down = ERR_VDDIO18;
+//		goto poweron_fail;
+	}
 
 	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
+	if (HAL_GPIO_ReadPin(PG_VDDC_GPIO_Port, PG_VDDC_Pin) == GPIO_PIN_RESET) {
+		i2c_regs.cause_pwr_down = ERR_VDDC;
+//		goto poweron_fail;
+	}
+
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
+	if (HAL_GPIO_ReadPin(PG_VDDIO33_GPIO_Port, PG_VDDIO33_Pin) == GPIO_PIN_RESET) {
+		i2c_regs.cause_pwr_down = ERR_VDDIO33;
+//		goto poweron_fail;
+	}
+
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_PHY_Pin, GPIO_PIN_SET);//EN_PHY
 	HAL_Delay(1);
+	if (HAL_GPIO_ReadPin(PG_VDD_PHY_GPIO_Port, PG_VDD_PHY_Pin) == GPIO_PIN_RESET) {
+		i2c_regs.cause_pwr_down = ERR_VDDPHY;
+//		goto poweron_fail;
+	}
+
 	HAL_GPIO_WritePin(GPIOA, P08_PWR_GOOD_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
+
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_PCIE_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
+	if (HAL_GPIO_ReadPin(PG_VDD_PCIE_GPIO_Port, PG_VDD_PCIE_Pin) == GPIO_PIN_RESET) {
+		i2c_regs.cause_pwr_down = ERR_VDDPCIE;
+//		goto poweron_fail;
+	}
+
 	HAL_GPIO_WritePin(GPIOA, GPIO2_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
+	if (HAL_GPIO_ReadPin(PG_VDD_TPU_GPIO_Port, PG_VDD_TPU_Pin) == GPIO_PIN_RESET) {
+		HAL_Delay(5);
+		if (HAL_GPIO_ReadPin(PG_VDD_TPU_GPIO_Port, PG_VDD_TPU_Pin) == GPIO_PIN_RESET)
+			i2c_regs.cause_pwr_down = ERR_VDDTPU;
+//		goto poweron_fail;
+	}
+
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	origin_val = val = 0xE5;
@@ -218,33 +245,33 @@ void PowerON(void)
 #endif
 	HAL_Delay(1);//5ms
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_RESET);
-//	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);
+	HAL_Delay(2);
+#if 0 //PG can not be detect in some board
+	if (HAL_GPIO_ReadPin(PG_VDD_TPU_MEM_GPIO_Port, PG_VDD_TPU_MEM_Pin) == GPIO_PIN_RESET) {
+		HAL_Delay(5);
+		if (HAL_GPIO_ReadPin(PG_VDD_TPU_MEM_GPIO_Port, PG_VDD_TPU_MEM_Pin) == GPIO_PIN_RESET)
+			i2c_regs.cause_pwr_down = ERR_VDDTPUMEM;
+//		goto poweron_fail;
+	}
+#endif
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
-//#ifndef PCBV1
-//	if (HAL_GPIO_ReadPin(PG_CORE_GPIO_Port, PG_CORE_Pin) == GPIO_PIN_SET) {
-//		i2c_regs.power_good = 1;
-//		power_on_good = 1;
-//	} else {
-//		i2c_regs.power_good = 0;
-//		i2c_regs.intr_status1 |= POWERON_ERR;
-//		PowerDOWN();
-//		goto poweron_fail;
-//	}
-//#endif
-	if (i2c_regs.vender != VENDER_SA5) {
-		i2c_regs.power_good = 1;
-		power_on_good = 1;
-	}
+
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
 
 poweron_fail:
-	i2c_regs.cmd_reg = 0;
+	if (i2c_regs.cause_pwr_down == 0) {
+		i2c_regs.power_good = 1;
+		power_on_good = 1;
+	} else {
+		i2c_regs.power_good = 0;
+		i2c_regs.intr_status1 |= POWERON_ERR;
+		PowerDOWN();
+	}
 	return;
 }
 
@@ -292,12 +319,6 @@ void PowerDOWN(void)
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 1, 1000);// LDO1V_IN
-	HAL_Delay(40);
-	HAL_GPIO_WritePin(GPIOB, EN_PMIC_Pin, GPIO_PIN_RESET);// EN_PMIC 1->0
-	HAL_Delay(3);
-	HAL_GPIO_WritePin(GPIOH, EN_3P3_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOH, EN_5V_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 
 	led_on();
