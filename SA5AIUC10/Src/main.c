@@ -384,15 +384,12 @@ __weak void i2c_cb(void)
 //	i2c_regs.cmd_reg = data;
 }
 
-float ADC_PCB_Ver0;
-float ADC_BOM_Ver0;
-uint8_t PCB_Ver0;
-uint8_t BOM_Ver0;
-uint32_t ADC_Buf[2];
-
 void SET_HW_Ver(void)
 {
 	  uint8_t i;
+	  uint8_t PCB_Ver0 = 0;
+	  uint8_t BOM_Ver0 = 0;
+	  uint16_t ADC_Buf[2];
 
 	  for (i = 0; i < 2; i++) {
 		  HAL_ADC_Start(&hadc);
@@ -403,37 +400,37 @@ void SET_HW_Ver(void)
 		  }
 	  }
 
-	  //calculate voltage
-	  ADC_PCB_Ver0 = (float)ADC_Buf[0] /4096 * 2;
-	  ADC_BOM_Ver0 = (float)ADC_Buf[1] /4096 * 2;
-
-	  if (ADC_PCB_Ver0 < 0.08) {
+	  //0,0.18,0.46,0.71,1,1.28
+	  //0,368, 942,1454,2048,2621
+	  if (ADC_Buf[0] < 200) {
 		  PCB_Ver0 = 0;
-	  } else if ((ADC_PCB_Ver0 >= 0.1) && (ADC_PCB_Ver0 < 0.26)) {
+	  } else if ((ADC_Buf[0] > 250) && (ADC_Buf[0] < 600)) {
 		  PCB_Ver0 = 1;
-	  } else if ((ADC_PCB_Ver0 >= 0.28) && (ADC_PCB_Ver0 < 0.38)){
+	  } else if ((ADC_Buf[0] > 700) && (ADC_Buf[0] < 1150)) {
 		  PCB_Ver0 = 2;
-	  } else if ((ADC_PCB_Ver0 >= 0.40) && (ADC_PCB_Ver0 < 0.50)){
+	  } else if ((ADC_Buf[0] > 1200) && (ADC_Buf[0] < 1700)) {
 		  PCB_Ver0 = 3;
-	  } else {
-		  ADC_PCB_Ver0 = 0;
+	  } else if ((ADC_Buf[0] > 1750) && (ADC_Buf[0] < 2300)) {
+		  PCB_Ver0 = 4;
+	  } else if ((ADC_Buf[0] > 2350) && (ADC_Buf[0] < 2900)) {
+		  PCB_Ver0 = 5;
 	  }
-//0, 0.18.0.33,0.46
-//0,   1,   2,  3
-	  if (ADC_BOM_Ver0 < 0.08) {
+
+	  if (ADC_Buf[1] < 200) {
 		  BOM_Ver0 = 0;
-	  } else if ((ADC_BOM_Ver0 >= 0.1) && (ADC_BOM_Ver0 < 0.26)) {
+	  } else if ((ADC_Buf[1] > 250) && (ADC_Buf[1] < 600)) {
 		  BOM_Ver0 = 1;
-	  } else if ((ADC_BOM_Ver0 >= 0.28) && (ADC_BOM_Ver0 < 0.38)){
+	  } else if ((ADC_Buf[1] > 700) && (ADC_Buf[1] < 1150)) {
 		  BOM_Ver0 = 2;
-	  } else if ((ADC_BOM_Ver0 >= 0.40) && (ADC_BOM_Ver0 < 0.50)){
+	  } else if ((ADC_Buf[1] > 1200) && (ADC_Buf[1] < 1700)) {
 		  BOM_Ver0 = 3;
-	  } else {
-		  BOM_Ver0 = 0;
+	  } else if ((ADC_Buf[1] > 1750) && (ADC_Buf[1] < 2300)) {
+		  BOM_Ver0 = 4;
+	  } else if ((ADC_Buf[1] > 2350) && (ADC_Buf[1] < 2900)) {
+		  BOM_Ver0 = 5;
 	  }
 
 	  i2c_regs.hw_ver = (PCB_Ver0 << 4) | BOM_Ver0;
-
 
 	  HAL_ADC_Stop(&hadc);
 }
