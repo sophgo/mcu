@@ -463,6 +463,8 @@ void READ_Temper(void)
 #ifdef CAL_TEMPARETURE
 	float t_remote, terr1, t3;
 #endif //CAL_TEMPARETURE
+	uint8_t alert_cnt = 0;
+	uint8_t powerdown_cnt = 0;
 
 	if (sec_count == 1) {
 		// detection of temperature value
@@ -484,11 +486,19 @@ void READ_Temper(void)
 #endif //CAL_TEMPARETURE
 
 		if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
-			led_on();
-			i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
+			alert_cnt++;
+			if (alert_cnt ==3) {
+				i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
+				led_on();
+				alert_cnt = 0;
+			}
 		} else if ((i2c_regs.temp1684 > 85) || (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
-			i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
-			PowerDOWN();
+			powerdown_cnt++;
+			if (powerdown_cnt == 3) {
+				i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
+				PowerDOWN();
+				powerdown_cnt = 0;
+			}
 		}
 		sec_count = 0;
 	} else {
