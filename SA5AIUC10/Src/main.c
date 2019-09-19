@@ -175,28 +175,28 @@ void PowerON(void)
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(EN_VDDIO18_GPIO_Port, EN_VDDIO18_Pin) == GPIO_PIN_RESET) {
 		i2c_regs.cause_pwr_down = ERR_VDDIO18;
-//		goto poweron_fail;
+		goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDDC_GPIO_Port, PG_VDDC_Pin) == GPIO_PIN_RESET) {
 		i2c_regs.cause_pwr_down = ERR_VDDC;
-//		goto poweron_fail;
+		goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDDIO33_GPIO_Port, PG_VDDIO33_Pin) == GPIO_PIN_RESET) {
 		i2c_regs.cause_pwr_down = ERR_VDDIO33;
-//		goto poweron_fail;
+		goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_PHY_Pin, GPIO_PIN_SET);//EN_PHY
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDD_PHY_GPIO_Port, PG_VDD_PHY_Pin) == GPIO_PIN_RESET) {
 		i2c_regs.cause_pwr_down = ERR_VDDPHY;
-//		goto poweron_fail;
+		goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOA, P08_PWR_GOOD_Pin, GPIO_PIN_SET);
@@ -206,7 +206,7 @@ void PowerON(void)
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDD_PCIE_GPIO_Port, PG_VDD_PCIE_Pin) == GPIO_PIN_RESET) {
 		i2c_regs.cause_pwr_down = ERR_VDDPCIE;
-//		goto poweron_fail;
+		goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOA, GPIO2_Pin, GPIO_PIN_SET);
@@ -214,10 +214,8 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDD_TPU_GPIO_Port, PG_VDD_TPU_Pin) == GPIO_PIN_RESET) {
-		HAL_Delay(5);
-		if (HAL_GPIO_ReadPin(PG_VDD_TPU_GPIO_Port, PG_VDD_TPU_Pin) == GPIO_PIN_RESET)
-			i2c_regs.cause_pwr_down = ERR_VDDTPU;
-//		goto poweron_fail;
+		i2c_regs.cause_pwr_down = ERR_VDDTPU;
+		goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_SET);
@@ -251,7 +249,7 @@ void PowerON(void)
 		HAL_Delay(5);
 		if (HAL_GPIO_ReadPin(PG_VDD_TPU_MEM_GPIO_Port, PG_VDD_TPU_MEM_Pin) == GPIO_PIN_RESET)
 			i2c_regs.cause_pwr_down = ERR_VDDTPUMEM;
-//		goto poweron_fail;
+		goto poweron_fail;
 	}
 #endif
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_SET);
