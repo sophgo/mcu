@@ -15,7 +15,7 @@ DATE: 05/05/2018
 
 #define SYS_GOOD PORTAbits.RA0
 #define SYS_FAULT PORTAbits.RA1
-#define PWR_GOOD PORTAbits.RA3
+#define PWR_GOOD PORTAbits.RA2
 #define PWR_FAULT PORTAbits.RA3
 #define ETH_GOOD PORTAbits.RA4
 #define ETH_FAULT PORTAbits.RA5
@@ -54,7 +54,7 @@ DATE: 05/05/2018
 
 volatile unsigned char I2C_Array[RX_ELMNTS] =
 //led0, led1, led2, led3, led4, key_power, key_uid, version
-{0x00, 0x00, 0x00, 0x00, 0x00,  0x00,      0x00,   0x00,
+{0x00, 0x00, 0x00, 0x00, 0x00,  0x00,      0x00,   0x03,
 //flick frequence
 0x00,
 };
