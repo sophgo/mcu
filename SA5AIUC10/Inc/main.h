@@ -285,10 +285,11 @@ extern I2C_CTX i2c_ctx3;
 #define BOARD_OVER_TEMP BIT3
 #define BM1684_OVER_TEMP BIT4
 
-#define CPLD_CLR_ERR BIT5
-#define CPLD_SET_ERR BIT7
-#define POWERON_ERR BIT5
-#define RESET_OP BIT7
+#define CPLD_CLR_ERR 	BIT5
+#define CPLD_SET_ERR 	BIT7
+#define POWERON_ERR		BIT5
+#define V12V_ERR 		BIT6
+#define RESET_OP 		BIT7
 
 #define WDT_RST			BIT1
 
@@ -337,7 +338,7 @@ extern I2C_CTX i2c_ctx3;
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0xa)
+#define MCU_VERSION (0xb)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

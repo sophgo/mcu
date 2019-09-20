@@ -157,6 +157,7 @@ void PowerON(void)
 {
 	clean_pmic();
 	HAL_Delay(100);
+	i2c_regs.cause_pwr_down = 0;
 
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
@@ -290,6 +291,9 @@ void PowerDOWN(void)
 	clean_pmic();
 	HAL_Delay(100);
 
+	i2c_regs.power_good = 0;
+	power_on_good = 0;
+
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
@@ -396,13 +400,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   }
 }
 
-//TODO: receive data from bm1684 or CPLD
-__weak void i2c_cb(void)
-{
-	//set i2c_regs paramer
-//	i2c_regs.cmd_reg = data;
-}
-
 void SET_HW_Ver(void)
 {
 	  uint8_t i;
@@ -454,15 +451,46 @@ void SET_HW_Ver(void)
 	  HAL_ADC_Stop(&hadc);
 }
 
+static uint8_t low_power_cnt = 0;
+
+void DETECT_12V_Voltage(void)
+{
+	  uint8_t i;
+	  uint16_t ADC_Buf[3];
+
+	  for (i = 0; i < 3; i++) {
+		  HAL_ADC_Start(&hadc);
+		  HAL_ADC_PollForConversion(&hadc, 0XFFFF);
+
+		  if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc), HAL_ADC_STATE_REG_EOC)) {
+			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
+		  }
+	  }
+
+	  //power down when Vdetect  continuous < 1V1 three times
+	  if (ADC_Buf[2] < 2400) {
+		  low_power_cnt++;
+		  if (low_power_cnt == 3) {
+			  i2c_regs.intr_status1 |= V12V_ERR;
+			  PowerDOWN();
+		  }
+	  } else {
+		  low_power_cnt = 0;
+	  }
+
+	  HAL_ADC_Stop(&hadc);
+}
+
 #define TMP451_SLAVE_ADDR (0x98)
 uint8_t temp1684;	// before calibration
+static uint8_t alert_cnt = 0;
+static uint8_t powerdown_cnt = 0;
+
 void READ_Temper(void)
 {
 #ifdef CAL_TEMPARETURE
 	float t_remote, terr1, t3;
 #endif //CAL_TEMPARETURE
-	uint8_t alert_cnt = 0;
-	uint8_t powerdown_cnt = 0;
 
 	if (sec_count == 1) {
 		// detection of temperature value
@@ -483,21 +511,25 @@ void READ_Temper(void)
 		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
 #endif //CAL_TEMPARETURE
 
-		if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
-			alert_cnt++;
-			if (alert_cnt ==3) {
-				i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
-				led_on();
-				alert_cnt = 0;
-			}
-		} else if ((i2c_regs.temp1684 > 85) || (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
+		if ((i2c_regs.temp1684 > 85) || (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
 			powerdown_cnt++;
 			if (powerdown_cnt == 3) {
 				i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
 				PowerDOWN();
 				powerdown_cnt = 0;
 			}
+		} else if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
+			alert_cnt++;
+			if (alert_cnt ==3) {
+				i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
+				led_on();
+				alert_cnt = 0;
+			}
+		} else {
+			alert_cnt = 0;
+			powerdown_cnt = 0;
 		}
+
 		sec_count = 0;
 	} else {
 		HAL_Delay(1);
@@ -664,7 +696,7 @@ int main(void)
   {
 
 	  // response CPLD's commands
-	  switch(i2c_regs.cmd_reg) {
+	switch(i2c_regs.cmd_reg) {
 	  case CMD_CPLD_PWR_ON:
 		  PowerON();
 		  break;
@@ -701,6 +733,8 @@ int main(void)
 	  }
 	  // read temperature every 2 seconds
 	  READ_Temper();
+	  //detect 12v
+	  DETECT_12V_Voltage();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
 	  if ((i2c_regs.vender != VENDER_SA5) && (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin)))
