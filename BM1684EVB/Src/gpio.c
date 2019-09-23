@@ -49,25 +49,32 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin|RGMII0_RST_Pin|RGMII1_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin|STATUS_LED0_Pin|STATUS_LED1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin|EN_VDDIO33_Pin|EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin 
-                          |EN_VDD_TPU_MEM_L_Pin|EN0_ISL68127_Pin|EN1_ISL68127_Pin, GPIO_PIN_RESET);
+                          |PMIC_EN_Pin|EN0_ISL68127_Pin|EN1_ISL68127_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO1_Pin|GPIO2_Pin|GPIO3_Pin|P08_PWR_GOOD_Pin 
                           |DDR_PWR_GOOD_Pin|EN_VQPS18_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PCPin PCPin PCPin */
-  GPIO_InitStruct.Pin = SYS_RST_X_Pin|RGMII0_RST_Pin|RGMII1_RST_Pin;
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = SYS_RST_X_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SYS_RST_X_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PCPin PCPin */
+  GPIO_InitStruct.Pin = STATUS_LED0_Pin|STATUS_LED1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = TEMP_THERM_N_Pin|PG_ALL_Pin;
+  GPIO_InitStruct.Pin = NCT_INT_Pin|PG_ALL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -75,7 +82,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin 
                            PBPin PBPin PBPin */
   GPIO_InitStruct.Pin = EN_VDDIO18_Pin|EN_VDDIO33_Pin|EN_VDD_PHY_Pin|EN_VDD_PCIE_Pin 
-                          |EN_VDD_TPU_MEM_L_Pin|EN0_ISL68127_Pin|EN1_ISL68127_Pin;
+                          |PMIC_EN_Pin|EN0_ISL68127_Pin|EN1_ISL68127_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

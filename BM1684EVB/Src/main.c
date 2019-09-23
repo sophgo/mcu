@@ -150,9 +150,11 @@ void clean_pmic(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDD_TPU_MEM 0.7v
 }
 
 void PowerON(void)
@@ -160,44 +162,49 @@ void PowerON(void)
 	clean_pmic();
 	HAL_Delay(100);
 
+	HAL_GPIO_WritePin(PMIC_EN_GPIO_Port, PMIC_EN_Pin, GPIO_PIN_SET);
 	val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
 	val = 0;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	origin_val = val = 0xD0;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
-	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN
-	if (chk_val != origin_val)
-		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
+
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);//  2.3ms
-	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);//1.6ms
-	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);//2ms
-	HAL_GPIO_WritePin(GPIOB, EN_VDD_PHY_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_SET);
+	HAL_Delay(1);
+
+	//LDOIN_1V 0.8V
+	origin_val = val = 0xA5;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN 0.8V
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN 0.8V
+	if (chk_val != origin_val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN 0.8V
+	HAL_Delay(1);
+
 	HAL_GPIO_WritePin(GPIOA, P08_PWR_GOOD_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);//4ms
-	HAL_GPIO_WritePin(GPIOB, EN_VDD_PCIE_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO2_Pin, GPIO_PIN_SET);//EN_PHY
-	HAL_Delay(1);//4.4ms
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_SET);
-	HAL_Delay(1);//4.3ms
+	HAL_Delay(1);
+
+	//DDR_VDDQ
 	origin_val = val = 0xE5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR_VDDQ 1.1v
 	if (chk_val != origin_val)
 		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_Delay(1);
-//	val = 0x87;//1.8ms
-//	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.65v
+
+	//DDR_VDDQLP
 #if 1
 	origin_val = val = 0x7D;//1.8ms
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
@@ -213,8 +220,16 @@ void PowerON(void)
 		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
 	i2c_regs.ddr = 1;
 #endif
-	HAL_Delay(1);//5ms
-	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_L_Pin, GPIO_PIN_SET);
+
+	//VDD_TPU_MEM
+	HAL_Delay(1);
+	origin_val = val = 0x91;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, &val, 2, 1000);//VDD_TPU_MEM 0.7v
+	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//VDD_TPU_MEM 0.7v
+	if (chk_val != origin_val)
+		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 0.7v
+	HAL_Delay(1);
+
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);//2.7ms
@@ -238,8 +253,6 @@ void PowerDOWN(void)
 	HAL_GPIO_WritePin(GPIOA, EN_VQPS18_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_L_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
@@ -285,17 +298,18 @@ void Clean_ERR_INT(void)
 {
 	return ;
 }
-CURRENT_VAL curr_evb;
+
 #define MCU_VERSION 0x02
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
 #define VENDER_SE5	0x03
-int ADC_Buf[10];
 
 void Scan_Cuerrent(void)
 {
 	  uint8_t i;
+	  int ADC_Buf[10];
+	  CURRENT_VAL curr_evb;
 
 	  for (i = 0; i < 10; i++) {
 		  HAL_ADC_Start(&hadc);
@@ -307,16 +321,16 @@ void Scan_Cuerrent(void)
 	  }
 #if 0
 	  //calculate voltage
-	  curr_evb.i_12v_atx 		= (float)ADC_Buf[0] * 2 /4096 / 0.3;  //0.18+ A
-	  curr_evb.i_vddio5 		= (float)ADC_Buf[1] * 2 /4096 / 0.6;
-	  curr_evb.i_vddio18 		= (float)ADC_Buf[2] * 2 /4096 / 0.6;
-	  curr_evb.i_vddio33 		= (float)ADC_Buf[3] * 2 /4096 / 3;
-	  curr_evb.i_vdd_phy 		= (float)ADC_Buf[4] * 2 /4096 / 0.8;
-	  curr_evb.i_vdd_pcie 		= (float)ADC_Buf[5] * 2 /4096 / 0.6;
-	  curr_evb.i_vdd_tpu_mem 	= (float)ADC_Buf[6] * 2 /4096 / 0.3;
-	  curr_evb.i_ddr_vddq 		= (float)ADC_Buf[7] * 2 /4096 / 0.8;
-	  curr_evb.i_ddr_vddqlp 	= (float)ADC_Buf[8] * 2 /4096 / 0.5;
-	  curr_evb.i_ldo_pcie 		= (float)ADC_Buf[9] * 2 /4096 / 1.5;
+	  curr_evb.i_12v_atx 		= (float)ADC_Buf[0] * 1.8 /4096 / 0.6;  //0.18+ A
+	  curr_evb.i_vddio5 		= (float)ADC_Buf[1] * 1.8 /4096 / 0.3;
+	  curr_evb.i_vddio18 		= (float)ADC_Buf[2] * 1.8 /4096 / 1.5;
+	  curr_evb.i_vddio33 		= (float)ADC_Buf[3] * 1.8 /4096 / 3;
+	  curr_evb.i_vdd_phy 		= (float)ADC_Buf[4] * 1.8 /4096 / 1.5;
+	  curr_evb.i_vdd_pcie 		= (float)ADC_Buf[5] * 1.8 /4096 / 1.5;
+	  curr_evb.i_vdd_tpu_mem 	= (float)ADC_Buf[6] * 1.8 /4096 / 0.3;
+	  curr_evb.i_ddr_vddq 		= (float)ADC_Buf[7] * 1.8 /4096 / 0.8;
+	  curr_evb.i_ddr_vddqlp 	= (float)ADC_Buf[8] * 1.8 /4096 / 3;
+//	  curr_evb.i_ldo_pcie 		= (float)ADC_Buf[9] * 2 /4096 / 1.5;
 #endif
 	  //calculate voltage
 	  curr_evb.i_12v_atx 		= ADC_Buf[0];  //0.18+ A
@@ -328,11 +342,31 @@ void Scan_Cuerrent(void)
 	  curr_evb.i_vdd_tpu_mem 	= ADC_Buf[6];
 	  curr_evb.i_ddr_vddq 		= ADC_Buf[7];
 	  curr_evb.i_ddr_vddqlp 	= ADC_Buf[8];
-	  curr_evb.i_ldo_pcie 		= ADC_Buf[9];
+//	  curr_evb.i_ldo_pcie 		= ADC_Buf[9];
 
 	  memcpy(&i2c_regs.current, &curr_evb, sizeof(CURRENT_VAL));
 
 //	  EEPROM_Write(addr, ADC_Buf[0]);
+
+	  HAL_ADC_Stop(&hadc);
+}
+
+void Scan_Cuerrent(void)
+{
+	  uint8_t i;
+	  int ADC_Buf[10];
+
+	  for (i = 0; i < 10; i++) {
+		  HAL_ADC_Start(&hadc);
+		  HAL_ADC_PollForConversion(&hadc, 10);
+
+		  if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc), HAL_ADC_STATE_REG_EOC)) {
+			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
+		  }
+	  }
+
+	  if (ADC_Buf[9] )
+	  i2c_regs.hw_ver =
 
 	  HAL_ADC_Stop(&hadc);
 }

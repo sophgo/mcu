@@ -160,7 +160,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = I_DDR_VDDQLP_Pin|I_LDO_PCIE_Pin;
+    GPIO_InitStruct.Pin = I_DDR_VDDQLP_Pin|PCB_VER_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -197,7 +197,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     HAL_GPIO_DeInit(GPIOA, I_12V_ATX_Pin|I_VDDIO5_Pin|I_VDDIO18_Pin|I_VDDIO33_Pin 
                           |I_VDD_PHY_Pin|I_VDD_PCIE_Pin|I_VDD_TPU_MEM_Pin|I_DDR_VDDQ_Pin);
 
-    HAL_GPIO_DeInit(GPIOB, I_DDR_VDDQLP_Pin|I_LDO_PCIE_Pin);
+    HAL_GPIO_DeInit(GPIOB, I_DDR_VDDQLP_Pin|PCB_VER_Pin);
 
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 

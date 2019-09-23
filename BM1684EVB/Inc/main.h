@@ -126,10 +126,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define SYS_RST_X_Pin GPIO_PIN_13
 #define SYS_RST_X_GPIO_Port GPIOC
-#define RGMII0_RST_Pin GPIO_PIN_14
-#define RGMII0_RST_GPIO_Port GPIOC
-#define RGMII1_RST_Pin GPIO_PIN_15
-#define RGMII1_RST_GPIO_Port GPIOC
+#define STATUS_LED0_Pin GPIO_PIN_14
+#define STATUS_LED0_GPIO_Port GPIOC
+#define STATUS_LED1_Pin GPIO_PIN_15
+#define STATUS_LED1_GPIO_Port GPIOC
 #define I_12V_ATX_Pin GPIO_PIN_0
 #define I_12V_ATX_GPIO_Port GPIOA
 #define I_VDDIO5_Pin GPIO_PIN_1
@@ -148,10 +148,10 @@ void Error_Handler(void);
 #define I_DDR_VDDQ_GPIO_Port GPIOA
 #define I_DDR_VDDQLP_Pin GPIO_PIN_0
 #define I_DDR_VDDQLP_GPIO_Port GPIOB
-#define I_LDO_PCIE_Pin GPIO_PIN_1
-#define I_LDO_PCIE_GPIO_Port GPIOB
-#define TEMP_THERM_N_Pin GPIO_PIN_2
-#define TEMP_THERM_N_GPIO_Port GPIOB
+#define PCB_VER_Pin GPIO_PIN_1
+#define PCB_VER_GPIO_Port GPIOB
+#define NCT_INT_Pin GPIO_PIN_2
+#define NCT_INT_GPIO_Port GPIOB
 #define PMIC_SCL_Pin GPIO_PIN_10
 #define PMIC_SCL_GPIO_Port GPIOB
 #define PMIC_SDA_Pin GPIO_PIN_11
@@ -180,8 +180,8 @@ void Error_Handler(void);
 #define PG_ALL_GPIO_Port GPIOB
 #define PCIEE_RST_X_MCU_Pin GPIO_PIN_4
 #define PCIEE_RST_X_MCU_GPIO_Port GPIOB
-#define EN_VDD_TPU_MEM_L_Pin GPIO_PIN_5
-#define EN_VDD_TPU_MEM_L_GPIO_Port GPIOB
+#define PMIC_EN_Pin GPIO_PIN_5
+#define PMIC_EN_GPIO_Port GPIOB
 #define EN0_ISL68127_Pin GPIO_PIN_8
 #define EN0_ISL68127_GPIO_Port GPIOB
 #define EN1_ISL68127_Pin GPIO_PIN_9
