@@ -351,7 +351,7 @@ void Scan_Cuerrent(void)
 	  HAL_ADC_Stop(&hadc);
 }
 
-void Scan_Cuerrent(void)
+void Set_HW_Ver(void)
 {
 	  uint8_t i;
 	  int ADC_Buf[10];
@@ -365,8 +365,36 @@ void Scan_Cuerrent(void)
 		  }
 	  }
 
-	  if (ADC_Buf[9] )
-	  i2c_regs.hw_ver =
+	  switch(ADC_Buf[9]) {
+	  case 100 ... 400:
+	  	  i2c_regs.hw_ver = 0;
+	  	  break;
+	  case 500 ... 900:
+	  	  i2c_regs.hw_ver = 1;
+	  	  break;
+	  case 1000 ... 1300:
+	  	  i2c_regs.hw_ver = 2;
+	  	  break;
+	  case 1400 ... 1900:
+	  	  i2c_regs.hw_ver = 3;
+	  	  break;
+	  case 1950 ... 2200:
+	  	  i2c_regs.hw_ver = 4;
+  	  	  break;
+	  case 2250 ... 2700:
+	  	  i2c_regs.hw_ver = 5;
+	  	  break;
+	  case 2750 ... 3000:
+	  	  i2c_regs.hw_ver = 6;
+	  	  break;
+	  case 3100 ... 3600:
+	  	  i2c_regs.hw_ver = 7;
+	  	  break;
+	  case 3650 ... 4000:
+	  	  i2c_regs.hw_ver = 8;
+	  	  break;
+	  }
+
 
 	  HAL_ADC_Stop(&hadc);
 }
@@ -448,6 +476,8 @@ int main(void)
   PowerON();
 
   HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
+
+  Set_HW_Ver();
 
   //CHANGE SYS_RST FROM OUTPUT TO INPUT
   Convert_sysrst_gpio(1);
