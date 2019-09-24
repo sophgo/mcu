@@ -189,9 +189,12 @@ typedef struct I2C_REGS_t
 	uint8_t cmd;
 	uint8_t ddr;//0x15,21
 	uint8_t power_good;
-	uint8_t pmic_status;
 	uint8_t vender_val;
-	uint8_t reserved1[15];
+	uint8_t pmic_status;
+
+	volatile uint8_t power_on_cmd;//0x19
+	volatile uint8_t cmd_reg_bkup;
+	uint8_t reserved1[13];
 	CURRENT_VAL current;
 	uint8_t reserved2[2];
 	uint8_t eeprom_offset_l;
@@ -246,6 +249,10 @@ extern I2C_CTX i2c_ctx3;
 #define REG_DDR				0x15
 #define REG_PWR_GOOD		0x16
 #define REG_VENDER_VAL		0x17
+
+#define REG_PMIC_STATUS		0x18
+#define REG_PWRON_CMD		0x19
+#define REG_CMD_BKUP		0x1a
 
 /* some reserved here, original MAC0 and MAC1 */
 #define I_12V_ATX_L			0x28
@@ -338,7 +345,7 @@ extern I2C_CTX i2c_ctx3;
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0xb)
+#define MCU_VERSION (0x0c)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

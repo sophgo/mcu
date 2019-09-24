@@ -75,22 +75,7 @@ typedef struct factory_info_t {
 }Factory_Info;
 
 Factory_Info fty_Info;
-#if 0
-typedef struct CURRENT_VAL_t
-{
-	float i_12v_atx;
-	float i_vddio5;
-	float i_vddio18;
-	float i_vddio33;
-	float i_vdd_phy;
-	float i_vdd_pcie;
-	float i_vdd_tpu_mem;
-	float i_ddr_vddq;
-	float i_ddr_vddqlp;
-	float i_ldo_pcie;
-}CURRENT_VAL;
-#endif
-#if 1
+
 typedef struct CURRENT_VAL_t
 {
 	uint16_t i_12v_atx;
@@ -104,7 +89,7 @@ typedef struct CURRENT_VAL_t
 	uint16_t i_ddr_vddqlp;
 	uint16_t i_ldo_pcie;
 }CURRENT_VAL;
-#endif
+
 void Convert_sysrst_gpio(int io);
 extern void PowerDOWN(void);
 extern void PowerON(void);

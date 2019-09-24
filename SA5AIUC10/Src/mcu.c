@@ -61,8 +61,10 @@ static void mcu_write(volatile uint8_t data)
 
 	switch (mcu_ctx.idx) {
 	case REG_CMD_REG:
-//		if (i2c_regs.cmd_reg == 0)
+		if (i2c_regs.cmd_reg == 0)
 			i2c_regs.cmd_reg = data;
+		i2c_regs.cmd_reg_bkup = data;
+
 		if (CPLD_CLR_ERR | i2c_regs.cmd_reg) {
 			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
 		}
@@ -177,6 +179,15 @@ static uint8_t mcu_read(void)
 		break;
 	case REG_VENDER_VAL:
 		ret = i2c_regs.vender_val;
+		break;
+	case REG_PMIC_STATUS:
+		ret = i2c_regs.pmic_status;
+		break;
+	case REG_PWRON_CMD:
+		ret = i2c_regs.power_on_cmd;
+		break;
+	case REG_CMD_BKUP:
+		ret = i2c_regs.cmd_reg_bkup;
 		break;
 	default:
 		ret = 0xff;
