@@ -279,6 +279,7 @@ poweron_fail:
 		i2c_regs.power_good = 1;
 		power_on_good = 1;
 		i2c_regs.cmd_reg = 0;
+		i2c_regs.cmd_reg_bkup = 0;
 	} else {
 		i2c_regs.power_good = 0;
 		i2c_regs.intr_status1 |= POWERON_ERR;
