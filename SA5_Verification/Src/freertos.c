@@ -105,6 +105,13 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+#if FACTORY_TEST_FLAG
+#else
+    HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
+#endif
 	// Core board detect
 	uint8_t data[1] = { 0x01 };
 	if ((HAL_GPIO_ReadPin(AIC_FULLIN1_GPIO_Port, AIC_FULLIN1_Pin)
@@ -114,9 +121,11 @@ void MX_FREERTOS_Init(void) {
 		HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
 		HAL_ADC_Start(&hadc);
 		HAL_Delay(500);
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
-				!= HAL_OK)
-			Error("[initial] I2C write error");
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)!= HAL_OK)
+			Error("[initial] poweron 1684 error");
+		data[0] = 0x80;
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data, 1, 100)!= HAL_OK)
+			Error("[initial] set core poweron location error");
 		HAL_Delay(100);
 		HAL_ADC_PollForConversion(&hadc, 10);
 		tStage = STAGE_FULLIN;

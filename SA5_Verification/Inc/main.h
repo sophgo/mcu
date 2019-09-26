@@ -56,6 +56,7 @@ extern "C" {
 #define RESET 0
 
 #define MAX_REG_SIZE 32
+#define FACTORY_TEST_FLAG 1
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/

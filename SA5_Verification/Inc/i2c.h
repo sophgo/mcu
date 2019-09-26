@@ -42,6 +42,7 @@ extern I2C_HandleTypeDef hi2c3;
 #define MCU_CTEMP_IIC           0x04   //bm1684 chip temperature register
 #define MCU_BTEMP_IIC           0x05   //core board temperature register
 #define MCU_INTR_IIC            0x07
+#define MCU_LOCATION_IIC        0x14
 #define MCU_EEPROM_LADDR_IIC    0x3E    //MCU eeprom low addr register
 #define MCU_EEPROM_HADDR_IIC    0x3F    //MCU eeprom hign addr register
 #define MCU_EEPROM_DATA_IIC     0x40    //MCU eeprom data iic
