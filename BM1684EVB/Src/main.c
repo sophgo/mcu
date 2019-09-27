@@ -180,7 +180,7 @@ void PowerON(void)
 	HAL_Delay(1);
 
 	//LDOIN_1V 0.8V
-	origin_val = val = 0xA5;
+	origin_val = val = 0xA9;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN 0.8V
 	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN 0.8V
 	if (chk_val != origin_val)
@@ -239,6 +239,8 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
+
+	i2c_regs.cmd_reg  = 0;
 }
 
 void PowerDOWN(void)
@@ -272,6 +274,8 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
 	HAL_Delay(1);
+
+	i2c_regs.cmd_reg  = 0;
 }
 
 void BM1684_RST(void)
@@ -283,6 +287,8 @@ void BM1684_RST(void)
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 	Convert_sysrst_gpio(1);
+
+	i2c_regs.cmd_reg  = 0;
 
 	return ;
 }
@@ -296,6 +302,8 @@ void BM1684_REBOOT(void)
 
 void Clean_ERR_INT(void)
 {
+	i2c_regs.cmd_reg  = 0;
+
 	return ;
 }
 
@@ -435,7 +443,7 @@ void Convert_sysrst_gpio(int io)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	uint8_t Buffer;
   /* USER CODE END 1 */
   
 
@@ -512,6 +520,13 @@ int main(void)
 		  break;
 	  case CMD_BM1684_REBOOT:
 		  BM1684_REBOOT();
+		  break;
+	  case CMD_MCU_UPDATE:
+		  Buffer = 0x08;
+		  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET,&Buffer, 1);
+		  i2c_regs.cmd_reg = 0;
+		  break;
+	  default:
 		  break;
 	  }
 

@@ -279,6 +279,7 @@ extern I2C_REGS i2c_regs;
 //BM1684 Command
 #define CMD_BM1684_RST			0x06       // power is always on
 #define CMD_BM1684_REBOOT		0x07       // power down
+#define CMD_MCU_UPDATE			0x08		//MCU UPDATE
 
 //EEPROM  FLASH
 #define EEPROM_BASE_ADDR	0x08080C00
@@ -298,6 +299,8 @@ extern I2C_REGS i2c_regs;
 #define SN_Addr		(EEPROM_BASE_ADDR + 32 * 2)
 #define MAC0_Addr	(EEPROM_BASE_ADDR + 32 * 0)
 #define MAC1_Addr	(EEPROM_BASE_ADDR + 32 * 1)
+
+#define UPDATE_FLAG_OFFSET		(0xbf0)
 
 /* USER CODE END Private defines */
 
