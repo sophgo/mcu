@@ -278,13 +278,15 @@ poweron_fail:
 	if (i2c_regs.cause_pwr_down == 0) {
 		i2c_regs.power_good = 1;
 		power_on_good = 1;
-		i2c_regs.cmd_reg = 0;
-		i2c_regs.cmd_reg_bkup = 0;
 	} else {
 		i2c_regs.power_good = 0;
 		i2c_regs.intr_status1 |= POWERON_ERR;
 		PowerDOWN();
 	}
+
+	i2c_regs.cmd_reg = 0;
+	i2c_regs.cmd_reg_bkup = 0;
+
 	return;
 }
 
@@ -302,12 +304,12 @@ void clean_pmic(void)
 
 void PowerDOWN(void)
 {
-	clean_pmic();
-	HAL_Delay(100);
-
 	i2c_regs.cmd_reg = 0;
 	i2c_regs.power_good = 0;
 	power_on_good = 0;
+
+	clean_pmic();
+	HAL_Delay(100);
 
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
@@ -338,7 +340,7 @@ void PowerDOWN(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 1, 1000);// LDO1V_IN
 	HAL_Delay(1);
 
-	led_on();
+//	led_on();
 }
 
 void BM1684_RST(void)
@@ -530,19 +532,19 @@ void READ_Temper(void)
 		if (temp1684 < 4) {
 			i2c_regs.temp1684 = 0;
 		} else {
-			i2c_regs.temp1684 = (temp1684 * 232- 886) / 256; //rough handling of tempareture calibration
+			i2c_regs.temp1684 = (temp1684 * 232- 886) >> 8; //rough handling of tempareture calibration
 		}
 		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
 #endif //CAL_TEMPARETURE
 
-		if ((i2c_regs.temp1684 > 85) || (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
+		if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
 			powerdown_cnt++;
 			if (powerdown_cnt == 3) {
 				i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
 				PowerDOWN();
 				powerdown_cnt = 0;
 			}
-		} else if ((i2c_regs.temp1684 > 75) || (i2c_regs.temp_board > 70)) {//temperature too high alert
+		} else if ((i2c_regs.temp1684 > 75) && (i2c_regs.temp_board > 70)) {//temperature too high alert
 			alert_cnt++;
 			if (alert_cnt ==3) {
 				i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
@@ -659,11 +661,7 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C2_Init();
-  if (i2c_regs.vender != VENDER_SA5) {
-	  BM_MX_I2C1_Init();
-  } else {
-	  MX_I2C1_Init();
-  }
+  MX_I2C1_Init();
   MX_I2C3_Init();
   MX_LPTIM1_Init();
   MX_RTC_Init();

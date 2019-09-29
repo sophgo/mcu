@@ -225,6 +225,57 @@ void PowerDOWN(void)
 	led_on();
 }
 
+void SET_HW_Ver(void)
+{
+	  uint8_t i;
+	  uint8_t PCB_Ver0 = 0;
+	  uint8_t BOM_Ver0 = 0;
+	  uint16_t ADC_Buf[2];
+
+	  for (i = 0; i < 2; i++) {
+		  HAL_ADC_Start(&hadc);
+		  HAL_ADC_PollForConversion(&hadc, 0XFFFF);
+
+		  if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc), HAL_ADC_STATE_REG_EOC)) {
+			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
+		  }
+	  }
+
+	  //0,0.18,0.46,0.71,1,1.28
+	  //0,368, 942,1454,2048,2621
+	  if (ADC_Buf[0] < 200) {
+		  PCB_Ver0 = 0;
+	  } else if ((ADC_Buf[0] > 250) && (ADC_Buf[0] < 600)) {
+		  PCB_Ver0 = 1;
+	  } else if ((ADC_Buf[0] > 700) && (ADC_Buf[0] < 1150)) {
+		  PCB_Ver0 = 2;
+	  } else if ((ADC_Buf[0] > 1200) && (ADC_Buf[0] < 1700)) {
+		  PCB_Ver0 = 3;
+	  } else if ((ADC_Buf[0] > 1750) && (ADC_Buf[0] < 2300)) {
+		  PCB_Ver0 = 4;
+	  } else if ((ADC_Buf[0] > 2350) && (ADC_Buf[0] < 2900)) {
+		  PCB_Ver0 = 5;
+	  }
+
+	  if (ADC_Buf[1] < 200) {
+		  BOM_Ver0 = 0;
+	  } else if ((ADC_Buf[1] > 250) && (ADC_Buf[1] < 600)) {
+		  BOM_Ver0 = 1;
+	  } else if ((ADC_Buf[1] > 700) && (ADC_Buf[1] < 1150)) {
+		  BOM_Ver0 = 2;
+	  } else if ((ADC_Buf[1] > 1200) && (ADC_Buf[1] < 1700)) {
+		  BOM_Ver0 = 3;
+	  } else if ((ADC_Buf[1] > 1750) && (ADC_Buf[1] < 2300)) {
+		  BOM_Ver0 = 4;
+	  } else if ((ADC_Buf[1] > 2350) && (ADC_Buf[1] < 2900)) {
+		  BOM_Ver0 = 5;
+	  }
+
+	  reg[2] = (PCB_Ver0 << 4) | BOM_Ver0;
+
+	  HAL_ADC_Stop(&hadc);
+}
+
 volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,2,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
@@ -281,6 +332,8 @@ int main(void)
 
   I2C_SlaveInit(&hi2c3, (uint8_t *)reg, MAX_REG_SIZE);
   I2C_SlaveInit(&hi2c1, (uint8_t *)reg, MAX_REG_SIZE);
+
+  SET_HW_Ver();
 
   uint8_t Buffer;
 //  EEPROM_WriteBytes(addr, &Buffer, 1);
