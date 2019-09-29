@@ -63,7 +63,6 @@ void Error_Handler(void);
 #define SYS_RST_X_GPIO_Port GPIOC
 #define PCIE_RST_MCU_Pin GPIO_PIN_14
 #define PCIE_RST_MCU_GPIO_Port GPIOC
-#define PCIE_RST_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define PMIC_INT_Pin GPIO_PIN_15
 #define PMIC_INT_GPIO_Port GPIOC
 #define PG_VDDC_Pin GPIO_PIN_0

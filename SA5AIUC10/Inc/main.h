@@ -96,7 +96,6 @@ void Error_Handler(void);
 #define SYS_RST_X_GPIO_Port GPIOC
 #define PCIE_RST_MCU_Pin GPIO_PIN_14
 #define PCIE_RST_MCU_GPIO_Port GPIOC
-#define PCIE_RST_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define PMIC_INT_Pin GPIO_PIN_15
 #define PMIC_INT_GPIO_Port GPIOC
 #define PG_VDDC_Pin GPIO_PIN_0
@@ -345,7 +344,7 @@ extern I2C_CTX i2c_ctx3;
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0x0c)
+#define MCU_VERSION (0x0d)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
