@@ -94,7 +94,7 @@ static void mcu_write(volatile uint8_t data)
 		break;
 	case REG_VENDER_VAL:
 		i2c_regs.vender_val = data;
-		EEPROM_WriteBytes(VENDER_Addr, (uint8_t *)&data, 1);
+//		EEPROM_WriteBytes(VENDER_Addr, (uint8_t *)&data, 1);
 		break;
 	default:
 		break;

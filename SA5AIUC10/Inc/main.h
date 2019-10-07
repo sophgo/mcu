@@ -344,7 +344,7 @@ extern I2C_CTX i2c_ctx3;
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0x0d)
+#define MCU_VERSION (0x0E)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

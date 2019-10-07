@@ -661,7 +661,12 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C2_Init();
-  MX_I2C1_Init();
+  if ((i2c_regs.vender == VENDER_SM5_P) || (i2c_regs.vender == VENDER_SM5_S)) {
+	  BM_MX_I2C1_Init();
+  } else {
+	  MX_I2C1_Init();
+  }
+
   MX_I2C3_Init();
   MX_LPTIM1_Init();
   MX_RTC_Init();
