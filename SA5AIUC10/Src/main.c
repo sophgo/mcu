@@ -768,7 +768,7 @@ int main(void)
 	  // read temperature every 2 seconds
 	  READ_Temper();
 	  //detect 12v
-	  DETECT_12V_Voltage();
+//	  DETECT_12V_Voltage();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
 	  if ((i2c_regs.vender != VENDER_SA5) && (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin)))
