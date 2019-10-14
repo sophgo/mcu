@@ -159,12 +159,14 @@ void PowerON(void)
 	HAL_Delay(100);
 	i2c_regs.cause_pwr_down = 0;
 
-	val = 0xE5;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
 	val = 0;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
+
+	val = 0xE5;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// enable buck1-3
+
 	origin_val = val = 0xD0;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
 	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN
@@ -178,10 +180,11 @@ void PowerON(void)
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
-	if (HAL_GPIO_ReadPin(EN_VDDIO18_GPIO_Port, EN_VDDIO18_Pin) == GPIO_PIN_RESET) {
+	if (HAL_GPIO_ReadPin(PG_VDDIO18_GPIO_Port, PG_VDDIO18_Pin) == GPIO_PIN_RESET) {
 		i2c_regs.cause_pwr_down = ERR_VDDIO18;
 		goto poweron_fail;
 	}
+
 
 	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
@@ -274,6 +277,9 @@ void PowerON(void)
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
 
+	i2c_regs.cmd_reg = 0;
+	i2c_regs.cmd_reg_bkup = 0;
+
 poweron_fail:
 	if (i2c_regs.cause_pwr_down == 0) {
 		i2c_regs.power_good = 1;
@@ -283,9 +289,6 @@ poweron_fail:
 		i2c_regs.intr_status1 |= POWERON_ERR;
 		PowerDOWN();
 	}
-
-	i2c_regs.cmd_reg = 0;
-	i2c_regs.cmd_reg_bkup = 0;
 
 	return;
 }
