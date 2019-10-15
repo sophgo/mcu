@@ -117,10 +117,10 @@ void led_pwr_switch(void)
 //       }
        return ;       
     }
-        
-    PWR_FAULT = I2C_Array[4] & 0x01;
+    
+    PWR_GOOD = I2C_Array[4] & 0x01;
     __delay_ms(1);//wait 1 millisecond for stable
-    PWR_GOOD = (I2C_Array[4] >> 1) & 0x01;
+    PWR_FAULT = (I2C_Array[4] >> 1) & 0x01;
     
     return;
 }

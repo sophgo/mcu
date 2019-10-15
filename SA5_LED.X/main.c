@@ -51,7 +51,7 @@ unsigned char first = 1;               // used to determine whether data address
 extern void led_bd_pwr(void);
 extern void led_bd_uid(void);
 
-#define MCU_VERSION         0x02
+#define MCU_VERSION         0x04
 
 void main(void) {  
     int i = 0;
