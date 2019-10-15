@@ -152,7 +152,6 @@ void Error_Handler(void);
 #define I2C1_SDA_GPIO_Port GPIOB
 #define TWARN_VDD_TPU_Pin GPIO_PIN_5
 #define TWARN_VDD_TPU_GPIO_Port GPIOB
-#define TWARN_VDD_TPU_EXTI_IRQn EXTI4_15_IRQn
 #define EN_VDD_TPU_MEM_Pin GPIO_PIN_6
 #define EN_VDD_TPU_MEM_GPIO_Port GPIOB
 #define PG_VDD_PCIE_Pin GPIO_PIN_7
