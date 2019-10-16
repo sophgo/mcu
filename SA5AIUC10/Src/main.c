@@ -623,6 +623,11 @@ void TCA6416_Deinit(void)
 
 }
 
+void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
+{
+	wdt_isr();
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -674,6 +679,8 @@ int main(void)
   MX_LPTIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_LPTIM_Start1HZ(&hlptim1);
 
 //  Factory_Info_Get();
   if (i2c_regs.vender == VENDER_SA5) {

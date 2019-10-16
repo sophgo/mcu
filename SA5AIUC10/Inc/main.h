@@ -234,13 +234,13 @@ extern I2C_CTX i2c_ctx3;
 
 #define REG_UPTIME1			0x0c
 #define REG_CAUSE_PWR_DOWN	0x0d
-#define REG_SYS_RTC_SEC		0x0e
-#define REG_SYS_RTC_MIN		0x0f
 
-#define REG_SYS_RTC_HOUR	0x10
-#define REG_SYS_RTC_DAY		0x11
-#define REG_SYS_RTC_MON		0x12
-#define REG_SYS_RTC_YEAR	0x13
+#define REG_SYS_RTC_YEAR	0x0e
+#define REG_SYS_RTC_MON		0x0f
+#define REG_SYS_RTC_DAY		0x10
+#define REG_SYS_RTC_HOUR	0x11
+#define REG_SYS_RTC_MIN		0x12
+#define REG_SYS_RTC_SEC		0x13
 
 #define REG_CMD				0x14
 
