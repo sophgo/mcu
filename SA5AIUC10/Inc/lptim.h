@@ -39,6 +39,7 @@ extern LPTIM_HandleTypeDef hlptim1;
 void MX_LPTIM1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void HAL_LPTIM_Start1HZ(LPTIM_HandleTypeDef* lptimHandle);
 
 /* USER CODE END Prototypes */
 

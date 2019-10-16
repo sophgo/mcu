@@ -626,6 +626,7 @@ void TCA6416_Deinit(void)
 void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
 	wdt_isr();
+	mcu_tick_isr();
 }
 
 /* USER CODE END 0 */

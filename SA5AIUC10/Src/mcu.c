@@ -17,8 +17,11 @@
 static struct mcu_ctx {
 	int set_idx;
 	int idx;
+	int setrtc;
+	unsigned short uptime;
 	I2C_REGS map;
 } mcu_ctx;
+
 
 #define MCU_REG_MAX REG_NUMBER
 // #define MCU_REG_CTL 3
@@ -47,7 +50,13 @@ static inline uint16_t eeprom_offset(void)
 		mcu_ctx.idx - REG_EEPROM_DATA;
 	return offset_base + offset_off;
 }
-static int setrtc = 0;
+void mcu_tick_isr()
+{
+	mcu_ctx.uptime++;
+	i2c_regs.uptime0 = mcu_ctx.uptime & 0xFF;
+	i2c_regs.uptime1 = ( mcu_ctx.uptime >> 8 )& 0xFF;
+}
+
 static void mcu_write(volatile uint8_t data)
 {
 	int offset;
@@ -79,7 +88,7 @@ static void mcu_write(volatile uint8_t data)
 	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
 		offset = mcu_ctx.idx - REG_SYS_RTC_YEAR;
 		((uint8_t *)&mcu_ctx.map.rtc)[offset] = data;
-		setrtc = 1;
+		mcu_ctx.setrtc = 1;
 		break;
 	case REG_CMD:
 		mcu_ctx.map.cmd = data;
@@ -222,9 +231,9 @@ static uint8_t mcu_read(void)
 
 static void mcu_stop(void)
 {
-	if (setrtc)
+	if (mcu_ctx.setrtc)
 	{
-		setrtc = 0;
+		mcu_ctx.setrtc = 0;
 		RTC_DateTypeDef sDate;
 		RTC_TimeTypeDef sTime;
 		sDate.Year		= mcu_ctx.map.rtc[0];
@@ -258,6 +267,9 @@ static struct i2c_slave_op slave3 = {
 void mcu_init(void)
 {
 	assert(sizeof(I2C_REGS) == 0x60);
+	mcu_ctx.setrtc = 0;
+	mcu_ctx.uptime = 0;
+
 	if (i2c_regs.vender == VENDER_SA5) {
 		i2c_slave_register(&slave,i2c_ctx0);
 	}

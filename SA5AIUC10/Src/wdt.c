@@ -5,7 +5,6 @@
  *      Author: weic
  */
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 #include "main.h"
 #include "i2c_bm.h"
@@ -129,12 +128,12 @@ __weak void soc_wdt_reset(void)
 static void wdt_reset(void)
 {
 	memset(&wdt_ctx, 0, sizeof(wdt_ctx));
-	wdt_ctx.clock = (37 * 1000) / 128;
+//	wdt_ctx.clock = (37 * 1000) / 128;
 	wdt_ctx.counter = wdt_ctx.counter_shadow =
 		wdt_ctx.timeout = wdt_ctx.timeout_shadow = 0xffffffff;
 }
 
-void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
+void wdt_isr()
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
 		soc_wdt_reset();
@@ -143,20 +142,12 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 		--wdt_ctx.counter;
 
 	return;
+
 }
 
 void wdt_init(void)
 {
-	RCC_PeriphCLKInitTypeDef clk;
-	HAL_RCCEx_GetPeriphCLKConfig(&clk);
-	// LSI has a fixed clock frequency of 37KHz
-	assert(clk.LptimClockSelection == RCC_LPTIM1CLKSOURCE_LSI);
-	// make sure, prescaler set to 128
-	assert(hlptim1.Init.Clock.Prescaler = LPTIM_PRESCALER_DIV128);
-
 	wdt_reset();
-
-	HAL_LPTIM_PWM_Start_IT(&hlptim1, wdt_ctx.clock, wdt_ctx.clock);
 
 	i2c_slave_register(&slave,i2c_ctx3);
 }

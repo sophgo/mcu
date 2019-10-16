@@ -21,6 +21,7 @@
 #include "lptim.h"
 
 /* USER CODE BEGIN 0 */
+#include <assert.h>
 
 /* USER CODE END 0 */
 
@@ -85,6 +86,18 @@ void HAL_LPTIM_MspDeInit(LPTIM_HandleTypeDef* lptimHandle)
 
 /* USER CODE BEGIN 1 */
 
+
+void HAL_LPTIM_Start1HZ(LPTIM_HandleTypeDef* lptimHandle)
+{
+	RCC_PeriphCLKInitTypeDef clk;
+	HAL_RCCEx_GetPeriphCLKConfig(&clk);
+	// LSI has a fixed clock frequency of 37KHz
+	assert(clk.LptimClockSelection == RCC_LPTIM1CLKSOURCE_LSI);
+	// make sure, prescaler set to 128
+	assert(lptimHandle->Init.Clock.Prescaler = LPTIM_PRESCALER_DIV128);
+	
+	HAL_LPTIM_PWM_Start_IT(lptimHandle, (37 * 1000) / 128, (37 * 1000) / 128);
+}
 /* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
