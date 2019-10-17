@@ -167,6 +167,10 @@ void Error_Handler(void);
 #define PCIEE_RST_X_MCU_GPIO_Port GPIOB
 #define PMIC_EN_Pin GPIO_PIN_5
 #define PMIC_EN_GPIO_Port GPIOB
+#define I2C1_SCL_Pin GPIO_PIN_6
+#define I2C1_SCL_GPIO_Port GPIOB
+#define I2C1_SDA_Pin GPIO_PIN_7
+#define I2C1_SDA_GPIO_Port GPIOB
 #define EN0_ISL68127_Pin GPIO_PIN_8
 #define EN0_ISL68127_GPIO_Port GPIOB
 #define EN1_ISL68127_Pin GPIO_PIN_9
