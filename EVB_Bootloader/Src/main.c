@@ -256,6 +256,53 @@ volatile uint8_t reg[MAX_REG_SIZE] = { 0x00,2,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0};
 
+void Set_HW_Ver(void)
+{
+	  uint8_t i;
+	  int ADC_Buf[10];
+
+	  for (i = 0; i < 10; i++) {
+		  HAL_ADC_Start(&hadc);
+		  HAL_ADC_PollForConversion(&hadc, 10);
+
+		  if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc), HAL_ADC_STATE_REG_EOC)) {
+			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
+		  }
+	  }
+
+	  switch(ADC_Buf[9]) {
+	  case 100 ... 400:
+	  	  reg[2] = 0;
+	  	  break;
+	  case 500 ... 900:
+	  	  reg[2] = 1;
+	  	  break;
+	  case 1000 ... 1300:
+	  	  reg[2] = 2;
+	  	  break;
+	  case 1400 ... 1900:
+	  	  reg[2] = 3;
+	  	  break;
+	  case 1950 ... 2200:
+	  	  reg[2] = 4;
+  	  	  break;
+	  case 2250 ... 2700:
+	  	  reg[2] = 5;
+	  	  break;
+	  case 2750 ... 3000:
+	  	  reg[2] = 6;
+	  	  break;
+	  case 3100 ... 3600:
+	  	  reg[2] = 7;
+	  	  break;
+	  case 3650 ... 4000:
+	  	  reg[2] = 8;
+	  	  break;
+	  }
+
+
+	  HAL_ADC_Stop(&hadc);
+}
 /* USER CODE END 0 */
 
 /**
@@ -295,6 +342,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   I2C_SlaveInit(&hi2c1, (uint8_t *)reg, MAX_REG_SIZE);
+
+  HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
+
+  Set_HW_Ver();
 
   uint8_t Buffer;
 //  EEPROM_WriteBytes(addr, &Buffer, 1);
