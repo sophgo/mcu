@@ -155,6 +155,9 @@ void clean_pmic(void);
 
 void PowerON(void)
 {
+	HAL_I2C_MspDeInit(&hi2c1);
+	HAL_I2C_MspDeInit(&hi2c3);
+
 	clean_pmic();
 	HAL_Delay(100);
 	i2c_regs.cause_pwr_down = 0;
@@ -289,6 +292,9 @@ poweron_fail:
 		i2c_regs.intr_status1 |= POWERON_ERR;
 		PowerDOWN();
 	}
+
+	HAL_I2C_MspInit(&hi2c1);
+	HAL_I2C_MspInit(&hi2c3);
 
 	return;
 }
