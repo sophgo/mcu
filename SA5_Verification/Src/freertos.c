@@ -136,6 +136,7 @@ void MX_FREERTOS_Init(void) {
 
 	// auto power-up detect
 	if (tStage == STAGE_FULLIN) {
+		HAL_Delay(200);
 		*data = 0x00;
 		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_TYPE_IIC, 1, data, 1, 100)
 				!= HAL_OK)
