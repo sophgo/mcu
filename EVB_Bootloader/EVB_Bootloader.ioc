@@ -1,10 +1,8 @@
 #MicroXplorer Configuration settings - do not modify
 File.Version=6
-I2C1.DualAddressMode=I2C_DUALADDRESS_ENABLE
-I2C1.IPParameters=Timing,DualAddressMode,OwnAddress,OwnAddress2,OwnAddress2Masks
+I2C1.DualAddressMode=I2C_DUALADDRESS_DISABLE
+I2C1.IPParameters=Timing,DualAddressMode,OwnAddress
 I2C1.OwnAddress=0x17
-I2C1.OwnAddress2=0x68
-I2C1.OwnAddress2Masks=I2C_OA2_MASK02
 I2C1.Timing=0x40000A0B
 I2C2.IPParameters=Timing
 I2C2.Timing=0x40000A0B
