@@ -496,6 +496,12 @@ int main(void)
 
   //CHANGE SYS_RST FROM OUTPUT TO INPUT
   Convert_sysrst_gpio(1);
+
+  EEPROM_ReadBytes(UPDATE_FLAG_OFFSET, &Buffer, 1);
+
+  if (Buffer == 8) {
+	  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, 0x0, 1);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
