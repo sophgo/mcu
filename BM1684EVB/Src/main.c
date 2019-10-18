@@ -311,7 +311,7 @@ void Clean_ERR_INT(void)
 	return ;
 }
 
-#define MCU_VERSION 0x02
+#define MCU_VERSION 0x04
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
