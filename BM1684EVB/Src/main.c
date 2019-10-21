@@ -244,6 +244,7 @@ void PowerON(void)
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
 
+	i2c_regs.power_good = 1;
 	i2c_regs.cmd_reg  = 0;
 }
 

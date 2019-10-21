@@ -235,6 +235,7 @@ extern I2C_REGS i2c_regs;
 
 #define REG_CMD				0x14
 #define REG_DDR				0x15
+#define REG_POWER_GOOD		0x16
 /* some reserved here, original MAC0 and MAC1 */
 #define I_12V_ATX_L			0x28
 #define I_12V_ATX_H			0x29

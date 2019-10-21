@@ -204,8 +204,11 @@ static uint8_t mcu_read(void)
 	case REG_DDR:
 		ret = i2c_regs.ddr;
 		break;
+	case REG_POWER_GOOD:
+		ret = i2c_regs.power_good;
+		break;
 	default:
-		ret = i2c_regs.sw_ver;
+		ret = 0xff;
 		break;
 	}
 
