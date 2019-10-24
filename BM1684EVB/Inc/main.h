@@ -202,7 +202,14 @@ typedef struct I2C_REGS_t
 	uint8_t power_good;
 	uint8_t reserved0;
 
-	uint8_t reserved1[16];
+	uint8_t reserved1[2];
+	uint16_t v_vddio3v3;//0x1a-0x27
+	uint16_t v_vddio18;
+	uint16_t v_vdd_phy;
+	uint16_t v_vdd_pcie;
+	uint16_t v_vdd_tpu_mem;
+	uint16_t v_ddr_vddq;
+	uint16_t v_ddr_vddqlp;
 	CURRENT_VAL current;
 }I2C_REGS;
 

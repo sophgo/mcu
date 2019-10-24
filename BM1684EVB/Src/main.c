@@ -91,17 +91,21 @@ void SystemClock_Config(void);
 
 #define IO_MODECTRL			0x24
 #define BUCK1_VOUTFBDIV		0x3B
+#define BUCK1_CFG3			0x3f
 #define BUCK1_DVS0CFG1		0x48
 #define BUCK1_DVS0CFG0		0x49
 #define BUCK1_DVSSEL		0x53
 #define BUCK1_EN_DLY		0x56
 #define BUCK2_VOUTFBDIV		0x58
+#define BUCK2_CFG3			0x5c
 #define BUCK2_DVS0CFG1		0x62
 #define BUCK2_DVS0CFG0		0x63
 #define BUCK3_VOUTFBDIV		0x72
+#define BUCK3_CFG3			0x76
 #define BUCK3_DVS0CFG1		0x7C
 #define BUCK3_DVS0CFG0		0x7D
 #define BUCK4_VOUTFBDIV		0x8c
+#define BUCK4_CFG3			0x90
 #define BUCK4_DVS0CFG1		0x96
 #define BUCK4_DVS0CFG0 		0x97
 
@@ -172,6 +176,12 @@ void PowerON(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
 
+	val = 0x80;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_CFG3, 1, &val, 1, 1000);
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_CFG3, 1, &val, 1, 1000);
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_CFG3, 1, &val, 1, 1000);
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_CFG3, 1, &val, 1, 1000);
+
 	val = 0xF5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
 
@@ -227,7 +237,7 @@ void PowerON(void)
 
 	//VDD_TPU_MEM
 	HAL_Delay(1);
-	origin_val = val = 0x58;
+	origin_val = val = 0x5e;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, &val, 2, 1000);//VDD_TPU_MEM 0.7v
 	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//VDD_TPU_MEM 0.7v
 	if (chk_val != origin_val)
@@ -312,7 +322,7 @@ void Clean_ERR_INT(void)
 	return ;
 }
 
-#define MCU_VERSION 0x04
+#define MCU_VERSION 0x05
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
@@ -362,6 +372,43 @@ void Scan_Cuerrent(void)
 //	  EEPROM_Write(addr, ADC_Buf[0]);
 
 	  HAL_ADC_Stop(&hadc);
+}
+
+#define NCT80		(0x50)
+
+#define START_BIT		BIT0
+#define INT_Clear		BIT3
+#define CONFIG_REG		(0X00)
+#define CONVERSION_RATE (0x07)
+#define CHANNEL_SEL_REG	(0x08)
+#define IN0_READING		(0x20)
+#define IN1_READING		(0x21)
+#define IN2_READING		(0x22)
+#define IN3_READING		(0x23)
+#define IN4_READING		(0x24)
+#define IN5_READING		(0x25)
+#define IN6_READING		(0x26)
+
+void Scan_Voltage(void)
+{
+
+	HAL_I2C_Mem_Read( &hi2c2, NCT80, IN0_READING, 1, (uint8_t *)&i2c_regs.v_vddio3v3, 2, 1000);
+	HAL_I2C_Mem_Read( &hi2c2, NCT80, IN1_READING, 1, (uint8_t *)&i2c_regs.v_vddio18, 2, 1000);
+	HAL_I2C_Mem_Read( &hi2c2, NCT80, IN2_READING, 1, (uint8_t *)&i2c_regs.v_vdd_phy, 2, 1000);
+	HAL_I2C_Mem_Read( &hi2c2, NCT80, IN3_READING, 1, (uint8_t *)&i2c_regs.v_vdd_pcie, 2, 1000);
+	HAL_I2C_Mem_Read( &hi2c2, NCT80, IN4_READING, 1, (uint8_t *)&i2c_regs.v_vdd_tpu_mem, 2, 1000);
+	HAL_I2C_Mem_Read( &hi2c2, NCT80, IN5_READING, 1, (uint8_t *)&i2c_regs.v_ddr_vddq, 2, 1000);
+	HAL_I2C_Mem_Read( &hi2c2, NCT80, IN6_READING, 1, (uint8_t *)&i2c_regs.v_ddr_vddqlp, 2, 1000);
+
+	i2c_regs.v_vddio3v3 = i2c_regs.v_vddio3v3 >> 6;
+	i2c_regs.v_vddio18 = i2c_regs.v_vddio18 >> 6;
+	i2c_regs.v_vdd_phy = i2c_regs.v_vdd_phy >> 6;
+	i2c_regs.v_vdd_pcie = i2c_regs.v_vdd_pcie >> 6;
+	i2c_regs.v_vdd_tpu_mem = i2c_regs.v_vdd_tpu_mem >> 6;
+	i2c_regs.v_ddr_vddq = i2c_regs.v_ddr_vddq >> 6;
+	i2c_regs.v_ddr_vddqlp = i2c_regs.v_ddr_vddqlp >> 6;
+
+	return;
 }
 
 void Set_HW_Ver(void)
@@ -449,6 +496,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	uint8_t Buffer;
+	uint8_t val = 0;
   /* USER CODE END 1 */
   
 
@@ -503,6 +551,10 @@ int main(void)
   if (Buffer == 8) {
 	  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, 0x0, 1);
   }
+
+  val = 0x1;
+  HAL_I2C_Mem_Write(&hi2c2, NCT80, CONFIG_REG, 1, &val, 1, 1000);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -546,6 +598,7 @@ int main(void)
 
 	  //get current of ten channels
 	  Scan_Cuerrent();
+	  Scan_Voltage();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
 	  if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port, PCIEE_RST_X_MCU_Pin))
