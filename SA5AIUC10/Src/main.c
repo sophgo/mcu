@@ -313,6 +313,9 @@ void clean_pmic(void)
 
 void PowerDOWN(void)
 {
+	HAL_I2C_MspDeInit(&hi2c1);
+	HAL_I2C_MspDeInit(&hi2c3);
+
 	i2c_regs.cmd_reg = 0;
 	i2c_regs.power_good = 0;
 	power_on_good = 0;
@@ -350,6 +353,8 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 
 //	led_on();
+	HAL_I2C_MspInit(&hi2c1);
+	HAL_I2C_MspInit(&hi2c3);
 }
 
 void BM1684_RST(void)
