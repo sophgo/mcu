@@ -22,6 +22,7 @@ static struct mcu_ctx {
 	I2C_REGS map;
 } mcu_ctx;
 
+static int cmd_received;
 
 #define MCU_REG_MAX REG_NUMBER
 // #define MCU_REG_CTL 3
@@ -71,9 +72,11 @@ static void mcu_write(volatile uint8_t data)
 
 	switch (mcu_ctx.idx) {
 	case REG_CMD_REG:
-		if (i2c_regs.cmd_reg == 0)
+		if (i2c_regs.cmd_reg == 0) {
 //			i2c_regs.cmd_reg = data;
 			i2c_regs.cmd_reg_bkup = data;
+			cmd_received = 1;
+		}
 
 		if (CPLD_CLR_ERR | i2c_regs.cmd_reg) {
 			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
@@ -232,8 +235,10 @@ static uint8_t mcu_read(void)
 static void mcu_stop(void)
 {
 
-	if (i2c_regs.cmd_reg_bkup != i2c_regs.cmd_reg)
+	if ((i2c_regs.cmd_reg_bkup != i2c_regs.cmd_reg) && (cmd_received == 1)) {
+		cmd_received = 0;
 		i2c_regs.cmd_reg = i2c_regs.cmd_reg_bkup;
+	}
 
 	if (mcu_ctx.setrtc)
 	{
