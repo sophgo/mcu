@@ -4,8 +4,8 @@
  *  Created on: Jul 22, 2019
  *      Author: weic
  */
-#include <assert.h>
-#include "i2c_bm.h"
+#include "i2c_slave.h"
+#include "main.h"
 #include "eeprom.h"
 
 #define EEPROM_SIZE	(EEPROM_BANK_SIZE)
@@ -15,7 +15,7 @@ static struct eeprom_ctx {
 	int idx;
 } ctx;
 
-static void eeprom_match(int dir)
+static void eeprom_match(void *priv, int dir)
 {
 	if (dir == I2C_SLAVE_WRITE) {
 		ctx.set_idx = 2;
@@ -36,7 +36,7 @@ static inline void idx_inc(void)
 	ctx.idx = (ctx.idx + 1) % EEPROM_SIZE;
 }
 
-static void eeprom_write(uint8_t data)
+static void eeprom_write(void *priv, uint8_t data)
 {
 	switch (ctx.set_idx) {
 	case 2:
@@ -54,7 +54,7 @@ static void eeprom_write(uint8_t data)
 	idx_inc();
 }
 
-static uint8_t eeprom_read(void)
+static uint8_t eeprom_read(void *priv)
 {
 	uint8_t tmp;
 	EEPROM_ReadBytes(ctx.idx, &tmp, 1);
@@ -62,16 +62,11 @@ static uint8_t eeprom_read(void)
 	return tmp;
 }
 
-static void eeprom_stop(void)
-{
-}
-
-static struct i2c_slave_op slave = {
+static struct i2c_slave_op slave1 = {
 	.addr = 0x6a,
 	.match = eeprom_match,
 	.write = eeprom_write,
 	.read = eeprom_read,
-	.stop = eeprom_stop,
 };
 
 static struct i2c_slave_op slave3 = {
@@ -79,14 +74,13 @@ static struct i2c_slave_op slave3 = {
 	.match = eeprom_match,
 	.write = eeprom_write,
 	.read = eeprom_read,
-	.stop = eeprom_stop,
 };
 
 void eeprom_init(void)
 {
 	if (i2c_regs.vender == VENDER_SA5) {
-		i2c_slave_register(&slave, i2c_ctx0);
+		i2c_slave_register(i2c_ctx1, &slave1);
 	}
-	i2c_slave_register(&slave3,i2c_ctx3);
+	i2c_slave_register(i2c_ctx3, &slave3);
 }
 

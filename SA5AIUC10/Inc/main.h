@@ -165,57 +165,58 @@ void Error_Handler(void);
 #define MCU_EEPROM_DATA_MAX    (32)
 typedef struct I2C_REGS_t
 {
-	uint8_t vender;
-	uint8_t sw_ver;
-	uint8_t hw_ver;
+	volatile uint8_t vender;
+	volatile uint8_t sw_ver;
+	volatile uint8_t hw_ver;
 	volatile uint8_t cmd_reg;
 
 	volatile uint8_t temp1684;
 	volatile uint8_t temp_board;
 	volatile uint8_t intr_status1;
-	uint8_t intr_status2;
+	volatile uint8_t intr_status2;
 
-	uint8_t intr_mask1;
-	uint8_t intr_mask2;
-	uint8_t rst_1684_times;
+	volatile uint8_t intr_mask1;
+	volatile uint8_t intr_mask2;
+	volatile uint8_t rst_1684_times;
 
-	uint8_t uptime0;
+	volatile uint8_t uptime0;
 
-	uint8_t uptime1;
-	uint8_t cause_pwr_down;
-	uint8_t rtc[6];
-	uint8_t cmd;
-	uint8_t ddr;//0x15,21
-	uint8_t power_good;
-	uint8_t vender_val;
-	uint8_t pmic_status;
+	volatile uint8_t uptime1;
+	volatile uint8_t cause_pwr_down;
+	volatile uint8_t rtc[6];
+	volatile uint8_t cmd;
+	volatile uint8_t ddr;//0x15,21
+	volatile uint8_t power_good;
+	volatile uint8_t vender_val;
+	volatile uint8_t pmic_status;
 
 	volatile uint8_t power_on_cmd;//0x19
 	volatile uint8_t cmd_reg_bkup;
-	uint8_t reserved1[13];
-	CURRENT_VAL current;
-	uint8_t reserved2[2];
-	uint8_t eeprom_offset_l;
-	uint8_t eeprom_offset_h;
-	uint8_t eeprom_data[MCU_EEPROM_DATA_MAX];
+	volatile uint8_t reserved1[13];
+	volatile CURRENT_VAL current;
+	volatile uint8_t reserved2[2];
+	volatile uint8_t eeprom_offset_l;
+	volatile uint8_t eeprom_offset_h;
+	volatile uint8_t eeprom_data[MCU_EEPROM_DATA_MAX];
+	volatile uint8_t error_line_l; /* log error line during power on */
+	volatile uint8_t error_line_h; /* log error line during power on */
+	volatile uint8_t error_code; /* last error code */
+	volatile uint8_t reserved3;
 }I2C_REGS;
 
 extern I2C_REGS i2c_regs;
 
-#define I2C_SLAVE_MAX	(8)
-//extern struct i2c_isr_op;
+struct i2c_slave_ctx;
+extern struct i2c_slave_ctx *i2c_ctx1;
+extern struct i2c_slave_ctx *i2c_ctx3;
+extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
+extern I2C_HandleTypeDef hi2c3;
 
-typedef struct i2c_ctx {
-	int dir;
-	int idx;
-	unsigned int isr_irq_mask;
-	struct i2c_reg *reg;
-	struct i2c_slave_op *slave_list[I2C_SLAVE_MAX];
-	struct i2c_slave_op *slave; /* current slave */
-} *I2C_CTX;
-
-extern I2C_CTX i2c_ctx0;
-extern I2C_CTX i2c_ctx3;
+void PowerON(void);
+void PowerDOWN(void);
+void BM1684_RST(void);
+void BM1684_REBOOT(void);
 
 #define REG_VENDER			0x00
 #define REG_SW_VER			0x01
@@ -276,6 +277,10 @@ extern I2C_CTX i2c_ctx3;
 #define REG_EEPROM_OFFSET_L	0x3e	/* 16bit eeprom address, low 8bits */
 #define REG_EEPROM_OFFSET_H	0x3f	/* 16bit eeprom address, high 8bits */
 #define REG_EEPROM_DATA		0x40	/* eeprom data */
+#define REG_ERROR_LINE_L	0x60	/* error line low byte */
+#define REG_ERROR_LINE_H	0x61	/* error line high byte */
+#define REG_ERROR_CODE		0x62	/* error code */
+#define REG_I2C2_STATE		0x63	/* i2c2 state */
 #define REG_NUMBER		sizeof(I2C_REGS)
 
 #define BIT0   (0X01 << 0)
@@ -308,6 +313,7 @@ extern I2C_CTX i2c_ctx3;
 #define ERR_VDDPCIE	BIT4
 #define ERR_VDDTPU	BIT5
 #define ERR_VDDTPUMEM	BIT6
+#define ERR_PMIC_I2C_IO	BIT7
 
 
 //CPLD Command
@@ -343,7 +349,7 @@ extern I2C_CTX i2c_ctx3;
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0x10)
+#define MCU_VERSION (0x11)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

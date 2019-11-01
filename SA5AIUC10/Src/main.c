@@ -48,7 +48,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "i2c_bm.h"
+#include "i2c_slave.h"
 #include "mcu.h"
 #include "wdt.h"
 #include "ds1307.h"
@@ -57,6 +57,7 @@
 #include "eeprom.h"
 #include "stdlib.h"
 #include "string.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -78,8 +79,8 @@
 
 /* USER CODE BEGIN PV */
 I2C_REGS i2c_regs;
-I2C_CTX i2c_ctx0;
-I2C_CTX i2c_ctx3;
+struct i2c_slave_ctx *i2c_ctx1;
+struct i2c_slave_ctx *i2c_ctx3;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,14 +123,11 @@ void HAL_Delay(uint32_t Delay)
 
 void TurnOnLED(void);
 void TurnOffLED(void);
-void PowerON(void);
-void PowerDOWN(void);
-void BM1684_RST(void);
-void Clean_ERR_INT(void);
 
 #define PMIC_ADDR 0x3c
 
-#define IO_MODECTRL			0x24
+#define IO_CHIPNAME		0x01
+#define IO_MODECTRL		0x24
 #define BUCK1_VOUTFBDIV		0x3B
 #define BUCK1_DVS0CFG1		0x48
 #define BUCK1_DVS0CFG0		0x49
@@ -143,42 +141,57 @@ void Clean_ERR_INT(void);
 #define BUCK3_DVS0CFG0		0x7D
 #define BUCK4_VOUTFBDIV		0x8c
 #define BUCK4_DVS0CFG1		0x96
-#define BUCK4_DVS0CFG0 		0x97
+#define BUCK4_DVS0CFG0		0x97
 
-uint8_t val;
-uint8_t origin_val;
-uint8_t chk_val;
-volatile uint8_t power_on_good;
-void led_on(void);
-void led_filcker(void);
-void clean_pmic(void);
+int clean_pmic(void);
 
+#define LOG_ERROR_LINE()								\
+	do {												\
+		i2c_regs.error_line_l = __LINE__ & 0xff;		\
+		i2c_regs.error_line_h = (__LINE__ >> 8) & 0xff;	\
+	} while(0)
+
+#define LOG_ERROR_CAUSE(cause)							\
+	do {												\
+		i2c_regs.cause_pwr_down = cause;				\
+	} while(0)
+
+#define LOG_ERROR_CODE(code)							\
+	do {												\
+		i2c_regs.error_code = code;						\
+	} while(0)
+
+#define PMIC_PWR_ON_I2C_CHECK(op)						\
+	do {												\
+		int err = (op);									\
+		if (err != HAL_OK) {							\
+			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);			\
+			LOG_ERROR_LINE();							\
+			LOG_ERROR_CODE(err);						\
+			goto poweron_fail;							\
+		}												\
+	} while (0)
 void PowerON(void)
 {
-	HAL_I2C_MspDeInit(&hi2c1);
-	HAL_I2C_MspDeInit(&hi2c3);
-
-	clean_pmic();
-	HAL_Delay(100);
+	unsigned char tmp[8];
 	i2c_regs.cause_pwr_down = 0;
 
-	val = 0;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-
-	val = 0xE5;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// enable buck1-3
-
-	origin_val = val = 0xD0;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
-	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);// LDO1V_IN
-	if (chk_val != origin_val) {
-		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
-		if (chk_val != origin_val) {
-			i2c_regs.pmic_status |= 0x01;
-		}
+	if (clean_pmic()) {
+		goto poweron_fail;
 	}
+	HAL_Delay(100);
+
+	tmp[0] = 0;
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, tmp, 1, 1000));// 1.2v
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, tmp, 1, 1000));// 1.2v
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, tmp, 1, 1000));// 1.2v
+
+	tmp[0] = 0xE5;
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, tmp, 1, 1000));// enable buck1-3
+
+	tmp[0] = 0xD0;
+	tmp[1] = 0x00;
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, tmp, 2, 1000));// LDO1V_IN
 
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
@@ -231,33 +244,19 @@ void PowerON(void)
 
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
-	origin_val = val = 0xE5;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
-	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR_VDDQ 1.1v
-	if (chk_val != origin_val) {
-		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
-		if (chk_val != origin_val) {
-				i2c_regs.pmic_status |= 0x02;
-		}
-	}
+	tmp[0] = 0xE5;
+	tmp[1] = 0x00;
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, tmp, 2, 1000));//DDR_VDDQ 1.1v
 	HAL_Delay(1);
 #if 0  //DDR4
-	origin_val = val = 0xE5;//1.8ms
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
-	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
-	if (chk_val != origin_val)
-		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	tmp[0] = 0xE5;
+	tmp[1] = 0x00;
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, tmp, 2, 1000));//DDR*_DDR_VDDQLP 1.1v
 	i2c_regs.ddr = 1;
 #else //ddr4x
-	origin_val = val = 0x7D;//1.8ms
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
-	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, (uint8_t *)&chk_val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
-	if (chk_val != origin_val) {
-		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 0.6v
-		if (chk_val != origin_val) {
-			i2c_regs.pmic_status |= 0x04;
-		}
-	}
+	tmp[0] = 0x7D;//1.8ms
+	tmp[1] = 0x00;//1.8ms
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, tmp, 2, 1000));//DDR*_DDR_VDDQLP 0.6v
 	i2c_regs.ddr = 0;
 #endif
 	HAL_Delay(1);//5ms
@@ -280,46 +279,63 @@ void PowerON(void)
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
 
-	i2c_regs.cmd_reg = 0;
-	i2c_regs.cmd_reg_bkup = 0;
-
 poweron_fail:
 	if (i2c_regs.cause_pwr_down == 0) {
 		i2c_regs.power_good = 1;
-		power_on_good = 1;
 	} else {
 		i2c_regs.power_good = 0;
 		i2c_regs.intr_status1 |= POWERON_ERR;
 		PowerDOWN();
 	}
 
-	HAL_I2C_MspInit(&hi2c1);
-	HAL_I2C_MspInit(&hi2c3);
-
 	return;
 }
 
-void clean_pmic(void)
+#define PMIC_CLEAN_I2C_CHECK(op)						\
+	do {												\
+		int err = (op);									\
+		if (err != HAL_OK) {							\
+			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);			\
+			LOG_ERROR_LINE();							\
+			LOG_ERROR_CODE(err);						\
+			return -1;									\
+		}												\
+	} while (0)
+
+int clean_pmic(void)
 {
-	val = 0;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	uint8_t tmp[2] = {0, 0};
+	uint32_t tickstart = HAL_GetTick();
+	int err;
+
+	HAL_Delay(5);
+
+	do {
+		err = HAL_I2C_Mem_Read(&hi2c2, PMIC_ADDR, IO_CHIPNAME, 1, tmp, 1, 10);
+		if (err == HAL_OK)
+			break;
+	} while(HAL_GetTick() - tickstart <= 1000);
+
+	if (err != HAL_OK) {
+		i2c_regs.cause_pwr_down = ERR_PMIC_I2C_IO;
+		return -1;
+	}
+
+	tmp[0] = tmp[1] = 0;
+
+	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, IO_MODECTRL, 1, tmp, 1, 1000));
+	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK1_VOUTFBDIV, 1, tmp, 1, 1000));
+	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK2_VOUTFBDIV, 1, tmp, 1, 1000));
+	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK3_VOUTFBDIV, 1, tmp, 1, 1000));
+	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK1_DVS0CFG1, 1, tmp, 2, 1000));
+	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK2_DVS0CFG1, 1, tmp, 2, 1000));
+	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK3_DVS0CFG1, 1, tmp, 2, 1000));
+	return 0;
 }
 
 void PowerDOWN(void)
 {
-	HAL_I2C_MspDeInit(&hi2c1);
-	HAL_I2C_MspDeInit(&hi2c3);
-
-	i2c_regs.cmd_reg = 0;
 	i2c_regs.power_good = 0;
-	power_on_good = 0;
-
 	clean_pmic();
 	HAL_Delay(100);
 
@@ -349,18 +365,11 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 1, 1000);// LDO1V_IN
-	HAL_Delay(1);
-
-//	led_on();
-	HAL_I2C_MspInit(&hi2c1);
-	HAL_I2C_MspInit(&hi2c3);
 }
 
 void BM1684_RST(void)
 {
 	i2c_regs.intr_status1 |= RESET_OP;
-	i2c_regs.cmd_reg = 0;
 
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
@@ -371,69 +380,47 @@ void BM1684_RST(void)
 
 void BM1684_REBOOT(void)
 {
-	i2c_regs.cmd_reg = 0;
-
 	PowerDOWN();
 	HAL_Delay(5);
 	PowerON();
 }
 
-void Clean_ERR_INT(void)
-{
-	i2c_regs.cmd_reg = 0;
-
-	return ;
-}
-
 uint8_t pg_core = 0;
 
-uint8_t sec_count = 0;
-
-void led_filcker(void)
-{
-	HAL_GPIO_WritePin(GPIOA, MCU_LED_Pin, GPIO_PIN_SET);
-	HAL_Delay(500);
-	HAL_GPIO_WritePin(GPIOA, MCU_LED_Pin, GPIO_PIN_RESET);
-	HAL_Delay(500);
-}
-
-void led_on(void)
+static inline void led_on(void)
 {
 	HAL_GPIO_WritePin(GPIOA, MCU_LED_Pin, GPIO_PIN_SET);
 }
 
-void led_off(void)
+static inline void led_off(void)
 {
 	HAL_GPIO_WritePin(GPIOA, MCU_LED_Pin, GPIO_PIN_RESET);
 }
-/**
-  * @brief  EXTI line detection callbacks.
-  * @param  GPIO_Pin Specifies the pins connected to the EXTI line.
-  * @retval None
-  */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(GPIO_Pin);
 
-  /* NOTE: This function Should not be modified, when the callback is needed,
-           the HAL_GPIO_EXTI_Callback could be implemented in the user file
-   */
-  switch (GPIO_Pin)
-  {
-  case GPIO_PIN_5:
-	  // tempture too high
-	  led_filcker();
-	  i2c_regs.intr_status1 = 0x02;
-	  break;
-  case GPIO_PIN_14:
-	  // reset 1684 pcie
-	  break;
-  case GPIO_PIN_15:
-	  // power good
-	  pg_core = 1;
-	  break;
-  }
+static inline void led_flicker(void)
+{
+	/* flicker at 1Hz */
+	/* it is too slow by this way */
+	// tick = (tick / 500) & 1;
+	/* consider this */
+	// tick = (tick / 512) & 1;
+	// tick &= 1 << 9; //faster then divide
+
+	if (HAL_GetTick() & (1 << 9))
+		led_on();
+	else
+		led_off();
+}
+
+static void led_update(void)
+{
+
+	if (i2c_regs.intr_status1 & (BM1684_OVER_TEMP | BOARD_OVER_TEMP))
+		led_on();
+	else if (i2c_regs.power_good)
+		led_flicker();
+	else
+		led_off();
 }
 
 void SET_HW_Ver(void)
@@ -522,58 +509,81 @@ uint8_t temp1684;	// before calibration
 static uint8_t alert_cnt = 0;
 static uint8_t powerdown_cnt = 0;
 
+#define TMP451_MAIN_I2C_CHECK(op)						\
+	do {												\
+		int err = (op);									\
+		if (err != HAL_OK) {							\
+			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);			\
+			LOG_ERROR_LINE();							\
+			LOG_ERROR_CODE(err);						\
+			while (1)									\
+				;										\
+		}												\
+	} while (0)
+
+#define TMP451_ALERT		(0x22)
+#define TMP451_SMBTO_MASK	(1 << 7)
+
 void READ_Temper(void)
 {
+	/* enable tmp451 smbus timeout feature */
+	static uint8_t smbto = 0;
+
+	if (smbto == 0) {
+		/* tmp451 smbus timeout will release sda and scl after 20ms from i2c start */
+		/* 30ms delay is for safety */
+		HAL_Delay(30);
+		/* first time tempareture get, from stm32 bootup */
+		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2, TMP451_SLAVE_ADDR, TMP451_ALERT, 1, &smbto, 1, 1000));
+		if ((smbto & TMP451_SMBTO_MASK) == 0) {
+			/* tmp451 has not enabled smbus timeout feature, enable it */
+			smbto |= TMP451_SMBTO_MASK;
+			TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, TMP451_SLAVE_ADDR, TMP451_ALERT, 1, &smbto, 1, 1000));
+		}
+	}
+
 #ifdef CAL_TEMPARETURE
 	float t_remote, terr1, t3;
 #endif //CAL_TEMPARETURE
 
-	if (sec_count == 1) {
-		// detection of temperature value
-		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000);
+	// detection of temperature value
+	HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000);
 #ifdef CAL_TEMPARETURE
-		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000);
-		//1 t_remote = t_register - 6.947;
-		t_remote = temp1684 - 6.947;
-		//2 Terr1 = ((n-1.008)/1.008) *(273.15 + T1); n = 1.11, T1 = 25
-		terr1 = ((1.11 - 1.008)/1.008)*(273.15 + 25);
-		//3 T3=((1.008*(Ttremote + Terr1) - (1.11 -1.008) * 273.15)/1.11);
-		t3 = (1.008*(t_remote + terr1) - (1.11 - 1.008)*273.15)/1.11;
+	HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000);
+	//1 t_remote = t_register - 6.947;
+	t_remote = temp1684 - 6.947;
+	//2 Terr1 = ((n-1.008)/1.008) *(273.15 + T1); n = 1.11, T1 = 25
+	terr1 = ((1.11 - 1.008)/1.008)*(273.15 + 25);
+	//3 T3=((1.008*(Ttremote + Terr1) - (1.11 -1.008) * 273.15)/1.11);
+	t3 = (1.008*(t_remote + terr1) - (1.11 - 1.008)*273.15)/1.11;
 
-		i2c_regs.temp1684 = (uint8_t)t3;
+	i2c_regs.temp1684 = (uint8_t)t3;
 
 #else
-		if (temp1684 < 4) {
-			i2c_regs.temp1684 = 0;
-		} else {
-			i2c_regs.temp1684 = (temp1684 * 232- 886) >> 8; //rough handling of tempareture calibration
-		}
-		HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
+	if (temp1684 < 4) {
+		i2c_regs.temp1684 = 0;
+	} else {
+		i2c_regs.temp1684 = (temp1684 * 232- 886) >> 8; //rough handling of tempareture calibration
+	}
+	HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
 #endif //CAL_TEMPARETURE
 
-		if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
-			powerdown_cnt++;
-			if (powerdown_cnt == 3) {
-				i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
-				PowerDOWN();
-				powerdown_cnt = 0;
-			}
-		} else if ((i2c_regs.temp1684 > 75) && (i2c_regs.temp_board > 70)) {//temperature too high alert
-			alert_cnt++;
-			if (alert_cnt ==3) {
-				i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
-				led_on();
-				alert_cnt = 0;
-			}
-		} else {
-			alert_cnt = 0;
+	if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
+		powerdown_cnt++;
+		if (powerdown_cnt == 3) {
+			i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
+			PowerDOWN();
 			powerdown_cnt = 0;
 		}
-
-		sec_count = 0;
+	} else if ((i2c_regs.temp1684 > 75) && (i2c_regs.temp_board > 70)) {//temperature too high alert
+		alert_cnt++;
+		if (alert_cnt ==3) {
+			i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
+			alert_cnt = 0;
+		}
 	} else {
-		HAL_Delay(1);
-		sec_count = 1;
+		alert_cnt = 0;
+		powerdown_cnt = 0;
 	}
 }
 
@@ -660,7 +670,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  EEPROM_ReadBytes(VENDER_Addr, &i2c_regs.vender, 1);
+  EEPROM_ReadBytes(VENDER_Addr, (uint8_t *)&i2c_regs.vender, 1);
 
   if (i2c_regs.vender == 0)
 	  i2c_regs.vender = VENDER_SA5;
@@ -691,34 +701,31 @@ int main(void)
   MX_LPTIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+  /* put led to off state */
+  led_off();
 
   HAL_LPTIM_Start1HZ(&hlptim1);
 
 //  Factory_Info_Get();
   if (i2c_regs.vender == VENDER_SA5) {
-	  i2c_ctx0 = (struct i2c_ctx*)malloc(sizeof(struct i2c_ctx));
-  }
-  i2c_ctx3 = (struct i2c_ctx*)malloc(sizeof(struct i2c_ctx));
-  if (i2c_regs.vender == VENDER_SA5) {
-	  memset(i2c_ctx0, 0, sizeof(struct i2c_ctx));
-  }
-  memset(i2c_ctx3, 0, sizeof(struct i2c_ctx));
-
-  if (i2c_regs.vender == VENDER_SA5) {
-	  i2c_init(hi2c1.Instance,i2c_ctx0);
-  }
-  i2c_init(hi2c3.Instance,i2c_ctx3);
-  if (i2c_regs.vender == VENDER_SA5) {
+	  i2c_ctx1 = (struct i2c_slave_ctx*)malloc(sizeof(struct i2c_slave_ctx));
+	  memset(i2c_ctx1, 0, sizeof(struct i2c_slave_ctx));
+	  i2c_init(i2c_ctx1, hi2c1.Instance);
 	  ds1307_init();
   }
+
+  i2c_ctx3 = (struct i2c_slave_ctx*)malloc(sizeof(struct i2c_slave_ctx));
+  memset(i2c_ctx3, 0, sizeof(struct i2c_slave_ctx));
+  i2c_init(i2c_ctx3, hi2c3.Instance);
   tmp451_init();
   mcu_init();
   wdt_init();
   eeprom_init();
-  if (i2c_regs.vender == VENDER_SA5) {
-	  i2c_slave_start(i2c_ctx0);
-  }
+
   i2c_slave_start(i2c_ctx3);
+  if (i2c_regs.vender == VENDER_SA5) {
+	  i2c_slave_start(i2c_ctx1);
+  }
 
   // make sure PB6 is high
 //  HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
@@ -743,65 +750,41 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
 	  // response CPLD's commands
-	switch(i2c_regs.cmd_reg) {
-	  case CMD_CPLD_PWR_ON:
-		  i2c_regs.power_on_cmd = 1;
-		  if (i2c_regs.power_good == 0) {
-			  PowerON();
-		  }
-		  break;
-	  case CMD_CPLD_PWR_DOWN:
-		  PowerDOWN();
-		  break;
-	  case CMD_CPLD_1684RST:
-		  BM1684_RST();
-		  i2c_regs.rst_1684_times++;
-		  break;
-	  case CMD_CPLD_SWRST:
-		  i2c_regs.cmd_reg = 0;
-		  break;
-	  case CMD_CPLD_CLR:
-		  Clean_ERR_INT();
-		  break;
-	  case CMD_BM1684_RST:
-		  BM1684_RST();
-		  break;
-	  case CMD_BM1684_REBOOT:
-		  BM1684_REBOOT();
-		  break;
-	  case CMD_MCU_UPDATE:
-		  Buffer = 0x08;
-		  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, &Buffer,1);
-		  i2c_regs.cmd_reg = 0;
-		  break;
-	  default:
-		  break;
-	  }
+	  extern void mcu_process_cmd_slow(void);
+	  mcu_process_cmd_slow();
 
-	  if ((i2c_regs.cmd_reg == 0) && (i2c_regs.cmd_reg_bkup == 1)) {
-		  PowerON();
-	  }
-
-	  if ((power_on_good == 1) && (i2c_regs.intr_status1 != BOARD_OVER_TEMP) && (i2c_regs.intr_status1 != BM1684_OVER_TEMP)) {
-		  led_filcker();
-	  }
 	  // read temperature every 2 seconds
-	  READ_Temper();
+	  static uint32_t last_read_time = 0;
+	  static int ever_read = 0;
+	  if (ever_read == 0) {
+		  /* read temperature at boot time */
+		  READ_Temper();
+		  ever_read = 1;
+		  last_read_time = HAL_GetTick();
+	  } else {
+		  uint32_t read_time = HAL_GetTick();
+
+		  if (read_time - last_read_time > 2000) {
+			  READ_Temper();
+			  last_read_time = read_time;
+		  }
+	  }
+	  led_update();
 	  //detect 12v
-//	  DETECT_12V_Voltage();
+	  //	  DETECT_12V_Voltage();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
-	  if ((i2c_regs.vender != VENDER_SA5) && (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin)))
-	  {
+	  if ((i2c_regs.vender != VENDER_SA5) &&
+	      (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
+											  PCIE_RST_MCU_Pin))) {
 		  PowerDOWN();
-	  	  HAL_Delay(30);
-	  	  PowerON();
+		  HAL_Delay(30);
+		  PowerON();
 	  }
-    /* USER CODE END WHILE */
+	  /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
+	  /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }

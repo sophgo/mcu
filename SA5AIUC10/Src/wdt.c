@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "main.h"
-#include "i2c_bm.h"
+#include "i2c_slave.h"
 #include "lptim.h"
 #include "stm32l0xx_hal.h"
 
@@ -37,7 +37,7 @@ static struct wdt_ctx {
 	__IO uint32_t clock;	/* real clock frequency */
 } wdt_ctx;
 
-static void wdt_match(int dir)
+static void wdt_match(void *priv, int dir)
 {
 	if (dir == I2C_SLAVE_WRITE) {
 		wdt_ctx.set_idx = 1;
@@ -57,7 +57,7 @@ static inline void idx_inc(void)
 	wdt_ctx.idx = (wdt_ctx.idx + 1) % WDT_REG_MAX;
 }
 
-static void wdt_write(uint8_t data)
+static void wdt_write(void *priv, uint8_t data)
 {
 	int offset;
 
@@ -81,7 +81,7 @@ static void wdt_write(uint8_t data)
 	idx_inc();
 }
 
-static uint8_t wdt_read(void)
+static uint8_t wdt_read(void *priv)
 {
 	uint8_t ret = 0;
 	int offset;
@@ -103,7 +103,7 @@ static uint8_t wdt_read(void)
 	return ret;
 }
 
-static void wdt_stop(void)
+static void wdt_stop(void *priv)
 {
 	wdt_ctx.timeout = wdt_ctx.timeout_shadow;
 }
@@ -149,6 +149,6 @@ void wdt_init(void)
 {
 	wdt_reset();
 
-	i2c_slave_register(&slave,i2c_ctx3);
+	i2c_slave_register(i2c_ctx3, &slave);
 }
 

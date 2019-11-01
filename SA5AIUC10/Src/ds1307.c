@@ -6,7 +6,7 @@
  */
 #include <assert.h>
 #include "main.h"
-#include "i2c_bm.h"
+#include "i2c_slave.h"
 #include "rtc.h"
 
 struct ds1307_map {
@@ -28,7 +28,7 @@ static struct ds1307_ctx {
 	struct ds1307_map map;
 } ds1307_ctx;
 
-static void ds1307_match(int dir)
+static void ds1307_match(void *priv, int dir)
 {
 	if (dir == I2C_SLAVE_WRITE) {
 		ds1307_ctx.set_idx = 1;
@@ -65,7 +65,7 @@ static void ds1307_match(int dir)
 	}
 }
 
-static void ds1307_write(uint8_t data)
+static void ds1307_write(void *priv, uint8_t data)
 {
 	if (ds1307_ctx.set_idx) {
 		ds1307_ctx.idx = data % sizeof(struct ds1307_map);
@@ -77,14 +77,14 @@ static void ds1307_write(uint8_t data)
 	ds1307_ctx.set_rtc = 1;
 }
 
-static uint8_t ds1307_read(void)
+static uint8_t ds1307_read(void *priv)
 {
 	uint8_t tmp = *((uint8_t *)(&ds1307_ctx.map) + ds1307_ctx.idx);
 	ds1307_ctx.idx = (ds1307_ctx.idx + 1) % sizeof(struct ds1307_map);
 	return tmp;
 }
 
-static void ds1307_stop(void)
+static void ds1307_stop(void *priv)
 {
 	if (ds1307_ctx.set_rtc == 0)
 		return;
@@ -125,6 +125,6 @@ static struct i2c_slave_op slave = {
 void ds1307_init(void)
 {
 	assert(sizeof(struct ds1307_map) == 0x40);
-	i2c_slave_register(&slave,i2c_ctx3);
+	i2c_slave_register(i2c_ctx3, &slave);
 }
 

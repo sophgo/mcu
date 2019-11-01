@@ -4,8 +4,8 @@
  *  Created on: Apr 25, 2019
  *      Author: weic
  */
-#include <assert.h>
-#include "i2c_bm.h"
+#include "i2c_slave.h"
+#include "main.h"
 
 #define TMP451_REG_MAX	(23)
 
@@ -64,7 +64,7 @@ static void software_reset(void)
 	tmp451_ctx.rptr = tmp451_ctx.wptr = &(tmp451_ctx.map[0].value);
 }
 
-static void tmp451_match(int dir)
+static void tmp451_match(void *priv, int dir)
 {
 	if (dir == I2C_SLAVE_WRITE)
 		tmp451_ctx.set_ptr = 1;
@@ -72,7 +72,7 @@ static void tmp451_match(int dir)
 
 extern uint8_t temp1684;
 
-static void tmp451_write(uint8_t data)
+static void tmp451_write(void *priv, uint8_t data)
 {
 	if (tmp451_ctx.set_ptr) {
 		tmp451_ctx.set_ptr = 0;
@@ -113,7 +113,7 @@ static void tmp451_write(uint8_t data)
 	// error handling
 }
 
-static uint8_t tmp451_read(void)
+static uint8_t tmp451_read(void *priv)
 {
 	if (tmp451_ctx.rptr)
 		return *(tmp451_ctx.rptr);
@@ -132,6 +132,6 @@ static struct i2c_slave_op tmp451_slave = {
 void tmp451_init(void)
 {
 	software_reset();
-	i2c_slave_register(&tmp451_slave, i2c_ctx3);
+	i2c_slave_register(i2c_ctx3, &tmp451_slave);
 }
 

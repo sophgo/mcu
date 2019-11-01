@@ -47,7 +47,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-  extern void i2c_isr(I2C_CTX i2c_ctx);
+  extern void i2c_isr(struct i2c_slave_ctx *ctx);
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -197,7 +197,7 @@ void I2C3_IRQHandler(void)
 void I2C1_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C1_IRQn 0 */
-	i2c_isr(i2c_ctx0);
+	i2c_isr(i2c_ctx1);
 
 	/* don't use hal arch */
 	return;

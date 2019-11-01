@@ -7,80 +7,153 @@
 
 #include <assert.h>
 #include "main.h"
-#include "i2c_bm.h"
-
+#include "i2c_slave.h"
 #include "eeprom.h"
 #include "rtc.h"
+#include "debug.h"
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
-static struct mcu_ctx {
+static unsigned short uptime;
+
+struct mcu_ctx {
 	int set_idx;
 	int idx;
 	int setrtc;
-	unsigned short uptime;
-	I2C_REGS map;
-} mcu_ctx;
+	int load_cmd_reg;
+	I2C_REGS *map;
+};
 
-static int cmd_received;
+I2C_REGS mcu_reg;
+static struct mcu_ctx mcu1_ctx;
+static struct mcu_ctx mcu3_ctx;
 
 #define MCU_REG_MAX REG_NUMBER
-// #define MCU_REG_CTL 3
 
-static void mcu_match(int dir)
+static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
 {
+	ctx->idx = idx % MCU_REG_MAX;
+}
+
+static inline void idx_inc(struct mcu_ctx *ctx)
+{
+	ctx->idx = (ctx->idx + 1) % MCU_REG_MAX;
+}
+
+static void mcu_match(void *priv, int dir)
+{
+	struct mcu_ctx *ctx = priv;
 	if (dir == I2C_SLAVE_WRITE) {
-		mcu_ctx.set_idx = 1;
+		ctx->set_idx = 1;
 	}
 }
 
-static inline void idx_set(uint8_t idx)
+static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)
 {
-	mcu_ctx.idx = idx % MCU_REG_MAX;
-}
-static inline void idx_inc(void)
-{
-	mcu_ctx.idx = (mcu_ctx.idx + 1) % MCU_REG_MAX;
-}
-
-static inline uint16_t eeprom_offset(void)
-{
-	uint16_t offset_base = mcu_ctx.map.eeprom_offset_l |
-		(mcu_ctx.map.eeprom_offset_h << 8);
+	uint16_t offset_base = ctx->map->eeprom_offset_l |
+		(ctx->map->eeprom_offset_h << 8);
 	uint16_t offset_off =
-		mcu_ctx.idx - REG_EEPROM_DATA;
+		ctx->idx - REG_EEPROM_DATA;
 	return offset_base + offset_off;
 }
-void mcu_tick_isr()
+void mcu_tick_isr(void)
 {
-	mcu_ctx.uptime++;
-	i2c_regs.uptime0 = mcu_ctx.uptime & 0xFF;
-	i2c_regs.uptime1 = ( mcu_ctx.uptime >> 8 )& 0xFF;
+	uptime++;
+	i2c_regs.uptime0 = uptime & 0xFF;
+	i2c_regs.uptime1 = ( uptime >> 8 )& 0xFF;
 }
 
-static void mcu_write(volatile uint8_t data)
+static void mcu_process_cmd_slow_start(void)
 {
+	uint8_t tmp;
+
+	/* faster than execute switch-case every times*/
+	if (i2c_regs.cmd_reg == 0)
+		return;
+	if (CPLD_CLR_ERR & i2c_regs.cmd_reg)
+		HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
+	switch (i2c_regs.cmd_reg) {
+		/* fast calls */
+		case CMD_MCU_UPDATE:
+			tmp = 0x08;
+			EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, &tmp, 1);
+			i2c_regs.cmd_reg = 0;
+			break;
+		case CMD_CPLD_SWRST:
+			i2c_regs.cmd_reg = 0;
+			break;
+		case CMD_CPLD_CLR:
+			i2c_regs.cmd_reg = 0;
+			break;
+		/* delayed calles */
+		case CMD_CPLD_PWR_ON:
+			if (i2c_regs.power_good) {
+				i2c_regs.cmd_reg = 0;
+				break;
+			}
+		case CMD_CPLD_PWR_DOWN:
+		case CMD_CPLD_1684RST:
+		case CMD_BM1684_REBOOT:
+			HAL_NVIC_DisableIRQ(I2C1_IRQn);
+			//HAL_NVIC_DisableIRQ(I2C3_IRQn);
+			break;
+		default:
+			/* invalid command */
+			i2c_regs.cmd_reg = 0;
+			break;
+	}
+}
+
+void mcu_process_cmd_slow(void)
+{
+	if (i2c_regs.cmd_reg == 0)
+		return;
+
+	// now we have disabled i2c1 interrupt
+	// put i2c1 controller to reset state
+	__HAL_I2C_DISABLE(&hi2c1);
+	HAL_Delay(1);	//three apb bus cycle is needed
+	HAL_I2C_MspDeInit(&hi2c1);
+	//HAL_I2C_MspDeInit(&hi2c3);
+	switch (i2c_regs.cmd_reg) {
+	case CMD_CPLD_PWR_ON:
+		PowerON();
+		break;
+	case CMD_CPLD_PWR_DOWN:
+		PowerDOWN();
+		break;
+	case CMD_CPLD_1684RST:
+		BM1684_RST();
+		i2c_regs.rst_1684_times++;
+		break;
+	case CMD_BM1684_REBOOT:
+		BM1684_REBOOT();
+		break;
+	}
+	i2c_regs.cmd_reg = 0;
+	HAL_I2C_MspInit(&hi2c1);
+	// re-enable i2c controller
+	__HAL_I2C_ENABLE(&hi2c1);
+	//HAL_I2C_MspInit(&hi2c3);
+}
+
+static void mcu_write(void *priv, volatile uint8_t data)
+{
+	struct mcu_ctx *ctx = priv;
 	int offset;
 
-	if (mcu_ctx.set_idx) {
-		mcu_ctx.idx = (int)data % sizeof(I2C_REGS);
-		mcu_ctx.set_idx = 0;
+	if (ctx->set_idx) {
+		idx_set(ctx, data);
+		ctx->set_idx = 0;
 		return;
 	}
-	*((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx) = data;
+	I2C_REGS *map = ctx->map;
+	*(((uint8_t *)map) + ctx->idx) = data;
 
-
-	switch (mcu_ctx.idx) {
+	switch (ctx->idx) {
 	case REG_CMD_REG:
-		if (i2c_regs.cmd_reg == 0) {
-//			i2c_regs.cmd_reg = data;
-			i2c_regs.cmd_reg_bkup = data;
-			cmd_received = 1;
-		}
-
-		if (CPLD_CLR_ERR | i2c_regs.cmd_reg) {
-			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
-		}
+		ctx->load_cmd_reg = data;
+		i2c_regs.cmd_reg_bkup = data;
 		break;
 	case REG_INTR_STATUS2:
 		i2c_regs.intr_status2 = data;
@@ -89,22 +162,22 @@ static void mcu_write(volatile uint8_t data)
 		}
 		break;
 	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
-		offset = mcu_ctx.idx - REG_SYS_RTC_YEAR;
-		((uint8_t *)&mcu_ctx.map.rtc)[offset] = data;
-		mcu_ctx.setrtc = 1;
+		offset = ctx->idx - REG_SYS_RTC_YEAR;
+		map->rtc[offset] = data;
+		ctx->setrtc = 1;
 		break;
 	case REG_CMD:
-		mcu_ctx.map.cmd = data;
+		map->cmd = data;
 		break;
 	case REG_EEPROM_OFFSET_L:
-		mcu_ctx.map.eeprom_offset_l = data;
+		map->eeprom_offset_l = data;
 		break;
 	case REG_EEPROM_OFFSET_H:
-		mcu_ctx.map.eeprom_offset_h = data;
+		map->eeprom_offset_h = data;
 		break;
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
-		EEPROM_WriteBytes(eeprom_offset(), (uint8_t *)&data, 1);
+		EEPROM_WriteBytes(eeprom_offset(ctx), (uint8_t *)&data, 1);
 		break;
 	case REG_VENDER_VAL:
 		i2c_regs.vender_val = data;
@@ -114,20 +187,19 @@ static void mcu_write(volatile uint8_t data)
 		break;
 	}
 
-	idx_inc();
+	idx_inc(ctx);
 }
 
-extern volatile uint8_t power_on_good;
-static uint8_t mcu_read(void)
+static uint8_t mcu_read(void *priv)
 {
+	struct mcu_ctx *ctx = priv;
 	uint8_t ret = 0;
 	static RTC_DateTypeDef sDate;
 	static RTC_TimeTypeDef sTime;
 	int offset;
+	I2C_REGS *map = ctx->map;
 
-//	uint8_t tmp = *((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx);
-
-	switch (mcu_ctx.idx) {
+	switch (ctx->idx) {
 	case REG_VENDER:
 		ret = i2c_regs.vender;
 		break;
@@ -171,29 +243,25 @@ static uint8_t mcu_read(void)
 		ret = i2c_regs.cause_pwr_down;
 		break;
 	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
-		offset = mcu_ctx.idx - REG_SYS_RTC_YEAR;
-		//*
+		offset = ctx->idx - REG_SYS_RTC_YEAR;
 		if (offset < 3)
 		{
 			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BCD);
-			mcu_ctx.map.rtc[0] = sDate.Year;
-			mcu_ctx.map.rtc[1] = sDate.Month;
-			mcu_ctx.map.rtc[2] = sDate.Date;
+			map->rtc[0] = sDate.Year;
+			map->rtc[1] = sDate.Month;
+			map->rtc[2] = sDate.Date;
 		}
 		else
 		{
 			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BCD);
-			mcu_ctx.map.rtc[3] = sTime.Hours;
-			mcu_ctx.map.rtc[4] = sTime.Minutes;
-			mcu_ctx.map.rtc[5] = sTime.Seconds;
-			
-			
+			map->rtc[3] = sTime.Hours;
+			map->rtc[4] = sTime.Minutes;
+			map->rtc[5] = sTime.Seconds;
 		}
-	//*/
-		ret = ((uint8_t *)&mcu_ctx.map.rtc)[offset];
+		ret = map->rtc[offset];
 		break;
 	case REG_CMD:
-		ret = mcu_ctx.map.cmd;
+		ret = map->cmd;
 		break;
 	case REG_DDR:
 		ret = i2c_regs.ddr;
@@ -202,14 +270,14 @@ static uint8_t mcu_read(void)
 		ret = i2c_regs.power_good;
 		break;
 	case REG_EEPROM_OFFSET_L:
-		ret = mcu_ctx.map.eeprom_offset_l;
+		ret = map->eeprom_offset_l;
 		break;
 	case REG_EEPROM_OFFSET_H:
-		ret = mcu_ctx.map.eeprom_offset_h;
+		ret = map->eeprom_offset_h;
 		break;
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
-		EEPROM_ReadBytes(eeprom_offset(), &ret, 1);
+		EEPROM_ReadBytes(eeprom_offset(ctx), &ret, 1);
 		break;
 	case REG_VENDER_VAL:
 		ret = i2c_regs.vender_val;
@@ -223,46 +291,60 @@ static uint8_t mcu_read(void)
 	case REG_CMD_BKUP:
 		ret = i2c_regs.cmd_reg_bkup;
 		break;
+	case REG_ERROR_LINE_L:
+		ret = i2c_regs.error_line_l;
+		break;
+	case REG_ERROR_LINE_H:
+		ret = i2c_regs.error_line_h;
+		break;
+	case REG_ERROR_CODE:
+		ret = i2c_regs.error_code;
+		break;
+	case REG_I2C2_STATE:
+		ret = hi2c2.State;
+		break;
 	default:
 		ret = 0xff;
 		break;
 	}
 
-	idx_inc();
+	idx_inc(ctx);
 	return ret;
 }
 
-static void mcu_stop(void)
+static void mcu_stop(void *priv)
 {
-
-	if ((i2c_regs.cmd_reg_bkup != i2c_regs.cmd_reg) && (cmd_received == 1)) {
-		cmd_received = 0;
-		i2c_regs.cmd_reg = i2c_regs.cmd_reg_bkup;
-	}
-
-	if (mcu_ctx.setrtc)
+	struct mcu_ctx *ctx = priv;
+	if (ctx->setrtc)
 	{
-		mcu_ctx.setrtc = 0;
+		ctx->setrtc = 0;
 		RTC_DateTypeDef sDate;
 		RTC_TimeTypeDef sTime;
-		sDate.Year		= mcu_ctx.map.rtc[0];
-		sDate.Month		= mcu_ctx.map.rtc[1];
-		sDate.Date		= mcu_ctx.map.rtc[2];
-		sTime.Hours		= mcu_ctx.map.rtc[3];
-		sTime.Minutes	= mcu_ctx.map.rtc[4];
-		sTime.Seconds	= mcu_ctx.map.rtc[5];
+		sDate.Year		= ctx->map->rtc[0];
+		sDate.Month		= ctx->map->rtc[1];
+		sDate.Date		= ctx->map->rtc[2];
+		sTime.Hours		= ctx->map->rtc[3];
+		sTime.Minutes	= ctx->map->rtc[4];
+		sTime.Seconds	= ctx->map->rtc[5];
 
 		HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD);
 		HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD);
 	}
+	if (ctx->load_cmd_reg) {
+		i2c_regs.cmd_reg = ctx->load_cmd_reg;
+		ctx->load_cmd_reg = 0;
+	}
+	mcu_process_cmd_slow_start();
 }
 
 static struct i2c_slave_op slave = {
 	.addr = 0x38,	/* mcu common slave address */
+	.mask = 0x07,
 	.match = mcu_match,
 	.write = mcu_write,
 	.read = mcu_read,
 	.stop = mcu_stop,
+	.priv = &mcu1_ctx,
 };
 
 static struct i2c_slave_op slave3 = {
@@ -271,18 +353,22 @@ static struct i2c_slave_op slave3 = {
 	.write = mcu_write,
 	.read = mcu_read,
 	.stop = mcu_stop,
+	.priv = &mcu3_ctx,
 };
 
 void mcu_init(void)
 {
-	assert(sizeof(I2C_REGS) == 0x60);
-	mcu_ctx.setrtc = 0;
-	mcu_ctx.uptime = 0;
+	assert(sizeof(I2C_REGS) == 0x64);
+	mcu1_ctx.map = &mcu_reg;
+	mcu3_ctx.map = &mcu_reg;
+	mcu1_ctx.setrtc = 0;
+	mcu3_ctx.setrtc = 0;
+	uptime = 0;
 
 	if (i2c_regs.vender == VENDER_SA5) {
-		i2c_slave_register(&slave,i2c_ctx0);
+		i2c_slave_register(i2c_ctx1, &slave);
 	}
-	i2c_slave_register(&slave3,i2c_ctx3);
+	i2c_slave_register(i2c_ctx3, &slave3);
 }
 
 
