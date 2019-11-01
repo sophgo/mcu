@@ -276,7 +276,7 @@ void SET_HW_Ver(void)
 	  HAL_ADC_Stop(&hadc);
 }
 
-volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,2,0,0,0,0,0,0, \
+volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,3,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0};
@@ -346,9 +346,10 @@ int main(void)
 
 	  while(1) {
 		  if (reg[7] == 1){
+			  STMFLASH_lock();//lock flash when transaction finished.
 //			  PowerDOWN();
-			  Buffer = 0;
-			  EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
+//			  Buffer = 0;
+//			  EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
 			  break;
 		  }
 	  }

@@ -20,6 +20,7 @@
 
 
 void STMFLASH_Unlock(void);
+void STMFLASH_lock(void);
 void STMFLASH_Write(uint32_t WriteAddr,uint32_t Data);
 uint32_t STMFLASH_Read(uint32_t ReadAddr);
 void STMFLASH_Write_Page(uint32_t WriteAddr, uint8_t *p, uint8_t len);
