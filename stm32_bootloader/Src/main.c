@@ -276,7 +276,7 @@ void SET_HW_Ver(void)
 	  HAL_ADC_Stop(&hadc);
 }
 
-volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,3,0,0,0,0,0,0, \
+volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,2,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0};
@@ -346,16 +346,16 @@ int main(void)
 
 	  while(1) {
 		  if (reg[7] == 1){
-			  STMFLASH_lock();//lock flash when transaction finished.
-//			  PowerDOWN();
-//			  Buffer = 0;
-//			  EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
 			  break;
 		  }
 	  }
   }
+
   /* Test if user code is programmed starting from address "APPLICATION_ADDRESS" */
   if (((*(__IO uint32_t*)APPLICATION_ADDRESS) & 0x2FFE0000 ) == 0x20000000) {
+	//clear update flag when update complete finished.
+	Buffer = 0;
+	EEPROM_WriteBytes(eeprom_addr, &Buffer, 1);
     /* Jump to user application */
     JumpAddress = *(__IO uint32_t*) (APPLICATION_ADDRESS + 4);
     JumpToApplication = (pFunction) JumpAddress;
