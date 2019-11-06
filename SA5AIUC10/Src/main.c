@@ -710,12 +710,14 @@ int main(void)
   if (i2c_regs.vender == VENDER_SA5) {
 	  i2c_ctx1 = (struct i2c_slave_ctx*)malloc(sizeof(struct i2c_slave_ctx));
 	  memset(i2c_ctx1, 0, sizeof(struct i2c_slave_ctx));
+	  i2c_ctx1->id = 1;
 	  i2c_init(i2c_ctx1, hi2c1.Instance);
 	  ds1307_init();
   }
 
   i2c_ctx3 = (struct i2c_slave_ctx*)malloc(sizeof(struct i2c_slave_ctx));
   memset(i2c_ctx3, 0, sizeof(struct i2c_slave_ctx));
+  i2c_ctx3->id = 3;
   i2c_init(i2c_ctx3, hi2c3.Instance);
   tmp451_init();
   mcu_init();
@@ -782,9 +784,9 @@ int main(void)
 		  HAL_Delay(30);
 		  PowerON();
 	  }
-	  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-	  /* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }

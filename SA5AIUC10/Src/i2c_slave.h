@@ -36,7 +36,7 @@ struct i2c_slave_op {
 
 struct i2c_slave_ctx {
 	int dir;
-	int idx;
+	int id;
 	unsigned int isr_irq_mask;
 	struct i2c_reg *reg;
 	struct i2c_slave_op *slave_list[I2C_SLAVE_MAX];

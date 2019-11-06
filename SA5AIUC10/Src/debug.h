@@ -3,6 +3,10 @@
 
 int mprintf(const char *fmt, ...);
 
+int dbg_enable(void);
+int dbg_disable(void);
+int dbg_restore(void);
+
 #ifdef DEBUG
 #define dprintf	mprintf
 #else
