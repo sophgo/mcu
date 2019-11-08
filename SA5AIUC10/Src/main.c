@@ -58,6 +58,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "stdio.h"
+#include "gpioex.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -606,48 +607,27 @@ void Factory_Info_Get(void)
 //	  EEPROM_ReadWords(addr_offset, &fty_Info.manufacturer, sizeof(Factory_Info));
 }
 
-#define TCA6416A_ADDR 0x40
-#define INPUT_PORT0	0X00
-#define INPUT_PORT1	0X01
-#define OUTPUT_PORT0 0X02
-#define OUTPUT_PORT1 0X03
-#define POLARITY_INVERSION0 0X04
-#define POLARITY_INVERSION1 0X05
-#define CONFIGURATION0 0x06
-#define CONFIGURATION1 0x07
-
-void TCA6416_init(void)
-{
-	uint8_t val;
-	val = 0xf6;
-	HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, CONFIGURATION0,1, &val, 1, 1000);
-	HAL_Delay(1);
-	val = 0x9;
-	HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, OUTPUT_PORT0,1, &val, 1, 1000);
-}
-
-
-void TCA6416_Deinit(void)
-{
-	uint8_t val;
-
-	HAL_I2C_Mem_Read(&hi2c1,TCA6416A_ADDR, INPUT_PORT0,1, &val, 1, 1000);
-
-	if (((val >> 5) & 0x01) == 0)
-	{
-		HAL_Delay(5000);
-		//power off
-		val = HAL_I2C_Mem_Read(&hi2c1,TCA6416A_ADDR, OUTPUT_PORT0,1, &val, 2, 1000);
-		val &= ~0x09;
-		HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, OUTPUT_PORT0,1, &val, 2, 1000);
-	}
-
-}
-
+#define POWER_OFF_TIME 5
+static int poweroffcheck = POWER_OFF_TIME;
+int needpoweroff = 0;
 void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
 	wdt_isr();
 	mcu_tick_isr();
+	if (i2c_regs.vender == VENDER_SM5_S) {
+		if (gpioex_getpoweroff())
+		{
+			poweroffcheck--;
+			if (poweroffcheck == 0)
+			{
+				needpoweroff = 1;
+			}
+		}
+		else
+		{
+			poweroffcheck = POWER_OFF_TIME;
+		}
+	}
 }
 
 /* USER CODE END 0 */
@@ -662,7 +642,6 @@ int main(void)
   uint8_t Buffer;
 //  uint16_t board_type_addr = BOARD_TYPE;
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -671,7 +650,10 @@ int main(void)
 
   /* USER CODE BEGIN Init */
   EEPROM_ReadBytes(VENDER_Addr, (uint8_t *)&i2c_regs.vender, 1);
-
+#if 0
+	i2c_regs.vender = VENDER_SM5_S;
+	EEPROM_WriteBytes(VENDER_Addr, (uint8_t *)&i2c_regs.vender, 1);
+#endif
   if (i2c_regs.vender == 0)
 	  i2c_regs.vender = VENDER_SA5;
 
@@ -690,14 +672,14 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC_Init();
-  MX_I2C2_Init();
+  MX_I2C2_Init();// iic device
   if ((i2c_regs.vender == VENDER_SM5_P) || (i2c_regs.vender == VENDER_SM5_S)) {
-	  BM_MX_I2C1_Init();
+	  BM_MX_I2C1_Init();// iic host
   } else {
-	  MX_I2C1_Init();
+	  MX_I2C1_Init();// iic device
   }
 
-  MX_I2C3_Init();
+  MX_I2C3_Init();// iic device
   MX_LPTIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
@@ -705,6 +687,27 @@ int main(void)
   led_off();
 
   HAL_LPTIM_Start1HZ(&hlptim1);
+  /*
+
+ 1684 -> hi2c3 -> 0x17	  MCU
+ 1684 -> hi2c3 -> 0x40	  GPIOEX
+ 1684 -> hi2c3 -> 0x69	  WDT
+ 1684 -> hi2c3 -> 0x6A	  EEPROM
+ 1684 -> hi2c3 -> 0x6B	  TMP451
+
+  if i2c_regs.vender == VENDER_SA5
+  {
+	  control -> hi2c1 -> 0x38-3F MCU
+	  control -> hi2c1 -> 0x6A	  EEPROM
+	  1684	  -> hi2c3 -> 0x68	  RTC DS1307
+  }
+  else //VENDER_SM5
+  {
+	  1684	  -> hi2c3 -> 0x6C	  TCA6416  i2c to 16 gpio
+
+	  hi2c1 -> TCA6416	i2c to 16 gpio
+  }
+//*/
 
 //  Factory_Info_Get();
   if (i2c_regs.vender == VENDER_SA5) {
@@ -712,13 +715,18 @@ int main(void)
 	  memset(i2c_ctx1, 0, sizeof(struct i2c_slave_ctx));
 	  i2c_ctx1->id = 1;
 	  i2c_init(i2c_ctx1, hi2c1.Instance);
-	  ds1307_init();
+	  ds1307_init();//RTC
   }
 
   i2c_ctx3 = (struct i2c_slave_ctx*)malloc(sizeof(struct i2c_slave_ctx));
   memset(i2c_ctx3, 0, sizeof(struct i2c_slave_ctx));
+
   i2c_ctx3->id = 3;
   i2c_init(i2c_ctx3, hi2c3.Instance);
+  if (i2c_regs.vender == VENDER_SM5_S)
+  {
+	  gpioex_init();
+  }
   tmp451_init();
   mcu_init();
   wdt_init();
@@ -735,9 +743,16 @@ int main(void)
   // set PCB & BOM version by voltage value
   SET_HW_Ver();
 
-  if (i2c_regs.vender != VENDER_SA5) {
-	  TCA6416_init();
-	  PowerON();
+  if (i2c_regs.vender == VENDER_SM5_S) {
+  	// power on after button bush 2s
+  	HAL_Delay(2000);//2s
+	gpioex_12v_on();
+	gpioex_led1_on();
+	PowerON();
+  }
+  else if (i2c_regs.vender == VENDER_SM5_P)
+  {
+  	PowerON();
   }
 
   EEPROM_ReadBytes(UPDATE_FLAG_OFFSET, &Buffer, 1);
@@ -777,7 +792,7 @@ int main(void)
 	  //	  DETECT_12V_Voltage();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
-	  if ((i2c_regs.vender != VENDER_SA5) &&
+	  if ((i2c_regs.vender == VENDER_SM5_P) &&
 	      (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
 											  PCIE_RST_MCU_Pin))) {
 		  PowerDOWN();
@@ -787,6 +802,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  if (needpoweroff)
+	  {
+	  	needpoweroff = 0;
+	  	PowerDOWN();
+		gpioex_led1_off();
+		gpioex_12v_off();
+	  }
   }
   /* USER CODE END 3 */
 }
