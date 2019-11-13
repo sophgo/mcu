@@ -100,7 +100,7 @@ int main(void)
   MX_I2C2_Init();
   MX_I2C3_Init();
   #if FACTORY_TEST_FLAG
-  MX_LPUART1_UART_Init();
+  //MX_LPUART1_UART_Init();
   #endif
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();

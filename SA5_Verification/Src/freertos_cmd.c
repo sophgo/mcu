@@ -28,6 +28,7 @@
 #include "main.h"
 
 /** Declarations **/
+static const char * const mcu_ver = "2.0.0";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
 extern volatile testStage tStage;
@@ -326,13 +327,13 @@ void Shell_RegisterCommand(void) {
 /*-----------------------------------------------------------*/
 static BaseType_t prvVersionCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	sprintf(pcWriteBuffer, "Version 0x%02X, for test only\r\n", VERSION);
+	sprintf(pcWriteBuffer, "mcu version:%s\r\n", mcu_ver);
 		return pdFALSE;
 }
 /*-----------------------------------------------------------*/
 static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
-	static uint8_t stage, data[1];
+	static uint8_t stage, data[2];
 	if (stage == 0) { // write reset pin
 		HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_RESET);
 		osDelay(10);
@@ -343,21 +344,27 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		return pdTRUE; // indicate that still have more lines to output
 	} else if (stage == 1) { // write power up command
 		osDelay(100);
-		*data = 0x01;
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
-				== HAL_OK) {
-			sprintf(pcWriteBuffer, "[reset] Power-up command issued\r\n");
-			osDelay(500);
-			stage = 2;
-			return pdTRUE;
-		} else {
+		data[0] = 0x01;
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100) != HAL_OK) {
 			sprintf(pcWriteBuffer,
-					"[reset] I2C Write failed\r\nQA_FAIL_RST\r\n");
+					"[reset] I2C Write power up reg failed\r\nQA_FAIL_RST\r\n");
 			stage = 0;
 			return pdFALSE;
 		}
+		osDelay(100);
+		data[0] = 0x80;
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data, 1, 100)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[reset] Write location reg failed\r\nQA_FAIL_RST\r\n");
+			stage = 0;
+			return pdFALSE;
+		}
+		sprintf(pcWriteBuffer, "[reset] Power-up command issued\r\n");
+		osDelay(500);
+		stage = 2;
+		return pdTRUE;
 	} else if (stage == 2) { //verify power up result REG
-		*data = 0x00;
+		data[0] = 0x00;
 		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
 				!= HAL_OK) {
 			sprintf(pcWriteBuffer,
@@ -365,7 +372,16 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 			stage = 0;
 			return pdFALSE;
 		}
-		sprintf(pcWriteBuffer, "[reset] REG[0x03]=0x%02X\r\n", *data);
+		osDelay(100);
+		data[1] = 0x00;
+		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data+1, 1, 100)
+				!= HAL_OK) {
+			sprintf(pcWriteBuffer,
+					"[reset] I2C Read Error\r\nQA_FAIL_RST\r\n");
+			stage = 0;
+			return pdFALSE;
+		}
+		sprintf(pcWriteBuffer, "[reset] REG[0x03]=0x%02X\r\n[reset] REG[0x14]=0x%02X\r\n", data[0],data[1]);
 		stage = 3;
 		return pdTRUE;
 	} else { // verify power up result VCC
