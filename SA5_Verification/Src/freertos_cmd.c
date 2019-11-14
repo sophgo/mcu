@@ -977,6 +977,7 @@ static BaseType_t prvI2c1684Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvI2CDbgCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
     uint8_t data[32] = {0};
+    #if 0
 	data[0] = 0x10;
     data[1] = 0x00;
     data[2] = 0x20;
@@ -988,6 +989,7 @@ static BaseType_t prvI2CDbgCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg write failed\r\nQA_FAIL_IDBG\r\n");
 	    return pdFALSE;
 	}
+	#endif
     data[0] = 0x23;
     if(HAL_I2C_Master_Transmit(&hi2c3, I2C3_SLAVE_ADDR(5), data, 1, 100)!= HAL_OK)
 	{
