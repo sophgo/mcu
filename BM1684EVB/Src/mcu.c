@@ -207,6 +207,9 @@ static uint8_t mcu_read(void)
 	case REG_POWER_GOOD:
 		ret = i2c_regs.power_good;
 		break;
+	case REG_MODE_FLAG:
+		ret = i2c_regs.mode_flag;
+		break;
 	default:
 		ret = 0xff;
 		break;

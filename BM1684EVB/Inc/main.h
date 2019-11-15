@@ -200,7 +200,7 @@ typedef struct I2C_REGS_t
 	uint8_t cmd;
 	uint8_t ddr;  //0x15,21
 	uint8_t power_good;
-	uint8_t reserved0;
+	uint8_t mode_flag;
 
 	uint8_t reserved1[2];
 	uint16_t v_vddio3v3;//0x1a-0x27
@@ -243,6 +243,7 @@ extern I2C_REGS i2c_regs;
 #define REG_CMD				0x14
 #define REG_DDR				0x15
 #define REG_POWER_GOOD		0x16
+#define REG_MODE_FLAG		0x17
 /* some reserved here, original MAC0 and MAC1 */
 #define I_12V_ATX_L			0x28
 #define I_12V_ATX_H			0x29
