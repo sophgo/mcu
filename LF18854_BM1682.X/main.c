@@ -104,6 +104,11 @@ uart_cmd_t
 int needfanspeed = 0;
 int needpowerup = 0;
 
+int needcheck_v09 = 0;
+int needcheck_v12 = 0;
+int needcheck_t1682 = 0;
+int needcheck_t68127 = 0;
+
 int needbite = 0;
 
 unsigned long last_feed_time	= 0;
@@ -406,11 +411,11 @@ uart_handle_fin:
 			if(I2C_Array[INDEX_TMP_1682] >= 85 || I2C_Array[INDEX_TMP_461] >= 75)//over temperature shutdown
 			{
 				MCU_ERR_INT = 0;
-	            if(SYS_RST == 1)
-	            {   
+				if(SYS_RST == 1)
+				{   
 					dopowerdown(POWERDOWN_REASON_TMP);
-	                I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
-	            }
+					I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x08;
+				}
 			}
 		}
 		else
@@ -443,9 +448,75 @@ uart_handle_fin:
 			utcsend_beg(Sencond_Count);
 			needbite = 0;
 		}
+		// send utc
 		if (factorymode == 0)
 		{
+			utc_get(&I2C_Array[INDEX_UTC_00]);
 			utcsend_run(Sencond_Count);
+		}
+
+		// check 
+		if (needcheck_v09)
+		{
+			needcheck_v09 = 0;
+			__delay_ms(5);
+			if (status == STATUS_POWERUP)
+			{
+				if(PG_VDD_C == 0)
+				{
+					MCU_ERR_INT = 0;
+					I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x01;
+				}
+				else if(PG_VDD_C == 1)
+				{
+					I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFE;
+				}
+			}
+		}
+		if (needcheck_v12)
+		{
+			needcheck_v12 = 0;
+			__delay_ms(5);
+			if (status == STATUS_POWERUP)
+			{
+				if(PG_DDR4_1V2 == 0)
+				{
+					MCU_ERR_INT = 0;
+					I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x02;
+				}
+				else if(PG_DDR4_1V2 == 1)
+				{
+					I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFD;
+				}
+			}
+		}
+		if (needcheck_t1682)
+		{
+			needcheck_t1682 = 0;
+			__delay_ms(5);
+			if(B_TEMP_ALR_N == 0)
+			{
+				MCU_ERR_INT = 0;
+				I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x01;
+			}
+			else if(B_TEMP_ALR_N == 1)
+			{
+				I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] & 0xFE;//clear bit
+			}
+		}
+		if (needcheck_t68127)
+		{
+			needcheck_t68127 = 0;
+			__delay_ms(5);
+			if(TWARN_VDD_C == 0)
+			{
+				MCU_ERR_INT = 0;
+				I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x02;
+			}
+			else if(TWARN_VDD_C == 1)
+			{
+				I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST]  & 0xFD;
+			}
 		}
    }
 }
@@ -519,24 +590,17 @@ void interrupt ISR(void)
 
 //    SSP2IF = 0;     
 //IIC master config ended
-    if(TMR0IF)
-    {
-        if(MCU_ERR_INT == 0)
-            LED0 = ~LED0;        
-        /*commit by zdh Temporary*/
-        //*
-        Sencond_Count++;
-		
+	if(TMR0IF)
+	{
+		if(MCU_ERR_INT == 0)
+			LED0 = ~LED0;
+		Sencond_Count++;
 		utc_inc();
-		utc_get(&I2C_Array[INDEX_UTC_00]);
 
-        I2C_Array[INDEX_TIME_L] = Sencond_Count;
-        I2C_Array[INDEX_TIME_H] = Sencond_Count >> 8;
-        //I2C_Array[0x02] = IIC_read_byte(0x98, 0x1);
-        //I2C_Array[0x03] = IIC_read_byte(0x98, 0x0);
-        needfanspeed = 1;
-        //*/
-        TMR0IF = 0;
+		I2C_Array[INDEX_TIME_L] = Sencond_Count;
+		I2C_Array[INDEX_TIME_H] = Sencond_Count >> 8;
+		needfanspeed = 1;
+		TMR0IF = 0;
 		if (watch_dog_isrun())
 		{
 			if ( I2C_Array[INDEX_DOG_TIME_OUT])
@@ -558,88 +622,19 @@ void interrupt ISR(void)
 			if ( I2C_Array[INDEX_DOG_TIME_OUT])//request to start wd
 			{
 				watch_dog_start(I2C_Array[INDEX_DOG_TIME_OUT]);
-
 			}
 		}
-    }
+	}
 	
-    if (C2IF)//12V down or up
-    {
-        if (CM2CON0bits.C2OUT == 1)//power down
-        {
-        	dopowerdown(POWERDOWN_REASON_POWER);
+	if (C2IF)//12V down or up
+	{
+		if (CM2CON0bits.C2OUT == 1)//power down
+		{
+			dopowerdown(POWERDOWN_REASON_POWER);
 			needpowerup = 1;
-        }
-        C2IF = 0;//Clear interrupt bit
-    }
-
-/* Temporary disable  
-    if(IOCAF0)//BM1682 Temperature too high
-    {
-        delayms(5);
-        if(B_TEMP_ALR_N == 0)
-        {
-            MCU_ERR_INT = 0;
-            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x01;
-        }
-        else if(B_TEMP_ALR_N == 1)
-        {
-             I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] & 0xFE;//clear bit
-        }
-        IOCAF0 = 0;
-    }
-*/  
-
-    if(IOCAF1)//ISL68127 voltage abnormal //0.9V
-    {
-        __delay_ms(5);
-		if (status == STATUS_POWERUP)
-		{
-	        if(PG_VDD_C == 0)
-	        {
-	            MCU_ERR_INT = 0;
-	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x01;
-	        }
-	        else if(PG_VDD_C == 1)
-	        {
-	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFE;
-	        }
 		}
-        IOCAF1 = 0;
-    }
-    
-    if(IOCAF6)//ISL68127 temperature abnormal
-    {
-        __delay_ms(5);
-        if(TWARN_VDD_C == 0)
-        {
-            MCU_ERR_INT = 0;
-            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST] | 0x02;
-        }
-        else if(TWARN_VDD_C == 1)
-        {
-            I2C_Array[INDEX_SYS_TMP_ST] = I2C_Array[INDEX_SYS_TMP_ST]  & 0xFD;
-        }
-        IOCAF6 = 0;
-    }
-	
-    if(IOCAF3)//DDR4 1.2V abnormal
-    {
-        __delay_ms(5);
-		if (status == STATUS_POWERUP)
-		{
-	        if(PG_DDR4_1V2 == 0)
-	        {
-	            MCU_ERR_INT = 0;
-	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] | 0x02;
-	        }
-	        else if(PG_DDR4_1V2 == 1)
-	        {
-	            I2C_Array[INDEX_SYS_VOL_ST] = I2C_Array[INDEX_SYS_VOL_ST] & 0xFD;
-	        }
-    	}
-        IOCAF3 = 0;
-    }
+		C2IF = 0;//Clear interrupt bit
+	}
 	if (uart_isr())
 	{
 		//uart recv some data 
@@ -649,4 +644,25 @@ void interrupt ISR(void)
 		}
 	}
 
+
+	if(IOCAF1)//ISL68127 voltage abnormal //0.9V
+	{
+		needcheck_v09 = 1;
+		IOCAF1 = 0;
+	}
+	if(IOCAF3)//DDR4 1.2V abnormal
+	{
+		needcheck_v12 = 1;
+		IOCAF3 = 0;
+	}
+	if(IOCAF0)//BM1682 Temperature too high
+	{
+		needcheck_t1682 = 1;
+		IOCAF0 = 0;
+	}
+	if(IOCAF6)//ISL68127 temperature abnormal
+	{
+		needcheck_t68127 = 1;
+		IOCAF6 = 0;
+	}
 }// end of ISR 

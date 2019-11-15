@@ -8,6 +8,8 @@ static char needutc = 0;
 static unsigned long last_utc_time = 0;
 
 static unsigned long g_utc = 0;
+static unsigned long l_utc = 0;
+
 
 void utcsend_beg(unsigned long curtime)
 {
@@ -37,12 +39,14 @@ void utc_set(unsigned char* utctime4)
 void utc_get(unsigned char* utctime4)
 {
 	unsigned char uc8[8];
+	if (l_utc == g_utc)
+	{
+		return;
+	}
+	l_utc = g_utc;
 	// update array
 	*(long *)&utctime4[0] = g_utc;
 	// update str
-#if 0	
-	asc2hex(&utc_str[10],&utctime8[0],8);
-#else
 	asc2hex(&uc8[0],&utctime4[0],4);
 	utc_str[10 +  0] = uc8[6];
 	utc_str[10 +  1] = uc8[7];
@@ -52,7 +56,6 @@ void utc_get(unsigned char* utctime4)
 	utc_str[10 +  5] = uc8[3];
 	utc_str[10 +  6] = uc8[0];
 	utc_str[10 +  7] = uc8[1];
-#endif
 }
 
 void utc_inc()
