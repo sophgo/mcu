@@ -32,6 +32,7 @@ DATE: 05/05/2018
 #define CMD_DOG_ONOFF		0x10
 #define CMD_DOG_FEED		0x11
 #define CMD_REBOOT			0x12		// include power on/off
+#define CMD_UART_TEST		0x13
 #define CMD_RECOVERY		0x15
 #define CMD_SET_UTC			0x16
 #define CMD_CLEAN_FACTORY_MODE	0x17
@@ -65,6 +66,8 @@ DATE: 05/05/2018
 #define INDEX_SETUTC_01		0x15
 #define INDEX_SETUTC_02		0x16
 #define INDEX_SETUTC_03		0x17
+#define INDEX_UART_TO_MCU_COUNT	0x18
+
 
 #define MCU_STATUS_POWER_ON	0x80
 #define MCU_STATUS_FACTORY_MODE	0x40

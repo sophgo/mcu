@@ -384,6 +384,10 @@ void main(void)
 					ret  = 0;
 					utcsend_beg(Sencond_Count);
 					break;
+				case (CMD_UART_TEST):
+					I2C_Array[INDEX_UART_TO_MCU_COUNT] += 1;
+					uart_send_bytes("UART-TO-MCU-OK",14);
+					break;
 				default:
 					ret  = ERR_UART_CMD;
 			}
