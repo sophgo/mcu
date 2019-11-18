@@ -276,7 +276,7 @@ void SET_HW_Ver(void)
 	  HAL_ADC_Stop(&hadc);
 }
 
-volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,2,0,0,0,0,0,0, \
+volatile uint8_t reg[MAX_REG_SIZE] = { 0x01,3,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0, \
 									0,0,0,0,0,0,0,0};

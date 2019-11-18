@@ -103,7 +103,7 @@ static uint8_t update_flag = 0;
 uint32_t flashdestination = 0x8008000;
 uint8_t buf = 0;
 extern volatile uint8_t reg[];
-
+static uint8_t smbus_flag = 0;
 
 static HAL_StatusTypeDef I2C_SlaveISR(I2C_HandleTypeDef *hi2c,
 		uint32_t ITFlags, uint32_t ITSources) {
@@ -116,7 +116,7 @@ static HAL_StatusTypeDef I2C_SlaveISR(I2C_HandleTypeDef *hi2c,
 		/* Check that I2C transfer finished */
 		/* if yes, normal use case, a NACK is sent by the MASTER when Transfer is finished */
 		__HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_AF);
-		I2C_SlaveProcessDone(hi2c, addr);
+//		I2C_SlaveProcessDone(hi2c, addr);
 	} else if ((I2C_CHECK_FLAG(ITFlags, I2C_FLAG_ADDR) != RESET)
 				&& (I2C_CHECK_IT_SOURCE(ITSources, I2C_IT_ADDRI) != RESET)) {
 			I2C_AddrMatch(hi2c);
@@ -133,17 +133,20 @@ static HAL_StatusTypeDef I2C_SlaveISR(I2C_HandleTypeDef *hi2c,
 			hi2c->pBuffPtr += addr;
 			hi2c->XferCount = addr;
 			package_cnt = 0;
-		} else if (hi2c->XferCount != 0xFFFF
-				/*hi2c->XferCount < hi2c->XferSize*/&& (update_flag == 0)){// write reg
+			smbus_flag = 1;
+		} else if (hi2c->XferCount != 0xFFFF &&
+				hi2c->XferCount < hi2c->XferSize && (update_flag == 0)){// write reg
 				/* Increment Buffer pointer */
 			*hi2c->pBuffPtr = buf;
 			hi2c->pBuffPtr++;
 			hi2c->XferCount++;
+			smbus_flag = 0;
 
 			if (hi2c->State != HAL_I2C_STATE_BUSY_TX_LISTEN)
 				hi2c->State = HAL_I2C_STATE_BUSY_RX_LISTEN;
-//		} else { // wrong reg addr or out of bound
-//			__HAL_I2C_GENERATE_NACK(hi2c);
+		} else { // wrong reg addr or out of bound
+			*hi2c->pBuffPtr = 1;
+			__HAL_I2C_GENERATE_NACK(hi2c);
 		}
 
 		if (buf == 0x42) {
@@ -175,15 +178,18 @@ static HAL_StatusTypeDef I2C_SlaveISR(I2C_HandleTypeDef *hi2c,
 			&& (I2C_CHECK_IT_SOURCE(ITSources, I2C_IT_TXI) != RESET)) {
 		/* incoming bytes */
 		ITFlags &= ~I2C_FLAG_TXIS;
+		smbus_flag = 0;
 		if (hi2c->XferCount == 0xFFFF)
 			hi2c->XferCount = 0; // start from beginning
-		if (1/*hi2c->XferCount < hi2c->XferSize*/) { // or a specific addr
+		if (hi2c->XferCount < hi2c->XferSize) { // or a specific addr
 			hi2c->Instance->TXDR = *hi2c->pBuffPtr;
 			/* Increment Buffer pointer */
 			hi2c->pBuffPtr++;
 			hi2c->XferCount++;
 			hi2c->State = HAL_I2C_STATE_BUSY_TX_LISTEN;
-//		} else { // out of bound or no reg selected
+		} else { // out of bound or no reg selected
+			hi2c->Instance->TXDR = 0;
+			hi2c->State = HAL_I2C_STATE_BUSY_TX_LISTEN;
 //			__HAL_I2C_GENERATE_NACK(hi2c);
 		}
 	}
@@ -192,7 +198,9 @@ static HAL_StatusTypeDef I2C_SlaveISR(I2C_HandleTypeDef *hi2c,
 	if ((I2C_CHECK_FLAG(ITFlags, I2C_FLAG_STOPF) != RESET)
 			&& (I2C_CHECK_IT_SOURCE(ITSources, I2C_IT_STOPI) != RESET)) {
 		/* Call I2C Slave complete process */
-//		I2C_SlaveProcessDone(hi2c, addr);
+		if (smbus_flag == 0) {
+			I2C_SlaveProcessDone(hi2c, addr);
+		}
 		/* Clear STOP Flag */
 		__HAL_I2C_CLEAR_FLAG(hi2c, I2C_FLAG_STOPF);
 	}
@@ -212,10 +220,9 @@ static void I2C_AddrMatch(I2C_HandleTypeDef *hi2c) {
 
 static void I2C_SlaveProcessDone(I2C_HandleTypeDef *hi2c, uint8_t addr) {
 	/* Reset handle */
-//	if (update_flag == 0) {
-		hi2c->pBuffPtr -= hi2c->XferCount;
-		hi2c->XferCount = 0xFFFF;
-//	}
+	hi2c->pBuffPtr -= hi2c->XferCount;
+	hi2c->XferCount = 0xFFFF;
+
 	I2C_FlushTXDR(hi2c);
 	__HAL_UNLOCK(hi2c);
 
