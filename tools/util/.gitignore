@@ -1,0 +1,6 @@
+mcu-util
+mcu-util.elf
+mcu-util.map
+*.o
+*.swp
+*.bin

@@ -1,0 +1,11 @@
+tags
+*.o
+*.map
+*.elf
+*.bin
+*.dis
+*.su
+*.img
+*.swp
+*.log
+*.i

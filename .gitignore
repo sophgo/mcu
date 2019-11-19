@@ -1,2 +1,4 @@
 *.xml
 *launch
+tags
+*.swp

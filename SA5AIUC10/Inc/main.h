@@ -194,14 +194,15 @@ typedef struct I2C_REGS_t
 	volatile uint8_t cmd_reg_bkup;
 	volatile uint8_t reserved1[13];
 	volatile CURRENT_VAL current;
-	volatile uint8_t reserved2[2];
+	volatile uint8_t stage;			/* 0: application, 1: loader, 2: upgrader */
+	volatile uint8_t reserved2[1];
 	volatile uint8_t eeprom_offset_l;
 	volatile uint8_t eeprom_offset_h;
 	volatile uint8_t eeprom_data[MCU_EEPROM_DATA_MAX];
 	volatile uint8_t error_line_l; /* log error line during power on */
 	volatile uint8_t error_line_h; /* log error line during power on */
 	volatile uint8_t error_code; /* last error code */
-	volatile uint8_t reserved3;
+	volatile uint8_t i2c2_state; /* i2c2 software status */
 }I2C_REGS;
 
 extern I2C_REGS i2c_regs;
@@ -274,6 +275,7 @@ void BM1684_REBOOT(void);
 #define I_DDR_VDDQLP_H		0x39
 #define I_LDO_PCIE_L		0x3a
 #define I_LDO_PCIE_H		0x3b
+#define REG_STAGE		0x3c
 #define REG_EEPROM_OFFSET_L	0x3e	/* 16bit eeprom address, low 8bits */
 #define REG_EEPROM_OFFSET_H	0x3f	/* 16bit eeprom address, high 8bits */
 #define REG_EEPROM_DATA		0x40	/* eeprom data */
@@ -349,7 +351,7 @@ void BM1684_REBOOT(void);
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0x12)
+#define MCU_VERSION (0x13)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

@@ -237,7 +237,7 @@ static uint8_t gpioex_read(void *priv)
 	return tmp;
 }
 
-static void gpioex_stop(void)
+static void gpioex_stop(void *priv)
 {
 
 }

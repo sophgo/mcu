@@ -59,6 +59,7 @@
 #include "string.h"
 #include "stdio.h"
 #include "gpioex.h"
+#include "upgrade.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -641,6 +642,13 @@ int main(void)
   /* USER CODE BEGIN 1 */
   uint8_t Buffer;
 //  uint16_t board_type_addr = BOARD_TYPE;
+	setup_stage();
+	if (i2c_regs.stage == RUN_STAGE_LOADER) {
+		/* success */
+		if (check_app() == 0) {
+			app_start();
+		}
+	}
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -659,7 +667,6 @@ int main(void)
 
   i2c_regs.sw_ver = MCU_VERSION;
 
-  HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -683,6 +690,7 @@ int main(void)
   MX_LPTIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+  HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
   /* put led to off state */
   led_off();
 
@@ -707,7 +715,7 @@ int main(void)
 
 	  hi2c1 -> TCA6416	i2c to 16 gpio
   }
-//*/
+  */
 
 //  Factory_Info_Get();
   if (i2c_regs.vender == VENDER_SA5) {

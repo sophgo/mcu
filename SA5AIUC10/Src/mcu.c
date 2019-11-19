@@ -11,6 +11,7 @@
 #include "eeprom.h"
 #include "rtc.h"
 #include "debug.h"
+#include "upgrade.h"
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
@@ -74,11 +75,6 @@ static void mcu_process_cmd_slow_start(void)
 		HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
 	switch (i2c_regs.cmd_reg) {
 		/* fast calls */
-		case CMD_MCU_UPDATE:
-			tmp = 0x08;
-			EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, &tmp, 1);
-			i2c_regs.cmd_reg = 0;
-			break;
 		case CMD_CPLD_SWRST:
 			i2c_regs.cmd_reg = 0;
 			break;
@@ -94,6 +90,7 @@ static void mcu_process_cmd_slow_start(void)
 		case CMD_CPLD_PWR_DOWN:
 		case CMD_CPLD_1684RST:
 		case CMD_BM1684_REBOOT:
+		case CMD_MCU_UPDATE:
 			HAL_NVIC_DisableIRQ(I2C1_IRQn);
 			//HAL_NVIC_DisableIRQ(I2C3_IRQn);
 			break;
@@ -128,6 +125,10 @@ void mcu_process_cmd_slow(void)
 		break;
 	case CMD_BM1684_REBOOT:
 		BM1684_REBOOT();
+		break;
+	case CMD_MCU_UPDATE:
+		HAL_I2C_MspInit(&hi2c1);
+		upgrade_start();
 		break;
 	}
 	i2c_regs.cmd_reg = 0;
@@ -290,6 +291,9 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_CMD_BKUP:
 		ret = i2c_regs.cmd_reg_bkup;
+		break;
+	case REG_STAGE:
+		ret = i2c_regs.stage;
 		break;
 	case REG_ERROR_LINE_L:
 		ret = i2c_regs.error_line_l;
