@@ -233,7 +233,7 @@ static struct i2c_slave_op slave = {
 
 void mcu_init(void)
 {
-	assert(sizeof(I2C_REGS) == 0x3c);
+	assert(sizeof(I2C_REGS) == REG_NUMBER);
 	i2c_slave_register(&slave);
 }
 

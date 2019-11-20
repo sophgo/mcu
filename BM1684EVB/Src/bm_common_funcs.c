@@ -267,11 +267,6 @@ void Clean_ERR_INT(void)
 	return ;
 }
 
-#define MCU_VERSION 0x06
-
-#define VENDER_SA5	0x01
-#define VENDER_SC5	0x02
-#define VENDER_SE5	0x03
 
 void Scan_Cuerrent(void)
 {
