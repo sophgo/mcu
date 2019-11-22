@@ -66,8 +66,6 @@ void mcu_tick_isr(void)
 
 static void mcu_process_cmd_slow_start(void)
 {
-	uint8_t tmp;
-
 	/* faster than execute switch-case every times*/
 	if (i2c_regs.cmd_reg == 0)
 		return;

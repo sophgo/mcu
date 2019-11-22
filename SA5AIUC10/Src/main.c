@@ -186,17 +186,29 @@ void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *instance)
     //  2. Configure the SCL and SDA I/Os as General Purpose Output Open-Drain, High level (Write 1 to GPIOx_ODR).
     GPIO_InitStruct.Pin = PMIC_SCL_Pin|PMIC_SDA_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF6_I2C2;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     //fix tmp451 hold I2C bus BUG. stay low for 40ms ,make sure I2C slave can be reset by themselves
     HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_RESET);
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
     HAL_GPIO_WritePin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin, GPIO_PIN_RESET);
     HAL_Delay(40);
 
     HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_SET);
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
+    asm volatile ("nop");
     HAL_GPIO_WritePin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin, GPIO_PIN_SET);
 
 
@@ -395,7 +407,7 @@ void PowerON(void)
 	HAL_GPIO_WritePin(EN_VQPS18_GPIO_Port, EN_VQPS18_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	hi2c3.Instance->CR1 &= ~I2C_CR1_PE;
-	HAL_Delay(5);
+	HAL_Delay(1);
 	hi2c3.Instance->CR1 |= I2C_CR1_PE;
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
@@ -633,16 +645,16 @@ uint8_t temp1684;	// before calibration
 static uint8_t alert_cnt = 0;
 static uint8_t powerdown_cnt = 0;
 
-#define TMP451_MAIN_I2C_CHECK(op)						\
-	do {												\
-		int err = (op);									\
-		if (err != HAL_OK) {							\
-			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);			\
-			LOG_ERROR_LINE();							\
-			LOG_ERROR_CODE(err);						\
-			while (1)									\
-				;										\
-		}												\
+#define TMP451_MAIN_I2C_CHECK(op)				\
+	do {							\
+		__disable_irq();				\
+		int err = (op);					\
+		__enable_irq();					\
+		if (err != HAL_OK) {				\
+			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);	\
+			LOG_ERROR_LINE();			\
+			LOG_ERROR_CODE(err);			\
+		}						\
 	} while (0)
 
 #define TMP451_ALERT		(0x22)
@@ -671,9 +683,9 @@ void READ_Temper(void)
 #endif //CAL_TEMPARETURE
 
 	// detection of temperature value
-	HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000);
+	TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000));
 #ifdef CAL_TEMPARETURE
-	HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000);
+	TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, &i2c_regs.temp_board, 1, 1000));
 	//1 t_remote = t_register - 6.947;
 	t_remote = temp1684 - 6.947;
 	//2 Terr1 = ((n-1.008)/1.008) *(273.15 + T1); n = 1.11, T1 = 25
@@ -689,7 +701,7 @@ void READ_Temper(void)
 	} else {
 		i2c_regs.temp1684 = (temp1684 * 232- 886) >> 8; //rough handling of tempareture calibration
 	}
-	HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000);
+	TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000));
 #endif //CAL_TEMPARETURE
 
 	if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
@@ -772,6 +784,7 @@ int main(void)
 		}
 	}
   /* USER CODE END 1 */
+  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -904,7 +917,6 @@ int main(void)
 	  // read temperature every 2 seconds
 	  static uint32_t last_read_time = 0;
 	  static int ever_read = 0;
-	  if (i2c_regs.power_good == 1) {
 	  if (ever_read == 0) {
 		  /* read temperature at boot time */
 		  READ_Temper();
@@ -917,7 +929,6 @@ int main(void)
 			  READ_Temper();
 			  last_read_time = read_time;
 		  }
-	  }
 	  }
 	  led_update();
 	  //detect 12v

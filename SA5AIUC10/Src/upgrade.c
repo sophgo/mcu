@@ -126,7 +126,7 @@ int check_app(void)
 		return -1;
 	}
 	/* we know stm32 address is 32bit long, a 64bit var can handle overflow. ^_^ */
-	uint64_t checksum_end = (uint64_t)checksum_start + checksum_len;
+	uint64_t checksum_end = (unsigned long)checksum_start + checksum_len;
 
 	if (checksum_end > MEMMAP_FLASH_END) {
 		return -1;
