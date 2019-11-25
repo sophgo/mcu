@@ -17,6 +17,8 @@ fi
 
 
 ROOT=$1
+ROOT=`echo "$ROOT" | sed 's/\/$//'`
+
 TOOLCHAIN_SOURCE=$ROOT/tools/toolchain
 
 if [ ! -d $TOOLCHAIN_SOURCE ]; then
@@ -29,6 +31,7 @@ if [ $# -lt 2 ]; then
     TOOLCHAIN_INSTALL=$TOOLCHAIN_SOURCE/install
 else
     TOOLCHAIN_INSTALL=$2
+    TOOLCHAIN_INSTALL=`echo "$TOOLCHAIN_INSTALL" | sed 's/\/$//'`
 fi
 
 if [ ! -d $TOOLCHAIN_INSTALL ]; then
@@ -44,56 +47,50 @@ fi
 echo 'MCU Root Directory: ' $ROOT
 echo 'Toolchain Installation Directory: ' $TOOLCHAIN_INSTALL
 
-ARM_NONE_EABI_SOURCE=$TOOLCHAIN_SOURCE/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
-ATOLLIC_EABI_SOURCE=$TOOLCHAIN_SOURCE/gcc-atollic-eabi-6-x86_64-linux.tar.bz2
+install_toolchain()
+{
+    local BINARY_SOURCE=$TOOLCHAIN_SOURCE/$1
+    local BINARY_INSTALL=$TOOLCHAIN_INSTALL/$2
+    local CROSS_COMPILE=$3
 
-ARM_NONE_EABI_INSTALL=$TOOLCHAIN_INSTALL/gcc-arm-none-eabi-9-2019-q4-major
-ATOLLIC_EABI_INSTALL=$TOOLCHAIN_INSTALL/gcc-atollic-eabi-6-x86_64-linux
+    # echo 'installing ' $BINARY_SOURCE 'to ' $BINARY_INSTALL
+    echo "installing $CROSS_COMPILE"
+    if [ -d $BINARY_INSTALL ]; then
+        echo "$CROSS_COMPILE already installed"
+    else
+        pushd $TOOLCHAIN_INSTALL 1>/dev/null 2>&1
+        # install
+        tar -xf $BINARY_SOURCE
+        popd 1>/dev/null 2>&1
+    fi
+    local EXEC_PATH=$BINARY_INSTALL/bin
+    if echo $PATH | grep $EXEC_PATH 1>/dev/null 2>&1; then
+        echo "$CROSS_COMPILE already in PATH"
+    else
+        PATH=$EXEC_PATH:$PATH
+    fi
+    EXEC_CHECK=`which ${CROSS_COMPILE}gcc | xargs dirname`
+    if [ "x$EXEC_CHECK" != "x$EXEC_PATH" ]; then
+        echo "$CROSS_COMPILE executable file in wrong place"
+        return 1
+    fi
+    return 0
+}
 
-if [ -d $ARM_NONE_EABI_INSTALL ]; then
-    echo 'arm-none-eabi toolchain already installed before'
-else
-    pushd $TOOLCHAIN_INSTALL
-    # install arm-none-eabi-
-    tar -xjf $ARM_NONE_EABI_SOURCE
-    popd
-fi
+# arm none eabi
+install_toolchain gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 \
+                  gcc-arm-none-eabi-9-2019-q4-major \
+                  arm-none-eabi-
 
-if [ -d $ATOLLIC_EABI_INSTALL ]; then
-    echo 'atollic-eabi toolchain already installed before'
-else
-    pushd $TOOLCHAIN_INSTALL
-    # install atollic-eabi-
-    tar -xjf $ATOLLIC_EABI_SOURCE
-    popd
-fi
+# arm atollic
+install_toolchain gcc-atollic-eabi-6-x86_64-linux.tar.bz2 \
+                  gcc-atollic-eabi-6-x86_64-linux \
+                  arm-atollic-eabi-
 
-# add to PATH
-ARM_NONE_EABI_EXEC=$ARM_NONE_EABI_INSTALL/bin
-ATOLLIC_EABI_EXEC=$ATOLLIC_EABI_INSTALL/bin
-if echo $PATH | grep $ARM_NONE_EABI_EXEC 1>/dev/null 2>&1; then
-    echo 'arm-none-eabi aleady in PATH'
-else
-    PATH=$ARM_NONE_EABI_EXEC:$PATH
-fi
-
-if echo $PATH | grep $ATOLLIC_EABI_EXEC 1>/dev/null 2>&1; then
-    echo 'atollic-eabi aleady in PATH'
-else
-    PATH=$ATOLLIC_EABI_EXEC:$PATH
-fi
-
-EXEC_CHECK=`which arm-none-eabi-gcc`
-if [ x"EXEC_CHECK" == x"ARM_NONE_EABI_EXEC" ]; then
-    echo 'arm-none-eabi executable file in wrong place'
-    return 1
-fi
-
-EXEC_CHECK=`which arm-atollic-eabi-gcc`
-if [ x"EXEC_CHECK" == x"ATOLLIC_EABI_EXEC" ]; then
-    echo 'arm-none-eabi executable file in wrong place'
-    return 1
-fi
+# aarch64 linux gnu
+install_toolchain gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz \
+                  gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu \
+                  aarch64-linux-gnu-
 
 echo 'installation done'
 
