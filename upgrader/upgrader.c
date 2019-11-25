@@ -3,6 +3,7 @@
 #include <checksum.h>
 #include <stdlib.h>
 #include <string.h>
+#include <project.h>
 
 #define REG_STAGE		(0x3c)
 
@@ -40,8 +41,8 @@ volatile uint32_t cksum_off;
 volatile uint32_t cksum_len;
 volatile uint8_t cksum[16];
 
-#define LOG_BUF_LEN     (1024)
-#define LOG_BUF_MASK    (LOG_BUF_LEN - 1)
+#define LOG_BUF_LEN	(1024)
+#define LOG_BUF_MASK	(LOG_BUF_LEN - 1)
 
 volatile uint8_t log_buf[LOG_BUF_LEN];
 volatile uint8_t log_wr_idx;
@@ -170,7 +171,7 @@ static uint8_t upgrader_read(void *priv)
 		break;
 	case REG_DATA ... REG_FLUSH:
 		ret = *(uint8_t *)(FLASH_PROGRAM_START +
-				   flash_off + (idx - REG_DATA));
+				flash_off + (idx - REG_DATA));
 		break;
 	case REG_OFFSET ... REG_OFFSET + 3:
 		ret = H2ST(REG_OFFSET, idx, uint32_t, flash_off);
@@ -212,20 +213,54 @@ static struct i2c_slave_op slave3 = {
 	.priv = &upgrader_ctx3,
 };
 
-extern struct i2c_slave_ctx i2c1;
-extern struct i2c_slave_ctx i2c3;
+uint32_t project;
+struct i2c_slave_ctx i2c1;
+struct i2c_slave_ctx i2c3;
 
-void upgrader_init()
+static void i2c1_init(uint8_t addr, uint8_t mask)
+{
+	i2c1.id = 1;
+	memset(&upgrader_ctx1, 0x00, sizeof(upgrader_ctx1));
+	slave1.addr = addr;
+	slave1.mask = mask;
+
+	i2c_slave_init(&i2c1, (void *)I2C1_BASE);
+	i2c_slave_register(&i2c1, &slave1);
+	i2c_slave_start(&i2c1);
+}
+
+static void i2c3_init(uint8_t addr, uint8_t mask)
+{
+	i2c3.id = 3;
+	memset(&upgrader_ctx3, 0x00, sizeof(upgrader_ctx3));
+	slave3.addr = addr;
+	slave3.mask = mask;
+
+	i2c_slave_init(&i2c3, (void *)I2C3_BASE);
+	i2c_slave_register(&i2c3, &slave3);
+	i2c_slave_start(&i2c3);
+}
+
+void upgrader_init(void)
 {
 #ifndef VERSION
 #define VERSION	"no-version"
 #endif
-
 	upgrader_log(VERSION " " __DATE__ " " __TIME__);
-	memset(&upgrader_ctx1, 0x00, sizeof(upgrader_ctx1));
-	memset(&upgrader_ctx3, 0x00, sizeof(upgrader_ctx3));
 
-	i2c_slave_register(&i2c1, &slave1);
-	i2c_slave_register(&i2c3, &slave3);
+	switch(project) {
+	case EVB:
+		i2c1_init(0x17, 0);
+		break;
+	case SA5:
+		i2c1_init(0x38, 0x07);
+		i2c3_init(0x17, 0);
+		break;
+	default:
+		/* sa5 type */
+		i2c1_init(0x38, 0x07);
+		i2c3_init(0x17, 0);
+		break;
+	}
 }
 

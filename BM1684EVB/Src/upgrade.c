@@ -2,6 +2,7 @@
 #include "main.h"
 #include "upgrade.h"
 #include "lptim.h"
+#include "i2c.h"
 #include <string.h>
 #include "project.h"
 
@@ -50,19 +51,18 @@ void upgrade_start(void)
 	  SysTick->CTRL &= ~1;
 	  /* disable i2c1 and i2c3 */
 	  extern RTC_HandleTypeDef hrtc;
-	  __HAL_I2C_DISABLE(&hi2c1);
-	  __HAL_I2C_DISABLE(&hi2c3);
 	  HAL_LPTIM_MspDeInit(&hlptim1);
 	  // HAL_ADC_MspDeInit(&hadc);
 	  HAL_RTC_MspDeInit(&hrtc);
 
 	  /* disable all interrupt */
 	  __disable_irq();
+	  __HAL_I2C_DISABLE(&hi2c1);
 
 	  /* working in thumb mode, we should add 1 to destination */
 	  /* thumb instruction pc should be even number */
 	  upgrade_entry entry = (upgrade_entry)(upgrader_efie->offset + MEMMAP_FLASH_START + 1);
-	  entry(SA5);
+	  entry(EVB);
 }
 
 void app_start(void)
@@ -76,24 +76,13 @@ void app_start(void)
 	entry();
 }
 
-void setup_stage(void)
-{
-	register uint32_t pc;
-	asm volatile ("mov %0, pc" : "=r" (pc));
-	pc -= 4;
-	if (pc < MEMMAP_LOADER_END)
-		i2c_regs.stage = RUN_STAGE_LOADER;
-	else
-		i2c_regs.stage = RUN_STAGE_APP;
-}
-
 static void checksum(void *out, void *in, unsigned long len)
 {
 	uint32_t *src = in;
 	char *init = "*BITMAIN-SOPHON*";
 	uint32_t result[4];
 	memcpy(result, init, sizeof(result));
-	
+
 	unsigned long block = len >> 4;
 	unsigned long left = len & 0xf;
 	unsigned long i, j;
@@ -110,7 +99,7 @@ static void checksum(void *out, void *in, unsigned long len)
 	memcpy(out, result, sizeof(result));
 }
 
-/* 
+/*
  * 0 means success, app is complete upgraded
  * -1 means failed, app is broken
  */
@@ -139,3 +128,23 @@ int check_app(void)
 		return -1;
 	return 0;
 }
+
+void setup_stage(void)
+{
+	register uint32_t pc;
+	asm volatile ("mov %0, pc" : "=r" (pc));
+	pc -= 4;
+	if (pc < MEMMAP_LOADER_END)
+		i2c_regs.stage = RUN_STAGE_LOADER;
+	else
+		i2c_regs.stage = RUN_STAGE_APP;
+
+	if (i2c_regs.stage == RUN_STAGE_LOADER) {
+		/* success */
+		if (check_app() == 0) {
+			/* fly to app, no return */
+			app_start();
+		}
+	}
+}
+

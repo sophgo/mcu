@@ -704,14 +704,15 @@ int mcu_read(unsigned long offset, unsigned long length)
 		return -1;
 	}
 
-	if (i2c_read_flash(fd, data, length, offset)) {
-		err = -1;
-		goto free_data;
-	}
-
 	unsigned long i, xoffset;
 
 	for (i = 0, xoffset = offset; i < length; ++i, ++xoffset) {
+		if (xoffset % 128 == 0) {
+			if (i2c_read_flash(fd, data + i, 128, xoffset)) {
+				err = -1;
+				goto free_data;
+			}
+		}
 		if (xoffset % 16 == 0)
 			printf("\n%08lx:", xoffset);
 		printf(" %02x", data[i]);

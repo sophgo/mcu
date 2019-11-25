@@ -1,6 +1,6 @@
-APP_ROOT = $(TOP)/SA5AIUC10
-APP = $(APP_ROOT)/build/SA5AIUC10_APP.bin
-LOADER = $(APP_ROOT)/build/SA5AIUC10_LOADER.bin
+APP_ROOT = $(TOP)/BM1684EVB
+APP = $(APP_ROOT)/build/BM1684EVB_APP.bin
+LOADER = $(APP_ROOT)/build/BM1684EVB_LOADER.bin
 UPGRADER_ROOT = $(TOP)/upgrader
 UPGRADER = $(UPGRADER_ROOT)/upgrader.bin
 APP_OFFSET = 0x8000
@@ -11,7 +11,7 @@ PACK = $(PACK_ROOT)/pack
 UTILROOT = $(TOOLS)/util
 UPGRADE = $(UTILROOT)/mcu-util
 
-$(TARGET).bin: FORCE
+$(TARGET): FORCE
 	$(Q)rm -rf $(OUTPUT)
 	$(Q)mkdir -p $(OUTPUT)
 	$(Q)cd $(APP_ROOT) && make clean && make

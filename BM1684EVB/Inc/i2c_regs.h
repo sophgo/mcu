@@ -59,7 +59,8 @@ typedef struct I2C_REGS_t
 	uint16_t v_ddr_vddq;
 	uint16_t v_ddr_vddqlp;
 	CURRENT_VAL current;
-	volatile uint8_t reserved2[2];
+	volatile uint8_t stage;		/* 0: application, 1: loader, 2: upgrader */
+	volatile uint8_t reserved2[1];
 	volatile uint8_t eeprom_offset_l;
 	volatile uint8_t eeprom_offset_h;
 	volatile uint8_t eeprom_data[MCU_EEPROM_DATA_MAX];
@@ -121,6 +122,7 @@ extern I2C_REGS i2c_regs;
 #define I_DDR_VDDQLP_H		0x39
 #define I_LDO_PCIE_L		0x3a
 #define I_LDO_PCIE_H		0x3b
+#define REG_STAGE		0x3c
 #define REG_EEPROM_OFFSET_L	0x3e	/* 16bit eeprom address, low 8bits */
 #define REG_EEPROM_OFFSET_H	0x3f	/* 16bit eeprom address, high 8bits */
 #define REG_EEPROM_DATA		0x40	/* eeprom data */
@@ -178,7 +180,7 @@ extern I2C_REGS i2c_regs;
 
 #define UPDATE_FLAG_OFFSET		(0xbf0)
 
-#define MCU_VERSION 0x06
+#define MCU_VERSION	0x07
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

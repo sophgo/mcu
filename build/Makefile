@@ -1,6 +1,7 @@
 PROJ ?= sa5
 TOP ?= ..
 OUTPUT ?= $(PROJ)
+TARGET ?= $(PROJ)-mcu.bin
 
 AARCH64_CROSS_COMPILE = aarch64-linux-gnu-
 

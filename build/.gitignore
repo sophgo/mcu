@@ -1,3 +1,4 @@
 *.bin
 mcu-util*
 /sa5/
+/bm1684evb/

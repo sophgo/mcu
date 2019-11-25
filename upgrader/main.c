@@ -5,8 +5,6 @@
 
 #define MCU_LED_PIN		GPIO_PIN_5
 
-struct i2c_slave_ctx i2c1;
-struct i2c_slave_ctx i2c3;
 volatile uint32_t tick;
 
 void delay(unsigned int ms)
@@ -38,24 +36,14 @@ static inline void led_update(void)
 		led_off();
 }
 
-volatile uint8_t app_checksum[16];
-
 int main(void)
 {
-	// asm volatile ("loop: b loop");
-	i2c1.id = 1;
-	i2c3.id = 3;
-	/* enable i2c by write cr1 pe bit to 1, in function i2c_slave_init */
-	i2c_slave_init(&i2c1, (void *)I2C1_BASE);
-	i2c_slave_init(&i2c3, (void *)I2C3_BASE);
 	/* reenable interrupt */
 	__enable_irq();
 	/* re-enable systick */
 	SysTick->CTRL |= 1;
 
 	upgrader_init();
-	i2c_slave_start(&i2c1);
-	i2c_slave_start(&i2c3);
 	while (1) {
 		led_update();
 		upgrader_calc_cksum();

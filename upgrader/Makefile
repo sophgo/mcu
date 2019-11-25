@@ -26,7 +26,7 @@ Drivers/CMSIS/Device/ST/STM32L0xx/Include \
 Drivers/CMSIS/Include
 
 CFLAGS = $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) -std=gnu11 \
-	 -ffunction-sections -fdata-sections -fstack-usage -Wall -Werror \
+	 -ffunction-sections -fdata-sections -Wall -Werror \
 	 -DUSE_HAL_DRIVER -DSTM32L071xx -D"__weak=__attribute__((weak))" \
 	 -D__packed="__attribute__((__packed__))" \
 	 -DVERSION='"$(VERSION)"' \

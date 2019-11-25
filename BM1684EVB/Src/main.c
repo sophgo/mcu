@@ -44,6 +44,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "upgrade.h"
 
 /* USER CODE END Includes */
 
@@ -86,6 +87,8 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  /* maybe no return */
+  setup_stage();
 
   /* USER CODE END 1 */
   
