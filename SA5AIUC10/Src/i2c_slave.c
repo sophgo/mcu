@@ -46,7 +46,7 @@ struct i2c_isr_op {
 #define CR1_RXDMAEN		(1 << 15)
 #define CR1_TXDMAEN		(1 << 14)
 
-#define CR1_NOSTRETCH   (1 << 17)
+#define CR1_NOSTRETCH		(1 << 17)
 #define CR1_ERRIE		(1 << 7)
 #define CR1_TCIE		(1 << 6)
 #define CR1_STOPIE		(1 << 5)
@@ -55,7 +55,7 @@ struct i2c_isr_op {
 #define CR1_RXIE		(1 << 2)
 #define CR1_TXIE		(1 << 1)
 
-#define CR1_IES_MASK	(0xfe)
+#define CR1_IES_MASK		(0xfe)
 
 #define CR1_PE			(1 << 0)
 
@@ -66,10 +66,10 @@ struct i2c_isr_op {
 #define ISR_DIR_WRITE		I2C_SLAVE_WRITE
 #define ISR_DIR_READ		I2C_SLAVE_READ
 #define ISR_BUSY_SHIFT		(15)
-#define ISR_STOPF			(0x1UL << 5)
-#define ISR_NACKF			(0x1UL << 4)
-#define ISR_BUSY			(0X1 << ISR_BUSY_SHIFT)
-#define ISR_TXE				(1)
+#define ISR_STOPF		(0x1UL << 5)
+#define ISR_NACKF		(0x1UL << 4)
+#define ISR_BUSY		(0X1 << ISR_BUSY_SHIFT)
+#define ISR_TXE			(1)
 
 static unsigned int i2c_intr_disable(struct i2c_slave_ctx *ctx)
 {
@@ -85,11 +85,12 @@ static void i2c_intr_restore(struct i2c_slave_ctx *ctx, unsigned int old)
 
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 
-#define ISR_OP_DEFAULT(name)												\
-void isr_##name##_cb(struct i2c_slave_ctx *ctx) {}							\
-void isr_##name##_clr(struct i2c_slave_ctx *ctx, struct i2c_isr_op *isr_op)	\
-{																			\
-	ctx->reg->icr |= 1 << isr_op->bit;										\
+#define ISR_OP_DEFAULT(name)				\
+void isr_##name##_cb(struct i2c_slave_ctx *ctx) {}	\
+void isr_##name##_clr(struct i2c_slave_ctx *ctx,	\
+		      struct i2c_isr_op *isr_op)	\
+{							\
+	ctx->reg->icr |= 1 << isr_op->bit;		\
 }
 
 //ISR_OP_DEFAULT(rxne)
@@ -160,7 +161,8 @@ void isr_stopf_clr(struct i2c_slave_ctx *ctx, struct i2c_isr_op *isr_op)
 	ctx->reg->icr |= 1 << isr_op->bit;
 }
 
-static inline struct i2c_slave_op *find_slave(struct i2c_slave_ctx *ctx, unsigned int addr)
+static inline struct i2c_slave_op *find_slave(struct i2c_slave_ctx *ctx,
+					      unsigned int addr)
 {
 	int i;
 	struct i2c_slave_op *slave;
@@ -244,7 +246,8 @@ void i2c_isr(struct i2c_slave_ctx *ctx)
 					if (i2c_isr_table[j].cb)
 						i2c_isr_table[j].cb(ctx);
 					if (i2c_isr_table[j].clr)
-						i2c_isr_table[j].clr(ctx, i2c_isr_table + j);
+						i2c_isr_table[j].clr(ctx,
+							i2c_isr_table + j);
 				}
 			}
 		}
@@ -257,12 +260,12 @@ int i2c_init(struct i2c_slave_ctx *ctx, void *reg)
 {
 	int i;
 
-	(*ctx).reg = reg;
-	(*ctx).isr_irq_mask = 0;
-	(*ctx).dir = I2C_SLAVE_WRITE;
+	ctx->reg = reg;
+	ctx->isr_irq_mask = 0;
+	ctx->dir = I2C_SLAVE_WRITE;
 
 	for (i = 0; i < ARRAY_SIZE(i2c_isr_table); ++i)
-		(*ctx).isr_irq_mask |= (1 << i2c_isr_table[i].bit);
+		ctx->isr_irq_mask |= (1 << i2c_isr_table[i].bit);
 	return 0;
 }
 

@@ -81,8 +81,8 @@
 
 /* USER CODE BEGIN PV */
 I2C_REGS i2c_regs;
-struct i2c_slave_ctx *i2c_ctx1;
-struct i2c_slave_ctx *i2c_ctx3;
+struct i2c_slave_ctx i2c_ctx1;
+struct i2c_slave_ctx i2c_ctx3;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -853,19 +853,18 @@ int main(void)
   */
 
 //  Factory_Info_Get();
-  if (i2c_regs.vender == VENDER_SA5) {
-	  i2c_ctx1 = (struct i2c_slave_ctx*)malloc(sizeof(struct i2c_slave_ctx));
-	  memset(i2c_ctx1, 0, sizeof(struct i2c_slave_ctx));
-	  i2c_ctx1->id = 1;
-	  i2c_init(i2c_ctx1, hi2c1.Instance);
+
+  i2c_ctx1.id = 1;
+  i2c_ctx3.id = 3;
+
+  if (i2c_regs.vender == VENDER_SA5)
+	  i2c_init(&i2c_ctx1, hi2c1.Instance);
+
+  i2c_init(&i2c_ctx3, hi2c3.Instance);
+
+  if (i2c_regs.vender == VENDER_SA5)
 	  ds1307_init();//RTC
-  }
 
-  i2c_ctx3 = (struct i2c_slave_ctx*)malloc(sizeof(struct i2c_slave_ctx));
-  memset(i2c_ctx3, 0, sizeof(struct i2c_slave_ctx));
-
-  i2c_ctx3->id = 3;
-  i2c_init(i2c_ctx3, hi2c3.Instance);
   if (i2c_regs.vender == VENDER_SM5_S)
   {
 	  gpioex_init();
@@ -875,9 +874,9 @@ int main(void)
   wdt_init();
   eeprom_init();
 
-  i2c_slave_start(i2c_ctx3);
+  i2c_slave_start(&i2c_ctx3);
   if (i2c_regs.vender == VENDER_SA5) {
-	  i2c_slave_start(i2c_ctx1);
+	  i2c_slave_start(&i2c_ctx1);
   }
 
   // make sure PB6 is high

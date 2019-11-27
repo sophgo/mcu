@@ -11,5 +11,6 @@
 
 /* must page align, page is 128bytes long */
 void flash_program(unsigned long offset, void *data, int len);
+void flash_init(void);
 
 #endif /* FLASH_IF_H_ */

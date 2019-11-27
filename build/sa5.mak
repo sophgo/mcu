@@ -11,7 +11,7 @@ PACK = $(PACK_ROOT)/pack
 UTILROOT = $(TOOLS)/util
 UPGRADE = $(UTILROOT)/mcu-util
 
-$(TARGET).bin: FORCE
+$(TARGET): FORCE
 	$(Q)rm -rf $(OUTPUT)
 	$(Q)mkdir -p $(OUTPUT)
 	$(Q)cd $(APP_ROOT) && make clean && make

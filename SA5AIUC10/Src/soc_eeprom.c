@@ -79,8 +79,8 @@ static struct i2c_slave_op slave3 = {
 void eeprom_init(void)
 {
 	if (i2c_regs.vender == VENDER_SA5) {
-		i2c_slave_register(i2c_ctx1, &slave1);
+		i2c_slave_register(&i2c_ctx1, &slave1);
 	}
-	i2c_slave_register(i2c_ctx3, &slave3);
+	i2c_slave_register(&i2c_ctx3, &slave3);
 }
 

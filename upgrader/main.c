@@ -2,6 +2,7 @@
 #include <upgrader.h>
 #include <stm32l0xx_hal.h>
 #include <checksum.h>
+#include <flash.h>
 
 #define MCU_LED_PIN		GPIO_PIN_5
 
@@ -38,6 +39,7 @@ static inline void led_update(void)
 
 int main(void)
 {
+	flash_init();
 	/* reenable interrupt */
 	__enable_irq();
 	/* re-enable systick */

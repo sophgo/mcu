@@ -208,8 +208,8 @@ typedef struct I2C_REGS_t
 extern I2C_REGS i2c_regs;
 
 struct i2c_slave_ctx;
-extern struct i2c_slave_ctx *i2c_ctx1;
-extern struct i2c_slave_ctx *i2c_ctx3;
+extern struct i2c_slave_ctx i2c_ctx1;
+extern struct i2c_slave_ctx i2c_ctx3;
 extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c2;
 extern I2C_HandleTypeDef hi2c3;

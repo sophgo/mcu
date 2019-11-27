@@ -377,9 +377,9 @@ void mcu_init(void)
 	uptime = 0;
 
 	if (i2c_regs.vender == VENDER_SA5) {
-		i2c_slave_register(i2c_ctx1, &slave);
+		i2c_slave_register(&i2c_ctx1, &slave);
 	}
-	i2c_slave_register(i2c_ctx3, &slave3);
+	i2c_slave_register(&i2c_ctx3, &slave3);
 }
 
 

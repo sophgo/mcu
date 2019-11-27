@@ -26,7 +26,7 @@ CFLAGS = $(OPT_CFLAGS) -std=gnu11 -Wall -Werror \
 ASFLAGS = $(OPT_CFLAGS) -x assembler-with-cpp \
           -Wa,--no-warn
 
-LDFLAGS = $(OPT_CFLAGS) -static \
+LDFLAGS = $(OPT_CFLAGS) \
 	  -Wl,-Map,$(TARGET).map -Wl,--gc-sections
 
 ifeq ($(strip $(V)), 1)

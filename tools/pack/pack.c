@@ -104,6 +104,12 @@ close_file:
 	return err;
 }
 
+void unload_file(struct comp *comp)
+{
+	if (comp->buf)
+		free(comp->buf);
+}
+
 int store_file(void *buf, unsigned long size, const char *file)
 {
 	int fd;
@@ -187,6 +193,8 @@ int is_invalid(struct comp *loader, struct comp *app, struct comp *upgrader)
 
 int main(int argc, char *argv[])
 {
+	int err = -1;
+
 	if (argc != 7) {
 		usage();
 		return 1;
@@ -200,12 +208,18 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	memset(image, 0x00, FLASH_SIZE);
-	if (load_file(&loader, argv[1]))
-		return 1;
-	if (load_file(&app, argv[2]))
-		return 1;
-	if (load_file(&upgrader, argv[4]))
-		return 1;
+	if (load_file(&loader, argv[1])) {
+		err = -1;
+		goto free_image;
+	}
+	if (load_file(&app, argv[2])) {
+		err = -1;
+		goto unload_loader;
+	}
+	if (load_file(&upgrader, argv[4])) {
+		err = -1;
+		goto unload_app;
+	}
 
 	loader.efie.offset = 0;
 	app.efie.offset = strtol(argv[3], NULL, 0);
@@ -215,8 +229,10 @@ int main(int argc, char *argv[])
 	print_efie(&app.efie);
 	print_efie(&upgrader.efie);
 
-	if (is_invalid(&loader, &app, &upgrader))
-		return 1;
+	if (is_invalid(&loader, &app, &upgrader)) {
+		err = -1;
+		goto unload_upgrader;
+	}
 
 	memcpy(image + loader.efie.offset, loader.buf, loader.size);
 	memcpy(image + app.efie.offset, app.buf, app.size);
@@ -235,6 +251,15 @@ int main(int argc, char *argv[])
 
 	store_file(image, FLASH_SIZE, argv[6]);
 
-	return 0;
+	err = 0;
+unload_upgrader:
+	unload_file(&upgrader);
+unload_app:
+	unload_file(&app);
+unload_loader:
+	unload_file(&loader);
+free_image:
+	free(image);
+	return err;
 }
 

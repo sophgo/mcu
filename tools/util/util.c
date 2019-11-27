@@ -1,7 +1,5 @@
 #include <stdlib.h>
 #include <linux/types.h>
-#include <linux/i2c.h>
-#include <linux/i2c-dev.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -13,131 +11,7 @@
 
 #include <global.h>
 #include <md5.h>
-
-static inline __s32 i2c_smbus_access(int file, char read_write, __u8 command,
-				     int size, union i2c_smbus_data *data)
-{
-	struct i2c_smbus_ioctl_data args;
-
-	args.read_write = read_write;
-	args.command = command;
-	args.size = size;
-	args.data = data;
-	return ioctl(file,I2C_SMBUS,&args);
-}
-
-static inline __s32 i2c_smbus_write_quick(int file, __u8 value)
-{
-	return i2c_smbus_access(file,value,0,I2C_SMBUS_QUICK,NULL);
-}
-
-static inline __s32 i2c_smbus_read_byte(int file)
-{
-	union i2c_smbus_data data;
-	if (i2c_smbus_access(file,I2C_SMBUS_READ,0,I2C_SMBUS_BYTE,&data))
-		return -1;
-	else
-		return 0x0FF & data.byte;
-}
-
-static inline __s32 i2c_smbus_write_byte(int file, __u8 value)
-{
-	return i2c_smbus_access(file,I2C_SMBUS_WRITE,value,
-				I2C_SMBUS_BYTE,NULL);
-}
-
-static inline __s32 i2c_smbus_read_byte_data(int file, __u8 command)
-{
-	union i2c_smbus_data data;
-	if (i2c_smbus_access(file,I2C_SMBUS_READ,command,
-			     I2C_SMBUS_BYTE_DATA,&data))
-		return -1;
-	else
-		return 0x0FF & data.byte;
-}
-
-static inline __s32 i2c_smbus_write_byte_data(int file, __u8 command,
-					      __u8 value)
-{
-	union i2c_smbus_data data;
-	data.byte = value;
-	return i2c_smbus_access(file,I2C_SMBUS_WRITE,command,
-				I2C_SMBUS_BYTE_DATA, &data);
-}
-
-static inline __s32 i2c_smbus_read_word_data(int file, __u8 command)
-{
-	union i2c_smbus_data data;
-	if (i2c_smbus_access(file,I2C_SMBUS_READ,command,
-			     I2C_SMBUS_WORD_DATA,&data))
-		return -1;
-	else
-		return 0x0FFFF & data.word;
-}
-
-static inline __s32 i2c_smbus_write_word_data(int file, __u8 command,
-					      __u16 value)
-{
-	union i2c_smbus_data data;
-	data.word = value;
-	return i2c_smbus_access(file,I2C_SMBUS_WRITE,command,
-				I2C_SMBUS_WORD_DATA, &data);
-}
-
-static inline __s32 i2c_smbus_process_call(int file, __u8 command, __u16 value)
-{
-	union i2c_smbus_data data;
-	data.word = value;
-	if (i2c_smbus_access(file,I2C_SMBUS_WRITE,command,
-			     I2C_SMBUS_PROC_CALL,&data))
-		return -1;
-	else
-		return 0x0FFFF & data.word;
-}
-
-/* Returns the number of read bytes */
-static inline __s32 i2c_smbus_read_block_data(int file, __u8 command,
-					      __u8 *values)
-{
-	union i2c_smbus_data data;
-	int i;
-	if (i2c_smbus_access(file,I2C_SMBUS_READ,command,
-			     I2C_SMBUS_BLOCK_DATA,&data))
-		return -1;
-	else {
-		for (i = 1; i <= data.block[0]; i++)
-			values[i-1] = data.block[i];
-		return data.block[0];
-	}
-}
-
-static inline __s32 i2c_smbus_write_block_data(int file, __u8 command,
-					       __u8 length, __u8 *values)
-{
-	union i2c_smbus_data data;
-	int i;
-	if (length > 32)
-		length = 32;
-	for (i = 1; i <= length; i++)
-		data.block[i] = values[i-1];
-	data.block[0] = length;
-	return i2c_smbus_access(file,I2C_SMBUS_WRITE,command,
-				I2C_SMBUS_BLOCK_DATA, &data);
-}
-
-static inline __s32 i2c_smbus_write_i2c_block_data(int file, __u8 command,
-						   __u8 length, __u8 *values)
-{
-	union i2c_smbus_data data;
-	int i;
-	if (length > 32)
-		length = 32;
-	for (i = 1; i <= length; i++)
-		data.block[i] = values[i-1];
-	data.block[0] = length;
-	return i2c_smbus_access(file,I2C_SMBUS_WRITE,command,
-				I2C_SMBUS_I2C_BLOCK_DATA, &data);
-}
+#include <i2c.h>
 
 #define FLASH_SIZE		(64 * 1024)
 #define PROGRAM_LIMIT		(FLASH_SIZE - 128)
@@ -151,6 +25,7 @@ static inline __s32 i2c_smbus_write_i2c_block_data(int file, __u8 command,
 #define EFIT_END		(EFIT_START + EFIT_SIZE)
 #define EFIE_SIZE		(128)
 
+#if 0
 #define APP_START		EFIT_END
 #define APP_SIZE		(28 * 1024)
 #define APP_END			(APP_START + APP_SIZE)
@@ -158,6 +33,7 @@ static inline __s32 i2c_smbus_write_i2c_block_data(int file, __u8 command,
 #define UPGRADER_START		APP_END
 #define UPGRADER_SIZE		(4 * 1024)
 #define UPGRADER_END		(UPGRADER_START + UPGRADER_SIZE)
+#endif
 
 #define REG_STAGE		(0x3c)
 #define REG_LOG			(0x62)
@@ -179,8 +55,8 @@ static inline __s32 i2c_smbus_write_i2c_block_data(int file, __u8 command,
 struct efie {
 	__u32	offset;
 	__u32	length;
-	__u8		checksum[16];
-	__u8		reserved[104];
+	__u8	checksum[16];
+	__u8	reserved[104];
 } __attribute__((packed));
 
 struct comp {
@@ -277,8 +153,13 @@ int i2c_send_page(int fd, void *data, unsigned long offset)
 			fprintf(stderr, "try %d times but still not responding\n", times);
 			return -1;
 		}
+
+        if (times < 100)
+            usleep(1000);
+        else
+            usleep(5 * 1000);
+
 	} while (err < 0);
-	
 	return 0;
 }
 
@@ -405,6 +286,13 @@ void print_efie(struct efie *efie)
 	for (i = 0; i < 16; ++i)
 		printf("%02x", efie->checksum[i]);
 	printf("\n");
+}
+
+
+void unload_file(struct comp *comp)
+{
+	if (comp->buf)
+		free(comp->buf);
 }
 
 int load_file(struct comp *comp, const char *file)
@@ -587,20 +475,18 @@ int is_invalid(void *_image, unsigned long size)
 	return 0;
 }
 
-int upgrade(char *file)
+int mcu_upgrade(char *file)
 {
 	int err;
 	// load file from disk
-	struct comp img;
+	struct comp img = {0};
 
-	if (load_file(&img, file)) {
-		err = -1;
-		goto err0;
-	}
+	if (load_file(&img, file))
+		return -1;
 
 	if (is_invalid(img.buf, img.size)) {
 		err = -1;
-		goto err0;
+		goto unload;
 	}
 
 	struct efie *app_efie = (struct efie *)(img.buf + EFIT_START);
@@ -611,12 +497,12 @@ int upgrade(char *file)
 	// program efie
 	if (i2c_program_flash(fd, app_efie, sizeof(*app_efie), EFIT_START, 1)) {
 		err = -1;
-		goto err0;
+		goto unload;
 	}
 	// program app
 	if (i2c_program_flash(fd, app_data, app_len, app_efie->offset, 1)) {
 		err = -1;
-		goto err0;
+		goto unload;
 	}
 
 	// calculate checksum
@@ -625,7 +511,7 @@ int upgrade(char *file)
 	if (i2c_get_checksum(fd, app_efie->offset,
 			     app_efie->length, calc_cksum)) {
 		err = -1;
-		goto err0;
+		goto unload;
 	}
 	if (memcmp(calc_cksum, app_efie->checksum, 16)) {
 		err = -1;
@@ -636,38 +522,38 @@ int upgrade(char *file)
 		printf("calculated checksum ");
 		hexdump_string(calc_cksum, 16);
 		printf("\n");
-		goto err0;
+		goto unload;
 	}
 
 	err = 0;
-err0:
+unload:
+	unload_file(&img);
 	return err;
 }
 
-int upgrade_full(char *file)
+int mcu_upgrade_full(char *file)
 {
 	int err;
 	// load file from disk
 	struct comp img;
 
-	if (load_file(&img, file)) {
-		err = -1;
-		goto err0;
-	}
+	if (load_file(&img, file))
+		return 0;
 
 	if (is_invalid(img.buf, img.size)) {
 		err = -1;
-		goto err0;
+		goto unload;
 	}
 
 	// program image
 	if (i2c_program_flash(fd, img.buf, img.size, 0, 1)) {
 		err = -1;
-		goto err0;
+		goto unload;
 	}
 
 	err = 0;
-err0:
+unload:
+	unload_file(&img);
 	return err;
 }
 
@@ -730,17 +616,26 @@ free_data:
 int mcu_write(unsigned long offset, char *file)
 {
 	struct comp comp;
+	int err;
+
 	if (load_file(&comp, file))
 		return -1;
 
 	if (offset & 127) {
 		fprintf(stderr, "offset must 128 bytes aligned\n");
-		return -1;
+		err = -1;
+		goto unload;
 	}
 
-	if (i2c_program_flash(fd, comp.buf, comp.size, offset, 1))
-		return -1;
-	return 0;
+	if (i2c_program_flash(fd, comp.buf, comp.size, offset, 1)) {
+		fprintf(stderr, "offset must 128 bytes aligned\n");
+		err = -1;
+		goto unload;
+	}
+unload:
+	err = 0;
+	unload_file(&comp);
+	return err;
 }
 
 int main(int argc, char *argv[])
@@ -765,7 +660,7 @@ int main(int argc, char *argv[])
 			err = 1;
 			goto close_dev;
 		}
-		if (upgrade(argv[4])) {
+		if (mcu_upgrade(argv[4])) {
 			err = 1;
 			goto close_dev;
 		}
@@ -775,7 +670,7 @@ int main(int argc, char *argv[])
 			err = 1;
 			goto close_dev;
 		}
-		if (upgrade_full(argv[4])) {
+		if (mcu_upgrade_full(argv[4])) {
 			err = 1;
 			goto close_dev;
 		}

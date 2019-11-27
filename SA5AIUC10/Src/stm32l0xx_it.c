@@ -176,7 +176,7 @@ void LPTIM1_IRQHandler(void)
 void I2C3_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C3_IRQn 0 */
-	i2c_isr(i2c_ctx3);
+	i2c_isr(&i2c_ctx3);
 
    /* don't use hal arch */
 	return;
@@ -197,7 +197,7 @@ void I2C3_IRQHandler(void)
 void I2C1_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C1_IRQn 0 */
-	i2c_isr(i2c_ctx1);
+	i2c_isr(&i2c_ctx1);
 
 	/* don't use hal arch */
 	return;

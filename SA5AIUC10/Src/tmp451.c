@@ -132,6 +132,6 @@ static struct i2c_slave_op tmp451_slave = {
 void tmp451_init(void)
 {
 	software_reset();
-	i2c_slave_register(i2c_ctx3, &tmp451_slave);
+	i2c_slave_register(&i2c_ctx3, &tmp451_slave);
 }
 

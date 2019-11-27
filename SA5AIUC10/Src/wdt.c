@@ -149,6 +149,6 @@ void wdt_init(void)
 {
 	wdt_reset();
 
-	i2c_slave_register(i2c_ctx3, &slave);
+	i2c_slave_register(&i2c_ctx3, &slave);
 }
 

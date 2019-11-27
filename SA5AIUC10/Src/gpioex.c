@@ -277,5 +277,5 @@ void gpioex_init()
 	HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, TCA_REG_OUTPUT1,1, &val, 1, 1000);
 	HAL_Delay(1);
 
-	i2c_slave_register(i2c_ctx3,&slave);
+	i2c_slave_register(&i2c_ctx3,&slave);
 }
