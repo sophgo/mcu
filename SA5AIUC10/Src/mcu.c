@@ -154,11 +154,20 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		ctx->load_cmd_reg = data;
 		i2c_regs.cmd_reg_bkup = data;
 		break;
+	case REG_INTR_STATUS1:
+		i2c_regs.intr_status1 = data;
+		break;
 	case REG_INTR_STATUS2:
 		i2c_regs.intr_status2 = data;
 		if (CPLD_SET_ERR | i2c_regs.intr_status2) {
 			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_SET);
 		}
+		break;
+	case REG_INTR_MASK1:
+		i2c_regs.intr_mask1 = data;
+		break;
+	case REG_INTR_MASK2:
+		i2c_regs.intr_mask2 = data;
 		break;
 	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
 		offset = ctx->idx - REG_SYS_RTC_YEAR;
