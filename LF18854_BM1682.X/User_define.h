@@ -9,7 +9,7 @@ DATE: 05/05/2018
 #include"delay.h"
 
 #define VERSION			0x8D
-#define INTERNAL_VERSION	0x00
+#define INTERNAL_VERSION	0x01
 
 #define    TMR0_Value     177
 #define __16F18854
@@ -31,14 +31,15 @@ DATE: 05/05/2018
 #define CMD_DEBUG_MODE		0x0D
 #define CMD_DOG_ONOFF		0x10
 #define CMD_DOG_FEED		0x11
-#define CMD_REBOOT			0x12		// include power on/off
+#define CMD_REBOOT_1682			0x12		// include power on/off
 #define CMD_UART_TEST		0x13
+#define CMD_RESET_MCU		0x14
 #define CMD_RECOVERY		0x15
 #define CMD_SET_UTC			0x16
 #define CMD_CLEAN_FACTORY_MODE	0x17
 #define CMD_SET_FACTORY_MODE	0x18
 
-#define CMD_RESET			0x66		//
+#define CMD_RESET_1682			0x66		//
 #define CMD_CLRERR			0x86
 #define CMD_POWERDOWN		0xF7
 

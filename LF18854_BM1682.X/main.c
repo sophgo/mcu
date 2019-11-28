@@ -211,7 +211,7 @@ void main(void)
 	{
 		I2C_Array[INDEX_MCU_STATUS] |= MCU_STATUS_FACTORY_MODE;
 		factorymode = 1;
-		dopowerup();	
+		dopowerup();
 	}
 	
 	__delay_ms(1000);//wait 1 second for stable
@@ -285,13 +285,13 @@ void main(void)
 				I2C_Array[INDEX_INSTRUCTION] = 0;
 				watch_dog_feed();
 				break;
-            case(CMD_REBOOT)://reboot
+            case(CMD_REBOOT_1682)://reboot
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
 				doreboot(POWERDOWN_REASON_REBOOT);
 
 				utcsend_beg(Sencond_Count);
                 break;
-            case(CMD_RESET)://BM1682 reset
+            case(CMD_RESET_1682)://BM1682 reset
 	            I2C_Array[INDEX_INSTRUCTION] = 0;
 				doreset(POWERDOWN_REASON_RESET);
 				utcsend_beg(Sencond_Count);
@@ -330,6 +330,11 @@ void main(void)
 				{
 					I2C_Array[INDEX_INSTRUCTION] = 0;
 					NVM_write_eeprom(NVM_EEPROM_BASE,0xFF);
+					break;
+				}
+			case CMD_RESET_MCU:
+				{
+					asm("RESET");
 					break;
 				}
         }		
@@ -374,12 +379,12 @@ void main(void)
 					watch_dog_feed();
 					ret  = 0;
 					break;
-				case(CMD_REBOOT)://reboot
+				case(CMD_REBOOT_1682)://reboot
 					doreboot(POWERDOWN_REASON_REBOOT);
 					ret  = 0;
 					utcsend_beg(Sencond_Count);
 					break;
-				case(CMD_RESET)://BM1682 reset
+				case(CMD_RESET_1682)://BM1682 reset
 					doreset(POWERDOWN_REASON_RESET);
 					ret  = 0;
 					utcsend_beg(Sencond_Count);
