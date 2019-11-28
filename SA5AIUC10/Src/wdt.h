@@ -10,5 +10,6 @@
 
 extern void wdt_init(void);
 void wdt_isr(void);
+void soc_wdt_reset_process(void);
 
 #endif /* WDT_H_ */

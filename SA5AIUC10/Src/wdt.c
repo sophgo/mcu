@@ -116,15 +116,6 @@ static struct i2c_slave_op slave = {
 	.stop = wdt_stop,
 };
 
-/* system should implement this function for real soc reset */
-__weak void soc_wdt_reset(void)
-{
-//	printf("SoC watchdog reset\r\n");
-//	BM1684_RST();
-	i2c_regs.intr_status2 = WDT_RST;
-	i2c_regs.cmd_reg = 0x03;
-}
-
 static void wdt_reset(void)
 {
 	memset(&wdt_ctx, 0, sizeof(wdt_ctx));
@@ -133,16 +124,21 @@ static void wdt_reset(void)
 		wdt_ctx.timeout = wdt_ctx.timeout_shadow = 0xffffffff;
 }
 
-void wdt_isr()
+void soc_wdt_reset_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
-		soc_wdt_reset();
+		BM1684_RST();
+		i2c_regs.intr_status2 = WDT_RST;
 		wdt_reset();	/* reset to initial state */
-	} else if (wdt_ctx.enable && wdt_ctx.counter > 0)
+	}
+}
+
+void wdt_isr()
+{
+	if (wdt_ctx.enable && wdt_ctx.counter > 0)
 		--wdt_ctx.counter;
 
 	return;
-
 }
 
 void wdt_init(void)

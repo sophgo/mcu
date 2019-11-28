@@ -912,6 +912,7 @@ int main(void)
 	  // response CPLD's commands
 	  extern void mcu_process_cmd_slow(void);
 	  mcu_process_cmd_slow();
+	  soc_wdt_reset_process();
 
 	  // read temperature every 2 seconds
 	  static uint32_t last_read_time = 0;
