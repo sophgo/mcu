@@ -141,7 +141,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32L071C8_FLASH
+LDSCRIPT = target
 
 # libraries
 LIBS = -lc -lm -lnosys 

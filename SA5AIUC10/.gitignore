@@ -1,4 +1,4 @@
 /Debug/
 /build/
-STM32L071C8_FLASH.ld
+target.ld
 tags
