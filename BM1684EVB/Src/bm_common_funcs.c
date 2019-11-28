@@ -467,6 +467,8 @@ void poll_pcie_rst(void)
 	{
 		Convert_sysrst_gpio(0);
 
+		i2c_regs.mode_flag = 2;
+
 		HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 		HAL_Delay(30);
 		while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port, PCIEE_RST_X_MCU_Pin))
