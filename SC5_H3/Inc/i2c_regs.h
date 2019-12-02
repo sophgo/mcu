@@ -59,7 +59,8 @@ typedef struct I2C_REGS_t
 	uint16_t v_ddr_vddq;
 	uint16_t v_ddr_vddqlp;
 	CURRENT_VAL current;
-	volatile uint8_t reserved2[2];
+	uint8_t mcu_addr;
+	volatile uint8_t reserved2[1];
 	volatile uint8_t eeprom_offset_l;
 	volatile uint8_t eeprom_offset_h;
 	volatile uint8_t eeprom_data[MCU_EEPROM_DATA_MAX];

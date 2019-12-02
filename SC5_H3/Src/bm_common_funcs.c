@@ -14,6 +14,7 @@
 #include "eeprom.h"
 #include "stdlib.h"
 #include "string.h"
+#include "i2c_regs.h"
 
 #define PMIC_ADDR 0x3c
 
@@ -77,18 +78,20 @@ void HAL_Delay(uint32_t Delay)
 
 void clean_pmic(void)
 {
-	val = 0;
+	uint8_t val[2];
 
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, &val, 2, 1000);// LDO1V_IN
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, &val, 2, 1000);//DDR_VDDQ 1.1v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, &val, 2, 1000);//DDR*_DDR_VDD_TPU_MEM 0.7v
+	val[0] = val[1] = 0x00;
 
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, val, 2, 1000);// LDO1V_IN
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, val, 2, 1000);//DDR_VDDQ 1.1v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, val, 2, 1000);//DDR*_DDR_VDD_TPU_MEM 0.7v
+
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, val, 1, 1000);// 1.2v
 }
 
 #define GPIO_RESET(gpio)	HAL_GPIO_WritePin(gpio##_GPIO_Port,gpio##_Pin, GPIO_PIN_RESET);
@@ -97,20 +100,21 @@ void clean_pmic(void)
 
 void init_pmic(void)
 {
-	val = 0x80;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, &val, 1, 1000);// 1.2v
+	uint8_t val[2];
+	val[0] = 0x80;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, val, 1, 1000);// 1.2v
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 
-	val = 0x80;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_CFG3, 1, &val, 1, 1000);
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_CFG3, 1, &val, 1, 1000);
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_CFG3, 1, &val, 1, 1000);
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_CFG3, 1, &val, 1, 1000);
+	val[0] = 0x80;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_CFG3, 1, val, 1, 1000);
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_CFG3, 1, val, 1, 1000);
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_CFG3, 1, val, 1, 1000);
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_CFG3, 1, val, 1, 1000);
 
-	val = 0xF5;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, &val, 1, 1000);//enable buck1\2\3\4
+	val[0] = 0xF5;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, val, 1, 1000);//enable buck1\2\3\4
 }
 
 void detect_mode(void)
@@ -345,6 +349,8 @@ void poll_pcie_rst(void)
 	{
 		Convert_sysrst_gpio(0);
 
+		i2c_regs.mode_flag = 2;
+
 		GPIO_RESET(PCIE_RST_X);
 		HAL_Delay(30);
 		while (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
@@ -355,12 +361,19 @@ void poll_pcie_rst(void)
 	}
 }
 
+void Set_Addr(void)
+{
+	i2c_regs.mcu_addr = (GPIO_GET(MCU_ADDR1) << 1) | (GPIO_GET(MCU_ADDR0));
+}
+
 void config_regs(void)
 {
 	i2c_regs.vender = VENDER_SC5_H3;
 	i2c_regs.sw_ver = MCU_VERSION;
 
 	Set_HW_Ver();
+
+	Set_Addr();
 }
 
 void module_init(void)
@@ -418,4 +431,14 @@ void cmd_process(void)
 	  default:
 		  break;
 	  }
+}
+
+void Detect_PowerON(void)
+{
+	while (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
+		;
+
+	PowerON();
+
+	GPIO_SET(MCU_CTL_DOWN_MCU);
 }

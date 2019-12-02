@@ -33,5 +33,6 @@ void poll_pcie_rst(void);
 void config_regs(void);
 void module_init(void);
 void cmd_process(void);
+void Detect_PowerON(void);
 
 #endif /* BM_COMMON_FUNC_H_ */

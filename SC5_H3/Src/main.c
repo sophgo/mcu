@@ -49,7 +49,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+I2C_REGS i2c_regs;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,7 +98,9 @@ int main(void)
   MX_LPTIM1_Init();
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
+  module_init();
 
+  Detect_PowerON();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -108,6 +110,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  cmd_process();
+
+	  //get current of ten channels
+	  Scan_Cuerrent();
+//	  Scan_Voltage();
+
+	  //POLL PCIEE_RST STATUS FOR SYS_RST
+	  poll_pcie_rst();
+	  //GET_Current_Voltage();
   }
   /* USER CODE END 3 */
 }
