@@ -28,7 +28,7 @@
 #include "main.h"
 
 /** Declarations **/
-static const char * const mcu_ver = "2.0.0";
+static const char * const mcu_ver = "2.0.2";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
 extern volatile testStage tStage;
@@ -344,18 +344,18 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		return pdTRUE; // indicate that still have more lines to output
 	} else if (stage == 1) { // write power up command
 		osDelay(100);
-		data[0] = 0x01;
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100) != HAL_OK) {
-			sprintf(pcWriteBuffer,
-					"[reset] I2C Write power up reg failed\r\nQA_FAIL_RST\r\n");
-			stage = 0;
-			return pdFALSE;
-		}
-		osDelay(100);
 		data[0] = 0x80;
 		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data, 1, 100)!= HAL_OK)
 		{
 			sprintf(pcWriteBuffer, "[reset] Write location reg failed\r\nQA_FAIL_RST\r\n");
+			stage = 0;
+			return pdFALSE;
+		}
+		osDelay(100);
+		data[0] = 0x01;
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100) != HAL_OK) {
+			sprintf(pcWriteBuffer,
+					"[reset] I2C Write power up reg failed\r\nQA_FAIL_RST\r\n");
 			stage = 0;
 			return pdFALSE;
 		}
@@ -1088,6 +1088,11 @@ static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	if (tStage == STAGE_KERNEL)
     {
         uint8_t flag = 0;
+        HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_SET);
+        osDelay(1000);
         if ((reg[0x03] != 3)||(reg[0x04] != 5))
         {
             sprintf(pcWriteBuffer, "[gpio1] reg3 = 0x%x, reg4 = 0x%x\r\nQA_FAIL_GPIO\r\n", reg[0x03], reg[0x04]);
