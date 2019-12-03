@@ -10,6 +10,7 @@
 #include "i2c_bm.h"
 
 #include "eeprom.h"
+#include "rtc.h"
 //#include "upgrade.h"
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
@@ -17,6 +18,7 @@
 static struct mcu_ctx {
 	int set_idx;
 	int idx;
+	int setrtc;
 	I2C_REGS map;
 } mcu_ctx;
 
@@ -64,9 +66,10 @@ static void mcu_write(volatile uint8_t data)
 //			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_SET);
 //		}
 		break;
-	case REG_SYS_RTC_SEC ... (REG_SYS_RTC_SEC + 5):
-		offset = mcu_ctx.idx - REG_SYS_RTC_SEC;
+	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
+		offset = mcu_ctx.idx - REG_SYS_RTC_YEAR;
 		((uint8_t *)&mcu_ctx.map.rtc)[offset] = data;
+		mcu_ctx.setrtc = 1;
 		break;
 	case REG_CMD:
 		mcu_ctx.map.cmd = data;
@@ -85,6 +88,8 @@ extern void read_flt_buck4(void);
 static uint8_t mcu_read(void)
 {
 	uint8_t ret = 0;
+	static RTC_DateTypeDef sDate;
+	static RTC_TimeTypeDef sTime;
 	int offset;
 
 	//uint8_t tmp = *((uint8_t *)(&mcu_ctx.map) + mcu_ctx.idx);
@@ -133,8 +138,22 @@ static uint8_t mcu_read(void)
 	case REG_CAUSE_PWR_DOWN:
 		ret = i2c_regs.cause_pwr_down;
 		break;
-	case REG_SYS_RTC_SEC ... (REG_SYS_RTC_SEC + 5):
-		offset = mcu_ctx.idx - REG_SYS_RTC_SEC;
+	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
+		offset = mcu_ctx.idx - REG_SYS_RTC_YEAR;
+		if (offset < 3)
+		{
+			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BCD);
+			mcu_ctx.map.rtc[0] = sDate.Year;
+			mcu_ctx.map.rtc[1] = sDate.Month;
+			mcu_ctx.map.rtc[2] = sDate.Date;
+		}
+		else
+		{
+			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BCD);
+			mcu_ctx.map.rtc[3] = sTime.Hours;
+			mcu_ctx.map.rtc[4] = sTime.Minutes;
+			mcu_ctx.map.rtc[5] = sTime.Seconds;
+		}
 		ret = ((uint8_t *)&mcu_ctx.map.rtc)[offset];
 		break;
 	case I_12V_ATX_L:
@@ -222,6 +241,21 @@ static uint8_t mcu_read(void)
 
 static void mcu_stop(void)
 {
+	if (mcu_ctx.setrtc)
+	{
+		mcu_ctx.setrtc = 0;
+		RTC_DateTypeDef sDate;
+		RTC_TimeTypeDef sTime;
+		sDate.Year		= mcu_ctx.map.rtc[0];
+		sDate.Month		= mcu_ctx.map.rtc[1];
+		sDate.Date		= mcu_ctx.map.rtc[2];
+		sTime.Hours		= mcu_ctx.map.rtc[3];
+		sTime.Minutes	= mcu_ctx.map.rtc[4];
+		sTime.Seconds	= mcu_ctx.map.rtc[5];
+
+		HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD);
+		HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD);
+	}
 }
 
 static struct i2c_slave_op slave = {
@@ -235,6 +269,7 @@ static struct i2c_slave_op slave = {
 void mcu_init(void)
 {
 	assert(sizeof(I2C_REGS) == REG_NUMBER);
+	mcu_ctx.setrtc = 0;
 	i2c_slave_register(&slave);
 }
 
