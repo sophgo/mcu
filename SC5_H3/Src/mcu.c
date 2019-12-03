@@ -15,6 +15,7 @@
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
+static unsigned short uptime;
 static struct mcu_ctx {
 	int set_idx;
 	int idx;
@@ -31,7 +32,12 @@ static void mcu_match(int dir)
 		mcu_ctx.set_idx = 1;
 	}
 }
-
+void mcu_tick_isr(void)
+{
+	uptime++;
+	i2c_regs.uptime0 = uptime & 0xFF;
+	i2c_regs.uptime1 = ( uptime >> 8 )& 0xFF;
+}
 static inline void idx_set(uint8_t idx)
 {
 	mcu_ctx.idx = idx % MCU_REG_MAX;

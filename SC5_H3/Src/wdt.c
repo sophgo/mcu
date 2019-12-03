@@ -135,7 +135,7 @@ static void wdt_reset(void)
 		wdt_ctx.timeout = wdt_ctx.timeout_shadow = 0xffffffff;
 }
 
-void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
+void wdt_isr()
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
 		soc_wdt_reset();

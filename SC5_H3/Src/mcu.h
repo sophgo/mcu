@@ -9,6 +9,7 @@
 #define MCU_H_
 
 extern void mcu_init(void);
+void mcu_tick_isr();
 
 #endif /* MCU_H_ */
 
