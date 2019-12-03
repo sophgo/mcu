@@ -156,6 +156,10 @@ uint8_t pmic_voltage_set(uint16_t MemAddress, uint8_t *pData)
 
 void PowerON(void)
 {
+	uint8_t val[2];
+
+	val[1] = 0;
+
 	clean_pmic();
 	HAL_Delay(100);
 
@@ -171,8 +175,8 @@ void PowerON(void)
 
 	detect_mode();
 	//EN_PMIC_OUT1  0.95v
-	val = 0x76;
-	pmic_voltage_set(BUCK1_DVS0CFG1, &val);
+	val[0] = 0x76;
+	pmic_voltage_set(BUCK1_DVS0CFG1, val);
 
 	GPIO_SET(P08_PG);
 	HAL_Delay(1);
@@ -183,14 +187,14 @@ void PowerON(void)
 	GPIO_SET(TPU_PG);
 	HAL_Delay(1);
 	//EN_PMIC_OUT2 0.6v
-	val = 0x4b;
-	pmic_voltage_set(BUCK2_DVS0CFG1, &val);
+	val[0] = 0x4b;
+	pmic_voltage_set(BUCK2_DVS0CFG1, val);
 	//EN_PMIC_OUT3 1.1v
-	val = 0x8a;
-	pmic_voltage_set(BUCK2_DVS0CFG1, &val);
+	val[0] = 0x8a;
+	pmic_voltage_set(BUCK2_DVS0CFG1, val);
 	//EN_PMIC_OUT4 0.75v
-	val = 0x5e;
-	pmic_voltage_set(BUCK3_DVS0CFG1, &val);
+	val[0] = 0x5e;
+	pmic_voltage_set(BUCK3_DVS0CFG1, val);
 
 	GPIO_SET(TPUMEM_PG);
 	HAL_Delay(1);
@@ -205,7 +209,31 @@ void PowerON(void)
 
 void PowerDOWN(void)
 {
+	clean_pmic();
+	HAL_Delay(100);
 
+	GPIO_RESET(DDR_PG);
+	HAL_Delay(1);
+	GPIO_RESET(MCU_CTL_DOWN_MCU);
+	HAL_Delay(1);
+	GPIO_RESET(SYS_RST_N);
+	HAL_Delay(1);
+	GPIO_RESET(TPUMEM_PG);
+	HAL_Delay(1);
+	GPIO_RESET(TPU_PG);
+	HAL_Delay(1);
+	GPIO_RESET(EN_VDD_TPU);
+	HAL_Delay(1);
+	GPIO_RESET(PCIE_PG);
+	HAL_Delay(1);
+	GPIO_RESET(P08_PG);
+	HAL_Delay(1);
+	GPIO_RESET(EN_VDD_3V3);
+	HAL_Delay(1);
+	GPIO_RESET(EN_VDDC);
+	HAL_Delay(1);
+	GPIO_RESET(EN_VDD_1V8);
+	HAL_Delay(1);
 }
 
 void BM1684_RST(void)
@@ -441,4 +469,10 @@ void Detect_PowerON(void)
 	PowerON();
 
 	GPIO_SET(MCU_CTL_DOWN_MCU);
+}
+
+void Detect_PowerDown(void)
+{
+	if (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
+		GPIO_RESET(MCU_CTL_DOWN_MCU);
 }

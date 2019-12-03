@@ -112,13 +112,14 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  cmd_process();
 
-	  //get current of ten channels
+	  //get current of two channels
 	  Scan_Cuerrent();
 //	  Scan_Voltage();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
 	  poll_pcie_rst();
 	  //GET_Current_Voltage();
+	  Detect_PowerDown();
   }
   /* USER CODE END 3 */
 }
