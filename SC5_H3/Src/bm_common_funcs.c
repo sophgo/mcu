@@ -9,7 +9,7 @@
 #include "i2c_bm.h"
 #include "mcu.h"
 #include "wdt.h"
-//#include "ds1307.h"
+#include "ds1307.h"
 #include "soc_eeprom.h"
 #include "eeprom.h"
 #include "stdlib.h"
@@ -428,7 +428,8 @@ void module_init(void)
 {
 	i2c_init(hi2c1.Instance);
 	/* EVB board has a real ds1307, donot enable this pseudo one */
-	// ds1307_init();
+	/* SC5 board has no ds1307 */
+	ds1307_init();
 	mcu_init();
 //	wdt_init();
 	eeprom_init();
