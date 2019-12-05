@@ -186,24 +186,24 @@ void PowerON(void)
 	HAL_Delay(1);
 	GPIO_SET(TPU_PG);
 	HAL_Delay(1);
+	//EN_PMIC_OUT3 1.1v
+	val[0] = 0x8a;
+	pmic_voltage_set(BUCK3_DVS0CFG1, val);
 	//EN_PMIC_OUT2 0.6v
 	val[0] = 0x4b;
 	pmic_voltage_set(BUCK2_DVS0CFG1, val);
-	//EN_PMIC_OUT3 1.1v
-	val[0] = 0x8a;
-	pmic_voltage_set(BUCK2_DVS0CFG1, val);
 	//EN_PMIC_OUT4 0.75v
 	val[0] = 0x5e;
-	pmic_voltage_set(BUCK3_DVS0CFG1, val);
+	pmic_voltage_set(BUCK4_DVS0CFG1, val);
 
 	GPIO_SET(TPUMEM_PG);
 	HAL_Delay(1);
-	while(!GPIO_GET(PWR_GOOD))
-		;
+//	while(!GPIO_GET(PWR_GOOD))
+//		;
 	HAL_Delay(30);
 	GPIO_SET(SYS_RST_N);
 	HAL_Delay(30);
-	GPIO_SET(MCU_CTL_DOWN_MCU);
+//	GPIO_SET(MCU_CTL_DOWN_MCU);
 	GPIO_SET(DDR_PG);
 }
 
@@ -214,7 +214,7 @@ void PowerDOWN(void)
 
 	GPIO_RESET(DDR_PG);
 	HAL_Delay(1);
-	GPIO_RESET(MCU_CTL_DOWN_MCU);
+//	GPIO_RESET(MCU_CTL_DOWN_MCU);
 	HAL_Delay(1);
 	GPIO_RESET(SYS_RST_N);
 	HAL_Delay(1);
@@ -410,7 +410,7 @@ void module_init(void)
 	/* EVB board has a real ds1307, donot enable this pseudo one */
 	// ds1307_init();
 	mcu_init();
-	wdt_init();
+//	wdt_init();
 	eeprom_init();
 	i2c_slave_start();
 
@@ -421,7 +421,7 @@ void module_init(void)
 	//CHANGE SYS_RST FROM OUTPUT TO INPUT
 	Convert_sysrst_gpio(1);
 
-	clean_update_flag();
+//	clean_update_flag();
 }
 
 void cmd_process(void)
@@ -463,16 +463,16 @@ void cmd_process(void)
 
 void Detect_PowerON(void)
 {
-	while (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
-		;
+//	while (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
+//		;
 
 	PowerON();
 
-	GPIO_SET(MCU_CTL_DOWN_MCU);
+//	GPIO_SET(MCU_CTL_DOWN_MCU);
 }
 
 void Detect_PowerDown(void)
 {
-	if (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
-		GPIO_RESET(MCU_CTL_DOWN_MCU);
+//	if (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
+//		GPIO_RESET(MCU_CTL_DOWN_MCU);
 }

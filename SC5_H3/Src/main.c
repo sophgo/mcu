@@ -119,7 +119,7 @@ int main(void)
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
 	  poll_pcie_rst();
 	  //GET_Current_Voltage();
-	  Detect_PowerDown();
+//	  Detect_PowerDown();
   }
   /* USER CODE END 3 */
 }
