@@ -160,8 +160,8 @@ extern I2C_REGS i2c_regs;
 #define CMD_MCU_UPDATE			0x08		//MCU UPDATE
 
 //EEPROM  FLASH
-#define EEPROM_BASE_ADDR	0x08080C00
-#define EEPROM_BANK_SIZE	0x0C00
+#define EEPROM_BASE_ADDR	0x08080000
+#define EEPROM_BANK_SIZE	0x0800
 
 //
 //uint32_t writeFlashData = 0x55aa55aa;
