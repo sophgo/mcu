@@ -258,13 +258,13 @@ void PowerDOWN(void)
 
 void BM1684_RST(void)
 {
-	Convert_sysrst_gpio(0);
+//	Convert_sysrst_gpio(0);
 
 	GPIO_RESET(SYS_RST_N);
 	HAL_Delay(30);
 	GPIO_SET(SYS_RST_N);
 
-	Convert_sysrst_gpio(1);
+//	Convert_sysrst_gpio(1);
 
 	return ;
 }
@@ -395,17 +395,18 @@ void poll_pcie_rst(void)
 {
 	if (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
 	{
-		Convert_sysrst_gpio(0);
+//		Convert_sysrst_gpio(0);
 
 		i2c_regs.mode_flag = 2;
 
-		GPIO_RESET(PCIE_RST_X);
+//		HAL_GPIO_WritePin(SYS_RST_N_GPIO_Port,SYS_RST_N_Pin,GPIO_PIN_RESET);
+		GPIO_RESET(SYS_RST_N);
 		HAL_Delay(30);
 		while (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
 			  ;
-		GPIO_SET(PCIE_RST_X);
+		GPIO_SET(SYS_RST_N);
 
-		Convert_sysrst_gpio(1);
+//		Convert_sysrst_gpio(1);
 	}
 }
 
@@ -440,7 +441,7 @@ void module_init(void)
 	config_regs();
 
 	//CHANGE SYS_RST FROM OUTPUT TO INPUT
-	Convert_sysrst_gpio(1);
+//	Convert_sysrst_gpio(1);
 
 //	clean_update_flag();
 }
