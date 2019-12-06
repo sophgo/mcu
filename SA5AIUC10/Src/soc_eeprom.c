@@ -13,6 +13,7 @@
 static struct eeprom_ctx {
 	int set_idx;
 	int idx;
+	unsigned char tmp;
 } ctx;
 
 static void eeprom_match(void *priv, int dir)
@@ -40,10 +41,11 @@ static void eeprom_write(void *priv, uint8_t data)
 {
 	switch (ctx.set_idx) {
 	case 2:
-		idx_set_hi(data);
+		ctx.tmp = data;
 		ctx.set_idx = 1;
 		return;
 	case 1:
+		idx_set_hi(ctx.tmp);
 		idx_set_lo(data);
 		ctx.set_idx = 0;
 		return;
@@ -57,6 +59,11 @@ static void eeprom_write(void *priv, uint8_t data)
 static uint8_t eeprom_read(void *priv)
 {
 	uint8_t tmp;
+	if (ctx.set_idx == 1)
+	{
+		idx_set_hi(0);
+		idx_set_lo(ctx.tmp);
+	}
 	EEPROM_ReadBytes(ctx.idx, &tmp, 1);
 	idx_inc();
 	return tmp;
