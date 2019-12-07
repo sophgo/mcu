@@ -30,12 +30,7 @@
 
 /* USER CODE END 1 */
 
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
+/** Configure pins
 */
 void MX_GPIO_Init(void)
 {
@@ -48,11 +43,18 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, EN_VDD_3V3_Pin|EN_VQPS_1V8_Pin|EN_VDD_1V8_Pin|P08_PG_Pin 
-                          |PCIE_PG_Pin|TPUMEM_PG_Pin|TPU_PG_Pin|SYS_RST_N_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, EN_VDD_3V3_Pin|EN_VQPS_1V8_Pin|EN_VDD_1V8_Pin|MCU_CTL_DOWN_MCU_Pin 
+                          |P08_PG_Pin|PCIE_PG_Pin|TPUMEM_PG_Pin|TPU_PG_Pin 
+                          |SYS_RST_N_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, MCU_ALERT_Pin|EN_VDD_TPU_Pin|EN_VDDC_Pin|DDR_PG_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = MCU_RCV_UP_MCU_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(MCU_RCV_UP_MCU_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin PAPin 
                            PAPin PAPin */
@@ -76,8 +78,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin */
-  GPIO_InitStruct.Pin = EN_VQPS_1V8_Pin|EN_VDD_1V8_Pin;
+  /*Configure GPIO pins : PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = EN_VQPS_1V8_Pin|EN_VDD_1V8_Pin|MCU_CTL_DOWN_MCU_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -101,12 +103,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(PWR_GOOD_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = PCIE_RST_X_Pin;

@@ -59,6 +59,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define MCU_RCV_UP_MCU_Pin GPIO_PIN_13
+#define MCU_RCV_UP_MCU_GPIO_Port GPIOA
 #define EN_VDD_3V3_Pin GPIO_PIN_15
 #define EN_VDD_3V3_GPIO_Port GPIOA
 #define MCU_ALERT_Pin GPIO_PIN_4
@@ -85,6 +87,8 @@ void Error_Handler(void);
 #define CURRENT_PCIE_3_3V_GPIO_Port GPIOB
 #define EN_VDDC_Pin GPIO_PIN_5
 #define EN_VDDC_GPIO_Port GPIOB
+#define MCU_CTL_DOWN_MCU_Pin GPIO_PIN_9
+#define MCU_CTL_DOWN_MCU_GPIO_Port GPIOA
 #define PMIC_SDA_Pin GPIO_PIN_11
 #define PMIC_SDA_GPIO_Port GPIOB
 #define CURRENT_PCIE_12V_5V_Pin GPIO_PIN_0

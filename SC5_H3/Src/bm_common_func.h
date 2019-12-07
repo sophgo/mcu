@@ -35,5 +35,6 @@ void module_init(void);
 void cmd_process(void);
 void Detect_PowerON(void);
 void Detect_PowerDown(void);
+uint8_t Get_Addr(void);
 
 #endif /* BM_COMMON_FUNC_H_ */

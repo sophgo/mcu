@@ -377,7 +377,6 @@ void Convert_sysrst_gpio(int io)
 		    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 		    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 	  }
-
 }
 
 void clean_update_flag(void)
@@ -405,14 +404,36 @@ void poll_pcie_rst(void)
 		while (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
 			  ;
 		GPIO_SET(SYS_RST_N);
+		HAL_Delay(5);
+		GPIO_SET(MCU_CTL_DOWN_MCU);// when mcu 0 receive prst, note mcu 1.mcu1->mcu2
+		HAL_Delay(30);
+		GPIO_RESET(MCU_CTL_DOWN_MCU);// when mcu 0 detect prst high, note mcu 1.mcu1->mcu2
 
 //		Convert_sysrst_gpio(1);
+	}
+
+	if ((Get_Addr() != 0) && (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_SET))
+	{// mcu 1,2 detect high from pre-mcu,note next mcu.
+		GPIO_RESET(SYS_RST_N);
+		HAL_Delay(30);
+		while (GPIO_PIN_SET == GPIO_GET(MCU_RCV_UP_MCU))
+			;
+		GPIO_SET(SYS_RST_N);
+		HAL_Delay(5);
+		GPIO_SET(MCU_CTL_DOWN_MCU);
+		HAL_Delay(30);
+		GPIO_RESET(MCU_CTL_DOWN_MCU);// when mcu 0 detect MCU_RCV_UP_MCU low, note mcu 1.mcu1->mcu2
 	}
 }
 
 void Set_Addr(void)
 {
 	i2c_regs.mcu_addr = (GPIO_GET(MCU_ADDR1) << 1) | (GPIO_GET(MCU_ADDR0));
+}
+
+uint8_t Get_Addr(void)
+{
+	return i2c_regs.mcu_addr;
 }
 
 void config_regs(void)
@@ -485,12 +506,14 @@ void cmd_process(void)
 
 void Detect_PowerON(void)
 {
-//	while (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
-//		;
+	while (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
+		;
 
 	PowerON();
 
-//	GPIO_SET(MCU_CTL_DOWN_MCU);
+	GPIO_SET(MCU_CTL_DOWN_MCU);
+	HAL_Delay(30);
+	GPIO_RESET(MCU_CTL_DOWN_MCU);
 }
 
 void Detect_PowerDown(void)
