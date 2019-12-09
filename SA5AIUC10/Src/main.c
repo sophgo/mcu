@@ -284,6 +284,9 @@ void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *instance)
     GPIO_InitStruct.Alternate = GPIO_AF6_I2C2;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+#if 0
+    // STM32L071 donnot have SWRST bit.
+    // It is RXDMAEN at that bit position.
     // 13. Set SWRST bit in I2Cx_CR1 register.
     instance->Instance->CR1 |= 0x8000;
 
@@ -293,6 +296,7 @@ void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *instance)
     instance->Instance->CR1 &= ~0x8000;
 
     asm("nop");
+#endif
 
     // 15. Enable the I2C peripheral by setting the PE bit in I2Cx_CR1 register
     instance->Instance->CR1 |= 0x0001;
@@ -300,6 +304,19 @@ void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *instance)
     // Call initialization function.
     HAL_I2C_Init(instance);
 }
+
+static int pin_state_error;
+static int pin_state_error_line;
+
+#define GPIO_SET_CHECK(port, pin, state)			\
+	do {							\
+		HAL_GPIO_WritePin(port, pin, state);		\
+		HAL_Delay(1);					\
+		if (HAL_GPIO_ReadPin(port, pin) != state) {	\
+			pin_state_error = 1;			\
+			pin_state_error_line = __LINE__;	\
+		}						\
+	} while (0)
 
 void PowerON(void)
 {
@@ -405,11 +422,13 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOA, GPIO1_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(EN_VQPS18_GPIO_Port, EN_VQPS18_Pin, GPIO_PIN_SET);
+
+	i2c_slave_reset(&i2c_ctx3);
 	HAL_Delay(30);
-	hi2c3.Instance->CR1 &= ~I2C_CR1_PE;
-	HAL_Delay(1);
-	hi2c3.Instance->CR1 |= I2C_CR1_PE;
-	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
+
+	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	HAL_Delay(30);
+	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
 
@@ -477,7 +496,7 @@ void PowerDOWN(void)
 
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(EN_VQPS18_GPIO_Port, EN_VQPS18_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
@@ -501,15 +520,17 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
+
+	i2c_slave_reset(&i2c_ctx3);
 }
 
 void BM1684_RST(void)
 {
 	i2c_regs.intr_status1 |= RESET_OP;
 
-	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
-	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
+	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 	return ;
 }
@@ -548,10 +569,20 @@ static inline void led_flicker(void)
 		led_off();
 }
 
+static inline void led_flicker_high(void)
+{
+	if (HAL_GetTick() & (1 << 6))
+		led_on();
+	else
+		led_off();
+}
+
 static void led_update(void)
 {
 
-	if (i2c_regs.intr_status1 & (BM1684_OVER_TEMP | BOARD_OVER_TEMP))
+	if (pin_state_error)
+		led_flicker_high();
+	else if (i2c_regs.intr_status1 & (BM1684_OVER_TEMP | BOARD_OVER_TEMP))
 		led_on();
 	else if (i2c_regs.power_good)
 		led_flicker();

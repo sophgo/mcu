@@ -17,20 +17,17 @@
 
 struct i2c_reg;
 
-typedef uint8_t (*i2c_slave_read)(void *priv);
-typedef void (*i2c_slave_write)(void *priv, uint8_t data);
-typedef void (*i2c_slave_match)(void *priv, int dir);
-typedef void (*i2c_slave_stop)(void *priv);
-typedef void (*i2c_slave_nack)(void *priv);
-
 struct i2c_slave_op {
 	uint8_t addr;
 	uint8_t mask;
-	i2c_slave_match match;
-	i2c_slave_write	write;
-	i2c_slave_read	read;
-	i2c_slave_stop	stop;
-	i2c_slave_nack	nack;
+
+	void (*match)(void *priv, int dir);
+	uint8_t (*read)(void *priv);
+	void (*write)(void *priv, uint8_t data);
+	void (*stop)(void *priv);
+	void (*nack)(void *priv);
+	void (*reset)(void *priv);
+
 	void *priv;
 };
 
@@ -46,5 +43,6 @@ struct i2c_slave_ctx {
 int i2c_init(struct i2c_slave_ctx *ctx, void *reg);
 int i2c_slave_register(struct i2c_slave_ctx *ctx, struct i2c_slave_op *slave);
 int i2c_slave_start(struct i2c_slave_ctx *ctx);
+int i2c_slave_reset(struct i2c_slave_ctx *ctx);
 
 #endif /* STM32L0XX_HAL_DRIVER_SRC_I2C_H_ */

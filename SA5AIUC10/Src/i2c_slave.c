@@ -68,7 +68,7 @@ struct i2c_isr_op {
 #define ISR_BUSY_SHIFT		(15)
 #define ISR_STOPF		(0x1UL << 5)
 #define ISR_NACKF		(0x1UL << 4)
-#define ISR_BUSY		(0X1 << ISR_BUSY_SHIFT)
+#define ISR_BUSY		(0x1 << ISR_BUSY_SHIFT)
 #define ISR_TXE			(1)
 
 static unsigned int i2c_intr_disable(struct i2c_slave_ctx *ctx)
@@ -288,8 +288,25 @@ int i2c_slave_start(struct i2c_slave_ctx *ctx)
 	/* nack just to assert */
 	/* over run and ander run just to assert */
 	ctx->reg->cr1 |= CR1_ADDRIE | CR1_RXIE | CR1_TXIE |
-						CR1_STOPIE | CR1_NACKIE;
+			 CR1_STOPIE | CR1_NACKIE;
 	ctx->slave = NULL;
+	return 0;
+}
+
+int i2c_slave_reset(struct i2c_slave_ctx *ctx)
+{
+	struct i2c_slave_op *op;
+	int i;
+
+	ctx->reg->cr1 &= ~CR1_PE;
+
+	for (i = 0; i < ARRAY_SIZE(ctx->slave_list); ++i) {
+		op = ctx->slave_list[i];
+		if (op && op->reset)
+			op->reset(op->priv);
+	}
+
+	ctx->reg->cr1 |= CR1_PE;
 	return 0;
 }
 

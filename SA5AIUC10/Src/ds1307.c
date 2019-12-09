@@ -30,6 +30,7 @@ static struct ds1307_ctx {
 
 static void ds1307_match(void *priv, int dir)
 {
+	ds1307_ctx.set_rtc = 0;
 	if (dir == I2C_SLAVE_WRITE) {
 		ds1307_ctx.set_idx = 1;
 	} else {
@@ -92,6 +93,9 @@ static void ds1307_stop(void *priv)
 	RTC_TimeTypeDef time;
 	RTC_DateTypeDef date;
 	struct ds1307_map *map = &ds1307_ctx.map;
+
+	memset(&time, 0x00, sizeof(time));
+	memset(&date, 0x00, sizeof(date));
 
 	time.Seconds = map->seconds & ~(1 << 7);
 	time.Minutes = map->minutes;

@@ -154,10 +154,10 @@ int i2c_send_page(int fd, void *data, unsigned long offset)
 			return -1;
 		}
 
-        if (times < 100)
-            usleep(1000);
-        else
-            usleep(5 * 1000);
+		if (times < 100)
+			usleep(1000);
+		else
+			usleep(5 * 1000);
 
 	} while (err < 0);
 	return 0;

@@ -12,6 +12,7 @@
 #include "rtc.h"
 #include "debug.h"
 #include "upgrade.h"
+#include "string.h"
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
@@ -331,6 +332,10 @@ static void mcu_stop(void *priv)
 		ctx->setrtc = 0;
 		RTC_DateTypeDef sDate;
 		RTC_TimeTypeDef sTime;
+
+		memset(&sTime, 0x00, sizeof(sTime));
+		memset(&sDate, 0x00, sizeof(sDate));
+
 		sDate.Year		= ctx->map->rtc[0];
 		sDate.Month		= ctx->map->rtc[1];
 		sDate.Date		= ctx->map->rtc[2];
@@ -348,6 +353,14 @@ static void mcu_stop(void *priv)
 	mcu_process_cmd_slow_start();
 }
 
+static void mcu_reset(void *priv)
+{
+	struct mcu_ctx *ctx = priv;
+
+	memset(ctx, 0x00, sizeof(*ctx));
+	ctx->map = &mcu_reg;
+}
+
 static struct i2c_slave_op slave = {
 	.addr = 0x38,	/* mcu common slave address */
 	.mask = 0x07,
@@ -355,6 +368,7 @@ static struct i2c_slave_op slave = {
 	.write = mcu_write,
 	.read = mcu_read,
 	.stop = mcu_stop,
+	.reset = mcu_reset,
 	.priv = &mcu1_ctx,
 };
 
@@ -364,6 +378,7 @@ static struct i2c_slave_op slave3 = {
 	.write = mcu_write,
 	.read = mcu_read,
 	.stop = mcu_stop,
+	.reset = mcu_reset,
 	.priv = &mcu3_ctx,
 };
 
