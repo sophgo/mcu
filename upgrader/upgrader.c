@@ -258,6 +258,9 @@ void upgrader_init(void)
 		i2c1_init(0x38, 0x07);
 		i2c3_init(0x17, 0);
 		break;
+	case SC5H3:
+		i2c1_init(0x17, 0x00);
+		break;
 	default:
 		/* sa5 type */
 		i2c1_init(0x38, 0x07);

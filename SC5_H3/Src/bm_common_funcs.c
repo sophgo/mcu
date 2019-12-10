@@ -15,6 +15,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "i2c_regs.h"
+#include "upgrade.h"
 
 #define PMIC_ADDR 0x3c
 
@@ -42,10 +43,6 @@ uint32_t writeFlashData = 0x55aa55aa;
 uint8_t readFlashData[4] = {0};
 uint32_t addr = 0x08080000;
 uint16_t addr_offset = 0x0;
-
-uint8_t val;
-uint8_t origin_val;
-uint8_t chk_val;
 
 /**
   * @brief This function provides minimum delay (in milliseconds) based
@@ -100,7 +97,7 @@ void clean_pmic(void)
 
 void init_pmic(void)
 {
-	uint8_t val[2];
+	uint8_t val[1];
 	val[0] = 0x80;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, val, 1, 1000);// 1.2v
@@ -469,8 +466,6 @@ void module_init(void)
 
 void cmd_process(void)
 {
-	uint8_t Buffer;
-
 	switch(i2c_regs.cmd_reg) {
 	  case CMD_CPLD_PWR_ON:
 		  PowerON();
@@ -495,9 +490,8 @@ void cmd_process(void)
 		  BM1684_REBOOT();
 		  break;
 	  case CMD_MCU_UPDATE:
-		  Buffer = 0x08;
-		  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET,&Buffer, 1);
-		  i2c_regs.cmd_reg = 0;
+		  /* upgrade_start is no return */
+		  upgrade_start();
 		  break;
 	  default:
 		  break;

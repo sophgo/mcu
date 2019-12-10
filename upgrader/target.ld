@@ -6,7 +6,7 @@ ENTRY(reset)
 MEMORY
 {
     /* RAM hold all code and data */
-    RAM : ORIGIN = 0x20000000, LENGTH = 20K
+    RAM : ORIGIN = 0x20000000, LENGTH = 8K
     /* ROM only hold a picec of code that copy real code to its position */
     /* ROM code should position independent */
     ROM : ORIGIN = 0x0800f000, LENGTH = 4K

@@ -11,7 +11,7 @@
 
 #include "eeprom.h"
 #include "rtc.h"
-//#include "upgrade.h"
+#include "upgrade.h"
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
@@ -235,6 +235,9 @@ static uint8_t mcu_read(void)
 		break;
 	case REG_MODE_FLAG:
 		ret = i2c_regs.mode_flag;
+		break;
+	case REG_STAGE:
+		ret = i2c_regs.stage;
 		break;
 	default:
 		ret = 0xff;

@@ -31,6 +31,7 @@
 #include "bm_common_func.h"
 #include "mcu.h"
 #include "wdt.h"
+#include "upgrade.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -78,6 +79,8 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  /* maybe no return */
+  setup_stage();
 
   /* USER CODE END 1 */
   
@@ -99,6 +102,9 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  /* for connect under reset */
+  HAL_Delay(5);
+
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C1_Init();
