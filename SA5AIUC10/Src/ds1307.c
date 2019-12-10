@@ -8,6 +8,7 @@
 #include "main.h"
 #include "i2c_slave.h"
 #include "rtc.h"
+#include <string.h>
 
 struct ds1307_map {
 	uint8_t seconds;

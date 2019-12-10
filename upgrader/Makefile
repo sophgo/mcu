@@ -15,6 +15,8 @@ SRC = $(C_SRC) $(S_SRC)
 OBJ = $(addsuffix .o, $(basename $(SRC)))
 SU = $(addsuffix .su, $(basename $(SRC)))
 
+OBJ := $(sort $(OBJ))
+
 OPT_CFLAGS = -g -O2
 ARCH_CFLAGS = -mthumb -mcpu=cortex-m0plus
 
