@@ -93,6 +93,9 @@ static void ds1307_stop()
 	RTC_DateTypeDef date;
 	struct ds1307_map *map = &ds1307_ctx.map;
 
+	memset(&time, 0x00, sizeof(time));
+	memset(&date, 0x00, sizeof(date));
+
 	time.Seconds = map->seconds & ~(1 << 7);
 	time.Minutes = map->minutes;
 	if (map->hours & (1 << 6)) {

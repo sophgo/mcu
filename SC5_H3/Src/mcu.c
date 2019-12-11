@@ -258,6 +258,10 @@ static void mcu_stop(void)
 		mcu_ctx.setrtc = 0;
 		RTC_DateTypeDef sDate;
 		RTC_TimeTypeDef sTime;
+
+		memset(&sTime, 0x00, sizeof(sTime));
+		memset(&sDate, 0x00, sizeof(sDate));
+
 		sDate.Year		= mcu_ctx.map.rtc[0];
 		sDate.Month		= mcu_ctx.map.rtc[1];
 		sDate.Date		= mcu_ctx.map.rtc[2];
