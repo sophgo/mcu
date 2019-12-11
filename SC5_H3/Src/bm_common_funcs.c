@@ -297,8 +297,8 @@ void Scan_Cuerrent(void)
 	  }
 
 	  //calculate voltage
-	  curr_evb.i_12v_atx 		= ADC_Buf[1];
-	  curr_evb.i_vddio33 		= ADC_Buf[2];
+	  curr_evb.i_12v_atx 		= ADC_Buf[3];
+	  curr_evb.i_vddio33 		= ADC_Buf[4];
 
 	  memcpy(&i2c_regs.current, &curr_evb, sizeof(CURRENT_VAL));
 

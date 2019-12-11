@@ -123,7 +123,8 @@ extern I2C_REGS i2c_regs;
 #define I_DDR_VDDQLP_H		0x39
 #define I_LDO_PCIE_L		0x3a
 #define I_LDO_PCIE_H		0x3b
-#define REG_STAGE		0x3c
+#define REG_STAGE			0x3c
+#define REG_MCUADDR			0x3d
 #define REG_EEPROM_OFFSET_L	0x3e	/* 16bit eeprom address, low 8bits */
 #define REG_EEPROM_OFFSET_H	0x3f	/* 16bit eeprom address, high 8bits */
 #define REG_EEPROM_DATA		0x40	/* eeprom data */
@@ -181,7 +182,7 @@ extern I2C_REGS i2c_regs;
 
 #define UPDATE_FLAG_OFFSET		(0xbf0)
 
-#define MCU_VERSION 0x00
+#define MCU_VERSION 0x01
 
 #define VENDER_EVB		(0x00)
 #define VENDER_SA5		(0x01)

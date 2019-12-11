@@ -239,6 +239,9 @@ static uint8_t mcu_read(void)
 	case REG_STAGE:
 		ret = i2c_regs.stage;
 		break;
+	case REG_MCUADDR:
+		ret = i2c_regs.mcu_addr;
+		break;
 	default:
 		ret = 0xff;
 		break;
