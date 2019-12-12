@@ -188,8 +188,8 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
 		EEPROM_WriteBytes(eeprom_offset(ctx), (uint8_t *)&data, 1);
 		break;
-	case REG_VENDER_VAL:
-		i2c_regs.vender_val = data;
+//	case REG_VENDER_VAL:
+//		i2c_regs.vender_val = data;
 //		EEPROM_WriteBytes(VENDER_Addr, (uint8_t *)&data, 1);
 		break;
 	default:
@@ -288,8 +288,8 @@ static uint8_t mcu_read(void *priv)
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
 		EEPROM_ReadBytes(eeprom_offset(ctx), &ret, 1);
 		break;
-	case REG_VENDER_VAL:
-		ret = i2c_regs.vender_val;
+	case REG_MODE_FLAG:
+		ret = i2c_regs.mode_flag;
 		break;
 	case REG_PMIC_STATUS:
 		ret = i2c_regs.pmic_status;

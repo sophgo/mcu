@@ -187,7 +187,7 @@ typedef struct I2C_REGS_t
 	volatile uint8_t cmd;
 	volatile uint8_t ddr;//0x15,21
 	volatile uint8_t power_good;
-	volatile uint8_t vender_val;
+	volatile uint8_t mode_flag;
 	volatile uint8_t pmic_status;
 
 	volatile uint8_t power_on_cmd;//0x19
@@ -248,7 +248,7 @@ void BM1684_REBOOT(void);
 
 #define REG_DDR				0x15
 #define REG_PWR_GOOD		0x16
-#define REG_VENDER_VAL		0x17
+#define REG_MODE_FLAG		0x17
 
 #define REG_PMIC_STATUS		0x18
 #define REG_PWRON_CMD		0x19

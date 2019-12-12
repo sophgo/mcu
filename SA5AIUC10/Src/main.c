@@ -322,6 +322,8 @@ void PowerON(void)
 {
 	unsigned char tmp[8];
 	i2c_regs.cause_pwr_down = 0;
+	uint8_t i = 0;
+	uint8_t pcie_mode = 0;
 
 	I2C_ClearBusyFlagErratum(&hi2c2);
 
@@ -363,6 +365,19 @@ void PowerON(void)
 	if (HAL_GPIO_ReadPin(PG_VDDIO33_GPIO_Port, PG_VDDIO33_Pin) == GPIO_PIN_RESET) {
 		i2c_regs.cause_pwr_down = ERR_VDDIO33;
 		goto poweron_fail;
+	}
+
+	// 1 soc 2 PCIE
+	for (i = 0; i <  5; i++) {
+		if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,PCIE_RST_MCU_Pin)) {
+			pcie_mode++;
+		}
+	}
+
+	if (pcie_mode > 3) {
+		i2c_regs.mode_flag = 2;
+	} else {
+		i2c_regs.mode_flag = 1;
 	}
 
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_PHY_Pin, GPIO_PIN_SET);//EN_PHY
@@ -972,9 +987,12 @@ int main(void)
 	  if ((i2c_regs.vender == VENDER_SM5_P) &&
 	      (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
 											  PCIE_RST_MCU_Pin))) {
-		  PowerDOWN();
+		  i2c_regs.mode_flag = 2;
+		  HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 		  HAL_Delay(30);
-		  PowerON();
+		  while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
+		  		;
+		  HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	  }
     /* USER CODE END WHILE */
 
