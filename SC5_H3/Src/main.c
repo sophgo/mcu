@@ -102,9 +102,6 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  /* for connect under reset */
-  HAL_Delay(5);
-
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C1_Init();

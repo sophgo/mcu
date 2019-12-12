@@ -322,35 +322,19 @@ void Set_HW_Ver(void)
 	  }
 
 	  switch(ADC_Buf[0]) {
-	  case 100 ... 400:
+	  case 1900 ... 2200:
 	  	  i2c_regs.hw_ver = 0;
 	  	  break;
-	  case 500 ... 900:
+	  case 2500 ... 2900:
 	  	  i2c_regs.hw_ver = 1;
 	  	  break;
-	  case 1000 ... 1300:
+	  case 3000 ... 3500:
 	  	  i2c_regs.hw_ver = 2;
 	  	  break;
-	  case 1400 ... 1900:
+	  case 3600 ... 3900:
 	  	  i2c_regs.hw_ver = 3;
 	  	  break;
-	  case 1950 ... 2200:
-	  	  i2c_regs.hw_ver = 4;
-  	  	  break;
-	  case 2250 ... 2700:
-	  	  i2c_regs.hw_ver = 5;
-	  	  break;
-	  case 2750 ... 3000:
-	  	  i2c_regs.hw_ver = 6;
-	  	  break;
-	  case 3100 ... 3600:
-	  	  i2c_regs.hw_ver = 7;
-	  	  break;
-	  case 3650 ... 4000:
-	  	  i2c_regs.hw_ver = 8;
-	  	  break;
 	  }
-
 
 	  HAL_ADC_Stop(&hadc);
 }

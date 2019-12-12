@@ -1,4 +1,6 @@
 #MicroXplorer Configuration settings - do not modify
+ADC.DiscontinuousConvMode=ENABLE
+ADC.IPParameters=DiscontinuousConvMode
 File.Version=6
 I2C1.DualAddressMode=I2C_DUALADDRESS_ENABLE
 I2C1.IPParameters=DualAddressMode,OwnAddress,OwnAddress2,OwnAddress2Masks
