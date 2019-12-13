@@ -439,9 +439,9 @@ void PowerON(void)
 	HAL_GPIO_WritePin(EN_VQPS18_GPIO_Port, EN_VQPS18_Pin, GPIO_PIN_SET);
 
 	i2c_slave_reset(&i2c_ctx3);
-	HAL_Delay(30);
-
-	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+//	HAL_Delay(30);
+//
+//	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
 	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
