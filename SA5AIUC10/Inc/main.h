@@ -351,7 +351,7 @@ void BM1684_REBOOT(void);
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION (0x15)
+#define MCU_VERSION (0x16)
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
