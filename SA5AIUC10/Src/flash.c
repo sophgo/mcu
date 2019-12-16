@@ -84,7 +84,8 @@ void flash_write_page(uint32_t addr, uint8_t *p, uint8_t len)
 	flash_unlock();
 	flash_erase_page(addr);
 	flash_wait_idle();
-	FLASH->PECR |= FLASH_PECR_FPRG | FLASH_PECR_PROG;
+	/* half page program seems not working if we are running in flash */
+	/* FLASH->PECR |= FLASH_PECR_FPRG | FLASH_PECR_PROG; */
 	while (cnt--) {
 		data = *(p++);
 		data |= *(p++)<< 8;
@@ -94,7 +95,7 @@ void flash_write_page(uint32_t addr, uint8_t *p, uint8_t len)
 		*(volatile uint32_t *)(addr + (4 * i)) = data;
 		++i;
 	}
-	FLASH->PECR &= ~(FLASH_PECR_FPRG | FLASH_PECR_PROG);
+	/* FLASH->PECR &= ~(FLASH_PECR_FPRG | FLASH_PECR_PROG); */
 	flash_wait_idle();
 	flash_lock();
 }
