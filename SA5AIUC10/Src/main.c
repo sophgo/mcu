@@ -330,7 +330,7 @@ void PowerON(void)
 	if (clean_pmic()) {
 		goto poweron_fail;
 	}
-	HAL_Delay(100);
+	HAL_Delay(50);
 
 	tmp[0] = 0;
 	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, tmp, 1, 1000));// 1.2v
@@ -446,6 +446,13 @@ void PowerON(void)
 	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
+
+	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	HAL_Delay(30);
+	//POLL PCIEE_RST STATUS FOR SYS_RST
+	while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
+			  		;
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 poweron_fail:
 	if (i2c_regs.cause_pwr_down == 0) {

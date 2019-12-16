@@ -4,6 +4,7 @@
 #include "lptim.h"
 #include <string.h>
 #include "project.h"
+#include "flash.h"
 
 #define MEMMAP_FLASH_START		0x08000000
 #define MEMMAP_FLASH_SIZE		(64 * 1024)
@@ -36,7 +37,8 @@ struct efie {
 	uint32_t	offset;
 	uint32_t	length;
 	uint8_t		checksum[16];
-	uint8_t		reserved[104];
+	uint8_t		is_checked;
+	uint8_t		reserved[103];
 } __packed;
 
 struct efie *app_efie = (void *)MEMMAP_EFIT_START;
@@ -119,6 +121,10 @@ int check_app(void)
 	void *checksum_start;
 	unsigned long checksum_len;
 	uint8_t *expected_checksum, calculated_checksum[16];
+
+	if (app_efie->is_checked)
+		return 0;
+
 	/* get application efie */
 	checksum_start = (void *)(app_efie->offset + MEMMAP_FLASH_START);
 	checksum_len = app_efie->length;
@@ -137,5 +143,16 @@ int check_app(void)
 	if (memcmp(expected_checksum, calculated_checksum, 16))
 		/* failed */
 		return -1;
+
+	/* looks good */
+	flash_init();
+	struct efie app_efie_backup;
+
+	memcpy(&app_efie_backup, app_efie, sizeof(app_efie_backup));
+
+	/* mark app as checked */
+	app_efie_backup.is_checked = 1;
+	flash_program((unsigned long)app_efie, &app_efie_backup, sizeof(app_efie_backup));
+
 	return 0;
 }

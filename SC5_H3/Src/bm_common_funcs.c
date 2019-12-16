@@ -153,14 +153,12 @@ uint8_t pmic_voltage_set(uint16_t MemAddress, uint8_t *pData)
 
 void PowerON(void)
 {
-	uint8_t i = 0;
 	uint8_t val[2];
-	uint8_t pcie_mode = 0;
 
 	val[1] = 0;
 
 	clean_pmic();
-	HAL_Delay(100);
+	HAL_Delay(50);
 
 	init_pmic();
 	HAL_Delay(30);
@@ -171,20 +169,6 @@ void PowerON(void)
 	HAL_Delay(1);
 	GPIO_SET(EN_VDD_3V3);
 	HAL_Delay(1);
-
-	// 1 soc 2 PCIE
-	for (i = 0; i <  5; i++) {
-		if (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X)) {
-			pcie_mode++;
-		}
-	}
-
-	if (pcie_mode > 3) {
-		i2c_regs.mode_flag = 2;
-	} else {
-			i2c_regs.mode_flag = 1;
-	}
-
 
 	detect_mode();
 	//EN_PMIC_OUT1  0.95v
@@ -219,6 +203,11 @@ void PowerON(void)
 	HAL_Delay(30);
 //	GPIO_SET(MCU_CTL_DOWN_MCU);
 	GPIO_SET(DDR_PG);
+
+	GPIO_RESET(SYS_RST_N);
+	while (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
+		;
+	GPIO_SET(SYS_RST_N);
 
 	i2c_regs.power_good = 1;
 	i2c_regs.cmd_reg  = 0;

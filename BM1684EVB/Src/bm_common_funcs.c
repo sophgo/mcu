@@ -103,7 +103,7 @@ void PowerON(void)
 	HAL_Delay(5);
 
 	clean_pmic();
-	HAL_Delay(100);
+	HAL_Delay(50);
 
 	val[0] = 0x80;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, val, 1, 1000);// 1.2v
@@ -211,6 +211,12 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
+
+	HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	HAL_Delay(30);
+	while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port, PCIEE_RST_X_MCU_Pin))
+			;
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 	i2c_regs.power_good = 1;
 	i2c_regs.cmd_reg  = 0;
