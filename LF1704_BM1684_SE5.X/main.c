@@ -43,16 +43,10 @@
 
 
 #define POWER_STATUS_OFF		0
-#define POWER_STATUS_THERMAL 	1
-#define POWER_STATUS_ON			2
+#define POWER_STATUS_ON			1
 
 unsigned char g_power_status = POWER_STATUS_OFF;
 
-unsigned short g_watchdog_count = 0;
-
-char need_poweron = 1;
-char need_poweroff = 0;
-unsigned char keydelay = 0;
 void main(void)
 {
 	char ret;
@@ -67,94 +61,74 @@ void main(void)
 	thermal_off();
 	power_led_off();
 	thermal_led_off();
-    power_led_on();
+
+
+	power_on();
+	power_led_on();
+	g_power_status = POWER_STATUS_ON;
 	while(1)
 	{
 		asm("CLRWDT");	// clear watch dog
-
-		if (g_power_status == POWER_STATUS_OFF)
-		{
-			if (need_poweron)
-			{
-				if (isunder_temp())
-				{
-					thermal_on();
-					g_power_status = POWER_STATUS_THERMAL;
-					keydelay = 0;
-				}
-				else
-				{
-					power_on();
-					g_power_status = POWER_STATUS_ON;
-					keydelay = 0;
-				}
-				need_poweron = 0;
-			}
-		}
-		else if (g_power_status == POWER_STATUS_THERMAL)
-		{
-			if (need_poweroff)
-			{
-                thermal_off();
-				g_power_status = POWER_STATUS_OFF;
-				need_poweroff = 0;
-				keydelay = 0;
-			}
-			if (!isunder_temp())
-			{
-				thermal_off();
-                power_on();
-				g_power_status = POWER_STATUS_ON;
-			}
-		}
-		else//POWER_STATUS_ON
-		{
-			if (need_poweroff)
-			{
-				power_off();
-				g_power_status = POWER_STATUS_OFF;
-				need_poweroff = 0;
-				keydelay = 0;
-			}
-		}
-
+		__delay_ms(5);
 	}
 }
 
-#define TIMER0_1S	1000
-unsigned short TIMER0_1S_count = TIMER0_1S;
+#define TIMER0_100MS	100
+unsigned short TIMER0_100MS_count = TIMER0_100MS;
 unsigned short time = 0;
-#define POWER_ON_DELAY  1
-#define POWER_OFF_DELAY 3
+#define POWER_ON_DELAY  15
+#define POWER_OFF_DELAY 40
 
+unsigned char keydelay = 0;
 void interrupt ISR(void) 
 {
 	if (TIMER0_isr())//timer 0 interrupt
 	{
-		if (TIMER0_1S_count-- == 0)
+		if (TIMER0_100MS_count-- == 0)
 		{
-            TIMER0_1S_count = TIMER0_1S;
+            TIMER0_100MS_count = TIMER0_100MS;
+#if 1
             time++;
-			if (g_power_status == POWER_STATUS_THERMAL)
+			if (g_power_status == POWER_STATUS_ON)
 			{
-                if(time %2 == 1)
-                {
-                    thermal_led_on();
-                }
-                else
-                {
-                    thermal_led_off();
-                }
-			}
-			else if (g_power_status == POWER_STATUS_ON)
-			{
-				thermal_led_on();
+				if (isunder_temp())
+				{
+					thermal_on();
+					if(time % 10 < 5)
+	                {
+	                    thermal_led_on();
+	                }
+	                else
+	                {
+	                    thermal_led_off();
+	                }
+				}
+				else if (isover_temp())
+				{
+					thermal_off();
+					thermal_led_on();
+				}
+				else
+				{
+					thermal_off();
+					thermal_led_off();
+				}
+
 			}
             else
             {
-                thermal_led_off();
+				if (isunder_temp() || isover_temp())
+				{
+					thermal_off();
+					thermal_led_on();
+				}
+				else
+				{
+					thermal_off();
+					thermal_led_off();
+				}
             }
-
+#endif
 			if (ispower_key_down())
 			{
 				keydelay++;
@@ -163,18 +137,26 @@ void interrupt ISR(void)
 			{
 				keydelay = 0;
 			}
-			if (g_power_status != POWER_STATUS_OFF)
+			if (g_power_status == POWER_STATUS_ON)
 			{
 				if (keydelay > POWER_OFF_DELAY)
 				{
-					need_poweroff = 1;
+					keydelay = 0;
+
+					power_off();
+					power_led_off();
+					g_power_status = POWER_STATUS_OFF;
 				}
 			}
 			else
 			{
 				if (keydelay > POWER_ON_DELAY)
 				{
-					need_poweron = 1;
+					keydelay = 0;
+
+					power_on();
+					power_led_on();
+					g_power_status = POWER_STATUS_ON;
 				}
 			}
 		}
