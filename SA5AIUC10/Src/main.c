@@ -735,43 +735,29 @@ void READ_Temper(void)
 		}
 	}
 
-#ifdef CAL_TEMPARETURE
-	float t_remote, terr1, t3;
-#endif //CAL_TEMPARETURE
-
 	// detection of temperature value
 	TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000));
 	if (i2c_regs.power_good) {
 		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000));
-#ifdef CAL_TEMPARETURE
-		//1 t_remote = t_register - 6.947;
-		t_remote = temp1684 - 6.947;
-		//2 Terr1 = ((n-1.008)/1.008) *(273.15 + T1); n = 1.11, T1 = 25
-		terr1 = ((1.11 - 1.008)/1.008)*(273.15 + 25);
-		//3 T3=((1.008*(Ttremote + Terr1) - (1.11 -1.008) * 273.15)/1.11);
-		t3 = (1.008*(t_remote + terr1) - (1.11 - 1.008)*273.15)/1.11;
 
-		i2c_regs.temp1684 = (uint8_t)t3;
-
-#else
 		if (temp1684 < 4) {
 			i2c_regs.temp1684 = 0;
 		} else {
-			i2c_regs.temp1684 = (temp1684 * 232- 886) >> 8; //rough handling of tempareture calibration
+//			i2c_regs.temp1684 = (temp1684 * 232- 886) >> 8; //rough handling of tempareture calibration
+			i2c_regs.temp1684 = temp1684 - 5;
 		}
-#endif //CAL_TEMPARETURE
 	} else {
 		i2c_regs.temp1684 = i2c_regs.temp_board;
 	}
 
-	if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 75)) {//temperature too high, powerdown
+	if ((i2c_regs.temp1684 > 95) && (i2c_regs.temp_board > 85)) {//temperature too high, powerdown
 		powerdown_cnt++;
 		if (powerdown_cnt == 3) {
 			i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
 			PowerDOWN();
 			powerdown_cnt = 0;
 		}
-	} else if ((i2c_regs.temp1684 > 75) && (i2c_regs.temp_board > 70)) {//temperature too high alert
+	} else if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 80)) {//temperature too high alert
 		alert_cnt++;
 		if (alert_cnt ==3) {
 			i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
