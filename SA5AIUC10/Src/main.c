@@ -861,7 +861,10 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C2_Init();// iic device
-  if ((i2c_regs.vender == VENDER_SM5_P) || (i2c_regs.vender == VENDER_SM5_S)) {
+  if ((i2c_regs.vender == VENDER_SM5_P)
+  	|| (i2c_regs.vender == VENDER_SM5_S)
+  	|| (i2c_regs.vender == VENDER_SE5)
+  	 ) {
 	  BM_MX_I2C1_Init();// iic host
   } else {
 	  MX_I2C1_Init();// iic device
@@ -911,7 +914,8 @@ int main(void)
   if (i2c_regs.vender == VENDER_SA5)
 	  ds1307_init();//RTC
 
-  if (i2c_regs.vender == VENDER_SM5_S)
+  if ((i2c_regs.vender == VENDER_SM5_S)
+  	|| (i2c_regs.vender == VENDER_SE5))
   {
 	  gpioex_init();
   }
@@ -931,7 +935,8 @@ int main(void)
   // set PCB & BOM version by voltage value
   SET_HW_Ver();
 
-  if (i2c_regs.vender == VENDER_SM5_S) {
+  if ((i2c_regs.vender == VENDER_SM5_S)
+  	|| (i2c_regs.vender == VENDER_SE5)) {
   	// power on after button bush 2s
   	HAL_Delay(2000);//2s
 	gpioex_12v_on();
