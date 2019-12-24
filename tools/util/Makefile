@@ -26,7 +26,7 @@ CFLAGS = $(OPT_CFLAGS) -std=gnu11 -Wall -Werror \
 ASFLAGS = $(OPT_CFLAGS) -x assembler-with-cpp \
           -Wa,--no-warn
 
-LDFLAGS = $(OPT_CFLAGS) \
+LDFLAGS = $(OPT_CFLAGS) -static \
 	  -Wl,-Map,$(TARGET).map -Wl,--gc-sections
 
 ifeq ($(strip $(V)), 1)
@@ -44,7 +44,7 @@ $(TARGET): $(TARGET).elf
 	$(Q)cp $< $@
 
 %.o: %.c
-
+	@echo '[CC] $@'
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o: %.s
