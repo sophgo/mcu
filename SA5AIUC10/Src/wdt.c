@@ -128,7 +128,7 @@ void soc_wdt_reset_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
 		BM1684_RST();
-		i2c_regs.intr_status2 = WDT_RST;
+		i2c_regs.intr_status1 = WDT_RST;
 		wdt_reset();	/* reset to initial state */
 	}
 }

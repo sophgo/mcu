@@ -70,8 +70,6 @@ static void mcu_process_cmd_slow_start(void)
 	/* faster than execute switch-case every times*/
 	if (i2c_regs.cmd_reg == 0)
 		return;
-	if (CPLD_CLR_ERR & i2c_regs.cmd_reg)
-		HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_RESET);
 	switch (i2c_regs.cmd_reg) {
 		/* fast calls */
 		case CMD_CPLD_SWRST:
@@ -156,19 +154,15 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		i2c_regs.cmd_reg_bkup = data;
 		break;
 	case REG_INTR_STATUS1:
-		i2c_regs.intr_status1 = data;
+		intr_status_clr(data);
 		break;
-	case REG_INTR_STATUS2:
-		i2c_regs.intr_status2 = data;
-		if (CPLD_SET_ERR | i2c_regs.intr_status2) {
-			HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin, GPIO_PIN_SET);
-		}
+	case REG_TEST_INTR_EN:
+		if (data == 0x5a)
+			intr_status_set(TEST_INTR);
+		i2c_regs.test_intr_en = data;
 		break;
 	case REG_INTR_MASK1:
-		i2c_regs.intr_mask1 = data;
-		break;
-	case REG_INTR_MASK2:
-		i2c_regs.intr_mask2 = data;
+		intr_mask_set(data);
 		break;
 	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
 		offset = ctx->idx - REG_SYS_RTC_YEAR;
@@ -230,14 +224,11 @@ static uint8_t mcu_read(void *priv)
 	case REG_INTR_STATUS1:
 		ret = i2c_regs.intr_status1;
 		break;
-	case REG_INTR_STATUS2:
-		ret = i2c_regs.intr_status2;
+	case REG_TEST_INTR_EN:
+		ret = i2c_regs.test_intr_en;
 		break;
 	case REG_INTR_MASK1:
 		ret = i2c_regs.intr_mask1;
-		break;
-	case REG_INTR_MASK2:
-		ret = i2c_regs.intr_mask2;
 		break;
 	case REG_1684_RST_TIMES:
 		ret = i2c_regs.rst_1684_times;

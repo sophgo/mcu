@@ -173,10 +173,10 @@ typedef struct I2C_REGS_t
 	volatile uint8_t temp1684;
 	volatile uint8_t temp_board;
 	volatile uint8_t intr_status1;
-	volatile uint8_t intr_status2;
+	volatile uint8_t test_intr_en;
 
 	volatile uint8_t intr_mask1;
-	volatile uint8_t intr_mask2;
+	volatile uint8_t reserved0;
 	volatile uint8_t rst_1684_times;
 
 	volatile uint8_t uptime0;
@@ -219,6 +219,10 @@ void PowerDOWN(void);
 void BM1684_RST(void);
 void BM1684_REBOOT(void);
 
+void intr_status_set(uint8_t intr);
+void intr_status_clr(uint8_t intr);
+void intr_mask_set(uint8_t mask);
+
 #define REG_VENDER			0x00
 #define REG_SW_VER			0x01
 #define REG_HW_VER			0x02
@@ -227,10 +231,10 @@ void BM1684_REBOOT(void);
 #define REG_TEMP1684		0X04
 #define REG_TEMP_BOARD		0x05
 #define REG_INTR_STATUS1	0x06
-#define REG_INTR_STATUS2	0x07
+#define REG_TEST_INTR_EN	0x07
 
 #define REG_INTR_MASK1		0x08
-#define REG_INTR_MASK2		0x09
+#define REG_RESERVED0		0x09
 #define REG_1684_RST_TIMES	0x0a
 #define REG_UPTIME0			0x0b
 
@@ -285,28 +289,21 @@ void BM1684_REBOOT(void);
 #define REG_I2C2_STATE		0x63	/* i2c2 state */
 #define REG_NUMBER		sizeof(I2C_REGS)
 
-#define BIT0   (0X01 << 0)
-#define BIT1   (0X01 << 1)
-#define BIT2   (0X01 << 2)
-#define BIT3   (0X01 << 3)
-#define BIT4   (0X01 << 4)
-#define BIT5   (0X01 << 5)
-#define BIT6   (0X01 << 6)
-#define BIT7   (0X01 << 7)
+#define BIT0   (0x01 << 0)
+#define BIT1   (0x01 << 1)
+#define BIT2   (0x01 << 2)
+#define BIT3   (0x01 << 3)
+#define BIT4   (0x01 << 4)
+#define BIT5   (0x01 << 5)
+#define BIT6   (0x01 << 6)
+#define BIT7   (0x01 << 7)
 
-#define BOARD_OVER_TEMP BIT3
-#define BM1684_OVER_TEMP BIT4
-
-#define CPLD_CLR_ERR 	BIT5
-#define CPLD_SET_ERR 	BIT7
-#define POWERON_ERR		BIT5
-#define V12V_ERR 		BIT6
-#define RESET_OP 		BIT7
-
-#define WDT_RST			BIT1
-
-#define CPLD_CLR_ERR	BIT5
-#define CPLD_SET_ERR	BIT7
+#define OVER_TEMP_ALERT		BIT0
+#define OVER_TEMP_POWEROFF	BIT1
+#define POWERON_ERR		BIT2
+#define WDT_RST			BIT3
+#define RESET_OP		BIT4
+#define TEST_INTR		BIT7
 
 #define ERR_VDDIO18 BIT0
 #define ERR_VDDC	BIT1

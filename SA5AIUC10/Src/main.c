@@ -459,11 +459,41 @@ poweron_fail:
 		i2c_regs.power_good = 1;
 	} else {
 		i2c_regs.power_good = 0;
-		i2c_regs.intr_status1 |= POWERON_ERR;
+		intr_status_set(POWERON_ERR);
 		PowerDOWN();
 	}
 
 	return;
+}
+
+void intr_status_set(uint8_t intr)
+{
+	__disable_irq();
+	i2c_regs.intr_status1 |= intr;
+	HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin,
+			  (i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1)) ?
+			  GPIO_PIN_SET : GPIO_PIN_RESET);
+	__enable_irq();
+}
+
+void intr_status_clr(uint8_t intr)
+{
+	__disable_irq();
+	i2c_regs.intr_status1 &= ~intr;
+	HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin,
+			  (i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1)) ?
+			  GPIO_PIN_SET : GPIO_PIN_RESET);
+	__enable_irq();
+}
+
+void intr_mask_set(uint8_t mask)
+{
+	__disable_irq();
+	i2c_regs.intr_mask1 = mask;
+	HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin,
+			  (i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1)) ?
+			  GPIO_PIN_SET : GPIO_PIN_RESET);
+	__enable_irq();
 }
 
 #define PMIC_CLEAN_I2C_CHECK(op)						\
@@ -548,7 +578,7 @@ void PowerDOWN(void)
 
 void BM1684_RST(void)
 {
-	i2c_regs.intr_status1 |= RESET_OP;
+	intr_status_set(RESET_OP);
 
 	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
@@ -604,7 +634,7 @@ static void led_update(void)
 
 	if (pin_state_error)
 		led_flicker_high();
-	else if (i2c_regs.intr_status1 & (BM1684_OVER_TEMP | BOARD_OVER_TEMP))
+	else if (i2c_regs.intr_status1 & (OVER_TEMP_POWEROFF | OVER_TEMP_ALERT))
 		led_on();
 	else if (i2c_regs.power_good)
 		led_flicker();
@@ -659,36 +689,6 @@ void SET_HW_Ver(void)
 	  }
 
 	  i2c_regs.hw_ver = (PCB_Ver0 << 4) | BOM_Ver0;
-
-	  HAL_ADC_Stop(&hadc);
-}
-
-static uint8_t low_power_cnt = 0;
-
-void DETECT_12V_Voltage(void)
-{
-	  uint8_t i;
-	  uint16_t ADC_Buf[3];
-
-	  for (i = 0; i < 3; i++) {
-		  HAL_ADC_Start(&hadc);
-		  HAL_ADC_PollForConversion(&hadc, 0XFFFF);
-
-		  if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc), HAL_ADC_STATE_REG_EOC)) {
-			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
-		  }
-	  }
-
-	  //power down when Vdetect  continuous < 1V1 three times
-	  if (ADC_Buf[2] < 2400) {
-		  low_power_cnt++;
-		  if (low_power_cnt == 3) {
-			  i2c_regs.intr_status1 |= V12V_ERR;
-			  PowerDOWN();
-		  }
-	  } else {
-		  low_power_cnt = 0;
-	  }
 
 	  HAL_ADC_Stop(&hadc);
 }
@@ -753,14 +753,14 @@ void READ_Temper(void)
 	if ((i2c_regs.temp1684 > 95) && (i2c_regs.temp_board > 85)) {//temperature too high, powerdown
 		powerdown_cnt++;
 		if (powerdown_cnt == 3) {
-			i2c_regs.intr_status1 |= BM1684_OVER_TEMP;
+			intr_status_set(OVER_TEMP_POWEROFF);
 			PowerDOWN();
 			powerdown_cnt = 0;
 		}
 	} else if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 80)) {//temperature too high alert
 		alert_cnt++;
 		if (alert_cnt ==3) {
-			i2c_regs.intr_status1 |= BOARD_OVER_TEMP;
+			intr_status_set(OVER_TEMP_ALERT);
 			alert_cnt = 0;
 		}
 	} else {
@@ -982,8 +982,6 @@ int main(void)
 		  }
 	  }
 	  led_update();
-	  //detect 12v
-	  //	  DETECT_12V_Voltage();
 
 	  //POLL PCIEE_RST STATUS FOR SYS_RST
 	  if ((i2c_regs.vender == VENDER_SM5_P) &&
