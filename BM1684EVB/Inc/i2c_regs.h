@@ -180,7 +180,7 @@ extern I2C_REGS i2c_regs;
 
 #define UPDATE_FLAG_OFFSET		(0xbf0)
 
-#define MCU_VERSION	0x08
+#define MCU_VERSION	0x07
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
