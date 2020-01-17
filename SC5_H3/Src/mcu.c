@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <string.h>
 #include "main.h"
 #include "i2c_bm.h"
 
