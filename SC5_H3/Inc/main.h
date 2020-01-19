@@ -61,6 +61,7 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define MCU_RCV_UP_MCU_Pin GPIO_PIN_13
 #define MCU_RCV_UP_MCU_GPIO_Port GPIOA
+#define MCU_RCV_UP_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define EN_VDD_3V3_Pin GPIO_PIN_15
 #define EN_VDD_3V3_GPIO_Port GPIOA
 #define MCU_ALERT_Pin GPIO_PIN_4
@@ -101,6 +102,7 @@ void Error_Handler(void);
 #define PMIC_SCL_GPIO_Port GPIOB
 #define PCIE_RST_X_Pin GPIO_PIN_6
 #define PCIE_RST_X_GPIO_Port GPIOA
+#define PCIE_RST_X_EXTI_IRQn EXTI4_15_IRQn
 #define VOL_12V_5V_Pin GPIO_PIN_4
 #define VOL_12V_5V_GPIO_Port GPIOA
 #define PCIE_PG_Pin GPIO_PIN_2

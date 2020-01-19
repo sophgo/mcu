@@ -16,6 +16,7 @@
 #include "string.h"
 #include "i2c_regs.h"
 #include "upgrade.h"
+#include "gpio.h"
 
 #define PMIC_ADDR 0x3c
 
@@ -38,6 +39,8 @@
 #define BUCK4_CFG3			0x90
 #define BUCK4_DVS0CFG1		0x96
 #define BUCK4_DVS0CFG0 		0x97
+
+static inline int pcie_reset_state(void);
 
 uint32_t writeFlashData = 0x55aa55aa;
 uint8_t readFlashData[4] = {0};
@@ -91,8 +94,8 @@ void clean_pmic(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, val, 1, 1000);// 1.2v
 }
 
-#define GPIO_RESET(gpio)	HAL_GPIO_WritePin(gpio##_GPIO_Port,gpio##_Pin, GPIO_PIN_RESET);
-#define GPIO_SET(gpio)	HAL_GPIO_WritePin(gpio##_GPIO_Port,gpio##_Pin, GPIO_PIN_SET);
+#define GPIO_RESET(gpio)	HAL_GPIO_WritePin(gpio##_GPIO_Port,gpio##_Pin, GPIO_PIN_RESET)
+#define GPIO_SET(gpio)	HAL_GPIO_WritePin(gpio##_GPIO_Port,gpio##_Pin, GPIO_PIN_SET)
 #define GPIO_GET(gpio)	HAL_GPIO_ReadPin(gpio##_GPIO_Port,gpio##_Pin)
 
 void init_pmic(void)
@@ -121,9 +124,8 @@ void detect_mode(void)
 
 	// 1 soc 2 PCIE
 	for (i = 0; i <  5; i++) {
-		if (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X)) {
+		if (pcie_reset_state() == 0)
 			pcie_mode++;
-		}
 	}
 
 	if (pcie_mode > 3) {
@@ -204,10 +206,9 @@ void PowerON(void)
 //	GPIO_SET(MCU_CTL_DOWN_MCU);
 	GPIO_SET(DDR_PG);
 
-	GPIO_RESET(SYS_RST_N);
-	while (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
-		;
 	GPIO_SET(SYS_RST_N);
+	HAL_Delay(30);
+	GPIO_RESET(SYS_RST_N);
 
 	i2c_regs.power_good = 1;
 	i2c_regs.cmd_reg  = 0;
@@ -360,39 +361,30 @@ void clean_update_flag(void)
 	}
 }
 
+static inline int pcie_reset_state(void)
+{
+	if (Get_Addr() == 0)
+		return (GPIO_PIN_SET == GPIO_GET(PCIE_RST_X)) ? 1 : 0;
+	else
+		return (GPIO_PIN_SET == GPIO_GET(MCU_RCV_UP_MCU)) ? 1 : 0;
+}
+
+void pcie_reset_trans(void)
+{
+	if (pcie_reset_state())
+		GPIO_SET(MCU_CTL_DOWN_MCU);
+	else
+		GPIO_RESET(MCU_CTL_DOWN_MCU);
+}
+
 void poll_pcie_rst(void)
 {
-	if (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
-	{
-//		Convert_sysrst_gpio(0);
-
-		i2c_regs.mode_flag = 2;
-
-//		HAL_GPIO_WritePin(SYS_RST_N_GPIO_Port,SYS_RST_N_Pin,GPIO_PIN_RESET);
+	if (pcie_reset_state() == 0) {
 		GPIO_RESET(SYS_RST_N);
 		HAL_Delay(30);
-		while (GPIO_PIN_RESET == GPIO_GET(PCIE_RST_X))
+		while (pcie_reset_state() == 0)
 			  ;
 		GPIO_SET(SYS_RST_N);
-		HAL_Delay(5);
-		GPIO_SET(MCU_CTL_DOWN_MCU);// when mcu 0 receive prst, note mcu 1.mcu1->mcu2
-		HAL_Delay(30);
-		GPIO_RESET(MCU_CTL_DOWN_MCU);// when mcu 0 detect prst high, note mcu 1.mcu1->mcu2
-
-//		Convert_sysrst_gpio(1);
-	}
-
-	if ((Get_Addr() != 0) && (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_SET))
-	{// mcu 1,2 detect high from pre-mcu,note next mcu.
-		GPIO_RESET(SYS_RST_N);
-		HAL_Delay(30);
-		while (GPIO_PIN_SET == GPIO_GET(MCU_RCV_UP_MCU))
-			;
-		GPIO_SET(SYS_RST_N);
-		HAL_Delay(5);
-		GPIO_SET(MCU_CTL_DOWN_MCU);
-		HAL_Delay(30);
-		GPIO_RESET(MCU_CTL_DOWN_MCU);// when mcu 0 detect MCU_RCV_UP_MCU low, note mcu 1.mcu1->mcu2
 	}
 }
 
@@ -430,6 +422,21 @@ void module_init(void)
 	HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
 
 	config_regs();
+
+	/* reconfig pa13 and pa6 according to mcu position */
+	if (Get_Addr() == 0) {
+		/* first chip */
+	} else {
+		/* not first chip */
+		/* add pull-up, default is invalid (low level valid) */
+		GPIO_InitTypeDef GPIO_InitStruct = {0};
+		GPIO_InitStruct.Pin = MCU_RCV_UP_MCU_Pin | PCIE_RST_X_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+		GPIO_InitStruct.Pull = GPIO_PULLUP;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	}
+
+	PowerON();
 
 	//CHANGE SYS_RST FROM OUTPUT TO INPUT
 //	Convert_sysrst_gpio(1);
@@ -471,20 +478,7 @@ void cmd_process(void)
 	  }
 }
 
-void Detect_PowerON(void)
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	while (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
-		;
-
-	PowerON();
-
-	GPIO_SET(MCU_CTL_DOWN_MCU);
-	HAL_Delay(30);
-	GPIO_RESET(MCU_CTL_DOWN_MCU);
-}
-
-void Detect_PowerDown(void)
-{
-//	if (GPIO_GET(MCU_RCV_UP_MCU) == GPIO_PIN_RESET)
-//		GPIO_RESET(MCU_CTL_DOWN_MCU);
+	pcie_reset_trans();
 }
