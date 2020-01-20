@@ -28,7 +28,7 @@
 #include "main.h"
 
 /** Declarations **/
-static const char * const mcu_ver = "2.0.2";
+static const char * const mcu_ver = "2.0.3";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
 extern volatile testStage tStage;
@@ -1302,8 +1302,8 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	static uint8_t stage, data[1];
 	HAL_NVIC_DisableIRQ(MCU_CPLD_ERR_EXTI_IRQn);
 	if (stage == 0) { // write err interrupt register
-		*data = SET<<1;
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_INTR_IIC, 1, data, 1, 100)
+		*data = 0x5a;
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_INTR_TRIGGER_IIC, 1, data, 1, 100)
 				!= HAL_OK) {
 			sprintf(pcWriteBuffer, "[err] I2C Write Error\r\nQA_FAIL_ERR\r\n");
 			return pdFALSE;
@@ -1327,8 +1327,8 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		return pdFALSE;
 	} else { // clear error register
 		osDelay(50);
-		*data = 0x05;
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
+		*data = 0x80;
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_INTR_STATUS_IIC, 1, data, 1, 100)
 				!= HAL_OK)
 			sprintf(pcWriteBuffer, "[err] I2C Write Error\r\nQA_FAIL_ERR\r\n");
 		else
