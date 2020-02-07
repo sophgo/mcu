@@ -1,3 +1,6 @@
 [submodule "tools/toolchain/stlink"]
 	path = tools/toolchain/stlink
 	url = https://github.com/texane/stlink.git
+[submodule "libopencm3"]
+	path = libopencm3
+	url = https://github.com/libopencm3/libopencm3.git
