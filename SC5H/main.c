@@ -16,6 +16,7 @@
 #include <info.h>
 #include <upgrade.h>
 #include <mcu.h>
+#include <debug.h>
 
 static inline void sys_reset_set(int state);
 
@@ -90,6 +91,11 @@ int main(void)
 	i2c_master_init(I2C2);
 	/* enable i2c1 interrupt */
 	nvic_enable_irq(NVIC_I2C1_IRQ);
+	/* enable uart1, uart1 tx,rx use PA2 and PA3 */
+	/* PA2 -- TX, PA3 -- RX */
+	std_stub_init();
+
+	debug("BITMAIN SOPHONE SC5H -- %s\n", VERSION);
 
 	i2c1_slave_ctx.id = 1;
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE);

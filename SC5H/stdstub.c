@@ -10,9 +10,8 @@ static unsigned long heap_end;
 void std_stub_init(void)
 {
 	/* usart1 */
-	rcc_periph_clock_enable(RCC_GPIOB);
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO6 | GPIO7);
-	gpio_set_af(GPIOB, GPIO_AF0, GPIO6 | GPIO7);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
+	gpio_set_af(GPIOA, GPIO_AF6, GPIO2 | GPIO3);
 	rcc_periph_clock_enable(RCC_USART1);
 	usart_enable(USART1);
 	usart_set_baudrate(USART1, 115200);

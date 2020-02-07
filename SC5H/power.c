@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <tick.h>
 #include <i2c_master.h>
+#include <debug.h>
 
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 
@@ -129,6 +130,8 @@ struct power_node power_sequence[] = {
 int node_on(struct power_node *node)
 {
 	int err = 0;
+
+	debug("power on %s\n", node->name);
 
 	if (node->check) {
 		while (gpio_get(node->port, node->pin) == 0)

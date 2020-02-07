@@ -259,6 +259,7 @@ void upgrader_init(void)
 		i2c3_init(0x17, 0);
 		break;
 	case SC5H3:
+	case SC5H:
 		i2c1_init(0x17, 0x00);
 		break;
 	default:
