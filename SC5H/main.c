@@ -18,6 +18,30 @@
 #include <mcu.h>
 #include <debug.h>
 
+#define LED_PORT	GPIOC
+#define LED_PIN		GPIO13
+
+static inline void led_off(void);
+
+static inline void led_init(void)
+{
+	gpio_mode_setup(LED_PORT,
+			GPIO_MODE_OUTPUT,
+			GPIO_PUPD_PULLUP,
+			LED_PIN);
+	led_off();
+}
+
+static inline void led_on(void)
+{
+	gpio_set(LED_PORT, LED_PIN);
+}
+
+static inline void led_off(void)
+{
+	gpio_clear(LED_PORT, LED_PIN);
+}
+
 static inline void sys_reset_set(int state);
 
 #define PCIE_RESET_PORT	GPIOB
@@ -51,10 +75,14 @@ static inline void sys_reset_init(void)
 
 static inline void sys_reset_set(int state)
 {
-	if (state)
+	if (state) {
 		gpio_set(SYS_RESET_PORT, SYS_RESET_PIN);
-	else
+		led_on();
+	}
+	else {
 		gpio_clear(SYS_RESET_PORT, SYS_RESET_PIN);
+		led_off();
+	}
 }
 
 void pcie_reset_poll(void)
@@ -84,6 +112,7 @@ int main(void)
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_GPIOC);
 	rcc_periph_clock_enable(RCC_GPIOD);
+	rcc_periph_clock_enable(RCC_GPIOH);
 	/* i2c1, i2c2 */
 	rcc_periph_clock_enable(RCC_I2C1);
 	rcc_periph_clock_enable(RCC_I2C2);
@@ -109,6 +138,8 @@ int main(void)
 	gpio_set_af(GPIOB, GPIO_AF6, GPIO10 | GPIO11);
 	gpio_set_af(GPIOB, GPIO_AF4, GPIO8 | GPIO9);
 
+	/* init user led */
+	led_init();
 	/* pcie reset received from pc, valid low */
 	pcie_reset_init();
 	/* sys reset to chip, valid high */

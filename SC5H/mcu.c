@@ -5,6 +5,7 @@
  *      Author: Chao Wei
  */
 
+#include <libopencm3/stm32/gpio.h>
 #include <assert.h>
 #include <string.h>
 #include <i2c_slave.h>
@@ -13,8 +14,8 @@
 #include <project_id.h>
 
 #define MCU_REG_MAX 0x64
-#define MCU_SW_VER	0
-#define MCU_HW_VER	0
+#define MCU_SW_VER 0;
+unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
 #define REG_SW_VER	0x01
@@ -96,10 +97,6 @@ static uint8_t mcu_read(void *priv)
 	return ret;
 }
 
-static void mcu_stop(void *priv)
-{
-}
-
 static void mcu_reset(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
@@ -112,7 +109,6 @@ static struct i2c_slave_op slave = {
 	.match = mcu_match,
 	.write = mcu_write,
 	.read = mcu_read,
-	.stop = mcu_stop,
 	.reset = mcu_reset,
 	.priv = &mcu_ctx,
 };
@@ -120,5 +116,18 @@ static struct i2c_slave_op slave = {
 void mcu_init(void)
 {
 	i2c_slave_register(&i2c1_slave_ctx, &slave);
+
+	gpio_mode_setup(GPIOC,
+			GPIO_MODE_INPUT,
+			GPIO_PUPD_NONE,
+			GPIO14 | GPIO15);
+
+	gpio_mode_setup(GPIOH,
+			GPIO_MODE_INPUT,
+			GPIO_PUPD_NONE,
+			GPIO0 | GPIO1);
+
+	MCU_HW_VER = (gpio_port_read(GPIOC) >> 14) & 3;
+	MCU_HW_VER |= (gpio_port_read(GPIOH) & 3) << 4;
 }
 
