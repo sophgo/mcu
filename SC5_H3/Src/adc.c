@@ -64,20 +64,6 @@ void MX_ADC_Init(void)
   }
   /** Configure for the selected ADC regular channel to be converted. 
   */
-  sConfig.Channel = ADC_CHANNEL_4;
-  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure for the selected ADC regular channel to be converted. 
-  */
-  sConfig.Channel = ADC_CHANNEL_5;
-  if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure for the selected ADC regular channel to be converted. 
-  */
   sConfig.Channel = ADC_CHANNEL_8;
   if (HAL_ADC_ConfigChannel(&hadc, &sConfig) != HAL_OK)
   {
@@ -110,19 +96,17 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     /**ADC GPIO Configuration    
     PB1     ------> ADC_IN9
     PB0     ------> ADC_IN8
-    PA0     ------> ADC_IN0
-    PA4     ------> ADC_IN4
-    PA5     ------> ADC_IN5 
+    PA0     ------> ADC_IN0 
     */
     GPIO_InitStruct.Pin = CURRENT_PCIE_3_3V_Pin|CURRENT_PCIE_12V_5V_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = HW_VER_Pin|VOL_12V_5V_Pin|VOL_3V3_Pin;
+    GPIO_InitStruct.Pin = HW_VER_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(HW_VER_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
@@ -144,13 +128,11 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     /**ADC GPIO Configuration    
     PB1     ------> ADC_IN9
     PB0     ------> ADC_IN8
-    PA0     ------> ADC_IN0
-    PA4     ------> ADC_IN4
-    PA5     ------> ADC_IN5 
+    PA0     ------> ADC_IN0 
     */
     HAL_GPIO_DeInit(GPIOB, CURRENT_PCIE_3_3V_Pin|CURRENT_PCIE_12V_5V_Pin);
 
-    HAL_GPIO_DeInit(GPIOA, HW_VER_Pin|VOL_12V_5V_Pin|VOL_3V3_Pin);
+    HAL_GPIO_DeInit(HW_VER_GPIO_Port, HW_VER_Pin);
 
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 

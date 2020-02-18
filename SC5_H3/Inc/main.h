@@ -59,9 +59,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define MCU_RCV_UP_MCU_Pin GPIO_PIN_13
-#define MCU_RCV_UP_MCU_GPIO_Port GPIOA
-#define MCU_RCV_UP_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define EN_VDD_3V3_Pin GPIO_PIN_15
 #define EN_VDD_3V3_GPIO_Port GPIOA
 #define MCU_ALERT_Pin GPIO_PIN_4
@@ -70,8 +67,9 @@ void Error_Handler(void);
 #define IIC1_SDA_GPIO_Port GPIOB
 #define MCU_ADDR0_Pin GPIO_PIN_14
 #define MCU_ADDR0_GPIO_Port GPIOC
-#define EN_VQPS_1V8_Pin GPIO_PIN_12
-#define EN_VQPS_1V8_GPIO_Port GPIOA
+#define MCU_RCV_UP_MCU_Pin GPIO_PIN_12
+#define MCU_RCV_UP_MCU_GPIO_Port GPIOA
+#define MCU_RCV_UP_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define PMIC_INT_Pin GPIO_PIN_3
 #define PMIC_INT_GPIO_Port GPIOB
 #define EN_VDD_TPU_Pin GPIO_PIN_6
@@ -103,16 +101,16 @@ void Error_Handler(void);
 #define PCIE_RST_X_Pin GPIO_PIN_6
 #define PCIE_RST_X_GPIO_Port GPIOA
 #define PCIE_RST_X_EXTI_IRQn EXTI4_15_IRQn
-#define VOL_12V_5V_Pin GPIO_PIN_4
-#define VOL_12V_5V_GPIO_Port GPIOA
+#define EN_VQPS_Pin GPIO_PIN_4
+#define EN_VQPS_GPIO_Port GPIOA
 #define PCIE_PG_Pin GPIO_PIN_2
 #define PCIE_PG_GPIO_Port GPIOA
 #define DDR_PG_Pin GPIO_PIN_2
 #define DDR_PG_GPIO_Port GPIOB
 #define TPUMEM_PG_Pin GPIO_PIN_7
 #define TPUMEM_PG_GPIO_Port GPIOA
-#define VOL_3V3_Pin GPIO_PIN_5
-#define VOL_3V3_GPIO_Port GPIOA
+#define EN_0P8V_Pin GPIO_PIN_5
+#define EN_0P8V_GPIO_Port GPIOA
 #define TPU_PG_Pin GPIO_PIN_3
 #define TPU_PG_GPIO_Port GPIOA
 #define SYS_RST_N_Pin GPIO_PIN_1

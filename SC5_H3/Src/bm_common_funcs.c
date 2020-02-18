@@ -35,10 +35,6 @@
 #define BUCK3_CFG3			0x76
 #define BUCK3_DVS0CFG1		0x7C
 #define BUCK3_DVS0CFG0		0x7D
-#define BUCK4_VOUTFBDIV		0x8c
-#define BUCK4_CFG3			0x90
-#define BUCK4_DVS0CFG1		0x96
-#define BUCK4_DVS0CFG0 		0x97
 
 static inline int pcie_reset_state(void);
 
@@ -85,11 +81,9 @@ void clean_pmic(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, val, 2, 1000);// LDO1V_IN
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, val, 2, 1000);//DDR_VDDQ 1.1v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, val, 2, 1000);//DDR*_DDR_VDDQLP 1.1v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_DVS0CFG1,1, val, 2, 1000);//DDR*_DDR_VDD_TPU_MEM 0.7v
 
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, val, 1, 1000);// 1.2v
 }
@@ -105,16 +99,14 @@ void init_pmic(void)
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_VOUTFBDIV,1, val, 1, 1000);// 1.2v
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_VOUTFBDIV,1, val, 1, 1000);// 1.2v
 
 	val[0] = 0x80;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_CFG3, 1, val, 1, 1000);
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_CFG3, 1, val, 1, 1000);
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_CFG3, 1, val, 1, 1000);
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK4_CFG3, 1, val, 1, 1000);
 
-	val[0] = 0xF5;
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, val, 1, 1000);//enable buck1\2\3\4
+	val[0] = 0xE5;
+	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, val, 1, 1000);//enable buck1\2\3
 }
 
 void detect_mode(void)
@@ -173,10 +165,9 @@ void PowerON(void)
 	HAL_Delay(1);
 
 	detect_mode();
-	//EN_PMIC_OUT1  0.95v
-	val[0] = 0x76;
-	pmic_voltage_set(BUCK1_DVS0CFG1, val);
-
+	//enable 0.8v
+    GPIO_SET(EN_0P8V);
+	HAL_Delay(1);
 	GPIO_SET(P08_PG);
 	HAL_Delay(1);
 	GPIO_SET(PCIE_PG);
@@ -192,9 +183,9 @@ void PowerON(void)
 	val[0] = 0x4b;
 	pmic_voltage_set(BUCK2_DVS0CFG1, val);
 	i2c_regs.ddr = 0;
-	//EN_PMIC_OUT4 0.75v
+	//EN_PMIC_OUT1 0.75v
 	val[0] = 0x5e;
-	pmic_voltage_set(BUCK4_DVS0CFG1, val);
+	pmic_voltage_set(BUCK1_DVS0CFG1, val);
 
 	GPIO_SET(TPUMEM_PG);
 	HAL_Delay(1);
@@ -235,6 +226,8 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 	GPIO_RESET(P08_PG);
 	HAL_Delay(1);
+    GPIO_RESET(EN_0P8V);
+	HAL_Delay(1);
 	GPIO_RESET(EN_VDD_3V3);
 	HAL_Delay(1);
 	GPIO_RESET(EN_VDDC);
@@ -269,7 +262,8 @@ void Clean_ERR_INT(void)
 	return ;
 }
 
-#define ADC_NUM		(5)
+#define ADC_NUM		(3)
+#define ADC_TIMEOUT (1)
 
 void Scan_Cuerrent(void)
 {
@@ -279,7 +273,7 @@ void Scan_Cuerrent(void)
 
 	  for (i = 0; i < ADC_NUM; i++) {
 		  HAL_ADC_Start(&hadc);
-		  HAL_ADC_PollForConversion(&hadc, ADC_NUM);
+		  HAL_ADC_PollForConversion(&hadc, ADC_TIMEOUT);
 
 		  if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc), HAL_ADC_STATE_REG_EOC)) {
 			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
@@ -304,7 +298,7 @@ void Set_HW_Ver(void)
 
 	  for (i = 0; i < ADC_NUM; i++) {
 		  HAL_ADC_Start(&hadc);
-		  HAL_ADC_PollForConversion(&hadc, ADC_NUM);
+		  HAL_ADC_PollForConversion(&hadc, ADC_TIMEOUT);
 
 		  if(HAL_IS_BIT_SET(HAL_ADC_GetState(&hadc), HAL_ADC_STATE_REG_EOC)) {
 			  ADC_Buf[i] = HAL_ADC_GetValue(&hadc);
