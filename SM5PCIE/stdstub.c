@@ -7,19 +7,34 @@
 static unsigned long heap_start;
 static unsigned long heap_end;
 
-void std_stub_init(void)
+static int uart;
+
+int std_stub_init(int _uart)
 {
-	/* usart1 */
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
-	gpio_set_af(GPIOA, GPIO_AF6, GPIO2 | GPIO3);
-	rcc_periph_clock_enable(RCC_USART1);
-	usart_enable(USART1);
-	usart_set_baudrate(USART1, 115200);
-	usart_set_databits(USART1, 8);
-	usart_set_stopbits(USART1, USART_STOPBITS_1);
-	usart_set_parity(USART1, USART_PARITY_NONE);
-	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-	usart_set_mode(USART1, USART_MODE_TX_RX);
+	unsigned int rcc_uart;
+
+	uart = _uart;
+
+	switch (uart) {
+	case USART1:
+		rcc_uart = RCC_USART1;
+		break;
+	case USART2:
+		rcc_uart = RCC_USART2;
+		break;
+	default:
+		return -1;
+	}
+
+	rcc_periph_clock_enable(rcc_uart);
+	usart_enable(uart);
+	usart_set_baudrate(uart, 115200);
+	usart_set_databits(uart, 8);
+	usart_set_stopbits(uart, USART_STOPBITS_1);
+	usart_set_parity(uart, USART_PARITY_NONE);
+	usart_set_flow_control(uart, USART_FLOWCONTROL_NONE);
+	usart_set_mode(uart, USART_MODE_TX_RX);
+	return 0;
 }
 
 int _write(int file, char *s, int len)
@@ -27,7 +42,7 @@ int _write(int file, char *s, int len)
 	int i;
 
 	for (i = 0; i < len; ++i) {
-		usart_send_blocking(USART1, s[i]);
+		usart_send_blocking(uart, s[i]);
 	}
 
 	return i;

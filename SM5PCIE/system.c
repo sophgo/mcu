@@ -7,6 +7,7 @@
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/usart.h>
 #include <tick.h>
 #include <stdstub.h>
 
@@ -24,12 +25,12 @@ static void gpio_init(void)
 	/* spi nss */
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO15);
 	gpio_set_af(GPIOA, GPIO_AF0, GPIO15);
-	/* uart4 tx, rx */
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO0 | GPIO1);
-	gpio_set_af(GPIOA, GPIO_AF6, GPIO0 | GPIO1);
+	/* uart2 tx, rx */
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
+	gpio_set_af(GPIOA, GPIO_AF4, GPIO2 | GPIO3);
 	/* adc 5 way */
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE,
-			GPIO3 | GPIO4 | GPIO5 | GPIO6 | GPIO7);
+			GPIO0 | GPIO1 | GPIO5 | GPIO6 | GPIO7);
 
 	/* GPIO port B */
 	/* spi clk, miso, mosi */
@@ -53,5 +54,5 @@ void system_init(void)
 
 	gpio_init();
 	tick_init();
-	std_stub_init();
+	std_stub_init(USART2);
 }

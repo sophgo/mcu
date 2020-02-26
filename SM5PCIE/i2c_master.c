@@ -4,15 +4,15 @@
 
 int i2c_master_init(int i2c)
 {
-    /* enable i2c interrupt */
-    switch (i2c) {
-        case I2C1:
-            nvic_enable_irq(NVIC_I2C1_IRQ);
-            break;
-        default:
-            return -1;
-    }
-    /* enable i2c clock */
+	/* enable i2c interrupt */
+	switch (i2c) {
+	case I2C1:
+		nvic_enable_irq(NVIC_I2C1_IRQ);
+		break;
+	default:
+		return -1;
+	}
+	/* enable i2c clock */
 	rcc_periph_clock_enable(i2c);
 
 	i2c_reset(i2c);
