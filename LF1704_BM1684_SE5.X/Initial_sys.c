@@ -53,6 +53,7 @@ void Initial_sys()
 	//set PORTC
 	TRISCbits.TRISC0 = 1;	//RC0 is input POWER_KEY
 	TRISCbits.TRISC1 = 0;	//RC1 is output	THERMAL_OFF
+	PORTCbits.RC1 = 1;		//close thermal on init
 	TRISCbits.TRISC2 = 0;	//RC2 is output	POWER_ON
 	TRISCbits.TRISC3 = 1;	//RC3 is input UNDER_TEMP
 	TRISCbits.TRISC4 = 1;	//RC4 is input PMEB
