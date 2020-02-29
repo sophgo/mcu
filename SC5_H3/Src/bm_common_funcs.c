@@ -281,8 +281,8 @@ void Scan_Cuerrent(void)
 	  }
 
 	  //calculate voltage
-	  curr_evb.i_12v_atx 		= ADC_Buf[3];
-	  curr_evb.i_vddio33 		= ADC_Buf[4];
+	  curr_evb.i_12v_atx 		= ADC_Buf[1];
+	  curr_evb.i_vddio33 		= ADC_Buf[2];
 
 	  memcpy(&i2c_regs.current, &curr_evb, sizeof(CURRENT_VAL));
 
@@ -357,10 +357,7 @@ void clean_update_flag(void)
 
 static inline int pcie_reset_state(void)
 {
-	if (Get_Addr() == 0)
-		return (GPIO_PIN_SET == GPIO_GET(PCIE_RST_X)) ? 1 : 0;
-	else
-		return (GPIO_PIN_SET == GPIO_GET(MCU_RCV_UP_MCU)) ? 1 : 0;
+	return (GPIO_PIN_SET == GPIO_GET(PCIE_RST_X)) ? 1 : 0;
 }
 
 void pcie_reset_trans(void)
@@ -426,7 +423,7 @@ void module_init(void)
 		GPIO_InitTypeDef GPIO_InitStruct = {0};
 		GPIO_InitStruct.Pin = MCU_RCV_UP_MCU_Pin | PCIE_RST_X_Pin;
 		GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-		GPIO_InitStruct.Pull = GPIO_PULLUP;
+		GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 	}
 
