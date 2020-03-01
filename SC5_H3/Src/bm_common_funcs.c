@@ -194,7 +194,6 @@ void PowerON(void)
 	HAL_Delay(30);
 	GPIO_SET(SYS_RST_N);
 	HAL_Delay(30);
-//	GPIO_SET(MCU_CTL_DOWN_MCU);
 	GPIO_SET(DDR_PG);
 
 	GPIO_SET(SYS_RST_N);
@@ -212,7 +211,6 @@ void PowerDOWN(void)
 
 	GPIO_RESET(DDR_PG);
 	HAL_Delay(1);
-//	GPIO_RESET(MCU_CTL_DOWN_MCU);
 	HAL_Delay(1);
 	GPIO_RESET(SYS_RST_N);
 	HAL_Delay(1);
@@ -360,14 +358,6 @@ static inline int pcie_reset_state(void)
 	return (GPIO_PIN_SET == GPIO_GET(PCIE_RST_X)) ? 1 : 0;
 }
 
-void pcie_reset_trans(void)
-{
-	if (pcie_reset_state())
-		GPIO_SET(MCU_CTL_DOWN_MCU);
-	else
-		GPIO_RESET(MCU_CTL_DOWN_MCU);
-}
-
 void poll_pcie_rst(void)
 {
 	if (pcie_reset_state() == 0) {
@@ -421,7 +411,7 @@ void module_init(void)
 		/* not first chip */
 		/* add pull-up, default is invalid (low level valid) */
 		GPIO_InitTypeDef GPIO_InitStruct = {0};
-		GPIO_InitStruct.Pin = MCU_RCV_UP_MCU_Pin | PCIE_RST_X_Pin;
+		GPIO_InitStruct.Pin = PCIE_RST_X_Pin;
 		GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
 		GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 		HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -467,9 +457,4 @@ void cmd_process(void)
 	  default:
 		  break;
 	  }
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	pcie_reset_trans();
 }

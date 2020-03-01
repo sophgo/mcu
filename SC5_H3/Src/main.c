@@ -83,7 +83,6 @@ int main(void)
   setup_stage();
 
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -112,8 +111,6 @@ int main(void)
   module_init();
 
   /* USER CODE END 2 */
- 
- 
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */

@@ -3,8 +3,11 @@
 #include <stm32l0xx_hal.h>
 #include <checksum.h>
 #include <flash.h>
+#include <project.h>
 
-#define MCU_LED_PIN		GPIO_PIN_5
+static unsigned int MCU_LED_PIN;
+static GPIO_TypeDef *MCU_LED_PORT;
+extern uint32_t project;
 
 volatile uint32_t tick;
 
@@ -17,12 +20,14 @@ void delay(unsigned int ms)
 
 static inline void led_on(void)
 {
-	HAL_GPIO_WritePin(GPIOA, MCU_LED_PIN, GPIO_PIN_SET);
+	if (MCU_LED_PORT)
+		HAL_GPIO_WritePin(MCU_LED_PORT, MCU_LED_PIN, GPIO_PIN_SET);
 }
 
 static inline void led_off(void)
 {
-	HAL_GPIO_WritePin(GPIOA, MCU_LED_PIN, GPIO_PIN_RESET);
+	if (MCU_LED_PORT)
+		HAL_GPIO_WritePin(MCU_LED_PORT, MCU_LED_PIN, GPIO_PIN_RESET);
 }
 
 static inline void led_update(void)
@@ -37,6 +42,21 @@ static inline void led_update(void)
 		led_off();
 }
 
+static inline void led_init(void)
+{
+	switch (project) {
+		case SA5:
+		case SM5P:
+		case SM5S:
+			MCU_LED_PORT = GPIOA;
+			MCU_LED_PIN = GPIO_PIN_5;
+			break;
+		default:
+			MCU_LED_PORT = NULL;
+			break;
+	}
+}
+
 int main(void)
 {
 	flash_init();
@@ -44,6 +64,8 @@ int main(void)
 	__enable_irq();
 	/* re-enable systick */
 	SysTick->CTRL |= 1;
+
+	led_init();
 
 	upgrader_init();
 	while (1) {

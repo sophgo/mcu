@@ -67,9 +67,6 @@ void Error_Handler(void);
 #define IIC1_SDA_GPIO_Port GPIOB
 #define MCU_ADDR0_Pin GPIO_PIN_14
 #define MCU_ADDR0_GPIO_Port GPIOC
-#define MCU_RCV_UP_MCU_Pin GPIO_PIN_12
-#define MCU_RCV_UP_MCU_GPIO_Port GPIOA
-#define MCU_RCV_UP_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define PMIC_INT_Pin GPIO_PIN_3
 #define PMIC_INT_GPIO_Port GPIOB
 #define EN_VDD_TPU_Pin GPIO_PIN_6
@@ -86,8 +83,6 @@ void Error_Handler(void);
 #define CURRENT_PCIE_3_3V_GPIO_Port GPIOB
 #define EN_VDDC_Pin GPIO_PIN_5
 #define EN_VDDC_GPIO_Port GPIOB
-#define MCU_CTL_DOWN_MCU_Pin GPIO_PIN_9
-#define MCU_CTL_DOWN_MCU_GPIO_Port GPIOA
 #define PMIC_SDA_Pin GPIO_PIN_11
 #define PMIC_SDA_GPIO_Port GPIOB
 #define CURRENT_PCIE_12V_5V_Pin GPIO_PIN_0
@@ -100,7 +95,6 @@ void Error_Handler(void);
 #define PMIC_SCL_GPIO_Port GPIOB
 #define PCIE_RST_X_Pin GPIO_PIN_6
 #define PCIE_RST_X_GPIO_Port GPIOA
-#define PCIE_RST_X_EXTI_IRQn EXTI4_15_IRQn
 #define EN_VQPS_Pin GPIO_PIN_4
 #define EN_VQPS_GPIO_Port GPIOA
 #define PCIE_PG_Pin GPIO_PIN_2
