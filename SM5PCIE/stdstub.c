@@ -42,6 +42,8 @@ int _write(int file, char *s, int len)
 	int i;
 
 	for (i = 0; i < len; ++i) {
+		if (s[i] == '\n')
+			usart_send_blocking(uart, '\r');
 		usart_send_blocking(uart, s[i]);
 	}
 

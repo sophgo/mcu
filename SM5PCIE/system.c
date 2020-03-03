@@ -26,8 +26,13 @@ static void gpio_init(void)
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO15);
 	gpio_set_af(GPIOA, GPIO_AF0, GPIO15);
 	/* uart2 tx, rx */
+#ifdef NUCLEO
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO9 | GPIO10);
+	gpio_set_af(GPIOA, GPIO_AF4, GPIO9 | GPIO10);
+#else
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
 	gpio_set_af(GPIOA, GPIO_AF4, GPIO2 | GPIO3);
+#endif
 	/* adc 5 way */
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE,
 			GPIO0 | GPIO1 | GPIO5 | GPIO6 | GPIO7);
@@ -44,6 +49,11 @@ static void gpio_init(void)
 	/* led, sdoe */
 	gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 			GPIO0 | GPIO1 | GPIO2 | GPIO7);
+#ifdef NUCLEO
+	std_stub_init(USART1);
+#else
+	std_stub_init(USART2);
+#endif
 }
 
 void system_init(void)
@@ -52,7 +62,6 @@ void system_init(void)
 	/* so relocated vtor -- vector table offset register */
 	SCB_VTOR = (uint32_t)&vector_table;
 
-	gpio_init();
 	tick_init();
-	std_stub_init(USART2);
+	gpio_init();
 }
