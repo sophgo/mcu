@@ -18,6 +18,10 @@ OUTDIR = build
 SRCDIR = .
 INCDIR = . $(OPENCM3_DIR)/include
 
+#fatfs
+INCDIR += fatfs
+SRCDIR += fatfs
+
 C_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
 S_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.s))
 S_SRCS += $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.S))
