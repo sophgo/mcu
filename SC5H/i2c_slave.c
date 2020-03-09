@@ -243,13 +243,23 @@ void i2c_slave_isr(struct i2c_slave_ctx *ctx)
 	i2c_intr_restore(ctx, old);
 }
 
-int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg)
+int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg, int oa1, int oa2, int oa2mask)
 {
 	int i;
 
 	ctx->reg = reg;
 	ctx->isr_irq_mask = 0;
 	ctx->dir = I2C_SLAVE_WRITE;
+	/* oa1 enable, 7 bit mode, 7 bit address */
+	ctx->reg->oar1 = 0;
+	if (oa1 > 0)
+		ctx->reg->oar1 = (1 << 15) | ((oa1 & 0x7f) << 1);
+
+	/* oa2 enable, oa2 address mask, 7 bit address */
+	ctx->reg->oar2 = 0;
+	if (oa2 > 0)
+		ctx->reg->oar2 = (1 << 15) | ((oa2 & 0x7f) << 1)
+			| ((oa2mask & 7) << 8);
 
 	for (i = 0; i < ARRAY_SIZE(i2c_isr_table); ++i)
 		ctx->isr_irq_mask |= (1 << i2c_isr_table[i].bit);

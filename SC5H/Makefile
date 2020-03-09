@@ -104,7 +104,7 @@ $(OUTDIR)/%.d: %.c | $(OUTDIR)
 $(OUTDIR):
 	@mkdir -p $@
 
-burn: $(OUTDIR)/$(TARGET).bin
+burn: $(OUTDIR)/$(TARGET)_LOADER.bin
 	st-flash write $< 0x08000000
 
 clean:

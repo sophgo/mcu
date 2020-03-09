@@ -28,6 +28,8 @@ extern struct i2c_slave_ctx i2c1_slave_ctx;
 struct mcu_ctx {
 	int set_idx;
 	int idx;
+	int cmd_tmp;
+	uint8_t cmd;
 };
 
 static struct mcu_ctx mcu_ctx;
@@ -50,6 +52,17 @@ static void mcu_match(void *priv, int dir)
 		ctx->set_idx = 1;
 }
 
+void mcu_cmd_process(void)
+{
+	switch (mcu_ctx.cmd) {
+		case 8:
+			upgrade_start();
+			break;
+		default:
+			break;
+	}
+}
+
 static void mcu_write(void *priv, volatile uint8_t data)
 {
 	struct mcu_ctx *ctx = priv;
@@ -62,6 +75,7 @@ static void mcu_write(void *priv, volatile uint8_t data)
 
 	switch (ctx->idx) {
 	case REG_CMD_REG:
+		ctx->cmd_tmp = data;
 		break;
 	default:
 		break;
@@ -97,6 +111,12 @@ static uint8_t mcu_read(void *priv)
 	return ret;
 }
 
+static void mcu_stop(void *priv)
+{
+	struct mcu_ctx *ctx = priv;
+	ctx->cmd = ctx->cmd_tmp;
+}
+
 static void mcu_reset(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
@@ -109,6 +129,7 @@ static struct i2c_slave_op slave = {
 	.match = mcu_match,
 	.write = mcu_write,
 	.read = mcu_read,
+	.stop = mcu_stop,
 	.reset = mcu_reset,
 	.priv = &mcu_ctx,
 };

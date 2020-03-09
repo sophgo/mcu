@@ -8,7 +8,13 @@ int i2c_master_init(int i2c)
 	//configure ANFOFF DNF[3:0] in CR1
 	i2c_enable_analog_filter(i2c);
 	i2c_set_digital_filter(i2c, 0);
-	i2c_set_speed(i2c, i2c_speed_sm_100k, rcc_apb1_frequency);
+
+#if 0
+	i2c_set_speed(i2c, i2c_speed_sm_100k, rcc_apb1_frequency / 1000 / 1000);
+#else
+	I2C_TIMINGR(i2c) = 0x708;
+#endif	
+
 	//configure No-Stretch CR1 (only relevant in slave mode)
 	i2c_enable_stretching(i2c);
 	//addressing mode
@@ -19,7 +25,6 @@ int i2c_master_init(int i2c)
 
 int i2c_master_destroy(int i2c)
 {
-	i2c_reset(i2c);
 	i2c_peripheral_disable(i2c);
 	return 0;
 }

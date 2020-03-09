@@ -6,6 +6,7 @@
 #include <project.h>
 #include <i2c_master.h>
 #include <flash.h>
+#include <project_id.h>
 
 #define MEMMAP_EFIE_SIZE		(128)
 
@@ -25,7 +26,7 @@ void upgrade_start(void)
 	typedef void (*upgrade_entry)(uint32_t project);
 	/* disable sys tick */
 	systick_counter_disable();
-	/* disable i2c1 and i2c3 */
+	/* disable i2c1 and i2c2 */
 	i2c_master_destroy(I2C1);
 	i2c_master_destroy(I2C2);
 
@@ -36,7 +37,7 @@ void upgrade_start(void)
 	/* thumb instruction pc should be even number */
 	upgrade_entry entry = (upgrade_entry)
 		(upgrader_efie->offset + MEMMAP_FLASH_START + 1);
-	entry(SA5);
+	entry(PROJ_SC5H);
 }
 
 void app_start(void)

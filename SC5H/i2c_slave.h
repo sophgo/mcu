@@ -33,7 +33,7 @@ struct i2c_slave_ctx {
 	struct i2c_slave_op *slave; /* current slave */
 };
 
-int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg);
+int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg, int oa1, int oa2, int oa2mask);
 int i2c_slave_register(struct i2c_slave_ctx *ctx, struct i2c_slave_op *slave);
 int i2c_slave_start(struct i2c_slave_ctx *ctx);
 int i2c_slave_reset(struct i2c_slave_ctx *ctx);

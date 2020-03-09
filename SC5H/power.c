@@ -3,6 +3,7 @@
 #include <tick.h>
 #include <i2c_master.h>
 #include <debug.h>
+#include <pin.h>
 
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 
@@ -49,12 +50,12 @@ int pmic_voltage_config(unsigned int buck, unsigned int voltage)
 
 int pmic_init(void *ctx)
 {
-	/* enable system enable, disable all buck */
-	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 0x40, 0x80);
-	pmic_voltage_config(0, 1800);
-	pmic_voltage_config(1, 600);
-	pmic_voltage_config(2, 1100);
-	pmic_voltage_config(3, 840);
+	/* enable system enable, disable buck 2, 3, 4, donot disable buck 1 */
+	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 0x40, 0xe0);
+	pmic_voltage_config(0, 1800 + 75);
+	pmic_voltage_config(1, 600 + 20);
+	pmic_voltage_config(2, 840 + 28);
+	pmic_voltage_config(3, 1100 + 38);
 	return 0;
 }
 
@@ -106,25 +107,41 @@ void p1v8_off(void *ctx)
 	pmic_buck_off(0);
 }
 
+static int sysrst_hi(void *ctx)
+{
+	gpio_set(SYS_RESET_PORT, SYS_RESET_PIN);
+	return 0;
+}
+
+static int sysrst_lo(void *ctx)
+{
+	gpio_clear(SYS_RESET_PORT, SYS_RESET_PIN);
+	return 0;
+}
+
+static void sysrst_nop(void *ctx)
+{
+}
+
 struct power_node power_sequence[] = {
-	{"cfg-pmic", 0, 0, 0, pmic_init, pmic_destroy, NULL, 1},
-	{"pwr-1.8v", 0, 0, 0, p1v8_on, p1v8_off, NULL, 1},
+	{"sys-rst-lo", 0, 0, 0, sysrst_lo, sysrst_nop, NULL, 0},
 	{"en-io18", 0, GPIOB, GPIO6, NULL, NULL, NULL, 1},
 	{"en-core", 0, GPIOB, GPIO12, NULL, NULL, NULL, 1},
 	{"en-io33", 0, GPIOB, GPIO7, NULL, NULL, NULL, 1},
+	{"cfg-pmic", 0, 0, 0, pmic_init, pmic_destroy, NULL, 1},
 	{"pwr-0.8v", 0, 0, 0, p0v8_on, p0v8_off, NULL, 1},/* vdd_phy vdd_pcie */
 	{"pg-p08", 0, GPIOA, GPIO11, NULL, NULL, NULL, 1},
 	{"pg-pcie", 0, GPIOA, GPIO9, NULL, NULL, NULL, 1},
 	{"en-tpu", 0, GPIOB, GPIO13, NULL, NULL, NULL, 1},
-	{"ck-tpu", 1, GPIOA, GPIO4, NULL, NULL, NULL, 0},
 	{"pg-tpu", 0, GPIOA, GPIO10, NULL, NULL, NULL, 1},
 	{"pwr-1.1v", 0, 0, 0, p1v1_on, p1v1_off, NULL, 1}, /* ddr_vddq */
 	{"pwr-0.6v", 0, 0, 0, p0v6_on, p0v6_off, NULL, 1}, /* ddr_vddlp */
 	{"en-tpu-mem", 0, GPIOB, GPIO14, NULL, NULL, NULL, 1},
-	{"ck-tpu-mem", 1, GPIOA, GPIO2, NULL, NULL, NULL, 0},
-	{"pg-tpu-mem", 0, GPIOA, GPIO7, NULL, NULL, NULL, 1},
-	{"en-vqps18", 0, GPIOA, GPIO15, NULL, NULL, NULL, 1},
-	{"pg-ddr", 0, GPIOA, GPIO12, NULL, NULL, NULL, 1},
+	{"pg-tpu-mem", 0, GPIOA, GPIO7, NULL, NULL, NULL, 31},
+	/* {"en-vqps18", 0, GPIOA, GPIO15, NULL, NULL, NULL, 1}, */
+	{"sys-rst-hi", 0, 0, 0, sysrst_hi, sysrst_nop, NULL, 1},
+	{"pg-ddr", 0, GPIOA, GPIO12, NULL, NULL, NULL, 29},
+	{"sys-rst-lo", 0, 0, 0, sysrst_lo, sysrst_nop, NULL, 30},
 };
 
 int node_on(struct power_node *node)
@@ -169,11 +186,11 @@ void sequence_init(struct power_node *node, int num)
 					GPIO_PUPD_PULLDOWN,
 					node[i].pin);
 		} else {
+			gpio_clear(node[i].port, node[i].pin);
 			gpio_mode_setup(node[i].port,
 					GPIO_MODE_OUTPUT,
 					GPIO_PUPD_PULLUP,
 					node[i].pin);
-			gpio_clear(node[i].port, node[i].pin);
 		}
 	}
 }

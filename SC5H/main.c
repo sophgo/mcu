@@ -17,9 +17,7 @@
 #include <upgrade.h>
 #include <mcu.h>
 #include <debug.h>
-
-#define LED_PORT	GPIOC
-#define LED_PIN		GPIO13
+#include <pin.h>
 
 static inline void led_off(void);
 
@@ -44,14 +42,11 @@ static inline void led_off(void)
 
 static inline void sys_reset_set(int state);
 
-#define PCIE_RESET_PORT	GPIOB
-#define PCIE_RESET_PIN	GPIO15
-
 static inline void pcie_reset_init(void)
 {
 	gpio_mode_setup(PCIE_RESET_PORT,
 			GPIO_MODE_INPUT,
-			GPIO_PUPD_PULLUP,
+			GPIO_PUPD_NONE,
 			PCIE_RESET_PIN);
 }
 
@@ -59,10 +54,6 @@ static inline int pcie_reset_state(void)
 {
 	return gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN) ? 1 : 0;
 }
-
-#define SYS_RESET_PORT	GPIOB
-#define SYS_RESET_PIN	GPIO5
-
 
 static inline void sys_reset_init(void)
 {
@@ -75,14 +66,10 @@ static inline void sys_reset_init(void)
 
 static inline void sys_reset_set(int state)
 {
-	if (state) {
+	if (state)
 		gpio_set(SYS_RESET_PORT, SYS_RESET_PIN);
-		led_on();
-	}
-	else {
+	else
 		gpio_clear(SYS_RESET_PORT, SYS_RESET_PIN);
-		led_off();
-	}
 }
 
 void pcie_reset_poll(void)
@@ -127,16 +114,20 @@ int main(void)
 	debug("BITMAIN SOPHONE SC5H -- %s\n", VERSION);
 
 	i2c1_slave_ctx.id = 1;
-	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE);
+	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
+			0x17, -1, 0);
 	mcu_init();
 	i2c_slave_start(&i2c1_slave_ctx);
 
 	/* mux i2c2 pin to PB10 -- SCL, PB11 -- SDA */
 	/* mux i2c1 pin to PB8 -- SCL, PB9 -- SDA */
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP,
-			GPIO10 | GPIO11 | GPIO8 | GPIO9);
+	gpio_set(GPIOB, GPIO8 | GPIO9 | GPIO10 | GPIO11);
 	gpio_set_af(GPIOB, GPIO_AF6, GPIO10 | GPIO11);
 	gpio_set_af(GPIOB, GPIO_AF4, GPIO8 | GPIO9);
+	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_VERYHIGH,
+			GPIO10 | GPIO11 | GPIO8 | GPIO9);
+	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
+			GPIO10 | GPIO11 | GPIO8 | GPIO9);
 
 	/* init user led */
 	led_init();
@@ -146,9 +137,11 @@ int main(void)
 	sys_reset_init();
 	power_init();
 	power_on();
+	led_on();
 
 	while (1) {
 		pcie_reset_poll();
+		mcu_cmd_process();
 	}
 
 	return 0;
