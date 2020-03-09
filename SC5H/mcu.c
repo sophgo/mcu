@@ -12,6 +12,7 @@
 #include <upgrade.h>
 #include <info.h>
 #include <project_id.h>
+#include <pin.h>
 
 #define MCU_REG_MAX 0x64
 #define MCU_SW_VER 0;
@@ -21,6 +22,7 @@ unsigned char MCU_HW_VER;
 #define REG_SW_VER	0x01
 #define REG_HW_VER	0x02
 #define REG_CMD_REG	0x03
+#define REG_VQPS	0x09
 #define REG_STAGE	0x3c
 
 extern struct i2c_slave_ctx i2c1_slave_ctx;
@@ -77,6 +79,12 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_CMD_REG:
 		ctx->cmd_tmp = data;
 		break;
+	case REG_VQPS:
+		if (data)
+			gpio_set(EN_VQPS_PORT, EN_VQPS_PIN);
+		else
+			gpio_clear(EN_VQPS_PORT, EN_VQPS_PIN);
+		break;
 	default:
 		break;
 	}
@@ -101,6 +109,9 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_STAGE:
 		ret = stage;
+		break;
+	case REG_VQPS:
+		ret = gpio_get(EN_VQPS_PORT, EN_VQPS_PIN) ? 1 : 0;
 		break;
 	default:
 		ret = 0xff;

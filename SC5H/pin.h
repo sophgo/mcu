@@ -10,4 +10,7 @@
 #define SYS_RESET_PORT	GPIOB
 #define SYS_RESET_PIN	GPIO5
 
+#define EN_VQPS_PORT	GPIOA
+#define EN_VQPS_PIN	GPIO15
+
 #endif
