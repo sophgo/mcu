@@ -19,6 +19,7 @@
 #include <debug.h>
 #include <pin.h>
 #include <eeprom.h>
+#include <adc.h>
 
 static inline void led_off(void);
 
@@ -113,6 +114,8 @@ int main(void)
 	std_stub_init();
 
 	debug("BITMAIN SOPHONE SC5H -- %s\n", VERSION);
+
+	adc_init();
 
 	i2c1_slave_ctx.id = 1;
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,

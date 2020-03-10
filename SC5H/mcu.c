@@ -13,6 +13,7 @@
 #include <info.h>
 #include <project_id.h>
 #include <pin.h>
+#include <adc.h>
 
 #define MCU_REG_MAX 0x64
 #define MCU_SW_VER 0;
@@ -25,6 +26,9 @@ unsigned char MCU_HW_VER;
 #define REG_VQPS	0x09
 #define REG_STAGE	0x3c
 
+#define REG_VOLTAGE	0x26
+#define REG_CURRENT	0x28
+
 extern struct i2c_slave_ctx i2c1_slave_ctx;
 
 struct mcu_ctx {
@@ -32,6 +36,8 @@ struct mcu_ctx {
 	int idx;
 	int cmd_tmp;
 	uint8_t cmd;
+	unsigned long current;
+	unsigned long voltage;
 };
 
 static struct mcu_ctx mcu_ctx;
@@ -112,6 +118,20 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_VQPS:
 		ret = gpio_get(EN_VQPS_PORT, EN_VQPS_PIN) ? 1 : 0;
+		break;
+	case REG_CURRENT:
+		adc_read(&ctx->current, &ctx->voltage);
+		ret = ctx->current & 0xff;
+		break;
+	case REG_CURRENT + 1:
+		ret = (ctx->current >> 8) & 0xff;
+		break;
+	case REG_VOLTAGE:
+		adc_read(&ctx->current, &ctx->voltage);
+		ret = ctx->voltage & 0xff;
+		break;
+	case REG_VOLTAGE + 1:
+		ret = (ctx->voltage >> 8) & 0xff;
 		break;
 	default:
 		ret = 0xff;
