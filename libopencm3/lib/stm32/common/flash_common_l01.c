@@ -108,6 +108,8 @@ void eeprom_program_word(uint32_t address, uint32_t data)
 	/* erase only if needed */
 	FLASH_PECR &= ~FLASH_PECR_FTDW;
 	MMIO32(address) = data;
+	/* wait eeprom program done */
+	while (FLASH_SR & FLASH_SR_BSY);
 	flash_lock_pecr();
 }
 
@@ -133,6 +135,114 @@ void eeprom_program_words(uint32_t address, uint32_t *data, int length_in_words)
 		while (FLASH_SR & FLASH_SR_BSY);
 	}
 	flash_lock_pecr();
+}
+
+/** @brief Write a byte to eeprom
+ *
+ * @param address assumed to be in the eeprom space, no checking
+ * @param data byte to write
+ */
+void eeprom_program_byte(uint32_t address, uint8_t data)
+{
+	flash_unlock_pecr();
+	/* erase only if needed */
+	FLASH_PECR &= ~FLASH_PECR_FTDW;
+	MMIO8(address) = data;
+	/* wait eeprom program done */
+	while (FLASH_SR & FLASH_SR_BSY);
+	flash_lock_pecr();
+}
+
+/** @brief Write a block of byte to eeprom
+ *
+ * Writes a block of byte to EEPROM at the requested address, erasing if
+ * necessary, and locking afterwards.  Only wordwise writing is safe for
+ * writing any value
+ *
+ * @param[in] address must point to EEPROM space, no checking!
+ * @param[in] data pointer to data to write
+ * @param[in] length size of of data in BYTES!
+ */
+void eeprom_program_bytes(uint32_t address, uint32_t *data, int length)
+{
+	int i;
+	flash_unlock_pecr();
+	while (FLASH_SR & FLASH_SR_BSY);
+	/* erase only if needed */
+	FLASH_PECR &= ~FLASH_PECR_FTDW;
+	for (i = 0; i < length; i++) {
+		MMIO8(address + (i * sizeof(uint32_t))) = *(data+i);
+		while (FLASH_SR & FLASH_SR_BSY);
+	}
+	flash_lock_pecr();
+}
+
+static inline int flash_is_busy(void)
+{
+	uint32_t error_mask =
+		FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_SIZEERR |
+		FLASH_SR_OPTVERR | FLASH_SR_RDERR | FLASH_SR_FWWERR |
+		FLASH_SR_NOTZEROERR;
+	uint32_t sr = FLASH_SR;
+
+	/* clear all previous flash error */
+	if (sr & error_mask)
+		FLASH_SR |= error_mask;
+
+	if (FLASH_SR & FLASH_SR_EOP)
+		FLASH_SR = FLASH_SR_EOP;
+
+	return sr & FLASH_SR_BSY;
+}
+
+static inline int flash_wait_idle(void)
+{
+	unsigned int time = 0x3fff;
+	do {
+		if (!flash_is_busy())
+			return 0;
+		time--;
+	} while (time);
+	return -1;
+}
+
+static inline void flash_erase_page(uint32_t addr)
+{
+	FLASH_PECR |= FLASH_PECR_ERASE | FLASH_PECR_PROG;
+	MMIO32(addr & ~(FLASH_PAGE_SIZE - 1)) = 0x00000000;
+	flash_wait_idle();
+	FLASH_PECR &= ~(FLASH_PECR_PROG | FLASH_PECR_ERASE);
+}
+
+void flash_program_page(uint32_t addr, void *dst, uint8_t len)
+{
+	uint8_t cnt = len/4;
+	uint8_t i = 0;
+	uint8_t *p = dst;
+
+	flash_unlock();
+	flash_erase_page(addr);
+	flash_wait_idle();
+	/* half page program seems not working if we are running in flash */
+	/* FLASH_PECR |= FLASH_PECR_FPRG | FLASH_PECR_PROG; */
+	while (cnt--) {
+		MMIO32(addr + (4 * i)) =
+			p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
+		i += 4;
+	}
+	/* FLASH_PECR &= ~(FLASH_PECR_FPRG | FLASH_PECR_PROG); */
+	flash_wait_idle();
+	flash_lock();
+}
+
+void flash_clear_error(void)
+{
+	/* clear all previous flash error */
+	uint32_t error_mask =
+		FLASH_SR_WRPERR | FLASH_SR_PGAERR | FLASH_SR_SIZEERR |
+		FLASH_SR_OPTVERR | FLASH_SR_RDERR | FLASH_SR_FWWERR |
+		FLASH_SR_NOTZEROERR;
+	FLASH_SR |= error_mask;
 }
 
 /**@}*/

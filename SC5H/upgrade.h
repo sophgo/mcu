@@ -1,9 +1,9 @@
 #ifndef __UPGRADE_H__
 #define __UPGRADE_H__
 
-#include <flash.h>
+#include <libopencm3/stm32/flash.h>
 
-#define MEMMAP_FLASH_START	FLASH_PROGRAM_START
+#define MEMMAP_FLASH_START	FLASH_MEM_ADDR
 #define MEMMAP_FLASH_SIZE	(64 * 1024)
 #define MEMMAP_FLASH_END	(MEMMAP_FLASH_START + MEMMAP_FLASH_SIZE)
 

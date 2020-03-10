@@ -18,6 +18,7 @@
 #include <mcu.h>
 #include <debug.h>
 #include <pin.h>
+#include <eeprom.h>
 
 static inline void led_off(void);
 
@@ -117,6 +118,7 @@ int main(void)
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
 			0x17, -1, 0);
 	mcu_init();
+	eeprom_init();
 	i2c_slave_start(&i2c1_slave_ctx);
 
 	/* mux i2c2 pin to PB10 -- SCL, PB11 -- SDA */

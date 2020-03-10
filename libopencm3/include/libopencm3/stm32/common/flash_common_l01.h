@@ -112,6 +112,9 @@
 #define FLASH_OBR_RDPRT_LEVEL_1		(0x00)
 #define FLASH_OBR_RDPRT_LEVEL_2		(0xcc)
 
+#define FLASH_PAGE_SIZE			(128)
+#define FLASH_MEM_ADDR			(0x08000000)
+
 BEGIN_DECLS
 
 void flash_unlock_pecr(void);
@@ -123,6 +126,12 @@ void flash_unlock_acr(void);
 
 void eeprom_program_word(uint32_t address, uint32_t data);
 void eeprom_program_words(uint32_t address, uint32_t *data, int length_in_words);
+
+void eeprom_program_byte(uint32_t address, uint8_t data);
+void eeprom_program_bytes(uint32_t address, uint32_t *data, int length);
+
+void flash_program_page(uint32_t addr, void *dst, uint8_t len);
+void flash_clear_error(void);
 
 END_DECLS
 /**@}*/

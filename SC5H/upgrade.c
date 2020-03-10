@@ -1,11 +1,11 @@
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/cm3/cortex.h>
 #include <libopencm3/stm32/i2c.h>
+#include <libopencm3/stm32/flash.h>
 #include <upgrade.h>
 #include <string.h>
 #include <project.h>
 #include <i2c_master.h>
-#include <flash.h>
 #include <project_id.h>
 
 #define MEMMAP_EFIE_SIZE		(128)
@@ -125,14 +125,14 @@ int check_app(void)
 		return -1;
 
 	/* looks good */
-	flash_init();
+	flash_clear_error();
 	struct efie app_efie_backup;
 
 	memcpy(&app_efie_backup, app_efie, sizeof(app_efie_backup));
 
 	/* mark app as checked */
 	app_efie_backup.is_checked = 1;
-	flash_program((unsigned long)app_efie, &app_efie_backup,
+	flash_program_page((unsigned long)app_efie, &app_efie_backup,
 		      sizeof(app_efie_backup));
 
 	return 0;
