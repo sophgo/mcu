@@ -273,6 +273,11 @@ void usart_wait_send_ready(uint32_t usart)
 	while ((USART_ISR(usart) & USART_ISR_TXE) == 0);
 }
 
+int usart_is_recv_ready(uint32_t usart)
+{
+	return USART_ISR(usart) & USART_ISR_RXNE;
+}
+
 /*---------------------------------------------------------------------------*/
 /** @brief USART Wait for Received Data Available
  *
