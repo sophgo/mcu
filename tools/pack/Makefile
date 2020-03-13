@@ -7,7 +7,7 @@ LD = $(CROSS_COMPILE)gcc
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 
-C_SRC = $(wildcard *.c)
+C_SRC = $(wildcard *.c) $(wildcard ezxml/*.c)
 S_SRC = $(wildcard *.s) $(wildcard *.S)
 SRC = $(C_SRC) $(S_SRC)
 OBJ = $(addsuffix .o, $(basename $(SRC)))
