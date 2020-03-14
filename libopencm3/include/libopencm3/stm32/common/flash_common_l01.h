@@ -130,7 +130,7 @@ void eeprom_program_words(uint32_t address, uint32_t *data, int length_in_words)
 void eeprom_program_byte(uint32_t address, uint8_t data);
 void eeprom_program_bytes(uint32_t address, uint32_t *data, int length);
 
-void flash_program_page(uint32_t addr, void *dst, uint8_t len);
+void flash_program_page(uint32_t addr, void *data);
 void flash_clear_error(void);
 
 END_DECLS

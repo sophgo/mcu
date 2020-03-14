@@ -132,8 +132,7 @@ int check_app(void)
 
 	/* mark app as checked */
 	app_efie_backup.is_checked = 1;
-	flash_program_page((unsigned long)app_efie, &app_efie_backup,
-		      sizeof(app_efie_backup));
+	flash_program_page((unsigned long)app_efie, &app_efie_backup);
 
 	return 0;
 }

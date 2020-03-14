@@ -214,23 +214,30 @@ static inline void flash_erase_page(uint32_t addr)
 	FLASH_PECR &= ~(FLASH_PECR_PROG | FLASH_PECR_ERASE);
 }
 
-void flash_program_page(uint32_t addr, void *dst, uint8_t len)
+void flash_program_page(uint32_t addr, void *data)
 {
-	uint8_t cnt = len/4;
-	uint8_t i = 0;
-	uint8_t *p = dst;
+	uint8_t i;
+	uint8_t *tmp;
+	register uint32_t pc;
+	int run_in_ram;
+
+	__asm__ volatile ("mov %0, pc" : "=r" (pc));
+	run_in_ram = (pc >> 28) ? 1 : 0;
 
 	flash_unlock();
 	flash_erase_page(addr);
 	flash_wait_idle();
 	/* half page program seems not working if we are running in flash */
-	/* FLASH_PECR |= FLASH_PECR_FPRG | FLASH_PECR_PROG; */
-	while (cnt--) {
-		MMIO32(addr + (4 * i)) =
-			p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
-		i += 4;
+	if (run_in_ram)
+		FLASH_PECR |= FLASH_PECR_FPRG | FLASH_PECR_PROG;
+	for (i = 0; i < FLASH_PAGE_SIZE; i += 4) {
+		tmp = ((uint8_t *)data) + i;
+		MMIO32(addr + i) = tmp[0] | (tmp[1] << 8) |
+				(tmp[2] << 16) | (tmp[3] << 24);
 	}
-	/* FLASH_PECR &= ~(FLASH_PECR_FPRG | FLASH_PECR_PROG); */
+
+	if (run_in_ram)
+		FLASH_PECR &= ~(FLASH_PECR_FPRG | FLASH_PECR_PROG);
 	flash_wait_idle();
 	flash_lock();
 }
