@@ -221,12 +221,24 @@ void flash_program_page(uint32_t addr, void *data)
 	register uint32_t pc;
 	int run_in_ram;
 
-	__asm__ volatile ("mov %0, pc" : "=r" (pc));
-	run_in_ram = (pc >> 28) ? 1 : 0;
-
 	flash_unlock();
 	flash_erase_page(addr);
 	flash_wait_idle();
+
+	/* check if we need re-program this page */
+	for (i = 0; i < FLASH_PAGE_SIZE; ++i) {
+		if (((uint8_t *)data)[i])
+			break;
+	}
+	if (i == FLASH_PAGE_SIZE) {
+		/* all data is zero, just erase, do not program */
+		flash_lock();
+		return;
+	}
+
+	__asm__ volatile ("mov %0, pc" : "=r" (pc));
+	run_in_ram = (pc >> 28) ? 1 : 0;
+
 	/* half page program seems not working if we are running in flash */
 	if (run_in_ram)
 		FLASH_PECR |= FLASH_PECR_FPRG | FLASH_PECR_PROG;
@@ -239,7 +251,6 @@ void flash_program_page(uint32_t addr, void *data)
 	if (run_in_ram)
 		FLASH_PECR &= ~(FLASH_PECR_FPRG | FLASH_PECR_PROG);
 	flash_wait_idle();
-	flash_lock();
 }
 
 void flash_clear_error(void)

@@ -92,7 +92,7 @@ int pack_v2(int argc, char *argv[])
 {
 	int err;
 	ezxml_t p;
-	char *firmware_name = "unknown_firmware";
+	char * __attribute__((unused)) firmware_name = "unknown_firmware";
 	unsigned long firmware_size = 64 * 1024;
 	struct image *img;
 
@@ -136,7 +136,7 @@ int pack_v2(int argc, char *argv[])
 		err = 1;
 		goto err_xml;
 	}
-	unsigned long efit_offset, efit_size;
+	unsigned long efit_offset;
 	p = ezxml_child(efit, "offset");
 	if (p == NULL) {
 		error("no efit offset\n");
@@ -150,9 +150,7 @@ int pack_v2(int argc, char *argv[])
 		err = 1;
 		goto err_xml;
 	}
-	efit_size = strtol(p->txt, NULL, 0);
-	debug("efit offset 0x%08lx, size 0x%08lx\n",
-	       efit_offset, efit_size);
+	debug("efit offset 0x%08lx", efit_offset);
 
 	debug("parsing components\n");
 

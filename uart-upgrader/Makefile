@@ -72,7 +72,7 @@ $(OUTDIR)/$(TARGET).dis: $(OUTDIR)/$(TARGET).elf
 
 $(OUTDIR)/$(TARGET).elf: $(LDSCRIPT) $(OBJS)
 	@echo '[LD] $@'
-	$(Q)$(LD) $(OBJS) $(LDFLAGS) -Wl,-Map,$@.map \
+	$(Q)$(LD) $(OBJS) $(LDFLAGS) -Wl,-Map,$(OUTDIR)/$(TARGET).map \
             -T $< -o $@
 
 $(OUTDIR)/%.o: %.c | $(OUTDIR)

@@ -15,20 +15,33 @@
 #include <ctype.h>
 #include <system.h>
 #include <ymodem.h>
+#include <md5.h>
 
 #define FLASH_SIZE	(64 * 1024)
 
 static int save_data(void *data, unsigned long len);
+static int check_firmware(void);
 
 int main(void)
 {
+	int err;
+
 	system_init();
 	systick_counter_enable();
 	cm_enable_interrupts();
 
 	ymodem_receive(save_data, FLASH_SIZE);
 
-	printf("firmware upgrade done\n")
+	printf("checking firmware\n");
+	err = check_firmware();
+
+	while (1) {
+		if (err)
+			printf("firmware upgrade failed\n");
+		else
+			printf("firmware upgrade success\n");
+		mdelay(1000);
+	}
 
 	return 0;
 }
@@ -49,4 +62,16 @@ static int save_data(void *data, unsigned long len)
 		flash_program_page(flash_offset, ((char *)data) + i);
 
 	return 0;
+}
+
+int check_firmware(void)
+{
+	struct md5_ctx ctx;
+	uint8_t md5[16];
+
+	md5_init(&ctx);
+	md5_update(&ctx, (void *)(FLASH_BASE), FLASH_SIZE - 16);
+	md5_final(&ctx, md5);
+	return memcmp(md5, (void *)(((unsigned long)FLASH_BASE) + FLASH_SIZE - 16),
+		      16);
 }
