@@ -8,18 +8,18 @@
 #include <i2c_master.h>
 #include <project_id.h>
 
-#define MEMMAP_EFIE_SIZE		(128)
-
 struct efie {
 	uint32_t	offset;
 	uint32_t	length;
 	uint8_t		checksum[16];
 	uint8_t		is_checked;
-	uint8_t		reserved[103];
+	uint8_t		type;
+	uint8_t		padding[102];
 } __packed;
 
-struct efie *app_efie = (void *)MEMMAP_EFIT_START;
-struct efie *upgrader_efie = (void *)(MEMMAP_EFIT_START + MEMMAP_EFIE_SIZE);
+struct efie *app_efie;
+struct efie *upgrader_efie;
+struct efie *uart_upgrader_efie;
 
 void upgrade_start(void)
 {
@@ -55,11 +55,31 @@ void app_start(void)
 	entry();
 }
 
+static struct efie *find_efie(uint32_t type)
+{
+	struct efie *p;
+
+	for (p = (void *)MEMMAP_EFIT_START;
+	     (unsigned long)p < MEMMAP_EFIT_END;
+	     ++p) {
+		if (p->type == type)
+			return p;
+	}
+	return NULL;
+}
+
+static void setup_efie(void)
+{
+	app_efie = find_efie(RUN_STAGE_APP);
+	upgrader_efie = find_efie(RUN_STAGE_UPGRADER);
+	uart_upgrader_efie = find_efie(RUN_STAGE_UART_UPGRADER);
+}
+
 int setup_stage(void)
 {
+	setup_efie();
 	register uint32_t pc;
 	asm volatile ("mov %0, pc" : "=r" (pc));
-	pc -= 4;
 	if (pc < MEMMAP_LOADER_END)
 		return RUN_STAGE_LOADER;
 	else
@@ -89,7 +109,7 @@ static void checksum(void *out, void *in, unsigned long len)
 	memcpy(out, result, sizeof(result));
 }
 
-/* 
+/*
  * 0 means success, app is complete upgraded
  * -1 means failed, app is broken
  */

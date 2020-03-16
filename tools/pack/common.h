@@ -12,8 +12,9 @@ struct efie {
 	uint32_t	offset;
 	uint32_t	length;
 	uint8_t		checksum[16];
-	uint32_t	type;
-	uint8_t		padding[100];
+	uint8_t		is_checked;
+	uint8_t		type;
+	uint8_t		padding[102];
 } __attribute__((packed));
 
 struct comp {

@@ -18,6 +18,7 @@
 #define RUN_STAGE_APP		0
 #define RUN_STAGE_LOADER	1
 #define RUN_STAGE_UPGRADER	2
+#define RUN_STAGE_UART_UPGRADER	3
 
 int check_app(void);
 int setup_stage(void);
