@@ -13,4 +13,9 @@
 
 #endif
 
+#define error(...)	printf(__VA_ARGS__)
+#define warn(...)	printf(__VA_ARGS__)
+
+void dump(void *data, unsigned long len);
+
 #endif

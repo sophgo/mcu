@@ -15,18 +15,11 @@
 #include <info.h>
 #include <mcu.h>
 #include <debug.h>
-#include <sd_io.h>
+#include <dma.h>
+#include <string.h>
+#include <sd.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
-
-#define SAMPLE_NUM		(1024)
-#define SAMPLE_DEPTH		(2)
-#define CHANNEL_NUM		(5)
-#define SAMPLE_TOTAL		(CHANNEL_NUM * SAMPLE_NUM)
-
-#define ADC_DMA_CHANNEL		DMA_CHANNEL1
-
-uint16_t sig_buf[SAMPLE_TOTAL];
 
 int adc_setup(void)
 {
@@ -53,62 +46,24 @@ void adc_start(void)
 	adc_start_conversion_regular(ADC1);
 }
 
-int dma_setup(void)
-{
-	dma_disable_channel(DMA1, ADC_DMA_CHANNEL);
-
-	dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
-	dma_enable_memory_increment_mode(DMA1, ADC_DMA_CHANNEL);
-
-	dma_set_peripheral_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_PSIZE_16BIT);
-	dma_set_memory_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_MSIZE_16BIT);
-
-	dma_set_read_from_peripheral(DMA1, ADC_DMA_CHANNEL);
-	dma_set_peripheral_address(DMA1, ADC_DMA_CHANNEL,
-				   (uint32_t)&ADC_DR(ADC1));
-
-	dma_set_memory_address(DMA1, ADC_DMA_CHANNEL, (uint32_t)sig_buf);
-	dma_set_number_of_data(DMA1, ADC_DMA_CHANNEL, SAMPLE_TOTAL);
-
-	dma_enable_transfer_complete_interrupt(DMA1, ADC_DMA_CHANNEL);
-	dma_enable_channel(DMA1, ADC_DMA_CHANNEL);
-	return 0;
-}
-
 int main(void)
 {
 	system_init();
 
-	debug("BITMAIN SOPHONE SM5 PCIE BOARD -- %s\n", VERSION);
+	printf("BITMAIN SOPHONE SM5 PCIE BOARD -- %s\n", VERSION);
 
 	i2c1_slave_ctx.id = 1;
 	i2c_master_init(I2C1);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE);
 	i2c_slave_start(&i2c1_slave_ctx);
 
-	SD_DEV dev[1];
-	uint8_t buffer[512];
 
-	SDRESULTS res;
-	// Part of your initialization code here
-	if(SD_Init(dev)==SD_OK)
-	{
-		// You can read the sd card. For example you can read from the second
-		// sector the set of bytes between [04..20]:
-		// - Second sector is 1
-		// - Offset is 4
-		// - Bytes to count is 16 (20 minus 4)
-		res = SD_Read(dev, (void*)buffer, 1, 4, 16);
-		if(res==SD_OK)
-		{
-			// Maybe you wish change the data on this sector:
-			res = SD_Write(dev, (void*)buffer, 1);
-			if(res==SD_OK)
-			{
-				//Some action here
-			}
-		}
-	}
+#ifdef DEBUG
+	printf("SD Card Self Test %s\n",
+	       sd_test() ? "Failed" : "Pass");
+#else
+	sd_init();
+#endif
 
 	adc_setup();
 	dma_setup();
