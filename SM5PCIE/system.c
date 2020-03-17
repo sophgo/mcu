@@ -23,21 +23,23 @@ static void gpio_init(void)
 #endif
 	/* GPIO port A */
 	/* spi nss */
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO15);
-	gpio_set_af(GPIOA, GPIO_AF0, GPIO15);
-	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
-			       GPIO15);
+	gpio_set(GPIOA, GPIO15);
+	/* gpio_set_af(GPIOA, GPIO_AF0, GPIO15); */
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP,
+				GPIO_OSPEED_VERYHIGH, GPIO15);
+	gpio_mode_setup(GPIOA, GPIO_MODE_OUTPUT,
+			GPIO_PUPD_PULLUP, GPIO15);
 	/* uart2 tx, rx */
 #ifdef NUCLEO
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO9 | GPIO10);
 	gpio_set_af(GPIOA, GPIO_AF4, GPIO9 | GPIO10);
 	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
 			       GPIO9 | GPIO10);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO9 | GPIO10);
 #else
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
 	gpio_set_af(GPIOA, GPIO_AF4, GPIO2 | GPIO3);
 	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
 			       GPIO2 | GPIO3);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
 #endif
 	/* adc 5 way */
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE,
@@ -45,6 +47,9 @@ static void gpio_init(void)
 
 	/* GPIO port B */
 	/* spi clk, miso, mosi */
+	gpio_set_af(GPIOB, GPIO_AF0, GPIO3 | GPIO4 | GPIO5);
+	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
+			       GPIO3 | GPIO4 | GPIO5);
 #if 1
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP,
 			GPIO3 | GPIO4 | GPIO5);
@@ -52,15 +57,13 @@ static void gpio_init(void)
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
 			GPIO3 | GPIO4 | GPIO5);
 #endif
-	gpio_set_af(GPIOB, GPIO_AF0, GPIO3 | GPIO4 | GPIO5);
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
-			       GPIO3 | GPIO4 | GPIO5);
+
 	/* i2c1 scl, sda */
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP,
-			GPIO8 | GPIO9);
 	gpio_set_af(GPIOB, GPIO_AF4, GPIO8 | GPIO9);
 	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
 			       GPIO8 | GPIO9);
+	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP,
+			GPIO8 | GPIO9);
 	/* led, sdoe */
 	gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 			GPIO0 | GPIO1 | GPIO2 | GPIO7);
