@@ -15,10 +15,9 @@
 #include <info.h>
 #include <mcu.h>
 #include <debug.h>
-#include <mmc.h>
+#include <sd_io.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
-struct mmc_port spi;
 
 #define SAMPLE_NUM		(1024)
 #define SAMPLE_DEPTH		(2)
@@ -87,8 +86,29 @@ int main(void)
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE);
 	i2c_slave_start(&i2c1_slave_ctx);
 
-	mcu_init();
-	mmc_init(SPI1, GPIOA, GPIO15, &spi);
+	SD_DEV dev[1];
+	uint8_t buffer[512];
+
+	SDRESULTS res;
+	// Part of your initialization code here
+	if(SD_Init(dev)==SD_OK)
+	{
+		// You can read the sd card. For example you can read from the second
+		// sector the set of bytes between [04..20]:
+		// - Second sector is 1
+		// - Offset is 4
+		// - Bytes to count is 16 (20 minus 4)
+		res = SD_Read(dev, (void*)buffer, 1, 4, 16);
+		if(res==SD_OK)
+		{
+			// Maybe you wish change the data on this sector:
+			res = SD_Write(dev, (void*)buffer, 1);
+			if(res==SD_OK)
+			{
+				//Some action here
+			}
+		}
+	}
 
 	adc_setup();
 	dma_setup();

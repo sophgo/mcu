@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#define debug(fmt, ...)	printf(fmt, __VA_ARGS__)
+#define debug(...)	printf(__VA_ARGS__)
 
 #else
 

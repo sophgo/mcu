@@ -16,8 +16,8 @@ VERSION := $(shell ./version.sh $(TARGET))
 OPENCM3_DIR = ../libopencm3
 
 OUTDIR = build
-SRCDIR = .
-INCDIR = . $(OPENCM3_DIR)/include
+SRCDIR = . ulibSD
+INCDIR = . $(OPENCM3_DIR)/include ulibSD
 
 #fatfs
 INCDIR += fatfs
