@@ -7,6 +7,7 @@
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/adc.h>
 #include <libopencm3/stm32/dma.h>
+#include <libopencm3/stm32/usart.h>
 #include <stdio.h>
 #include <tick.h>
 #include <system.h>
@@ -57,12 +58,25 @@ int main(void)
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE);
 	i2c_slave_start(&i2c1_slave_ctx);
 
-
+	if (sd_init()) {
+		error("sd card init failed\n");
+		return -1;
+	}
 #ifdef DEBUG
-	printf("SD Card Self Test %s\n",
-	       sd_test() ? "Failed" : "Pass");
-#else
-	sd_init();
+	puts("uart test passed\n");
+
+#if 0
+	printf("system timer test\n");
+	tick_test();
+#endif
+	printf("sd card self test %s\n",
+	       sd_test() ? "failed" : "pass");
+#if 0
+	printf("sd card benchmark\n");
+	sd_benchmark();
+	printf("benchmark done\n");
+#endif
+
 #endif
 
 	adc_setup();

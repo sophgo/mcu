@@ -27,13 +27,13 @@ int std_stub_init(int _uart)
 	}
 
 	rcc_periph_clock_enable(rcc_uart);
-	usart_enable(uart);
 	usart_set_baudrate(uart, 115200);
 	usart_set_databits(uart, 8);
 	usart_set_stopbits(uart, USART_STOPBITS_1);
 	usart_set_parity(uart, USART_PARITY_NONE);
 	usart_set_flow_control(uart, USART_FLOWCONTROL_NONE);
 	usart_set_mode(uart, USART_MODE_TX_RX);
+	usart_enable(uart);
 	return 0;
 }
 
@@ -88,5 +88,17 @@ void *_sbrk(unsigned long inc)
 	last = (void *)heap_end;
 	heap_end += inc;
 	return last;
+}
+
+int puts(const char *s)
+{
+	int i;
+
+	for (i = 0; *s; ++s, ++i) {
+		if (*s == '\n')
+			usart_send_blocking(uart, '\r');
+		usart_send_blocking(uart, *s);
+	}
+	return i;
 }
 
