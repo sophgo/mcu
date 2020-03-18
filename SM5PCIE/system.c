@@ -8,8 +8,29 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
+#include <libopencm3/stm32/flash.h>
 #include <tick.h>
 #include <stdstub.h>
+
+static void clock_init(void)
+{
+	struct rcc_clock_scale clk = {
+		.pll_mul = RCC_CFGR_PLLMUL_MUL4,
+		.pll_div = RCC_CFGR_PLLDIV_DIV2,
+		.pll_source = RCC_CFGR_PLLSRC_HSI16_CLK,
+		.flash_waitstates = FLASH_ACR_LATENCY_1WS,
+		.voltage_scale = PWR_SCALE1,
+		.hpre = RCC_CFGR_HPRE_NODIV,
+		.ppre1 = RCC_CFGR_PPRE1_NODIV,
+		.ppre2 = RCC_CFGR_PPRE2_NODIV,
+		.ahb_frequency = 32 * 1000 * 1000, /* 32M */
+		.apb1_frequency = 32 * 1000 * 1000, /* 32M */
+		.apb2_frequency = 32 * 1000 * 1000, /* 32M */
+		.msi_range = 0, /* ignored by driver */
+	};
+
+	rcc_clock_setup_pll(&clk);
+}
 
 static void gpio_init(void)
 {
@@ -79,6 +100,8 @@ void system_init(void)
 	/* we may load this to a place other than default reset address */
 	/* so relocated vtor -- vector table offset register */
 	SCB_VTOR = (uint32_t)&vector_table;
+
+	clock_init();
 
 	tick_init();
 	gpio_init();
