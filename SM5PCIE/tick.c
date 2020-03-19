@@ -37,7 +37,7 @@ void tick_test(void)
 {
 	int i;
 	for (i = 0; i < 10; ++i) {
-		debug("%d seconds\n", i);
+		debug("%d seconds\r\n", i);
 		mdelay(1000);
 	}
 }

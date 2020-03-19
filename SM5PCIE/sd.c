@@ -35,32 +35,32 @@ int sd_test(void)
 	memset(wr, 0x5a, sizeof(wr));
 
 	if (sd_read(rd, sector, 1)) {
-		debug("card read failed\n");
+		debug("card read failed\r\n");
 		return -1;
 	}
 
-	debug("original sector %lu data:\n", sector);
+	debug("original sector %lu data:\r\n", sector);
 	dump(rd, sizeof(rd));
 
 	if (sd_write(wr, sector, 1)) {
-		debug("card write failed\n");
+		debug("card write failed\r\n");
 		return -1;
 	}
 
-	debug("rewrite sector %lu with 0x5a\n", sector);
+	debug("rewrite sector %lu with 0x5a\r\n", sector);
 
 	if (sd_read(rd, sector, 1)) {
-		debug("card read failed\n");
+		debug("card read failed\r\n");
 		return -1;
 	}
 	dump(rd, sizeof(rd));
 
 	if (memcmp(rd, wr, sizeof(rd))) {
-		debug("data write error\n");
+		debug("data write error\r\n");
 		return -1;
 	}
 
-	puts("seems good\n");
+	debug("seems good\r\n");
 	return 0;
 }
 
@@ -81,6 +81,6 @@ int sd_benchmark(void)
 			error("%ld sectors used %ld ms\r",
 			      i, tick_get() - start);
 	}
-	printf("\n");
+	error("\r\n");
 	return 0;
 }

@@ -1,5 +1,6 @@
 #include <libopencm3/stm32/dma.h>
 #include <libopencm3/stm32/adc.h>
+#include <libopencm3/stm32/rcc.h>
 #include <debug.h>
 
 #define SAMPLE_HALF_NUM		(512)
@@ -21,6 +22,7 @@ void dma_assert(const char *msg)
 
 int dma_setup(void)
 {
+	rcc_periph_clock_enable(RCC_DMA);
 	dma_disable_channel(DMA1, ADC_DMA_CHANNEL);
 
 	dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
@@ -61,9 +63,9 @@ void dma_isr(void)
 	htif = isr & (1 << 2);
 	teif = isr & (1 << 3);
 	if (teif)
-		dma_assert("transmit error\n");
+		dma_assert("transmit error\r\n");
 	if (tcif && htif)
-		dma_assert("overflow\n");
+		dma_assert("overflow\r\n");
 
 	if (htif)
 		dma_ht_isr();

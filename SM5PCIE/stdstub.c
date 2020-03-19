@@ -41,11 +41,8 @@ int _write(int file, char *s, int len)
 {
 	int i;
 
-	for (i = 0; i < len; ++i) {
-		if (s[i] == '\n')
-			usart_send_blocking(uart, '\r');
+	for (i = 0; i < len; ++i)
 		usart_send_blocking(uart, s[i]);
-	}
 
 	return i;
 }
@@ -88,17 +85,5 @@ void *_sbrk(unsigned long inc)
 	last = (void *)heap_end;
 	heap_end += inc;
 	return last;
-}
-
-int puts(const char *s)
-{
-	int i;
-
-	for (i = 0; *s; ++s, ++i) {
-		if (*s == '\n')
-			usart_send_blocking(uart, '\r');
-		usart_send_blocking(uart, *s);
-	}
-	return i;
 }
 

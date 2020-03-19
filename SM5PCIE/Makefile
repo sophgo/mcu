@@ -82,7 +82,7 @@ $(OUTDIR)/%.dis: $(OUTDIR)/%.elf
 
 $(OUTDIR)/%.elf: $(OUTDIR)/%.ld $(OBJS)
 	@echo '[LD] $@'
-	$(Q)$(LD) $(OBJS) $(LDFLAGS) -Wl,-Map,$@.map \
+	$(Q)$(LD) $(OBJS) $(LDFLAGS) -Wl,-Map,$(basename $@).map \
             -T $< -o $@
 
 $(OUTDIR)/$(LDSCRIPT): target.ldi

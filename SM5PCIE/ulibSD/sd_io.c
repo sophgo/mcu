@@ -365,8 +365,18 @@ SDRESULTS SD_Read(SD_DEV *dev, void *dat, DWORD sector, WORD ofs, WORD cnt)
     WORD remaining;
     res = SD_ERROR;
     if ((sector > dev->last_sector)||(cnt == 0)) return(SD_PARERR);
-    // Convert sector number to byte address (sector * SD_BLK_SIZE)
-    if (__SD_Send_Cmd(CMD17, sector * SD_BLK_SIZE) == 0) {
+
+    /* SDSC addressed by byte: sector * SD_BLK_SIZE
+     * SDHC and SDXC addressed by sector(512 bytes fixed): sector
+     */
+    uint32_t offset;
+#if 0
+    offset = sector * SD_BLK_SIZE;
+#else
+    offset = sector;
+#endif
+
+    if (__SD_Send_Cmd(CMD17, offset) == 0) {
         SPI_Timer_On(100);  // Wait for data packet (timeout of 100ms)
         do {
             tkn = SPI_RW(0xFF);
@@ -427,8 +437,17 @@ SDRESULTS SD_Write(SD_DEV *dev, void *dat, DWORD sector)
     // Query ok?
     if(sector > dev->last_sector) return(SD_PARERR);
     // Single block write (token <- 0xFE)
-    // Convert sector number to bytes address (sector * SD_BLK_SIZE)
-    if(__SD_Send_Cmd(CMD24, sector * SD_BLK_SIZE)==0)
+
+    /* SDSC addressed by byte: sector * SD_BLK_SIZE
+     * SDHC and SDXC addressed by sector(512 bytes fixed): sector
+     */
+    uint32_t offset;
+#if 0
+    offset = sector * SD_BLK_SIZE;
+#else
+    offset = sector;
+#endif
+    if(__SD_Send_Cmd(CMD24, offset)==0)
         return(__SD_Write_Block(dev, dat, 0xFE));
     else
         return(SD_ERROR);

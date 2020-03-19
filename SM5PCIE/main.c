@@ -5,7 +5,6 @@
  */
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/spi.h>
-#include <libopencm3/stm32/adc.h>
 #include <libopencm3/stm32/dma.h>
 #include <libopencm3/stm32/usart.h>
 #include <stdio.h>
@@ -17,41 +16,19 @@
 #include <mcu.h>
 #include <debug.h>
 #include <dma.h>
+#include <adc.h>
 #include <string.h>
 #include <sd.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
 
-int adc_setup(void)
-{
-	uint8_t channels[] = {0, 1, 5, 6, 7};
-	/* init adc and dma */
-	adc_power_off(ADC1);
-	adc_calibrate(ADC1);
-	adc_enable_dma(ADC1);
-	adc_enable_dma_circular_mode(ADC1);
-	adc_set_continuous_conversion_mode(ADC1);
-	adc_disable_discontinuous_mode(ADC1);
-	adc_set_right_aligned(ADC1);
-	adc_set_resolution(ADC1, 0);
-	adc_set_regular_sequence(ADC1, sizeof(channels), channels);
-	/* about 10us per-sample, we have 5way, so 50us per-round */
-	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_160DOT5);
-	adc_power_on(ADC1);
-
-	return 0;
-}
-
-void adc_start(void)
-{
-	adc_start_conversion_regular(ADC1);
-}
-
 int main(void)
 {
 	system_init();
 
-	printf("BITMAIN SOPHONE SM5 PCIE BOARD -- %s\n", VERSION);
+	setvbuf(stdout, NULL, _IONBF, 0);
+
+	debug("\r\nBITMAIN SOPHONE SM5 PCIE BOARD -- %s\r\n", VERSION);
 
 	i2c1_slave_ctx.id = 1;
 	i2c_master_init(I2C1);
@@ -59,28 +36,31 @@ int main(void)
 	i2c_slave_start(&i2c1_slave_ctx);
 
 	if (sd_init()) {
-		error("sd card init failed\n");
+		error("sd card init failed\r\n");
 		return -1;
 	}
 #ifdef DEBUG
-	puts("uart test passed\n");
+	puts("uart test passed\r\n");
 
 #if 0
-	printf("system timer test\n");
+	debug("system timer test\r\n");
 	tick_test();
 #endif
-	printf("sd card self test %s\n",
+	debug("sd card self test %s\r\n",
 	       sd_test() ? "failed" : "pass");
 #if 0
-	printf("sd card benchmark\n");
+	debug("sd card benchmark\r\n");
 	sd_benchmark();
-	printf("benchmark done\n");
+	debug("benchmark done\r\n");
 #endif
 
 #endif
 
+	debug("adc setup done\r\n");
 	adc_setup();
+	debug("dma setup done\r\n");
 	dma_setup();
+	debug("adc start\r\n");
 	adc_start();
 
 	while (1) {
