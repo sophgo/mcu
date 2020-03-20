@@ -148,7 +148,7 @@ int node_on(struct power_node *node)
 {
 	int err = 0;
 
-	debug("power on %s\n", node->name);
+	debug("power on %s\r\n", node->name);
 
 	if (node->check) {
 		while (gpio_get(node->port, node->pin) == 0)

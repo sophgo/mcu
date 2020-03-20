@@ -16,7 +16,7 @@
 #include <adc.h>
 
 #define MCU_REG_MAX 0x64
-#define MCU_SW_VER 0;
+#define MCU_SW_VER	1
 unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
@@ -104,6 +104,9 @@ static uint8_t mcu_read(void *priv)
 	uint8_t ret = 0;
 
 	switch (ctx->idx) {
+	case REG_CMD_REG:
+		ret = 0;
+		break;
 	case REG_PROJECT:
 		ret = PROJ_SC5H;
 		break;
@@ -181,5 +184,9 @@ void mcu_init(void)
 
 	MCU_HW_VER = (gpio_port_read(GPIOC) >> 14) & 3;
 	MCU_HW_VER |= (gpio_port_read(GPIOH) & 3) << 4;
+
+	gpio_clear(EN_VQPS_PORT, EN_VQPS_PIN);
+	gpio_mode_setup(EN_VQPS_PORT, GPIO_MODE_OUTPUT,
+			GPIO_PUPD_NONE, EN_VQPS_PIN);
 }
 

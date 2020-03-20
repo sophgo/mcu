@@ -119,7 +119,7 @@ int main(void)
 
 	i2c1_slave_ctx.id = 1;
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
-			0x17, -1, 0);
+			0x17, 0x6a, 0);
 	mcu_init();
 	eeprom_init();
 	i2c_slave_start(&i2c1_slave_ctx);

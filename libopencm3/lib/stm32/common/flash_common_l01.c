@@ -251,6 +251,7 @@ void flash_program_page(uint32_t addr, void *data)
 	if (run_in_ram)
 		FLASH_PECR &= ~(FLASH_PECR_FPRG | FLASH_PECR_PROG);
 	flash_wait_idle();
+	flash_lock();
 }
 
 void flash_clear_error(void)

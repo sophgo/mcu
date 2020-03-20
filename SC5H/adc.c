@@ -1,10 +1,14 @@
 #include <libopencm3/stm32/adc.h>
+#include <libopencm3/stm32/rcc.h>
 
 int adc_init(void)
 {
 	uint8_t channels[] = {0, 1};
+
+	rcc_periph_clock_enable(RCC_ADC1);
 	/* init adc and dma */
 	adc_power_off(ADC1);
+	adc_set_clk_source(ADC1, ADC_CFGR2_CKMODE_PCLK_DIV2);
 	adc_calibrate(ADC1);
 	adc_set_single_conversion_mode(ADC1);
 	adc_enable_discontinuous_mode(ADC1);

@@ -45,8 +45,8 @@ static struct image *img_alloc(unsigned long size)
 
 static int img_final(struct image *img, char *file)
 {
-	/* calculate md5sum, from 0 to 64K - 16 */
-	unsigned long md_size = img->size - 16;
+	/* calculate md5sum, from 0 to 64K - 128 */
+	unsigned long md_size = img->size - 128;
 	void *dgst = img->img + md_size;
 	MD5_CTX md_ctx;
 

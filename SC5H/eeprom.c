@@ -12,7 +12,7 @@ static inline uint8_t eeprom_read_byte(uint32_t offset)
 
 static inline void eeprom_write_byte(uint32_t offset, uint8_t data)
 {
-	eeprom_program_word(EEPROM_BASE_ADDR + offset, data);
+	eeprom_program_byte(EEPROM_BASE_ADDR + offset, data);
 }
 
 static struct eeprom_ctx {
