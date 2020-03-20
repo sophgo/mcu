@@ -24,9 +24,14 @@ struct i2c_slave_ctx i2c1_slave_ctx;
 
 int main(void)
 {
+	void *buf;
+	unsigned long sector_num = 0;
+	unsigned long sector_offset = 0;
+
 	system_init();
 
-	setvbuf(stdout, NULL, _IONBF, 0);
+	/* set none buffered mode */
+	// setvbuf(stdout, NULL, _IONBF, 0);
 
 	debug("\r\nBITMAIN SOPHONE SM5 PCIE BOARD -- %s\r\n", VERSION);
 
@@ -46,8 +51,12 @@ int main(void)
 	debug("system timer test\r\n");
 	tick_test();
 #endif
+
+#if 0
 	debug("sd card self test %s\r\n",
-	       sd_test() ? "failed" : "pass");
+	      sd_test() ? "failed" : "pass");
+#endif
+
 #if 0
 	debug("sd card benchmark\r\n");
 	sd_benchmark();
@@ -64,7 +73,24 @@ int main(void)
 	adc_start();
 
 	while (1) {
+
+		buf = dma_buffer_get(&sector_num);
+		if (buf) {
+#if 0
+			if (sd_write(buf, sector_offset, sector_num))
+				error("sd card write error\r\n");
+#endif
+			sector_offset += sector_num;
+			dma_buffer_put(buf);
+		}
+		if (sector_offset >= 2048)
+			break;
 	}
+
+	debug("capture done\r\n");
+
+	while (1)
+		;
 
 	return 0;
 }

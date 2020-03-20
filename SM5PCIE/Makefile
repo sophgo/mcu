@@ -65,6 +65,7 @@ AS = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)gcc
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
+READELF = $(CROSS_COMPILE)readelf
 
 all:$(OUTDIR) \
 	$(OUTDIR)/$(TARGET).elf \
@@ -78,7 +79,8 @@ $(OUTDIR)/%.bin: $(OUTDIR)/%.elf
 
 $(OUTDIR)/%.dis: $(OUTDIR)/%.elf
 	@echo '[DP] $@'
-	$(Q)$(OBJDUMP) -D $< > $@
+	$(Q)$(READELF) -e $< > $@
+	$(Q)$(OBJDUMP) -D $< >> $@
 
 $(OUTDIR)/%.elf: $(OUTDIR)/%.ld $(OBJS)
 	@echo '[LD] $@'
