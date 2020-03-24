@@ -1,5 +1,6 @@
 TARGET = uart-upgrader
 DEBUG = 1
+STANDALONE = 0
 
 ifeq ($(strip $(V)), 1)
 	Q =
@@ -44,6 +45,10 @@ ifeq ($(strip $(DEBUG)), 1)
 CFLAGS += -DDEBUG
 endif
 
+ifeq ($(strip $(STANDALONE)), 1)
+CFLAGS += -DSTANDALONE
+endif
+
 ASFLAGS = $(CFLAGS) -x assembler-with-cpp -Wa,--no-warn
 
 LDFLAGS = $(SPEC_CFLAGS) $(ARCH_CFLAGS) $(OPT_CFLAGS) -static \
@@ -56,6 +61,7 @@ AS = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)gcc
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
+READELF = $(CROSS_COMPILE)readelf
 
 all:$(OUTDIR) \
 	$(OUTDIR)/$(TARGET).elf \
@@ -68,7 +74,8 @@ $(OUTDIR)/$(TARGET).bin: $(OUTDIR)/$(TARGET).elf
 
 $(OUTDIR)/$(TARGET).dis: $(OUTDIR)/$(TARGET).elf
 	@echo '[DP] $@'
-	$(Q)$(OBJDUMP) -D $< > $@
+	$(Q)$(READELF) -e $< > $@
+	$(Q)$(OBJDUMP) -D $< >> $@
 
 $(OUTDIR)/$(TARGET).elf: $(LDSCRIPT) $(OBJS)
 	@echo '[LD] $@'

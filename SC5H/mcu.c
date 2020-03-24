@@ -16,7 +16,7 @@
 #include <adc.h>
 
 #define MCU_REG_MAX 0x64
-#define MCU_SW_VER	1
+#define MCU_SW_VER	2
 unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
@@ -64,7 +64,7 @@ void mcu_cmd_process(void)
 {
 	switch (mcu_ctx.cmd) {
 		case 8:
-			upgrade_start();
+			i2c_upgrade_start();
 			break;
 		default:
 			break;

@@ -6,6 +6,7 @@
 #include <libopencm3/cm3/scb.h>
 #include <libopencm3/cm3/vector.h>
 #include <libopencm3/cm3/systick.h>
+#include <libopencm3/cm3/cortex.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/gpio.h>
@@ -24,6 +25,7 @@ static inline void tick_init(void)
 	systick_set_frequency(1000, rcc_ahb_frequency);
 	systick_interrupt_enable();
 	systick_counter_enable();
+	cm_enable_interrupts();
 }
 
 unsigned long tick_get(void)
@@ -47,18 +49,29 @@ void isr_systick(void)
 
 void sc5h_init(void)
 {
-	/* usart1 */
-	gpio_set_af(GPIOA, GPIO_AF6, GPIO2 | GPIO3);
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
-	rcc_periph_clock_enable(RCC_USART1);
-	usart_enable(USART1);
-	usart_set_baudrate(USART1, 115200);
-	usart_set_databits(USART1, 8);
-	usart_set_stopbits(USART1, USART_STOPBITS_1);
-	usart_set_parity(USART1, USART_PARITY_NONE);
-	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-	usart_set_mode(USART1, USART_MODE_TX_RX);
-	stduart = USART1;
+	const int uart = USART2;
+	const int rcc_uart = RCC_USART2;
+
+	rcc_periph_clock_enable(RCC_GPIOA);
+	rcc_periph_clock_enable(rcc_uart);
+
+	/* usart2 */
+	gpio_set_af(GPIOA, GPIO_AF4, GPIO2 | GPIO3);
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
+			GPIO2 | GPIO3);
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3);
+
+	usart_disable(uart);
+	mdelay(1);
+	usart_enable(uart);
+
+	usart_set_baudrate(uart, 115200);
+	usart_set_databits(uart, 8);
+	usart_set_stopbits(uart, USART_STOPBITS_1);
+	usart_set_parity(uart, USART_PARITY_NONE);
+	usart_set_flow_control(uart, USART_FLOWCONTROL_NONE);
+	usart_set_mode(uart, USART_MODE_TX_RX);
+	stduart = uart;
 }
 
 struct proj_ops {
@@ -93,8 +106,6 @@ int _write(int file, char *s, int len)
 	int i;
 
 	for (i = 0; i < len; ++i) {
-		if (s[i] == '\n')
-			usart_send_blocking(stduart, '\r');
 		usart_send_blocking(stduart, s[i]);
 	}
 
@@ -143,19 +154,22 @@ void *_sbrk(unsigned long inc)
 }
 
 
-int uart_send(int data)
+int xmodem_uart_send(int data)
 {
-    usart_send_blocking(USART1, data);
+	if (data == 0x18)
+		while (1)
+			;
+    usart_send_blocking(stduart, data);
     return 0;
 }
 
 /* 0xffffffff means infinity */
-int uart_recv(unsigned long timeout)
+int xmodem_uart_recv(unsigned long timeout)
 {
     unsigned long tick_start = tick_get();
     do {
-        if (usart_is_recv_ready(USART1)) {
-            return usart_recv(USART1);
+        if (usart_is_recv_ready(stduart)) {
+            return usart_recv(stduart);
         }
     } while (tick_get() - tick_start <= timeout || timeout == 0xffffffff);
     return -1;

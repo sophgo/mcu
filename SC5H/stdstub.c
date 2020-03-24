@@ -27,6 +27,13 @@ void std_stub_init(void)
 	usart_set_mode(UART, USART_MODE_TX_RX);
 }
 
+int uart_read(void)
+{
+	if (!usart_is_recv_ready(UART))
+		return -1;
+	return usart_recv(UART);
+}
+
 int _write(int file, char *s, int len)
 {
 	int i;

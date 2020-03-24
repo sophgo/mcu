@@ -9,7 +9,7 @@ MEMORY
     RAM : ORIGIN = 0x20000000, LENGTH = 20K
     /* ROM only hold a picec of code that copy real code to its position */
     /* ROM code should position independent */
-    ROM : ORIGIN = 0x0800d000, LENGTH = 12K
+    ROM : ORIGIN = 0x08000000, LENGTH = 12K
 }
 
 SECTIONS

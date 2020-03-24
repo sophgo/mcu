@@ -18,12 +18,28 @@ struct efie {
 } __packed;
 
 struct efie *app_efie;
-struct efie *upgrader_efie;
-struct efie *uart_upgrader_efie;
 
-void upgrade_start(void)
+static void upgrade_start(unsigned int type);
+static struct efie *find_efie(uint32_t type);
+
+void uart_upgrade_start(void)
+{
+	upgrade_start(RUN_STAGE_UART_UPGRADER);
+}
+
+void i2c_upgrade_start(void)
+{
+	upgrade_start(RUN_STAGE_UPGRADER);
+}
+
+static void upgrade_start(unsigned int type)
 {
 	typedef void (*upgrade_entry)(uint32_t project);
+	struct efie *efie = find_efie(type);
+
+	if (efie == NULL)
+		return;
+
 	/* disable sys tick */
 	systick_counter_disable();
 	/* disable i2c1 and i2c2 */
@@ -36,7 +52,7 @@ void upgrade_start(void)
 	/* working in thumb mode, we should add 1 to destination */
 	/* thumb instruction pc should be even number */
 	upgrade_entry entry = (upgrade_entry)
-		(upgrader_efie->offset + MEMMAP_FLASH_START + 1);
+		(efie->offset + MEMMAP_FLASH_START + 1);
 	entry(PROJ_SC5H);
 }
 
@@ -71,8 +87,6 @@ static struct efie *find_efie(uint32_t type)
 static void setup_efie(void)
 {
 	app_efie = find_efie(RUN_STAGE_APP);
-	upgrader_efie = find_efie(RUN_STAGE_UPGRADER);
-	uart_upgrader_efie = find_efie(RUN_STAGE_UART_UPGRADER);
 }
 
 int setup_stage(void)

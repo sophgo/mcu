@@ -1,16 +1,31 @@
+#include <project_id.h>
+
 #define SCB_BASE	(0xe000ed00)
-#define SCB_VTOR	(SCB_BASE + 8)
+#define SCB_VTOR	(SCB_BASE + 0x08)
+#define SCB_CCR		(SCB_BASE + 0x14)
 
 	.syntax unified
 	.cpu cortex-m0plus
 	.fpu softvfp
 	.thumb
+	.type loader_start, %function
+	.type pre_loader, %function
 
 	.section .loader, "ax"
+#ifdef STANDALONE
+	.word	__ld_ram_end
+	.word	pre_loader
+pre_loader:
+	ldr	r0, =PROJ_SC5H
+	b	loader_start
+#endif
 loader_start:
 	# get loader running address
 	mov	r3, pc
-	subs	r3, r3, 4
+	# 1K byte aligned
+	ldr	r1, = 0xfffffc00
+	ands	r3, r3, r1
+
 	/* save r0, parameters, donnot modify r4 untill main */
 	mov	r4, r0
 	
@@ -49,6 +64,13 @@ zero_bss_start:
 zero_bss_end:
 
 	/* b	zero_bss_end */
+
+	/* config ccr stkalign */
+	ldr	r0, =SCB_CCR
+	ldr	r1, [r0]
+	ldr	r2, =(1 << 9)
+	orrs	r1, r1, r2
+	str	r1, [r0]
 	
 	/* reconfig scb->vtor */
 	ldr	r0, =SCB_VTOR

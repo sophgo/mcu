@@ -22,7 +22,8 @@
 
 int check_app(void);
 int setup_stage(void);
-void upgrade_start(void);
+void i2c_upgrade_start(void);
+void uart_upgrade_start(void);
 void app_start(void);
 
 #endif

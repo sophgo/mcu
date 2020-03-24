@@ -79,16 +79,16 @@ void pcie_reset_poll(void)
 	if (pcie_reset_state() == 0) {
 		sys_reset_set(0);
 		mdelay(30);
-		while (pcie_reset_state() == 0)
-			;
-		sys_reset_set(1);
 	}
+	sys_reset_set(pcie_reset_state());
 }
 
 struct i2c_slave_ctx i2c1_slave_ctx;
 
 int main(void)
 {
+	int uart_recv;
+
 	stage = setup_stage();
 	if (stage == RUN_STAGE_LOADER && check_app() == 0)
 		app_start();
@@ -144,9 +144,16 @@ int main(void)
 	power_on();
 	led_on();
 
+	printf("\r\npress \'u\' to start uart upgrade\r\n");
+
 	while (1) {
 		pcie_reset_poll();
 		mcu_cmd_process();
+		uart_recv = uart_read();
+		if (uart_recv == 'u') {
+			printf("\r\nentering uart upgrader\r\n");
+			uart_upgrade_start();
+		}
 	}
 
 	return 0;
