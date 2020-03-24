@@ -9,14 +9,14 @@
 /* must 512 aligned */
 #define SAMPLE_HALF_NUM		(512)
 #define SAMPLE_NUM		(SAMPLE_HALF_NUM * 2)
-#define SAMPLE_DEPTH		(2)
+#define SAMPLE_DEPTH		(1)
 #define CHANNEL_NUM		(5)
 #define SAMPLE_TOTAL		(CHANNEL_NUM * SAMPLE_NUM)
 
 #define ADC_DMA_CHANNEL		DMA_CHANNEL1
 
-static uint16_t __attribute__((aligned(16))) sig_buf[SAMPLE_TOTAL + 1024];
-static uint16_t *buf0, *buf1;
+static uint8_t __attribute__((aligned(16))) sig_buf[SAMPLE_TOTAL + 1024];
+static uint8_t *buf0, *buf1;
 
 static int b0_valid;
 static int b1_valid;
@@ -36,8 +36,8 @@ int dma_setup(void)
 	dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
 	dma_enable_memory_increment_mode(DMA1, ADC_DMA_CHANNEL);
 
-	dma_set_peripheral_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_PSIZE_16BIT);
-	dma_set_memory_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_MSIZE_16BIT);
+	dma_set_peripheral_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_PSIZE_8BIT);
+	dma_set_memory_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_MSIZE_8BIT);
 
 	dma_set_read_from_peripheral(DMA1, ADC_DMA_CHANNEL);
 	dma_set_peripheral_address(DMA1, ADC_DMA_CHANNEL,
@@ -100,7 +100,9 @@ void dma_isr(void)
 	else
 		dma_ct_isr();
 
+	// printf("b: %08lx\r\n", isr);
 	DMA_IFCR(DMA1) = isr;
+	// printf("b: %08lx\r\n", DMA_ISR(DMA1));
 }
 
 void *dma_buffer_get(unsigned long *sector_num)
@@ -109,7 +111,7 @@ void *dma_buffer_get(unsigned long *sector_num)
 	cm_disable_interrupts();
 	if (b0_valid && b1_valid)
 		dma_assert("overflow\r\n");
-	if (!b0_valid || !b1_valid) {
+	if (!b0_valid && !b1_valid) {
 		*sector_num = 0;
 		buf = NULL;
 	} else {
@@ -129,3 +131,9 @@ void dma_buffer_put(void *buf)
 		b1_valid = 0;
 }
 
+void dma_destroy(void)
+{
+	cm_disable_interrupts();
+	dma_disable_channel(DMA1, ADC_DMA_CHANNEL);
+	cm_enable_interrupts();
+}

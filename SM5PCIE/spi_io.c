@@ -54,10 +54,14 @@ inline void SPI_CS_High (void)
 
 inline void SPI_Freq_High (void)
 {
+	/* 16M */
+	spi_set_baudrate_prescaler(SPI, SPI_CR1_BAUDRATE_FPCLK_DIV_2);
 }
 
 inline void SPI_Freq_Low (void)
 {
+	/* 256K */
+	spi_set_baudrate_prescaler(SPI, SPI_CR1_BAUDRATE_FPCLK_DIV_128);
 }
 
 static unsigned long start_time;

@@ -7,21 +7,36 @@ static SD_DEV sd;
 
 int sd_init(void)
 {
-	return SD_Init(&sd) == SD_OK ? 0 : -1;
+	int err = SD_Init(&sd);
+	printf("last_sector %ld\r\n", sd.last_sector);
+	return  err == SD_OK ? 0 : -1;
 }
 
 int sd_read(void *data, unsigned long sector, unsigned long num)
 {
-	return SD_Read(&sd, data, sector, 0, num * 512) == SD_OK ? 0 : -1;
+	unsigned long i;
+
+	for (i = 0; i < num; ++i) {
+		int err = SD_Read(&sd, (uint8_t *)data + i * 512, sector, 0, 512);
+		if (err != SD_OK)
+			return -1;
+	}
+
+	return 0;
 }
 
 int sd_write(void *data, unsigned long sector, unsigned long num)
 {
 	unsigned long i;
 
-	for (i = 0; i < num; ++i, ++sector)
-		if (SD_Write(&sd, (uint8_t *)data + i * 512, sector) != SD_OK)
+	for (i = 0; i < num; ++i, ++sector) {
+		int err = SD_Write(&sd, (uint8_t *)data + i * 512, sector);
+		if (err != SD_OK) {
+			printf("last_sector: %ld\r\n", sd.last_sector);
+			printf("error code %d\r\n", err);
 			return -1;
+		}
+	}
 
 	return 0;
 }

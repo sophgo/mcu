@@ -14,7 +14,7 @@ int adc_setup(void)
 	adc_set_continuous_conversion_mode(ADC1);
 	adc_disable_discontinuous_mode(ADC1);
 	adc_set_right_aligned(ADC1);
-	adc_set_resolution(ADC1, 0);
+	adc_set_resolution(ADC1, ADC_RESOLUTION_8BIT);
 	adc_set_regular_sequence(ADC1, sizeof(channels), channels);
 	/* about 10us per-sample, we have 5way, so 50us per-round */
 	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_160DOT5);

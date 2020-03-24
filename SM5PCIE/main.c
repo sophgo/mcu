@@ -76,16 +76,21 @@ int main(void)
 
 		buf = dma_buffer_get(&sector_num);
 		if (buf) {
-#if 0
+#if 1
 			if (sd_write(buf, sector_offset, sector_num))
 				error("sd card write error\r\n");
 #endif
 			sector_offset += sector_num;
+			printf("%ld sectors write\r\n", sector_offset);
 			dma_buffer_put(buf);
 		}
 		if (sector_offset >= 2048)
 			break;
 	}
+
+	dma_destroy();
+
+	printf("\r\n");
 
 	debug("capture done\r\n");
 

@@ -7,6 +7,7 @@
  */
 
 #include "sd_io.h"
+#include <stdio.h>
 
 #ifdef _M_IX86  // For use over x86
 /*****************************************************************************/
@@ -200,7 +201,14 @@ DWORD __SD_Sectors (SD_DEV *dev)
         SPI_RW(0xFF);
         SPI_RW(0xFF);
         SPI_Release();
-        if(dev->cardtype & SDCT_SD1)
+
+		uint8_t csd_version = (csd[0] >> 6) & 0x03;
+
+		/* csd version field, [127:126] */
+		/* 0: csd version 1 */
+		/* 1: csd version 2 */
+		/* 2, 3: reserved */
+        if(csd_version == 0)
         {
             ss = csd[0];
             // READ_BL_LEN[83:80]: max. read data block length
@@ -215,8 +223,12 @@ DWORD __SD_Sectors (SD_DEV *dev)
             C_SIZE_MULT = (csd[9] & 0x03);
             C_SIZE_MULT <<= 1;
             C_SIZE_MULT |= ((csd[10] >> 7) & 0x01);
-        }
-        else if(dev->cardtype & SDCT_SD2)
+			ss = (C_SIZE + 1);
+			ss *= __SD_Power_Of_Two(C_SIZE_MULT + 2);
+			ss *= __SD_Power_Of_Two(READ_BL_LEN);
+			ss /= SD_BLK_SIZE;
+		}
+        else if(csd_version == 1)
         {
             // C_SIZE [69:48]
             C_SIZE = (csd[7] & 0x3F);
@@ -224,13 +236,12 @@ DWORD __SD_Sectors (SD_DEV *dev)
             C_SIZE |= (csd[8] & 0xFF);
             C_SIZE <<= 8;
             C_SIZE |= (csd[9] & 0xFF);
-            // C_SIZE_MULT [--]. don't exits
-            C_SIZE_MULT = 0;
+			/* from the spec SD Specifications Part1 Physical Layer Simplified Specification
+			 * Version 6.00, Page 172
+			 * memory capacity = (C_SIZE + 1) * 512KByte
+			 */
+			ss = (C_SIZE + 1) * 1024;
         }
-        ss = (C_SIZE + 1);
-        ss *= __SD_Power_Of_Two(C_SIZE_MULT + 2);
-        ss *= __SD_Power_Of_Two(READ_BL_LEN);
-        ss /= SD_BLK_SIZE;
         return (ss);
     } else return (0); // Error
 }
