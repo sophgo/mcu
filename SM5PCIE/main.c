@@ -27,72 +27,46 @@ int main(void)
 	void *buf;
 	unsigned long sector_num = 0;
 	unsigned long sector_offset = 0;
+	unsigned long samples = 0;
 
 	system_init();
 
-	/* set none buffered mode */
-	// setvbuf(stdout, NULL, _IONBF, 0);
-
-	debug("\r\nBITMAIN SOPHONE SM5 PCIE BOARD -- %s\r\n", VERSION);
-
-	i2c1_slave_ctx.id = 1;
-	i2c_master_init(I2C1);
-	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE);
-	i2c_slave_start(&i2c1_slave_ctx);
+	adc_setup();
+	dma_setup();
+	adc_start();
 
 	if (sd_init()) {
 		error("sd card init failed\r\n");
 		return -1;
 	}
-#ifdef DEBUG
-	puts("uart test passed\r\n");
 
-#if 0
-	debug("system timer test\r\n");
-	tick_test();
-#endif
-
-#if 0
-	debug("sd card self test %s\r\n",
-	      sd_test() ? "failed" : "pass");
-#endif
-
-#if 0
-	debug("sd card benchmark\r\n");
-	sd_benchmark();
-	debug("benchmark done\r\n");
-#endif
-
-#endif
-
-	debug("adc setup done\r\n");
-	adc_setup();
-	debug("dma setup done\r\n");
-	dma_setup();
-	debug("adc start\r\n");
-	adc_start();
-
-	while (1) {
+	/* 256K samples will be acquired */
+	while (samples < 256 * 1024) {
 
 		buf = dma_buffer_get(&sector_num);
 		if (buf) {
-#if 1
 			if (sd_write(buf, sector_offset, sector_num))
 				error("sd card write error\r\n");
-#endif
 			sector_offset += sector_num;
-			printf("%ld sectors write\r\n", sector_offset);
+			samples += 1024;
+			printf("%lu samples\r", samples);
 			dma_buffer_put(buf);
 		}
-		if (sector_offset >= 2048)
-			break;
 	}
 
 	dma_destroy();
+	adc_stop();
 
-	printf("\r\n");
+	printf("\r\nBITMAIN SOPHONE SM5 PCIE BOARD -- %s\r\n", VERSION);
+	printf("%ld samples acquired, %ld sectors (%ld bytes) write\r\n",
+			samples, sector_offset, sector_offset * 512);
 
-	debug("capture done\r\n");
+	tick_init();
+
+	i2c1_slave_ctx.id = 1;
+	i2c_master_init(I2C1);
+	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE);
+	i2c_slave_start(&i2c1_slave_ctx);
 
 	while (1)
 		;

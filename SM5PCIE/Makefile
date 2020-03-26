@@ -1,6 +1,6 @@
 TARGET = SM5PCIE
 DEBUG = 1
-BOARD = NUCLEO
+# BOARD = NUCLEO
 
 ifeq ($(strip $(V)), 1)
 	Q =

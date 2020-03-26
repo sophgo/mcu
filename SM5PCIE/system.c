@@ -100,9 +100,6 @@ void system_init(void)
 	/* we may load this to a place other than default reset address */
 	/* so relocated vtor -- vector table offset register */
 	SCB_VTOR = (uint32_t)&vector_table;
-
 	clock_init();
-
-	tick_init();
 	gpio_init();
 }

@@ -7,10 +7,10 @@
 #include <string.h>
 
 /* must 512 aligned */
-#define SAMPLE_HALF_NUM		(512)
+#define SAMPLE_HALF_NUM		(1024 + 256)
 #define SAMPLE_NUM		(SAMPLE_HALF_NUM * 2)
 #define SAMPLE_DEPTH		(1)
-#define CHANNEL_NUM		(5)
+#define CHANNEL_NUM		(6)
 #define SAMPLE_TOTAL		(CHANNEL_NUM * SAMPLE_NUM)
 
 #define ADC_DMA_CHANNEL		DMA_CHANNEL1
@@ -29,7 +29,6 @@ static int b1_valid;
 
 int dma_setup(void)
 {
-	memset(sig_buf, 0xff, sizeof(sig_buf));
 	rcc_periph_clock_enable(RCC_DMA);
 	dma_disable_channel(DMA1, ADC_DMA_CHANNEL);
 
@@ -44,13 +43,7 @@ int dma_setup(void)
 				   (uint32_t)&ADC_DR(ADC1));
 
 	dma_set_memory_address(DMA1, ADC_DMA_CHANNEL, (uint32_t)sig_buf);
-#if 1
 	dma_set_number_of_data(DMA1, ADC_DMA_CHANNEL, SAMPLE_TOTAL);
-#else
-	dma_set_number_of_data(DMA1, ADC_DMA_CHANNEL,
-			       1024);
-#endif
-
 	dma_enable_half_transfer_interrupt(DMA1, ADC_DMA_CHANNEL);
 	dma_enable_transfer_complete_interrupt(DMA1, ADC_DMA_CHANNEL);
 	dma_enable_channel(DMA1, ADC_DMA_CHANNEL);
@@ -60,22 +53,6 @@ int dma_setup(void)
 	buf1 = sig_buf + SAMPLE_HALF_NUM * CHANNEL_NUM;
 
 	return 0;
-}
-
-/* half transmission complete */
-void dma_ht_isr(void)
-{
-	if (b0_valid)
-		dma_assert("overflow\r\n");
-	b0_valid = 1;
-}
-
-/* transmission complete */
-void dma_ct_isr(void)
-{
-	if (b1_valid)
-		dma_assert("overflow\r\n");
-	b1_valid = 1;
 }
 
 void dma_isr(void)
@@ -95,14 +72,19 @@ void dma_isr(void)
 	if (tcif && htif)
 		dma_assert("overflow\r\n");
 
-	if (htif)
-		dma_ht_isr();
-	else
-		dma_ct_isr();
+	if (htif) {
+		/* half transmission complete */
+		if (b0_valid)
+			dma_assert("overflow\r\n");
+		b0_valid = 1;
+	} else {
+		/* transmission complete */
+		if (b1_valid)
+			dma_assert("overflow\r\n");
+		b1_valid = 1;
+	}
 
-	// printf("b: %08lx\r\n", isr);
 	DMA_IFCR(DMA1) = isr;
-	// printf("b: %08lx\r\n", DMA_ISR(DMA1));
 }
 
 void *dma_buffer_get(unsigned long *sector_num)

@@ -2,6 +2,9 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
 /* std stubs */
 
 static unsigned long heap_start;
@@ -35,6 +38,24 @@ int std_stub_init(int _uart)
 	usart_set_mode(uart, USART_MODE_TX_RX);
 	usart_enable(uart);
 	return 0;
+}
+
+int printf(const char *fmt, ...)
+{
+	va_list ap;
+	char p[1024];
+	int len;
+
+	va_start(ap, fmt);
+	len = vsnprintf(p, sizeof(p), fmt, ap);
+	va_end(ap);
+
+	char *q;
+
+	for (q = p; *q; ++q)
+		usart_send_blocking(uart, *q);
+
+	return len;
 }
 
 int _write(int file, char *s, int len)

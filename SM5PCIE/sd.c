@@ -8,7 +8,6 @@ static SD_DEV sd;
 int sd_init(void)
 {
 	int err = SD_Init(&sd);
-	printf("last_sector %ld\r\n", sd.last_sector);
 	return  err == SD_OK ? 0 : -1;
 }
 

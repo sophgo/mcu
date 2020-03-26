@@ -268,7 +268,7 @@ SDRESULTS SD_Init(SD_DEV *dev)
     }
 #else   // uControllers
     BYTE n, cmd, ct, ocr[4];
-    BYTE idx;
+    BYTE __attribute__((unused)) idx;
     BYTE init_trys;
     ct = 0;
     for(init_trys=0; ((init_trys!=SD_INIT_TRYS)&&(!ct)); init_trys++)
@@ -279,12 +279,16 @@ SDRESULTS SD_Init(SD_DEV *dev)
         SPI_CS_High();
         SPI_Freq_Low();
 
+#if 0
         // 80 dummy clocks
         for(idx = 0; idx != 10; idx++) SPI_RW(0xFF);
+#endif
 
+#if 0
         SPI_Timer_On(500);
         while(SPI_Timer_Status()==TRUE);
         SPI_Timer_Off();
+#endif
 
         dev->mount = FALSE;
         SPI_Timer_On(500);

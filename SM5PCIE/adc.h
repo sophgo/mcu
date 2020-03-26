@@ -3,5 +3,6 @@
 
 int adc_setup(void);
 void adc_start(void);
+void adc_stop(void);
 
 #endif

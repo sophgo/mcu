@@ -5,7 +5,7 @@
 int adc_setup(void)
 {
 	rcc_periph_clock_enable(RCC_ADC1);
-	uint8_t channels[] = {0, 1, 5, 6, 7};
+	uint8_t channels[] = {0, 1, 4, 5, 6, 7};
 	/* init adc and dma */
 	adc_power_off(ADC1);
 	adc_calibrate(ADC1);
@@ -16,7 +16,7 @@ int adc_setup(void)
 	adc_set_right_aligned(ADC1);
 	adc_set_resolution(ADC1, ADC_RESOLUTION_8BIT);
 	adc_set_regular_sequence(ADC1, sizeof(channels), channels);
-	/* about 10us per-sample, we have 5way, so 50us per-round */
+	/* about 10us per-sample, we have 6way, so 60us per-round */
 	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_160DOT5);
 	adc_power_on(ADC1);
 
@@ -26,6 +26,11 @@ int adc_setup(void)
 void adc_start(void)
 {
 	adc_start_conversion_regular(ADC1);
+}
+
+void adc_stop(void)
+{
+	adc_power_off(ADC1);
 }
 
 
