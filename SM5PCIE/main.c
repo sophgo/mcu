@@ -19,49 +19,99 @@
 #include <adc.h>
 #include <string.h>
 #include <sd.h>
+#include <common.h>
+#include <led.h>
+#include <timer.h>
+#include <config.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
+
+const char channel_labels[] = {
+	CHANNEL_LABELS
+};
 
 int main(void)
 {
 	void *buf;
-	unsigned long sector_num = 0;
-	unsigned long sector_offset = 0;
-	unsigned long samples = 0;
+	/* skip control block and information block */
+	unsigned long sector_offset = DATA_START_SECTOR;
+	unsigned long round = 0;
+	unsigned long limit_time, current_time;
+	struct ctrl_block ctrl;
+	struct info_block info;
 
 	system_init();
 
 	adc_setup();
 	dma_setup();
-	adc_start();
+	timer_setup(SAMPLE_RATE * CHANNEL_NUMBER);
+	timer_start();
 
 	if (sd_init()) {
 		error("sd card init failed\r\n");
 		return -1;
 	}
 
-	/* 256K samples will be acquired */
-	while (samples < 256 * 1024) {
+	if (sd_read(&ctrl, 0, 1)) {
+		error("read control block from sd card failed\r\n");
+		return -1;
+	}
 
-		buf = dma_buffer_get(&sector_num);
+	if (memcmp(ctrl.magic, MAGIC, sizeof(ctrl.magic))) {
+		debug("invalid control block\r\n");
+		limit_time = DEFAULT_ACQUIRE_TIME;
+	} else
+		limit_time = ctrl.time ? ctrl.time : DEFAULT_ACQUIRE_TIME;
+
+	debug("acquire %lu seconds\r\n", (unsigned long)limit_time);
+
+	info.channels = CHANNEL_NUMBER;
+	info.sample_rate = SAMPLE_RATE;
+	info.bits_per_sample = BITS_PER_SAMPLE;
+	info.data_offset = DATA_START_SECTOR * SECTOR_SIZE;
+	info.samples = 0;
+	memcpy(info.channel_labels, channel_labels, sizeof(channel_labels));
+	memset(info.channel_labels + sizeof(channel_labels), 0x00,
+	       sizeof(info.channel_labels) - sizeof(channel_labels));
+
+	while (1) {
+		buf = dma_buffer_get();
 		if (buf) {
-			if (sd_write(buf, sector_offset, sector_num))
+			if (sd_write(buf, sector_offset,
+				     SIG_BUF_SIZE / 2 / SECTOR_SIZE))
 				error("sd card write error\r\n");
-			sector_offset += sector_num;
-			samples += 1024;
-			printf("%lu samples\r", samples);
 			dma_buffer_put(buf);
+
+			sector_offset += SIG_BUF_SIZE / 2 / SECTOR_SIZE;
+			++round;
+
+			if (round == CHANNEL_NUMBER) {
+				/* update information block */
+				info.samples += SIG_BUF_SIZE / 2;
+				current_time = info.samples / SAMPLE_RATE;
+				debug("%lus %lu smp\r\n",
+				      (unsigned long)current_time,
+				      (unsigned long)info.samples);
+				if (current_time > limit_time)
+					break;
+				if (sd_write(&info, 1, 1)) {
+					error("write infomation block to sd card failed\r\n");
+					return -1;
+				}
+				round = 0;
+				led_working();
+			}
 		}
 	}
 
 	dma_destroy();
 	adc_stop();
 
-	printf("\r\nBITMAIN SOPHONE SM5 PCIE BOARD -- %s\r\n", VERSION);
-	printf("%ld samples acquired, %ld sectors (%ld bytes) write\r\n",
-			samples, sector_offset, sector_offset * 512);
+	tick_init(1000);
 
-	tick_init();
+	info("\r\nBITMAIN SOPHONE SM5 PCIE BOARD -- %s\r\n", VERSION);
+	info("%ld samples acquired\r\n", (unsigned long)info.samples);
+
 
 	i2c1_slave_ctx.id = 1;
 	i2c_master_init(I2C1);

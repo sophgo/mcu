@@ -5,21 +5,16 @@
 #include <libopencm3/cm3/cortex.h>
 #include <debug.h>
 #include <string.h>
+#include <config.h>
 
-/* must 512 aligned */
-#define SAMPLE_HALF_NUM		(1024 + 256)
-#define SAMPLE_NUM		(SAMPLE_HALF_NUM * 2)
-#define SAMPLE_DEPTH		(1)
-#define CHANNEL_NUM		(6)
-#define SAMPLE_TOTAL		(CHANNEL_NUM * SAMPLE_NUM)
+static uint8_t __attribute__((aligned(16))) sig_buf[SIG_BUF_SIZE];
 
 #define ADC_DMA_CHANNEL		DMA_CHANNEL1
 
-static uint8_t __attribute__((aligned(16))) sig_buf[SAMPLE_TOTAL + 1024];
 static uint8_t *buf0, *buf1;
 
-static int b0_valid;
-static int b1_valid;
+static int buf0v;
+static int buf1v;
 
 #define dma_assert(msg)						\
 	do {							\
@@ -43,14 +38,14 @@ int dma_setup(void)
 				   (uint32_t)&ADC_DR(ADC1));
 
 	dma_set_memory_address(DMA1, ADC_DMA_CHANNEL, (uint32_t)sig_buf);
-	dma_set_number_of_data(DMA1, ADC_DMA_CHANNEL, SAMPLE_TOTAL);
+	dma_set_number_of_data(DMA1, ADC_DMA_CHANNEL, SIG_BUF_SIZE);
 	dma_enable_half_transfer_interrupt(DMA1, ADC_DMA_CHANNEL);
 	dma_enable_transfer_complete_interrupt(DMA1, ADC_DMA_CHANNEL);
 	dma_enable_channel(DMA1, ADC_DMA_CHANNEL);
 	nvic_enable_irq(NVIC_DMA1_CHANNEL1_IRQ);
 
 	buf0 = sig_buf;
-	buf1 = sig_buf + SAMPLE_HALF_NUM * CHANNEL_NUM;
+	buf1 = sig_buf + SIG_BUF_SIZE / 2;
 
 	return 0;
 }
@@ -58,59 +53,42 @@ int dma_setup(void)
 void dma_isr(void)
 {
 	uint32_t isr;
-	uint32_t teif, htif, tcif;
-
-	// printf("dma isr\r\n");
+	uint32_t teif, htif;
 
 	isr = DMA_ISR(DMA1);
 
-	tcif = isr & (1 << 1);
 	htif = isr & (1 << 2);
 	teif = isr & (1 << 3);
 	if (teif)
 		dma_assert("transmit error\r\n");
-	if (tcif && htif)
-		dma_assert("overflow\r\n");
-
-	if (htif) {
-		/* half transmission complete */
-		if (b0_valid)
-			dma_assert("overflow\r\n");
-		b0_valid = 1;
-	} else {
-		/* transmission complete */
-		if (b1_valid)
-			dma_assert("overflow\r\n");
-		b1_valid = 1;
-	}
+	if (htif)
+		buf0v = 1;
+	else
+		buf1v = 1;
 
 	DMA_IFCR(DMA1) = isr;
 }
 
-void *dma_buffer_get(unsigned long *sector_num)
+void *dma_buffer_get(void)
 {
 	void *buf;
-	cm_disable_interrupts();
-	if (b0_valid && b1_valid)
+	if (buf0v && buf1v)
 		dma_assert("overflow\r\n");
-	if (!b0_valid && !b1_valid) {
-		*sector_num = 0;
+	if (!buf0v && !buf1v)
 		buf = NULL;
-	} else {
-		*sector_num = (SAMPLE_DEPTH * CHANNEL_NUM) *
-			(SAMPLE_HALF_NUM / 512);
-		buf = b0_valid ? buf0 : buf1;
-	}
-	cm_enable_interrupts();
+	else
+		buf = buf0v ? buf0 : buf1;
 	return buf;
 }
 
 void dma_buffer_put(void *buf)
 {
+	cm_disable_interrupts();
 	if (buf == buf0)
-		b0_valid = 0;
+		buf0v = 0;
 	else
-		b1_valid = 0;
+		buf1v = 0;
+	cm_enable_interrupts();
 }
 
 void dma_destroy(void)

@@ -31,8 +31,6 @@ int sd_write(void *data, unsigned long sector, unsigned long num)
 	for (i = 0; i < num; ++i, ++sector) {
 		int err = SD_Write(&sd, (uint8_t *)data + i * 512, sector);
 		if (err != SD_OK) {
-			printf("last_sector: %ld\r\n", sd.last_sector);
-			printf("error code %d\r\n", err);
 			return -1;
 		}
 	}
@@ -93,7 +91,7 @@ int sd_benchmark(void)
 		sd_write(buf, i, 1);
 		if (i % 32 == 31)
 			error("%ld sectors used %ld ms\r",
-			      i, tick_get() - start);
+			      i, (long)(tick_get() - start));
 	}
 	error("\r\n");
 	return 0;

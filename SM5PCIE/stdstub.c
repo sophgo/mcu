@@ -30,7 +30,7 @@ int std_stub_init(int _uart)
 	}
 
 	rcc_periph_clock_enable(rcc_uart);
-	usart_set_baudrate(uart, 115200);
+	usart_set_baudrate(uart, 1000000);
 	usart_set_databits(uart, 8);
 	usart_set_stopbits(uart, USART_STOPBITS_1);
 	usart_set_parity(uart, USART_PARITY_NONE);
@@ -43,7 +43,7 @@ int std_stub_init(int _uart)
 int printf(const char *fmt, ...)
 {
 	va_list ap;
-	char p[1024];
+	char p[128];
 	int len;
 
 	va_start(ap, fmt);

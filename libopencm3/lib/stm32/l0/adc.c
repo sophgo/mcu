@@ -403,6 +403,11 @@ void adc_disable_vbat_sensor(void)
 	ADC_CCR(ADC1) &= ~ADC_CCR_VBATEN;
 }
 
+void adc_set_clk_prescale(uint32_t prescaler)
+{
+	ADC_CCR(ADC1) = (ADC_CCR(ADC1) & ~ADC_CCR_PRESC_MASK) | prescaler;
+}
+
 /*---------------------------------------------------------------------------*/
 /** @brief ADC Start the calibration procedure
  * @deprecated Replaced by adc_calibrate/_async/is_calibrating

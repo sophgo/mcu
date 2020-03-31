@@ -151,6 +151,21 @@ enum adc_opmode {
 };
 /**@}*/
 
+#define ADC_CCR_PRESC_SHIFT		(18)
+#define ADC_CCR_PRESC_MASK		(0xF << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV1		(0 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV2		(1 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV4		(2 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV6		(3 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV8		(4 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV10		(5 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV12		(6 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV16		(7 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV32		(8 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV64		(9 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV128		(10 << ADC_CCR_PRESC_SHIFT)
+#define ADC_CCR_PRESC_DIV256		(11 << ADC_CCR_PRESC_SHIFT)
+
 /*****************************************************************************/
 /* API Functions                                                             */
 /*****************************************************************************/
@@ -180,6 +195,7 @@ void adc_clear_eoc_sequence_flag(uint32_t adc);
 
 /* Basic configuration */
 void adc_set_clk_source(uint32_t adc, uint32_t source);
+void adc_set_clk_prescale(uint32_t prescaler);
 void adc_enable_vbat_sensor(void);
 void adc_disable_vbat_sensor(void);
 void adc_calibrate_start(uint32_t adc)

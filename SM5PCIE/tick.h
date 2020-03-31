@@ -1,9 +1,9 @@
 #ifndef __TICK_H__
 #define __TICK_H__
 
-void tick_init(void);
+void tick_init(unsigned long freq);
 void mdelay(unsigned long ms);
-unsigned long tick_get(void);
+unsigned long long tick_get(void);
 void tick_test(void);
 
 #endif

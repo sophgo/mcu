@@ -3,18 +3,19 @@
 #include <debug.h>
 
 /* software system tick in ms */
-static volatile unsigned long tick;
+static volatile unsigned long long tick;
 
-void tick_init(void)
+void tick_init(unsigned long freq)
 {
 	systick_counter_disable();
 	systick_clear();
-	systick_set_frequency(1000, rcc_ahb_frequency);
+	systick_set_frequency(freq, rcc_ahb_frequency);
 	systick_interrupt_enable();
 	systick_counter_enable();
+	tick = 0;
 }
 
-unsigned long tick_get(void)
+unsigned long long tick_get(void)
 {
 	return tick;
 }

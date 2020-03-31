@@ -8,24 +8,32 @@ int adc_setup(void)
 	uint8_t channels[] = {0, 1, 4, 5, 6, 7};
 	/* init adc and dma */
 	adc_power_off(ADC1);
+	/* adc working at 16M clock, sync mode */
+	adc_set_clk_source(ADC1, ADC_CLKSOURCE_PCLK_DIV2);
+	/* apb clock 32M */
+	adc_set_clk_prescale(ADC_CCR_PRESC_DIV1);
+
 	adc_calibrate(ADC1);
 	adc_enable_dma(ADC1);
 	adc_enable_dma_circular_mode(ADC1);
-	adc_set_continuous_conversion_mode(ADC1);
-	adc_disable_discontinuous_mode(ADC1);
+
+	/* triggerd by timer */
+	adc_set_single_conversion_mode(ADC1);
+	adc_enable_discontinuous_mode(ADC1);
+	/* triggerd by timer, so faster conversion */
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_001DOT5);
+	/* ADC_CFGR1_EXTSEL_VAL set to 0 means accept trigger by TIM6 */
+	adc_enable_external_trigger_regular(ADC1, ADC_CFGR1_EXTSEL_VAL(0),
+					    ADC_CFGR1_EXTEN_RISING_EDGE);
+
 	adc_set_right_aligned(ADC1);
 	adc_set_resolution(ADC1, ADC_RESOLUTION_8BIT);
 	adc_set_regular_sequence(ADC1, sizeof(channels), channels);
-	/* about 10us per-sample, we have 6way, so 60us per-round */
-	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_160DOT5);
 	adc_power_on(ADC1);
+	/* wait timer trigger */
+	adc_start_conversion_regular(ADC1);
 
 	return 0;
-}
-
-void adc_start(void)
-{
-	adc_start_conversion_regular(ADC1);
 }
 
 void adc_stop(void)
