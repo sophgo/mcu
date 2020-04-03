@@ -1,6 +1,6 @@
 TARGET = pcie-signal-debugger
 
-VERSION := $(shell ./version.sh)
+VERSION := $(shell ./version.sh $(TARGET))
 
 CROSS_COMPILE =
 CC = $(CROSS_COMPILE)gcc
