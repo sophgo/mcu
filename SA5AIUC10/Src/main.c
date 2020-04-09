@@ -796,7 +796,7 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 	wdt_isr();
 	mcu_tick_isr();
 	if (i2c_regs.vender == VENDER_SM5_S) {
-		if (gpioex_getpoweroff())
+		if (gpioex_getpoweroff() == 1)
 		{
 			poweroffcheck--;
 			if (poweroffcheck == 0)
