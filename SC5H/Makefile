@@ -1,5 +1,5 @@
 TARGET = SC5H
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(strip $(V)), 1)
 	Q =

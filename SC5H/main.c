@@ -20,6 +20,7 @@
 #include <pin.h>
 #include <eeprom.h>
 #include <adc.h>
+#include <timer.h>
 
 static inline void led_off(void);
 
@@ -93,18 +94,21 @@ int main(void)
 	if (stage == RUN_STAGE_LOADER && check_app() == 0)
 		app_start();
 
-	system_init();
-	tick_init();
-
 	/* enable all gpio power and clock */
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_GPIOC);
 	rcc_periph_clock_enable(RCC_GPIOD);
 	rcc_periph_clock_enable(RCC_GPIOH);
+
 	/* i2c1, i2c2 */
 	rcc_periph_clock_enable(RCC_I2C1);
 	rcc_periph_clock_enable(RCC_I2C2);
+
+	power_init();
+	system_init();
+	tick_init();
+
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
 	/* enable i2c1 interrupt */
@@ -113,7 +117,9 @@ int main(void)
 	/* PA2 -- TX, PA3 -- RX */
 	std_stub_init();
 
-	debug("BITMAIN SOPHONE SC5H -- %s\n", VERSION);
+	debug("BITMAIN SOPHONE SC5H -- %s\r\n", VERSION);
+
+	timer_setup();
 
 	adc_init();
 
@@ -140,7 +146,6 @@ int main(void)
 	pcie_reset_init();
 	/* sys reset to chip, valid high */
 	sys_reset_init();
-	power_init();
 	power_on();
 	led_on();
 

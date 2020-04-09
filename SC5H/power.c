@@ -1,11 +1,23 @@
 #include <libopencm3/stm32/gpio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <tick.h>
 #include <i2c_master.h>
 #include <debug.h>
 #include <pin.h>
+#include <timer.h>
 
-#define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
+static int sysrst_lo(void *ctx);
+static int sysrst_hi(void *ctx);
+static void sysrst_nop(void *ctx);
+static int pmic_init(void *ctx);
+static void pmic_destroy(void *ctx);
+static int p0v8_on(void *ctx);
+static void p0v8_off(void *ctx);
+static int p1v1_on(void *ctx);
+static void p1v1_off(void *ctx);
+static int p0v6_on(void *ctx);
+static void p0v6_off(void *ctx);
 
 struct power_node {
 	char *name;
@@ -16,23 +28,51 @@ struct power_node {
 	void *ctx;
 	unsigned long delay;
 };
+
+struct power_node power_sequence[] = {
+	{"sys-rst-lo", 0, 0, 0, sysrst_lo, sysrst_nop, NULL, 0},
+	{"en-io18", 0, GPIOB, GPIO6, NULL, NULL, NULL, 1000},
+	{"en-core", 0, GPIOB, GPIO12, NULL, NULL, NULL, 1000},
+	{"en-io33", 0, GPIOB, GPIO7, NULL, NULL, NULL, 0},
+	{"cfg-pmic", 0, 0, 0, pmic_init, pmic_destroy, NULL, 0},
+	{"pwr-0.8v", 0, 0, 0, p0v8_on, p0v8_off, NULL, 1000},/* vdd_phy vdd_pcie */
+	{"pg-p08", 0, GPIOA, GPIO11, NULL, NULL, NULL, 1000},
+	{"pg-pcie", 0, GPIOA, GPIO9, NULL, NULL, NULL, 1000},
+	{"en-tpu", 0, GPIOB, GPIO13, NULL, NULL, NULL, 1000},
+	{"pg-tpu", 0, GPIOA, GPIO10, NULL, NULL, NULL, 0},
+	{"pwr-1.1v", 0, 0, 0, p1v1_on, p1v1_off, NULL, 0}, /* ddr_vddq */
+	{"pwr-0.6v", 0, 0, 0, p0v6_on, p0v6_off, NULL, 1000}, /* ddr_vddlp */
+	{"en-tpu-mem", 0, GPIOB, GPIO14, NULL, NULL, NULL, 1000},
+	{"pg-tpu-mem", 0, GPIOA, GPIO7, NULL, NULL, NULL, 30000},
+	/* {"en-vqps18", 0, GPIOA, GPIO15, NULL, NULL, NULL, 1000}, */
+	{"sys-rst-hi", 0, 0, 0, sysrst_hi, sysrst_nop, NULL, 1000},
+	{"pg-ddr", 0, GPIOA, GPIO12, NULL, NULL, NULL, 29000},
+	{"sys-rst-lo", 0, 0, 0, sysrst_lo, sysrst_nop, NULL, 30000},
+};
+
+#define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
+
 #define PMIC_SLAVE_ADDR 0x60
 
 int pmic_buck_on(unsigned int buck)
 {
-	int tmp;
-	tmp = i2c_master_smbus_read_byte(I2C2, PMIC_SLAVE_ADDR, 0x40);
+	unsigned char tmp;
+	while (i2c_master_smbus_read_byte(I2C2, PMIC_SLAVE_ADDR, 1, 0x40, &tmp))
+		;
 	tmp |= (1 << 5) >> buck;
-	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 0x40, tmp);
+	while (i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 1, 0x40, tmp))
+		;
 	return 0;
 }
 
 void pmic_buck_off(unsigned int buck)
 {
-	int tmp;
-	tmp = i2c_master_smbus_read_byte(I2C2, PMIC_SLAVE_ADDR, 0x40);
+	unsigned char tmp;
+	while (i2c_master_smbus_read_byte(I2C2, PMIC_SLAVE_ADDR, 1, 0x40, &tmp))
+		;
 	tmp &= ~((1 << 5) >> buck);
-	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 0x40, tmp);
+	while (i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 1, 0x40, tmp))
+		;
 }
 
 int pmic_voltage_config(unsigned int buck, unsigned int voltage)
@@ -43,15 +83,21 @@ int pmic_voltage_config(unsigned int buck, unsigned int voltage)
 	unsigned int val_h = (value >> 8) & 0x03;
 	unsigned int val_l = value & 0xff;
 
-	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, reg_h, val_h);
-	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, reg_l, val_l);
+	while (i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR,
+					   1, reg_h, val_h))
+		;
+	while (i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR,
+					   1, reg_l, val_l))
+		;
 	return 0;
 }
 
-int pmic_init(void *ctx)
+static int pmic_init(void *ctx)
 {
 	/* enable system enable, disable buck 2, 3, 4, donot disable buck 1 */
-	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 0x40, 0xe0);
+	while (i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR,
+					   1, 0x40, 0xe0))
+		;
 	pmic_voltage_config(0, 1800 + 75);
 	pmic_voltage_config(1, 600 + 20);
 	pmic_voltage_config(2, 840 + 28);
@@ -59,52 +105,44 @@ int pmic_init(void *ctx)
 	return 0;
 }
 
-void pmic_destroy(void *ctx)
+static void pmic_destroy(void *ctx)
 {
 #if 0
 	/* disable system enable, disable all buck */
-	i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR, 0x40, 0x00);
+	while (i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR,
+					   1, 0x40, 0x00))
+		;
 #endif
 }
 
-int p0v8_on(void *ctx)
-{
-	return pmic_buck_on(3);
-}
-
-void p0v8_off(void *ctx)
-{
-	pmic_buck_off(3);
-}
-
-int p1v1_on(void *ctx)
-{
-	return pmic_buck_on(1);
-}
-
-void p1v1_off(void *ctx)
-{
-	pmic_buck_off(1);
-}
-
-int p0v6_on(void *ctx)
+static int p0v8_on(void *ctx)
 {
 	return pmic_buck_on(2);
 }
 
-void p0v6_off(void *ctx)
+static void p0v8_off(void *ctx)
 {
 	pmic_buck_off(2);
 }
 
-int p1v8_on(void *ctx)
+static int p1v1_on(void *ctx)
 {
-	return pmic_buck_on(0);
+	return pmic_buck_on(3);
 }
 
-void p1v8_off(void *ctx)
+static void p1v1_off(void *ctx)
 {
-	pmic_buck_off(0);
+	pmic_buck_off(3);
+}
+
+static int p0v6_on(void *ctx)
+{
+	return pmic_buck_on(1);
+}
+
+static void p0v6_off(void *ctx)
+{
+	pmic_buck_off(1);
 }
 
 static int sysrst_hi(void *ctx)
@@ -123,27 +161,6 @@ static void sysrst_nop(void *ctx)
 {
 }
 
-struct power_node power_sequence[] = {
-	{"sys-rst-lo", 0, 0, 0, sysrst_lo, sysrst_nop, NULL, 0},
-	{"en-io18", 0, GPIOB, GPIO6, NULL, NULL, NULL, 1},
-	{"en-core", 0, GPIOB, GPIO12, NULL, NULL, NULL, 1},
-	{"en-io33", 0, GPIOB, GPIO7, NULL, NULL, NULL, 1},
-	{"cfg-pmic", 0, 0, 0, pmic_init, pmic_destroy, NULL, 1},
-	{"pwr-0.8v", 0, 0, 0, p0v8_on, p0v8_off, NULL, 1},/* vdd_phy vdd_pcie */
-	{"pg-p08", 0, GPIOA, GPIO11, NULL, NULL, NULL, 1},
-	{"pg-pcie", 0, GPIOA, GPIO9, NULL, NULL, NULL, 1},
-	{"en-tpu", 0, GPIOB, GPIO13, NULL, NULL, NULL, 1},
-	{"pg-tpu", 0, GPIOA, GPIO10, NULL, NULL, NULL, 1},
-	{"pwr-1.1v", 0, 0, 0, p1v1_on, p1v1_off, NULL, 1}, /* ddr_vddq */
-	{"pwr-0.6v", 0, 0, 0, p0v6_on, p0v6_off, NULL, 1}, /* ddr_vddlp */
-	{"en-tpu-mem", 0, GPIOB, GPIO14, NULL, NULL, NULL, 1},
-	{"pg-tpu-mem", 0, GPIOA, GPIO7, NULL, NULL, NULL, 31},
-	/* {"en-vqps18", 0, GPIOA, GPIO15, NULL, NULL, NULL, 1}, */
-	{"sys-rst-hi", 0, 0, 0, sysrst_hi, sysrst_nop, NULL, 1},
-	{"pg-ddr", 0, GPIOA, GPIO12, NULL, NULL, NULL, 29},
-	{"sys-rst-lo", 0, 0, 0, sysrst_lo, sysrst_nop, NULL, 30},
-};
-
 int node_on(struct power_node *node)
 {
 	int err = 0;
@@ -160,7 +177,7 @@ int node_on(struct power_node *node)
 	}
 
 	if (err == 0 && node->delay)
-		mdelay(node->delay);
+		timer_udelay(node->delay);
 
 	return err;
 }
@@ -208,8 +225,10 @@ int sequence_on(struct power_node *node, int num)
 	}
 	if (i != num) {
 		--i;
-		while (i >= 0)
+		while (i >= 0) {
 			node_off(node + i);
+			--i;
+		}
 	}
 	return err;
 }

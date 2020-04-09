@@ -6,11 +6,14 @@
 
 int i2c_master_init(int i2c);
 int i2c_master_destroy(int i2c);
-int i2c_master_trans(int i2c, unsigned char addr,
+int i2c_master_trans(int i2c, unsigned char addr, unsigned long timeout,
 		     void *w, unsigned int wn, void *r, unsigned int rn);
-int i2c_master_smbus_read_byte(int i2c, unsigned char addr, unsigned char cmd);
-int i2c_master_smbus_write_byte(int i2c, unsigned char addr, unsigned char cmd,
-				unsigned char data);
+int i2c_master_smbus_read_byte(int i2c, unsigned char addr,
+			       unsigned long timeout,
+			       unsigned char cmd, unsigned char *data);
+int i2c_master_smbus_write_byte(int i2c, unsigned char addr,
+				unsigned long timeout,
+				unsigned char cmd, unsigned char data);
 
 
 #endif

@@ -3,5 +3,6 @@
 
 void tick_init(void);
 void mdelay(unsigned long ms);
+unsigned long tick_get(void);
 
 #endif

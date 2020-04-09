@@ -2,6 +2,8 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 /* std stubs */
 
 static unsigned long heap_start;
@@ -45,6 +47,22 @@ int _write(int file, char *s, int len)
 	return i;
 }
 
+int putchar(int c)
+{
+	usart_send_blocking(UART, c);
+	return c;
+}
+
+int puts(const char *s)
+{
+	int i;
+
+	for (i = 0; *s; ++s, ++i)
+		putchar(*s);
+
+	return i;
+}
+
 int _read(int file, char *s, int len)
 {
 	memset(s, 0x00, len);
@@ -83,5 +101,23 @@ void *_sbrk(unsigned long inc)
 	last = (void *)heap_end;
 	heap_end += inc;
 	return last;
+}
+
+int printf(const char *fmt, ...)
+{
+	va_list ap;
+	char p[128];
+	int len;
+
+	va_start(ap, fmt);
+	len = vsnprintf(p, sizeof(p), fmt, ap);
+	va_end(ap);
+
+	char *q;
+
+	for (q = p; *q; ++q)
+		usart_send_blocking(UART, *q);
+
+	return len;
 }
 
