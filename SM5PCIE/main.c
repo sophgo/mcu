@@ -52,7 +52,7 @@ int main(void)
 		return -1;
 	}
 
-	if (sd_read(&ctrl, 0, 1)) {
+	if (sd_read(&ctrl, CTRL_START_SECTOR, 1)) {
 		error("read control block from sd card failed\r\n");
 		return -1;
 	}
@@ -94,7 +94,7 @@ int main(void)
 				      (unsigned long)info.samples);
 				if (current_time > limit_time)
 					break;
-				if (sd_write(&info, 1, 1)) {
+				if (sd_write(&info, INFO_START_SECTOR, 1)) {
 					error("write infomation block to sd card failed\r\n");
 					return -1;
 				}

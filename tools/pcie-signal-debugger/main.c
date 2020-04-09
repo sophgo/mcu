@@ -32,8 +32,10 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (opt->verbose)
+	if (opt->verbose) {
 		opt_info(opt);
+		set_log_level(LEVEL_DBG);
+	}
 
 	if (opt->help || argc == 1) {
 		opt_help();

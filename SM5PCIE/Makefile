@@ -76,6 +76,7 @@ all:$(OUTDIR) \
 $(OUTDIR)/%.bin: $(OUTDIR)/%.elf
 	@echo '[CP] $@'
 	$(Q)$(OBJCOPY) -O binary $< $@
+	$(Q)chmod a-x $@
 
 $(OUTDIR)/%.dis: $(OUTDIR)/%.elf
 	@echo '[DP] $@'

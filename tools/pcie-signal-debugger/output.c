@@ -7,6 +7,7 @@
 #include <log.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 
 int output(struct opt *opt)
 {
@@ -59,12 +60,15 @@ int output(struct opt *opt)
 	if (opt->verbose)
 		info("signal data offset: %d bytes\n", info.data_offset);
 
+	if (info.bits_per_sample != 8) {
+		error("no support for sample depth which is not 8\n");
+		goto close_input_file;
+	}
+
 	int i = 0;
 	int ch;
-	char *channel_labels[16];
-
-	assert(sizeof(channel_labels)/sizeof(channel_labels[0])
-	       >= info.channels);
+	char channel_labels[16][64];
+	double channel_scale[16];
 
 	for (ch = 0; ch < info.channels; ++ch) {
 		while (info.channel_labels[i] == 0) {
@@ -74,7 +78,7 @@ int output(struct opt *opt)
 				goto close_input_file;
 			}
 		}
-		channel_labels[ch] = info.channel_labels + i;
+		strcpy(channel_labels[ch], info.channel_labels + i);
 		info("channel %d: %s\n", ch, channel_labels[ch]);
 		while (info.channel_labels[i]) {
 			++i;
@@ -84,8 +88,43 @@ int output(struct opt *opt)
 			}
 		}
 	}
+
+	for (ch = 0; ch < info.channels; ++ch) {
+		char *s;
+		s = strstr(channel_labels[ch], "scale:");
+		if (s == NULL) {
+			/* no scale key word */
+			/* set to default 3.3v */
+			channel_scale[ch] = 3.3;
+			continue;
+		}
+		/* find first digit */
+		while (!isdigit(*s) && *s)
+			++s;
+		if (*s == 0) {
+			warn("cannot find any digit\n");
+			channel_scale[ch] = 3.3;
+			continue;
+		}
+
+		char tmp[32];
+		for (i = 0; isdigit(*s) || *s == '.'; ++i, ++s)
+			tmp[i] = *s;
+		tmp[i] = 0;
+		sscanf(tmp, "%lf", channel_scale + ch);
+		debug("channel %d scale %s (%lf)\n",
+		      ch, tmp, channel_scale[ch]);
+	}
+
+	for (ch = 0; ch < info.channels; ++ch) {
+		char *s;
+		for (s = channel_labels[ch]; *s && *s != ','; ++s)
+			;
+		*s = 0;
+	}
+
 	if (opt->output[0] == 0) {
-		debug("no output file, just show information");
+		debug("no output file, just show information\n");
 		err = 0;
 		goto close_input_file;
 	}
@@ -144,10 +183,14 @@ int output(struct opt *opt)
 		int x;
 		x = sprintf(tmp, "%e ", t);
 		for (i = 0; i < info.channels; ++i) {
+			double scale = channel_scale[i];
+
 			if (i != info.channels - 1)
-				x += sprintf(tmp + x, "%u ", data[i]);
+				x += sprintf(tmp + x, "%e ",
+					     (double)data[i] * scale / 255);
 			else
-				x += sprintf(tmp + x, "%u\n", data[i]);
+				x += sprintf(tmp + x, "%e\n",
+					     (double)data[i] * scale / 255);
 		}
 
 		if (write(ofd, tmp, strlen(tmp)) != strlen(tmp)) {
