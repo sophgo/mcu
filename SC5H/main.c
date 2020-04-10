@@ -6,7 +6,6 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 #include <stdio.h>
-#include <tick.h>
 #include <system.h>
 #include <power.h>
 #include <i2c_master.h>
@@ -14,10 +13,7 @@
 #include <upgrade.h>
 #include <mcu.h>
 #include <debug.h>
-#include <pin.h>
 #include <eeprom.h>
-#include <adc.h>
-#include <timer.h>
 #include <led.h>
 #include <chip.h>
 

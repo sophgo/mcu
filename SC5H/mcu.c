@@ -13,6 +13,7 @@
 #include <project_id.h>
 #include <pin.h>
 #include <adc.h>
+#include <tick.h>
 
 #define MCU_REG_MAX	0x64
 #define MCU_SW_VER	3
@@ -59,8 +60,63 @@ static void mcu_match(void *priv, int dir)
 		ctx->set_idx = 1;
 }
 
+#define FILTER_DATA_WIDTH	16
+#define FILTER_DEPTH_SHIFT	8
+#define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
+#define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
+
+#if FILTER_DATA_WIDTH == 16
+typedef uint16_t filter_data_t;
+#else
+#error undefined filter width or unsupported filter width
+#endif
+
+struct filter {
+	filter_data_t data[FILTER_DEPTH];
+	unsigned long total;
+	int p;
+};
+
+static filter_data_t filter_init(struct filter *f, filter_data_t d)
+{
+	int i;
+
+	f->p = 0;
+	f->total = 0;
+	for (i = 0; i < FILTER_DEPTH; ++i) {
+		f->data[i] = d;
+		f->total += d;
+	}
+	return d;
+}
+
+static filter_data_t filter_in(struct filter *f, filter_data_t d)
+{
+	f->total -= f->data[f->p];
+	f->total += d;
+	f->data[f->p] = d;
+	f->p = (f->p + 1) & FILTER_DEPTH_MASK;
+
+	return f->total >> FILTER_DEPTH_SHIFT;
+}
+
+static struct filter current_filter;
+static struct filter voltage_filter;
+
 void mcu_cmd_process(void)
 {
+	static unsigned long last_tick = 0;
+	unsigned long current_tick;
+	unsigned long current, voltage;
+
+	current_tick = tick_get();
+	if (current_tick != last_tick) {
+		adc_read(&current, &voltage);
+		mcu_ctx.current = filter_in(&current_filter, current);
+		mcu_ctx.voltage = filter_in(&voltage_filter, voltage);
+		last_tick = current_tick;
+	}
+
 	switch (mcu_ctx.cmd) {
 		case 8:
 			i2c_upgrade_start();
@@ -122,14 +178,12 @@ static uint8_t mcu_read(void *priv)
 		ret = gpio_get(EN_VQPS_PORT, EN_VQPS_PIN) ? 1 : 0;
 		break;
 	case REG_CURRENT:
-		adc_read(&ctx->current, &ctx->voltage);
 		ret = ctx->current & 0xff;
 		break;
 	case REG_CURRENT + 1:
 		ret = (ctx->current >> 8) & 0xff;
 		break;
 	case REG_VOLTAGE:
-		adc_read(&ctx->current, &ctx->voltage);
 		ret = ctx->voltage & 0xff;
 		break;
 	case REG_VOLTAGE + 1:
@@ -169,6 +223,8 @@ static struct i2c_slave_op slave = {
 
 void mcu_init(void)
 {
+	unsigned long current, voltage;
+
 	i2c_slave_register(&i2c1_slave_ctx, &slave);
 
 	gpio_mode_setup(GPIOC,
@@ -187,5 +243,10 @@ void mcu_init(void)
 	gpio_clear(EN_VQPS_PORT, EN_VQPS_PIN);
 	gpio_mode_setup(EN_VQPS_PORT, GPIO_MODE_OUTPUT,
 			GPIO_PUPD_NONE, EN_VQPS_PIN);
+
+
+	adc_read(&current, &voltage);
+	mcu_ctx.current = filter_init(&current_filter, current);
+	mcu_ctx.voltage = filter_init(&voltage_filter, voltage);
 }
 
