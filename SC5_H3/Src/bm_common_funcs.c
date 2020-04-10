@@ -183,8 +183,8 @@ void PowerON(void)
 	val[0] = 0x4b;
 	pmic_voltage_set(BUCK2_DVS0CFG1, val);
 	i2c_regs.ddr = 0;
-	//EN_PMIC_OUT1 0.75v
-	val[0] = 0x5e;
+	//EN_PMIC_OUT1 0.792v
+	val[0] = 0x63;
 	pmic_voltage_set(BUCK1_DVS0CFG1, val);
 
 	GPIO_SET(TPUMEM_PG);
@@ -263,11 +263,53 @@ void Clean_ERR_INT(void)
 #define ADC_NUM		(3)
 #define ADC_TIMEOUT (1)
 
+#define FILTER_DATA_WIDTH	16
+#define FILTER_DEPTH_SHIFT	8
+#define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
+#define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
+
+#if FILTER_DATA_WIDTH == 16
+typedef uint16_t filter_data_t;
+#else
+#error undefined filter width or unsupported filter width
+#endif
+
+struct filter {
+	filter_data_t data[FILTER_DEPTH];
+	unsigned long total;
+	int p;
+};
+
+filter_data_t filter_init(struct filter *f, filter_data_t d)
+{
+	int i;
+
+	f->p = 0;
+	f->total = 0;
+	for (i = 0; i < FILTER_DEPTH; ++i) {
+		f->data[i] = d;
+		f->total += d;
+	}
+	return d;
+}
+
+filter_data_t filter_in(struct filter *f, filter_data_t d)
+{
+	f->total -= f->data[f->p];
+	f->total += d;
+	f->data[f->p] = d;
+	f->p = (f->p + 1) & FILTER_DEPTH_MASK;
+
+	return f->total >> FILTER_DEPTH_SHIFT;
+}
+
+struct filter i12v_filter;
+struct filter i33v_filter;
+
 void Scan_Cuerrent(void)
 {
 	  uint8_t i;
 	  int ADC_Buf[ADC_NUM];
-	  CURRENT_VAL curr_evb;
 
 	  for (i = 0; i < ADC_NUM; i++) {
 		  HAL_ADC_Start(&hadc);
@@ -278,13 +320,8 @@ void Scan_Cuerrent(void)
 		  }
 	  }
 
-	  //calculate voltage
-	  curr_evb.i_12v_atx 		= ADC_Buf[1];
-	  curr_evb.i_vddio33 		= ADC_Buf[2];
-
-	  memcpy(&i2c_regs.current, &curr_evb, sizeof(CURRENT_VAL));
-
-//	  EEPROM_Write(addr, ADC_Buf[0]);
+	  i2c_regs.current.i_12v_atx = filter_in(&i12v_filter, ADC_Buf[1]);
+	  i2c_regs.current.i_vddio33 = filter_in(&i33v_filter, ADC_Buf[2]);
 
 	  HAL_ADC_Stop(&hadc);
 }
@@ -317,6 +354,9 @@ void Set_HW_Ver(void)
 	  	  i2c_regs.hw_ver = 3;
 	  	  break;
 	  }
+
+	  filter_init(&i12v_filter, ADC_Buf[1]);
+	  filter_init(&i33v_filter, ADC_Buf[2]);
 
 	  HAL_ADC_Stop(&hadc);
 }
