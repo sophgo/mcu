@@ -20,7 +20,7 @@
 #define FLASH_SIZE	(64 * 1024)
 
 static int __attribute__((unused))
-   	save_data(void *data, unsigned long len);
+	save_data(void *data, unsigned long len);
 static int __attribute__((unused))
 	dummy_save(void *data, unsigned long len)
 {

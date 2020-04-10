@@ -21,7 +21,7 @@
 #define RUN_STAGE_UART_UPGRADER	3
 
 int check_app(void);
-int setup_stage(void);
+int get_stage(void);
 void i2c_upgrade_start(void);
 void uart_upgrade_start(void);
 void app_start(void);

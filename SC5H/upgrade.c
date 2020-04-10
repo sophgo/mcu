@@ -7,6 +7,7 @@
 #include <project.h>
 #include <i2c_master.h>
 #include <project_id.h>
+#include <chip.h>
 
 struct efie {
 	uint32_t	offset;
@@ -16,8 +17,6 @@ struct efie {
 	uint8_t		type;
 	uint8_t		padding[102];
 } __packed;
-
-struct efie *app_efie;
 
 static void upgrade_start(unsigned int type);
 static struct efie *find_efie(uint32_t type);
@@ -46,6 +45,8 @@ static void upgrade_start(unsigned int type)
 	i2c_master_destroy(I2C1);
 	i2c_master_destroy(I2C2);
 
+	chip_destroy();
+
 	/* disable all interrupt */
 	cm_disable_interrupts();
 
@@ -59,6 +60,9 @@ static void upgrade_start(unsigned int type)
 void app_start(void)
 {
 	unsigned long app_start, app_entry, app_stack;
+	struct efie *app_efie;
+
+	app_efie = find_efie(RUN_STAGE_APP);
 
 	app_start = app_efie->offset + MEMMAP_FLASH_START;
 	app_entry = *(volatile uint32_t *)(app_start + 4);
@@ -84,14 +88,8 @@ static struct efie *find_efie(uint32_t type)
 	return NULL;
 }
 
-static void setup_efie(void)
+int get_stage(void)
 {
-	app_efie = find_efie(RUN_STAGE_APP);
-}
-
-int setup_stage(void)
-{
-	setup_efie();
 	register uint32_t pc;
 	asm volatile ("mov %0, pc" : "=r" (pc));
 	if (pc < MEMMAP_LOADER_END)
@@ -132,6 +130,9 @@ int check_app(void)
 	void *checksum_start;
 	unsigned long checksum_len;
 	uint8_t *expected_checksum, calculated_checksum[16];
+	struct efie *app_efie;
+
+	app_efie = find_efie(RUN_STAGE_APP);
 
 	if (app_efie->is_checked)
 		return 0;

@@ -10,6 +10,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/flash.h>
 #include <string.h>
 #include <project_id.h>
 
@@ -47,10 +48,43 @@ void isr_systick(void)
 	++tick;
 }
 
+void sc5h_clock_init(void)
+{
+	const unsigned long AHB_FREQ = 32 * 1000 * 1000;
+	const unsigned long APB1_FREQ = AHB_FREQ;
+	const unsigned long APB2_FREQ = AHB_FREQ;
+
+	if (rcc_is_osc_ready(RCC_HSI16)) {
+		/* we have set it up before */
+		rcc_ahb_frequency = AHB_FREQ;
+		rcc_apb1_frequency = APB1_FREQ;
+		rcc_apb2_frequency = APB2_FREQ;
+	} else {
+		struct rcc_clock_scale clk = {
+			.pll_mul = RCC_CFGR_PLLMUL_MUL4,
+			.pll_div = RCC_CFGR_PLLDIV_DIV2,
+			.pll_source = RCC_CFGR_PLLSRC_HSI16_CLK,
+			.flash_waitstates = FLASH_ACR_LATENCY_1WS,
+			.voltage_scale = PWR_SCALE1,
+			.hpre = RCC_CFGR_HPRE_NODIV,
+			.ppre1 = RCC_CFGR_PPRE1_NODIV,
+			.ppre2 = RCC_CFGR_PPRE2_NODIV,
+			.ahb_frequency = AHB_FREQ,
+			.apb1_frequency = APB1_FREQ,
+			.apb2_frequency = APB2_FREQ,
+			.msi_range = 0, /* ignored by driver */
+		};
+
+		rcc_clock_setup_pll(&clk);
+	}
+}
+
 void sc5h_init(void)
 {
 	const int uart = USART2;
 	const int rcc_uart = RCC_USART2;
+
+	sc5h_clock_init();
 
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(rcc_uart);
@@ -62,10 +96,9 @@ void sc5h_init(void)
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3);
 
 	usart_disable(uart);
-	mdelay(1);
 	usart_enable(uart);
 
-	usart_set_baudrate(uart, 115200);
+	usart_set_baudrate(uart, 921600);
 	usart_set_databits(uart, 8);
 	usart_set_stopbits(uart, USART_STOPBITS_1);
 	usart_set_parity(uart, USART_PARITY_NONE);
@@ -87,7 +120,6 @@ struct proj_ops proj_ops_table[] = {
 
 void system_init(void)
 {
-	tick_init();
 	struct proj_ops *proj_ops;
 	int i;
 	for (i = 0; i < ARRAY_SIZE(proj_ops_table); ++i) {
@@ -96,6 +128,7 @@ void system_init(void)
 			proj_ops->init();
 		}
 	}
+	tick_init();
 }
 
 static unsigned long heap_start;

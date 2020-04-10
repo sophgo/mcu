@@ -10,7 +10,6 @@
 #include <string.h>
 #include <i2c_slave.h>
 #include <upgrade.h>
-#include <info.h>
 #include <project_id.h>
 #include <pin.h>
 #include <adc.h>
@@ -117,7 +116,7 @@ static uint8_t mcu_read(void *priv)
 		ret = MCU_HW_VER;
 		break;
 	case REG_STAGE:
-		ret = stage;
+		ret = get_stage();
 		break;
 	case REG_VQPS:
 		ret = gpio_get(EN_VQPS_PORT, EN_VQPS_PIN) ? 1 : 0;

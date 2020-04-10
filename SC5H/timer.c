@@ -35,7 +35,7 @@ void timer_start(unsigned long us)
 	timer_set_period(TIM6, cnt);
 #else
 	/* set to about 1M Hz */
-	timer_set_prescaler(TIM6, 1);
+	timer_set_prescaler(TIM6, 32 - 1);
 	timer_set_period(TIM6, us);
 #endif
 	timer_one_shot_mode(TIM6);
