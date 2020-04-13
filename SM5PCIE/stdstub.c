@@ -30,7 +30,7 @@ int std_stub_init(int _uart)
 	}
 
 	rcc_periph_clock_enable(rcc_uart);
-	usart_set_baudrate(uart, 1000000);
+	usart_set_baudrate(uart, 921600);
 	usart_set_databits(uart, 8);
 	usart_set_stopbits(uart, USART_STOPBITS_1);
 	usart_set_parity(uart, USART_PARITY_NONE);
@@ -106,5 +106,17 @@ void *_sbrk(unsigned long inc)
 	last = (void *)heap_end;
 	heap_end += inc;
 	return last;
+}
+
+void uart_putc(int c)
+{
+	usart_send_blocking(uart, c);
+}
+
+int uart_getc(void)
+{
+	if (usart_is_recv_ready(uart))
+		return usart_recv(uart);
+	return -1;
 }
 

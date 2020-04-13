@@ -14,8 +14,8 @@
 /*****************************************************************************/
 //#define _M_IX86           // For use with x86 architecture
 #define SD_IO_WRITE
-//#define SD_IO_WRITE_WAIT_BLOCKER
-#define SD_IO_WRITE_TIMEOUT_WAIT 250
+#define SD_IO_WRITE_WAIT_BLOCKER
+// #define SD_IO_WRITE_TIMEOUT_WAIT 250
 
 //#define SD_IO_DBG_COUNT
 /*****************************************************************************/

@@ -189,9 +189,6 @@ void *_sbrk(unsigned long inc)
 
 int xmodem_uart_send(int data)
 {
-	if (data == 0x18)
-		while (1)
-			;
     usart_send_blocking(stduart, data);
     return 0;
 }

@@ -16,11 +16,20 @@ static uint8_t *buf0, *buf1;
 static int buf0v;
 static int buf1v;
 
-#define dma_assert(msg)						\
+#ifdef DEBUG
+
+#define dma_error(msg)						\
 	do {							\
 		error("DMA-ASSERT LINE %d: ", __LINE__);	\
 		error(msg);					\
 	} while (0)
+#else
+
+#define dma_error(msg)						\
+	do {							\
+	} while (0)
+
+#endif
 
 int dma_setup(void)
 {
@@ -60,7 +69,7 @@ void dma_isr(void)
 	htif = isr & (1 << 2);
 	teif = isr & (1 << 3);
 	if (teif)
-		dma_assert("transmit error\r\n");
+		dma_error("transmit error\r\n");
 	if (htif)
 		buf0v = 1;
 	else
@@ -73,7 +82,7 @@ void *dma_buffer_get(void)
 {
 	void *buf;
 	if (buf0v && buf1v)
-		dma_assert("overflow\r\n");
+		dma_error("overflow\r\n");
 	if (!buf0v && !buf1v)
 		buf = NULL;
 	else

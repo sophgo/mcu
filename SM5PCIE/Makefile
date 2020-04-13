@@ -1,5 +1,5 @@
 TARGET = SM5PCIE
-DEBUG = 1
+DEBUG = 0
 # BOARD = NUCLEO
 
 ifeq ($(strip $(V)), 1)
@@ -20,8 +20,8 @@ SRCDIR = . ulibSD
 INCDIR = . $(OPENCM3_DIR)/include ulibSD
 
 #fatfs
-INCDIR += fatfs
-SRCDIR += fatfs
+INCDIR += ecdc
+SRCDIR += ecdc
 
 C_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
 S_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.s))

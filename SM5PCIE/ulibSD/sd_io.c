@@ -48,12 +48,12 @@ DWORD __SD_Power_Of_Two(BYTE e);
 /**
      \brief Assert the SD card (SPI CS low).
  */
-inline void __SD_Assert (void);
+static inline void __SD_Assert (void);
 
 /**
     \brief Deassert the SD (SPI CS high).
  */
-inline void __SD_Deassert (void);
+static inline void __SD_Deassert (void);
 
 /**
     \brief Change to max the speed transfer.
@@ -95,11 +95,11 @@ DWORD __SD_Power_Of_Two(BYTE e)
     return(partial);
 }
 
-inline void __SD_Assert(void){
+static inline void __SD_Assert(void){
     SPI_CS_Low();
 }
 
-inline void __SD_Deassert(void){
+static inline void __SD_Deassert(void){
     SPI_CS_High();
 }
 
@@ -150,15 +150,13 @@ BYTE __SD_Send_Cmd(BYTE cmd, DWORD arg)
 
 SDRESULTS __SD_Write_Block(SD_DEV *dev, void *dat, BYTE token)
 {
-    WORD idx;
-    BYTE line;
     // Send token (single or multiple)
     SPI_RW(token);
     // Single block write?
     if(token != 0xFD)
     {
         // Send block data
-        for(idx=0; idx!=SD_BLK_SIZE; idx++) SPI_RW(*((BYTE*)dat + idx));
+	spi_write_sector(dat);
         /* Dummy CRC */
         SPI_RW(0xFF);
         SPI_RW(0xFF);
@@ -167,9 +165,10 @@ SDRESULTS __SD_Write_Block(SD_DEV *dev, void *dat, BYTE token)
     }
 #ifdef SD_IO_WRITE_WAIT_BLOCKER
     // Waits until finish of data programming (blocked)
-    while(SPI_RW(0xFF)==0);
+    spi_after_write();
     return(SD_OK);
 #else
+    BYTE line;
     // Waits until finish of data programming with a timeout
     SPI_Timer_On(SD_IO_WRITE_TIMEOUT_WAIT);
     do {

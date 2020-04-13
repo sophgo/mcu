@@ -11,7 +11,12 @@
 #define DATA_START_SECTOR	(2)
 #define SECTOR_SIZE		(512)
 
-#define SIG_BUF_SIZE		(16 * (2 * SECTOR_SIZE))
+/* SIG_BUF_SIZE / 2 must CHANNEL_NUMBER aligned */
+/* we should log current and voltage for power calculation */
+#define SIG_BUF_SIZE		(15 * (2 * SECTOR_SIZE))
+
+#define CURRENT_SCALE		(11000)
+#define VOLTAGE_SCALE		(36300)
 
 #define CHANNEL_LABELS	\
 	"PCIE-12V-Current,scale:11\0"	\

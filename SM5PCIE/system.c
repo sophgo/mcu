@@ -62,9 +62,9 @@ static void gpio_init(void)
 			       GPIO2 | GPIO3);
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO2 | GPIO3);
 #endif
-	/* adc 5 way */
+	/* adc 6 way */
 	gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE,
-			GPIO0 | GPIO1 | GPIO5 | GPIO6 | GPIO7);
+			GPIO0 | GPIO1 | GPIO4 | GPIO5 | GPIO6 | GPIO7);
 
 	/* GPIO port B */
 	/* spi clk, miso, mosi */

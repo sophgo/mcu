@@ -23,6 +23,7 @@
 #include <led.h>
 #include <timer.h>
 #include <config.h>
+#include <console.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
 
@@ -30,9 +31,12 @@ const char channel_labels[] = {
 	CHANNEL_LABELS
 };
 
+unsigned long current;
+unsigned long voltage;
+
 int main(void)
 {
-	void *buf;
+	unsigned char *buf;
 	/* skip control block and information block */
 	unsigned long sector_offset = DATA_START_SECTOR;
 	unsigned long round = 0;
@@ -41,6 +45,9 @@ int main(void)
 	struct info_block info;
 
 	system_init();
+
+	console_init();
+	printf("\r\npress any key to enter teriminal\r\n");
 
 	adc_setup();
 	dma_setup();
@@ -63,7 +70,7 @@ int main(void)
 	} else
 		limit_time = ctrl.time ? ctrl.time : DEFAULT_ACQUIRE_TIME;
 
-	debug("acquire %lu seconds\r\n", (unsigned long)limit_time);
+	/* debug("acquire %lu seconds\r\n", (unsigned long)limit_time); */
 
 	info.channels = CHANNEL_NUMBER;
 	info.sample_rate = SAMPLE_RATE;
@@ -77,6 +84,9 @@ int main(void)
 	while (1) {
 		buf = dma_buffer_get();
 		if (buf) {
+			current = buf[0];
+			voltage = buf[1];
+
 			if (sd_write(buf, sector_offset,
 				     SIG_BUF_SIZE / 2 / SECTOR_SIZE))
 				error("sd card write error\r\n");
@@ -89,9 +99,11 @@ int main(void)
 				/* update information block */
 				info.samples += SIG_BUF_SIZE / 2;
 				current_time = info.samples / SAMPLE_RATE;
+#if 1
 				debug("%lus %lu smp\r\n",
 				      (unsigned long)current_time,
 				      (unsigned long)info.samples);
+#endif
 				if (current_time > limit_time)
 					break;
 				if (sd_write(&info, INFO_START_SECTOR, 1)) {
@@ -102,6 +114,7 @@ int main(void)
 				led_working();
 			}
 		}
+		console_poll();
 	}
 
 	dma_destroy();
