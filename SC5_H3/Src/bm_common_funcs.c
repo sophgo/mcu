@@ -130,16 +130,11 @@ void detect_mode(void)
 uint8_t pmic_voltage_set(uint16_t MemAddress, uint8_t *pData)
 {
 	uint8_t value[2];
-	uint8_t origin_val[2];
-	uint8_t chk_val[2];
 
-	origin_val[0] = value[0] = *pData;
-	origin_val[1] = value[1] = 0;
+	value[0] = *pData;
+	value[1] = 0;
 
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, MemAddress,1, value, 2, 1000);// LDO1V_IN 0.8V
-	HAL_I2C_Mem_Read(&hi2c2,PMIC_ADDR, MemAddress,1, (uint8_t *)chk_val, 2, 1000);// LDO1V_IN 0.8V
-	if (chk_val != origin_val)
-		HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, MemAddress,1, value, 2, 1000);// LDO1V_IN 0.8V
 	HAL_Delay(1);
 
 	return 0;
@@ -152,10 +147,7 @@ void PowerON(void)
 	val[1] = 0;
 
 	clean_pmic();
-	HAL_Delay(50);
-
 	init_pmic();
-	HAL_Delay(30);
 
 	GPIO_SET(EN_VDD_1V8);
 	HAL_Delay(1);
@@ -188,17 +180,16 @@ void PowerON(void)
 	pmic_voltage_set(BUCK1_DVS0CFG1, val);
 
 	GPIO_SET(TPUMEM_PG);
-	HAL_Delay(1);
 	while(!GPIO_GET(PWR_GOOD))
 		;
 	HAL_Delay(30);
 	GPIO_SET(SYS_RST_N);
-	HAL_Delay(30);
+	HAL_Delay(1);
 	GPIO_SET(DDR_PG);
 
-	GPIO_SET(SYS_RST_N);
-	HAL_Delay(30);
+	HAL_Delay(29);
 	GPIO_RESET(SYS_RST_N);
+	HAL_Delay(30);
 
 	i2c_regs.power_good = 1;
 	i2c_regs.cmd_reg  = 0;
@@ -405,6 +396,8 @@ void poll_pcie_rst(void)
 		HAL_Delay(30);
 		while (pcie_reset_state() == 0)
 			  ;
+		GPIO_SET(SYS_RST_N);
+	} else {
 		GPIO_SET(SYS_RST_N);
 	}
 }
