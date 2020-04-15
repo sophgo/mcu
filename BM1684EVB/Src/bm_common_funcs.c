@@ -130,7 +130,6 @@ void PowerON(void)
 	HAL_Delay(5);
 
 	clean_pmic();
-	HAL_Delay(50);
 
 	val[0] = 0x80;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, val, 1, 1000);// 1.2v
@@ -321,6 +320,47 @@ void Clean_ERR_INT(void)
 	return ;
 }
 
+#define FILTER_DATA_WIDTH	16
+#define FILTER_DEPTH_SHIFT	8
+#define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
+#define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
+
+#if FILTER_DATA_WIDTH == 16
+typedef uint16_t filter_data_t;
+#else
+#error undefined filter width or unsupported filter width
+#endif
+
+struct filter {
+	filter_data_t data[FILTER_DEPTH];
+	unsigned long total;
+	int p;
+};
+
+static filter_data_t filter_init(struct filter *f, filter_data_t d)
+{
+	int i;
+
+	f->p = 0;
+	f->total = 0;
+	for (i = 0; i < FILTER_DEPTH; ++i) {
+		f->data[i] = d;
+		f->total += d;
+	}
+	return d;
+}
+
+static filter_data_t filter_in(struct filter *f, filter_data_t d)
+{
+	f->total -= f->data[f->p];
+	f->total += d;
+	f->data[f->p] = d;
+	f->p = (f->p + 1) & FILTER_DEPTH_MASK;
+
+	return f->total >> FILTER_DEPTH_SHIFT;
+}
+
+static struct filter current_filter;
 
 void Scan_Cuerrent(void)
 {
@@ -350,7 +390,8 @@ void Scan_Cuerrent(void)
 //	  curr_evb.i_ldo_pcie 		= (float)ADC_Buf[9] * 2 /4096 / 1.5;
 #endif
 	  //calculate voltage
-	  curr_evb.i_12v_atx 		= ADC_Buf[0];  //0.18+ A
+	  //0.18+ A
+	  curr_evb.i_12v_atx = filter_in(&current_filter, ADC_Buf[0]);
 	  curr_evb.i_vddio5 		= ADC_Buf[1];
 	  curr_evb.i_vddio18 		= ADC_Buf[2];
 	  curr_evb.i_vddio33 		= ADC_Buf[3];
@@ -451,6 +492,8 @@ void Set_HW_Ver(void)
 
 
 	  HAL_ADC_Stop(&hadc);
+
+	  filter_init(&current_filter, ADC_Buf[0]);
 }
 
 void Factory_Info_get(void)
@@ -481,24 +524,6 @@ void nct80_init(void)
 
 	val = 0x1;
 	HAL_I2C_Mem_Write(&hi2c2, NCT80, CONFIG_REG, 1, &val, 1, 1000);
-}
-
-void poll_pcie_rst(void)
-{
-	if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port, PCIEE_RST_X_MCU_Pin))
-	{
-		Convert_sysrst_gpio(SYS_RST_MODE_OUTPUT);
-
-		i2c_regs.mode_flag = 2;
-
-		HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
-		HAL_Delay(30);
-		while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port, PCIEE_RST_X_MCU_Pin))
-			  ;
-		HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
-
-		Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
-	}
 }
 
 void config_regs(void)
@@ -561,4 +586,55 @@ void cmd_process(void)
 	  default:
 		  break;
 	  }
+}
+
+static volatile int is_chip_ready = 1;
+static volatile unsigned long timer_start_tick;
+static volatile unsigned long timer_timeout;
+
+static inline void timer_start(unsigned long timeout)
+{
+	__disable_irq();
+	timer_timeout = timeout;
+	timer_start_tick = HAL_GetTick();
+	__enable_irq();
+}
+
+static inline int timer_is_timeout(void)
+{
+	int is_timeout;
+	__disable_irq();
+	if (timer_timeout) {
+		is_timeout = HAL_GetTick() - timer_start_tick >= timer_timeout;
+		timer_timeout = 0;
+	}
+	else
+		is_timeout = 1;
+	__enable_irq();
+	return is_timeout;
+}
+
+void poll_pcie_rst(void)
+{
+	__disable_irq();
+	if (is_chip_ready) {
+		if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port,
+						     PCIEE_RST_X_MCU_Pin)) {
+
+			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin,
+					  GPIO_PIN_SET);
+			Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
+		}
+	} else {
+		is_chip_ready = timer_is_timeout();
+	}
+	__enable_irq();
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	Convert_sysrst_gpio(SYS_RST_MODE_OUTPUT);
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	timer_start(30);
+	is_chip_ready = 0;
 }

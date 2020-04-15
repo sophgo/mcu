@@ -151,6 +151,7 @@ void Error_Handler(void);
 #define PG_ALL_GPIO_Port GPIOB
 #define PCIEE_RST_X_MCU_Pin GPIO_PIN_4
 #define PCIEE_RST_X_MCU_GPIO_Port GPIOB
+#define PCIEE_RST_X_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define PMIC_EN_Pin GPIO_PIN_5
 #define PMIC_EN_GPIO_Port GPIOB
 #define I2C1_SCL_Pin GPIO_PIN_6

@@ -40,11 +40,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "bm_common_func.h"
+#include "adc.h"
+#include "i2c.h"
+#include "lptim.h"
+#include "rtc.h"
+#include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "upgrade.h"
+#include "bm_common_func.h"
 
 /* USER CODE END Includes */
 
@@ -91,7 +96,6 @@ int main(void)
   setup_stage();
 
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
