@@ -603,14 +603,13 @@ static inline void timer_start(unsigned long timeout)
 static inline int timer_is_timeout(void)
 {
 	int is_timeout;
-	__disable_irq();
 	if (timer_timeout) {
 		is_timeout = HAL_GetTick() - timer_start_tick >= timer_timeout;
-		timer_timeout = 0;
-	}
-	else
+        if (is_timeout)
+            timer_timeout = 0;
+	} else {
 		is_timeout = 1;
-	__enable_irq();
+    }
 	return is_timeout;
 }
 
