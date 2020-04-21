@@ -26,7 +26,6 @@ void chip_listen(void)
 {
 	/* enable PCIE RESET PIN interrupt */
 	rcc_periph_clock_enable(RCC_SYSCFG);
-	nvic_enable_irq(PCIE_RESET_NVIC);
 	exti_select_source(PCIE_RESET_EXTI, PCIE_RESET_PORT);
 	exti_set_trigger(PCIE_RESET_EXTI, EXTI_TRIGGER_FALLING);
 	exti_enable_request(PCIE_RESET_EXTI);
@@ -45,12 +44,14 @@ void chip_destroy(void)
 
 void chip_update(void)
 {
+	nvic_disable_irq(PCIE_RESET_NVIC);
 	if (is_chip_ready) {
 		if (gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN))
 			gpio_set(SYS_RESET_PORT, SYS_RESET_PIN);
 	} else {
 		is_chip_ready = timer_is_timeout();
 	}
+	nvic_enable_irq(PCIE_RESET_NVIC);
 }
 
 void exti4_15_isr(void)
