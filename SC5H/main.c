@@ -48,7 +48,7 @@ int main(void)
 	led_on();
 
 	/* start listening pcie ep reset */
-	chip_init();
+	chip_listen();
 
 	printf("\r\npress \'u\' to start uart upgrade\r\n");
 

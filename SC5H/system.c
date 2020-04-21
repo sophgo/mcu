@@ -17,6 +17,7 @@
 #include <timer.h>
 #include <pin.h>
 #include <led.h>
+#include <chip.h>
 
 #define UART			USART2
 #define RCC_UART		RCC_USART2
@@ -41,6 +42,7 @@ void system_init(void)
 	rcc_periph_clock_enable(RCC_GPIOD);
 	rcc_periph_clock_enable(RCC_GPIOH);
 
+	chip_init();
 	power_init();
 
 	/* i2c1, i2c2 */

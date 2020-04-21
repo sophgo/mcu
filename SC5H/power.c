@@ -98,10 +98,10 @@ static int pmic_init(void *ctx)
 	while (i2c_master_smbus_write_byte(I2C2, PMIC_SLAVE_ADDR,
 					   1, 0x40, 0xe0))
 		;
-	pmic_voltage_config(0, 1800 + 75);
-	pmic_voltage_config(1, 600 + 20);
-	pmic_voltage_config(2, 840 + 28);
-	pmic_voltage_config(3, 1100 + 38);
+	pmic_voltage_config(0, 1800 + 38);
+	pmic_voltage_config(1, 600 + 6);
+	pmic_voltage_config(2, 840 + 12);
+	pmic_voltage_config(3, 1100 + 12);
 	return 0;
 }
 

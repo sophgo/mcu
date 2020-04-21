@@ -16,7 +16,7 @@
 #include <tick.h>
 
 #define MCU_REG_MAX	0x64
-#define MCU_SW_VER	3
+#define MCU_SW_VER	4
 unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
