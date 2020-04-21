@@ -127,25 +127,19 @@ void detect_mode(void)
 	}
 }
 
-uint8_t pmic_voltage_set(uint16_t MemAddress, uint8_t *pData)
+void pmic_voltage_set(uint16_t mem, unsigned long mv)
 {
+	const unsigned int step = 2;
+	uint16_t cfg = mv / step;
 	uint8_t value[2];
-
-	value[0] = *pData;
-	value[1] = 0;
-
-	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, MemAddress,1, value, 2, 1000);// LDO1V_IN 0.8V
+	value[0] = (cfg >> 2) & 0xff;
+	value[1] = (cfg & 0x3) << 6;
+	HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, mem, 1, value, 2, 1000);// LDO1V_IN 0.8V
 	HAL_Delay(1);
-
-	return 0;
 }
 
 void PowerON(void)
 {
-	uint8_t val[2];
-
-	val[1] = 0;
-
 	clean_pmic();
 	init_pmic();
 
@@ -168,16 +162,10 @@ void PowerON(void)
 	HAL_Delay(1);
 	GPIO_SET(TPU_PG);
 	HAL_Delay(1);
-	//EN_PMIC_OUT3 1.1v
-	val[0] = 0x8a;
-	pmic_voltage_set(BUCK3_DVS0CFG1, val);
-	//EN_PMIC_OUT2 0.6v
-	val[0] = 0x4b;
-	pmic_voltage_set(BUCK2_DVS0CFG1, val);
+	pmic_voltage_set(BUCK3_DVS0CFG1, 1100);
+	pmic_voltage_set(BUCK2_DVS0CFG1, 600);
 	i2c_regs.ddr = 0;
-	//EN_PMIC_OUT1 0.792v
-	val[0] = 0x63;
-	pmic_voltage_set(BUCK1_DVS0CFG1, val);
+	pmic_voltage_set(BUCK1_DVS0CFG1, 774);
 
 	GPIO_SET(TPUMEM_PG);
 	while(!GPIO_GET(PWR_GOOD))
