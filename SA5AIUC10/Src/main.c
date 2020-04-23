@@ -330,7 +330,6 @@ void PowerON(void)
 	if (clean_pmic()) {
 		goto poweron_fail;
 	}
-	HAL_Delay(50);
 
 	tmp[0] = 0;
 	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_VOUTFBDIV,1, tmp, 1, 1000));// 1.2v
@@ -344,7 +343,7 @@ void PowerON(void)
 	tmp[1] = 0x00;
 	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, tmp, 2, 1000));// LDO1V_IN
 
-	HAL_Delay(30);
+	HAL_Delay(2);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDDIO18_GPIO_Port, PG_VDDIO18_Pin) == GPIO_PIN_RESET) {
@@ -590,7 +589,7 @@ void BM1684_RST(void)
 void BM1684_REBOOT(void)
 {
 	PowerDOWN();
-	HAL_Delay(5);
+	HAL_Delay(50);
 	PowerON();
 }
 
@@ -861,15 +860,7 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C2_Init();// iic device
-  if ((i2c_regs.vender == VENDER_SM5_P)
-  	|| (i2c_regs.vender == VENDER_SM5_S)
-  	|| (i2c_regs.vender == VENDER_SE5)
-  	 ) {
-	  BM_MX_I2C1_Init();// iic host
-  } else {
-	  MX_I2C1_Init();// iic device
-  }
-
+  MX_I2C1_Init();// iic device
   MX_I2C3_Init();// iic device
   MX_LPTIM1_Init();
   MX_RTC_Init();
@@ -914,10 +905,20 @@ int main(void)
   if (i2c_regs.vender == VENDER_SA5)
 	  ds1307_init();//RTC
 
-  if ((i2c_regs.vender == VENDER_SM5_S)
-  	|| (i2c_regs.vender == VENDER_SE5))
-  {
-	  gpioex_init();
+  if (i2c_regs.vender == VENDER_SM5_S ||
+      i2c_regs.vender == VENDER_SM5_P ||
+      i2c_regs.vender == VENDER_SE5) {
+      if (gpioex_init()) {
+          /* SM5 SoC mode but no I2C GPIO extension chip */
+          /* OK maybe I am on PCIE slot, act as a PCIE card ^_^ */
+          if (i2c_regs.vender == VENDER_SM5_S)
+              i2c_regs.vender = VENDER_SM5_P;
+      } else {
+          /* SM5 PCIE mode but with I2C GPIO extension chip */
+          /* OK maybe I am on SM5 motherboard, act as a SoC module ^_^ */
+          if (i2c_regs.vender == VENDER_SM5_P)
+              i2c_regs.vender = VENDER_SM5_S;
+      }
   }
   tmp451_init();
   mcu_init();

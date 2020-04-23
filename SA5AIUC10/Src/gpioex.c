@@ -249,13 +249,15 @@ static struct i2c_slave_op slave = {
 	.read	= gpioex_read,
 	.stop	= gpioex_stop,
 };
-void gpioex_init()
+int gpioex_init()
 {
 	uint8_t val;
 
 	//set output high
 	val = GPIOEX0_DEF_HIGH;
-	HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, TCA_REG_OUTPUT0,1, &val, 1, 1000);
+	if (HAL_OK != HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, TCA_REG_OUTPUT0,1, &val, 1, 1))
+        return -1;
+
 	HAL_Delay(1);
 	val = GPIOEX1_DEF_HIGH;
 	HAL_I2C_Mem_Write(&hi2c1,TCA6416A_ADDR, TCA_REG_OUTPUT1,1, &val, 1, 1000);
@@ -279,4 +281,5 @@ void gpioex_init()
 	HAL_Delay(1);
 
 	i2c_slave_register(&i2c_ctx3,&slave);
+    return 0;
 }
