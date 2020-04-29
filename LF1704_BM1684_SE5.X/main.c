@@ -78,7 +78,7 @@ void main(void)
     while (1)
     {
         power_ctrl();
-        reset_ctrl();
+        // reset_ctrl();
         temp_ctrl();
 
     }
