@@ -1,4 +1,4 @@
-PROJ ?= sc5h
+PROJ ?= sc5plus
 TOP ?= ..
 OUTPUT ?= $(PROJ)
 TARGET ?= $(PROJ)-mcu.bin

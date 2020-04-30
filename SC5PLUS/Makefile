@@ -13,8 +13,8 @@
 ######################################
 # target
 ######################################
-TARGET_APP = SC5H3_APP
-TARGET_LOADER = SC5H3_LOADER
+TARGET_APP = SC5PLUS_APP
+TARGET_LOADER = SC5PLUS_LOADER
 
 ######################################
 # building variables
