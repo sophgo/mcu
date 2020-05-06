@@ -64,8 +64,13 @@ void temp_ctrl(void)
     else
         heater_off();
 #else
-    volatile int temp;
-    temp = temp_get();
+    if (is_under_temp()) {
+        heater_on();
+        thermal_led_on();
+    } else {
+        heater_off();
+        thermal_led_off();
+    }
 #endif
 }
 

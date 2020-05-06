@@ -80,7 +80,6 @@ void main(void)
         power_ctrl();
         // reset_ctrl();
         temp_ctrl();
-
     }
 }
 /**
