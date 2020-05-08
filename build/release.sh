@@ -1,4 +1,4 @@
-list='bm1684evb sa5 sc5h sc5h3 sm5pcie'
+list='bm1684evb sa5 sc5h sc5plus sm5pcie'
 
 unset rm
 
