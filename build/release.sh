@@ -1,4 +1,4 @@
-list='bm1684evb sa5 sc5h sc5plus sm5pcie'
+list='bm1684evb sa5 sc5h sc5plus sm5pcie se5v2pic16'
 
 unset rm
 
@@ -25,8 +25,13 @@ function build()
     done
 
     for proj in $list; do
-        cp $proj/$proj-mcu.bin $proj/$proj-mcu-$date.bin
-        md5sum $proj/$proj-mcu-$date.bin
+        if echo $proj | grep -q pic16; then
+            suffix=hex
+        else
+            suffix=bin
+        fi
+        cp $proj/$proj-mcu.$suffix $proj/$proj-mcu-$date.$suffix
+        md5sum $proj/$proj-mcu-$date.$suffix
     done
 }
 

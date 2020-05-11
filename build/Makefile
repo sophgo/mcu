@@ -1,7 +1,13 @@
-PROJ ?= sc5plus
+PROJ ?= se5v2pic16
 TOP ?= ..
 OUTPUT ?= $(PROJ)
-TARGET ?= $(PROJ)-mcu.bin
+
+ifeq ($(findstring pic16, $(PROJ)), pic16)
+    TARGET ?= $(PROJ)-mcu.hex
+else
+    TARGET ?= $(PROJ)-mcu.bin
+endif
+
 
 AARCH64_CROSS_COMPILE = aarch64-linux-gnu-
 
