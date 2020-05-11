@@ -1,6 +1,5 @@
 #include <assert.h>
 #include "stm32l0xx_hal.h"
-#include "gpioex.h"
 #include "i2c.h"
 #include "i2c_slave.h"
 static struct gpioex_ctx {
@@ -57,7 +56,7 @@ static struct gpioex_ctx {
 #define GPIOEX0_MASK		(~GPIOEX0_RESERVE)
 #define GPIOEX1_MASK		(~GPIOEX1_RESERVE)
 
-int gpioex_led1_on()
+int sm5_gpioex_led1_on()
 {
 	int ret;
 	uint8_t val;
@@ -74,7 +73,7 @@ int gpioex_led1_on()
 	}
 	return 0;
 }
-int gpioex_led1_off()
+int sm5_gpioex_led1_off()
 {
 	int ret;
 	uint8_t val;
@@ -91,7 +90,7 @@ int gpioex_led1_off()
 	}
 	return 0;
 }
-int gpioex_led2_on()
+int sm5_gpioex_led2_on()
 {
 	int ret;
 
@@ -109,7 +108,7 @@ int gpioex_led2_on()
 	}
 	return 0;
 }
-int gpioex_led2_off()
+int sm5_gpioex_led2_off()
 {
 	int ret;
 
@@ -128,7 +127,7 @@ int gpioex_led2_off()
 	return 0;
 }
 
-int gpioex_12v_on()
+int sm5_gpioex_12v_on()
 {
 	int ret;
 
@@ -147,7 +146,7 @@ int gpioex_12v_on()
 	}
 	return 0;
 }
-int gpioex_12v_off()
+int sm5_gpioex_12v_off()
 {
 	int ret;
 
@@ -166,7 +165,7 @@ int gpioex_12v_off()
 	return 0;
 }
 
-int gpioex_getpoweroff()
+int sm5_gpioex_getpoweroff()
 {
 	int ret;
 	uint8_t val;
@@ -187,7 +186,7 @@ int gpioex_getpoweroff()
 	}
 }
 
-static void gpioex_match(void *priv, int dir)
+static void sm5_gpioex_match(void *priv, int dir)
 {
 	if (dir == I2C_SLAVE_WRITE) {
 		gpioex_ctx.set_idx = 1;
@@ -196,7 +195,7 @@ static void gpioex_match(void *priv, int dir)
 	}
 }
 
-static void gpioex_write(void *priv, uint8_t data)
+static void sm5_gpioex_write(void *priv, uint8_t data)
 {
 	uint8_t tmp;
 	if (gpioex_ctx.set_idx) {
@@ -228,7 +227,7 @@ static void gpioex_write(void *priv, uint8_t data)
 	gpioex_ctx.idx = (gpioex_ctx.idx + 1) % 8;
 }
 
-static uint8_t gpioex_read(void *priv)
+static uint8_t sm5_gpioex_read(void *priv)
 {
 	uint8_t tmp;
 
@@ -237,19 +236,19 @@ static uint8_t gpioex_read(void *priv)
 	return tmp;
 }
 
-static void gpioex_stop(void *priv)
+static void sm5_gpioex_stop(void *priv)
 {
 
 }
 
 static struct i2c_slave_op slave = {
-	.addr = 0x6C,	/* ds1307 common slave address */
-	.match	= gpioex_match,
-	.write	= gpioex_write,
-	.read	= gpioex_read,
-	.stop	= gpioex_stop,
+	.addr = 0x6C,
+	.match	= sm5_gpioex_match,
+	.write	= sm5_gpioex_write,
+	.read	= sm5_gpioex_read,
+	.stop	= sm5_gpioex_stop,
 };
-int gpioex_init()
+int sm5_gpioex_init()
 {
 	uint8_t val;
 

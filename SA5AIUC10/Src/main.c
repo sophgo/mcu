@@ -58,7 +58,8 @@
 #include "stdlib.h"
 #include "string.h"
 #include "stdio.h"
-#include "gpioex.h"
+#include "sm5_gpioex.h"
+#include "se5_gpioex.h"
 #include "upgrade.h"
 /* USER CODE END Includes */
 
@@ -588,9 +589,14 @@ void BM1684_RST(void)
 
 void BM1684_REBOOT(void)
 {
-	PowerDOWN();
-	HAL_Delay(50);
-	PowerON();
+
+	if (i2c_regs.vender == VENDER_SE5) {
+		se5_reset_board();
+	} else {
+		PowerDOWN();
+		HAL_Delay(50);
+		PowerON();
+	}
 }
 
 uint8_t pg_core = 0;
@@ -766,6 +772,8 @@ void READ_Temper(void)
 		alert_cnt = 0;
 		powerdown_cnt = 0;
 	}
+	/* report soc temperature to pic on se5 mother board */
+	se5_report_temp(i2c_regs.temp1684);
 }
 
 typedef struct factory_info_t {
@@ -795,7 +803,7 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 	wdt_isr();
 	mcu_tick_isr();
 	if (i2c_regs.vender == VENDER_SM5_S) {
-		if (gpioex_getpoweroff() == 1)
+		if (sm5_gpioex_getpoweroff() == 1)
 		{
 			poweroffcheck--;
 			if (poweroffcheck == 0)
@@ -819,7 +827,6 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint8_t Buffer;
 //  uint16_t board_type_addr = BOARD_TYPE;
 	setup_stage();
 	if (i2c_regs.stage == RUN_STAGE_LOADER) {
@@ -906,9 +913,8 @@ int main(void)
 	  ds1307_init();//RTC
 
   if (i2c_regs.vender == VENDER_SM5_S ||
-      i2c_regs.vender == VENDER_SM5_P ||
-      i2c_regs.vender == VENDER_SE5) {
-      if (gpioex_init()) {
+      i2c_regs.vender == VENDER_SM5_P) {
+      if (sm5_gpioex_init()) {
           /* SM5 SoC mode but no I2C GPIO extension chip */
           /* OK maybe I am on PCIE slot, act as a PCIE card ^_^ */
           if (i2c_regs.vender == VENDER_SM5_S)
@@ -919,6 +925,8 @@ int main(void)
           if (i2c_regs.vender == VENDER_SM5_P)
               i2c_regs.vender = VENDER_SM5_S;
       }
+  } else if (i2c_regs.vender == VENDER_SE5) {
+      se5_gpioex_init();
   }
   tmp451_init();
   mcu_init();
@@ -940,19 +948,13 @@ int main(void)
   	|| (i2c_regs.vender == VENDER_SE5)) {
   	// power on after button bush 2s
   	HAL_Delay(2000);//2s
-	gpioex_12v_on();
-	gpioex_led1_on();
+	sm5_gpioex_12v_on();
+	sm5_gpioex_led1_on();
 	PowerON();
   }
   else if (i2c_regs.vender == VENDER_SM5_P)
   {
   	PowerON();
-  }
-
-  EEPROM_ReadBytes(UPDATE_FLAG_OFFSET, &Buffer, 1);
-
-  if (Buffer == 8) {
-	  EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, 0x0, 1);
   }
 
   /* USER CODE END 2 */
@@ -1002,8 +1004,8 @@ int main(void)
 	  {
 	  	needpoweroff = 0;
 	  	PowerDOWN();
-		gpioex_led1_off();
-		gpioex_12v_off();
+		sm5_gpioex_led1_off();
+		sm5_gpioex_12v_off();
 	  }
   }
   /* USER CODE END 3 */

@@ -100,15 +100,17 @@ static void mcu_process_cmd_slow_start(void)
 
 void mcu_process_cmd_slow(void)
 {
-	if (i2c_regs.cmd_reg == 0)
-		return;
+    if (i2c_regs.cmd_reg == 0)
+        return;
 
-	// now we have disabled i2c1 interrupt
-	// put i2c1 controller to reset state
-	__HAL_I2C_DISABLE(&hi2c1);
-	HAL_Delay(1);	//three apb bus cycle is needed
-	HAL_I2C_MspDeInit(&hi2c1);
-	//HAL_I2C_MspDeInit(&hi2c3);
+    // now we have disabled i2c1 interrupt
+    // put i2c1 controller to reset state
+    if (i2c_regs.vender == VENDER_SA5) {
+        __HAL_I2C_DISABLE(&hi2c1);
+        HAL_Delay(1);	//three apb bus cycle is needed
+        HAL_I2C_MspDeInit(&hi2c1);
+    }
+
 	switch (i2c_regs.cmd_reg) {
 	case CMD_CPLD_PWR_ON:
 		PowerON();
@@ -128,11 +130,13 @@ void mcu_process_cmd_slow(void)
 		upgrade_start();
 		break;
 	}
-	i2c_regs.cmd_reg = 0;
-	HAL_I2C_MspInit(&hi2c1);
-	// re-enable i2c controller
-	__HAL_I2C_ENABLE(&hi2c1);
-	//HAL_I2C_MspInit(&hi2c3);
+
+    if (i2c_regs.vender == VENDER_SA5) {
+        i2c_regs.cmd_reg = 0;
+        HAL_I2C_MspInit(&hi2c1);
+        // re-enable i2c controller
+        __HAL_I2C_ENABLE(&hi2c1);
+    }
 }
 
 static void mcu_write(void *priv, volatile uint8_t data)
