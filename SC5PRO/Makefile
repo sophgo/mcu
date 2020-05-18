@@ -1,4 +1,4 @@
-TARGET = SC5H
+TARGET = SC5PRO
 DEBUG = 0
 
 ifeq ($(strip $(V)), 1)
