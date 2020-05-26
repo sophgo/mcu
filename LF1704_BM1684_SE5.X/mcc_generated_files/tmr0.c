@@ -14,7 +14,7 @@
     This source file provides APIs for TMR0.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.81.0
-        Device            :  PIC16LF1704
+        Device            :  PIC16F1704
         Driver Version    :  2.01
     The generated drivers are tested against the following:
         Compiler          :  XC8 2.10 and above
@@ -66,13 +66,13 @@ void TMR0_Initialize(void)
     // Set TMR0 to the options selected in the User Interface
 	
     // PSA assigned; PS 1:32; TMRSE Increment_hi_lo; mask the nWPUEN and INTEDG bits
-    OPTION_REG = (uint8_t)((OPTION_REG & 0xC0) | (0xD4 & 0x3F)); 
+    OPTION_REG = (uint8_t)((OPTION_REG & 0xC0) | (0xF4 & 0x3F)); 
 	
-    // TMR0 131; 
-    TMR0 = 0x83;
+    // TMR0 253; 
+    TMR0 = 0xFD;
 	
     // Load the TMR value to reload variable
-    timer0ReloadVal= 131;
+    timer0ReloadVal= 253;
 
     // Clear Interrupt flag before enabling the interrupt
     INTCONbits.TMR0IF = 0;

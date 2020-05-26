@@ -1,10 +1,12 @@
 #include "mcc_generated_files/mcc.h"
 #include "common.h"
 #include "tick.h"
+#include "i2c.h"
 
 #define POWER_ON_DELAY      1500
 #define POWER_OFF_DELAY     4000
-#define RESET_DELAY         1000
+#define REBOOT_DELAY         3000
+#define FACTORY_RESET_DELAY (REBOOT_DELAY + 10000)
 #define THERMAL_LED_FREQ    4
 
 static uint8_t is_power_on;
@@ -49,9 +51,9 @@ void power_ctrl(void)
     /* detect raising edge */
     if (!(current_key_status == 1 && last_key_status == 0))
         return;
-    
+
     start_tick = tick_get();
-    
+
     while (is_power_key_down()) {
         elapse = tick_get() - start_tick;
         if (is_power_on) {
@@ -72,22 +74,22 @@ void power_ctrl(void)
 
 void reset_ctrl(void)
 {
-    uint32_t start_tick, elapse;
+    uint32_t start_tick, elapse = 0;
     static uint8_t last_key_status = 0;
 
     /* detect reset signal */
     if (!is_reset_key_down())
         return;
-    
+
     start_tick = tick_get();
-    
+
     while (is_reset_key_down()) {
         elapse = tick_get() - start_tick;
-        if (elapse >= RESET_DELAY) {
-            power_off();
-            __delay_ms(1000);
-            power_on();
-            break;
-        }
+	if (elapse >= FACTORY_RESET_DELAY) {
+		req_factory_reset();
+		return;
+	}
     }
+    if (elapse >= REBOOT_DELAY)
+	    req_reboot();
 }

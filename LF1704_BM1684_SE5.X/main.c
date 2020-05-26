@@ -14,7 +14,7 @@
     This header file provides implementations for driver APIs for all modules selected in the GUI.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.81.0
-        Device            :  PIC16LF1704
+        Device            :  PIC16F1704
         Driver Version    :  2.00
 */
 
@@ -46,6 +46,7 @@
 #include "temp.h"
 #include "power.h"
 #include "tick.h"
+#include "i2c.h"
 
 /*
                          Main application
@@ -73,12 +74,15 @@ void main(void)
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
 
+    /* we would better init i2c slave before power on HDS */
+    i2c_slave_init();
+
     power_on();
 
     while (1)
     {
         power_ctrl();
-        // reset_ctrl();
+        reset_ctrl();
         temp_ctrl();
     }
 }

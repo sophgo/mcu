@@ -16,7 +16,7 @@
     all modules selected in the GUI.
     Generation Information :
         Product Revision  :  PIC10 / PIC12 / PIC16 / PIC18 MCUs - 1.81.0
-        Device            :  PIC16LF1704
+        Device            :  PIC16F1704
         Driver Version    :  2.03
     The generated drivers are tested against the following:
         Compiler          :  XC8 2.10 and above or later
@@ -56,6 +56,21 @@ void __interrupt() INTERRUPT_InterruptManager (void)
     {
         TMR0_ISR();
     }
+    else if(INTCONbits.PEIE == 1)
+    {
+        if(PIE2bits.BCL1IE == 1 && PIR2bits.BCL1IF == 1)
+        {
+            MSSP_InterruptHandler();
+        } 
+        else if(PIE1bits.SSP1IE == 1 && PIR1bits.SSP1IF == 1)
+        {
+            MSSP_InterruptHandler();
+        } 
+        else
+        {
+            //Unhandled Interrupt
+        }
+    }      
     else
     {
         //Unhandled Interrupt
