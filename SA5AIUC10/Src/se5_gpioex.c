@@ -2,6 +2,9 @@
 #include "stm32l0xx_hal.h"
 #include "i2c.h"
 #include "i2c_slave.h"
+#include <keyboard.h>
+#include <tca6416a.h>
+#include <pic.h>
 
 /* port 0 */
 #define ALL_RESET_PORT      0
@@ -106,102 +109,20 @@
 #define P1_CFG		(1 << PCIE_INT_PIN)
 #define P1_POL		0
 
-#define TCA6416A_ADDR	(0x20 << 1)
+/* virtual key define */
+#define POWER_KEY_PORT		0
+#define POWER_KEY		(1 << 0)
 
-/* smbus timeout, count in ms */
-#define SMBTO		        2
+#define REBOOT_KEY_PORT		0
+#define REBOOT_KEY		(1 << 1)
 
-#define TCA6416A_P0_IN		0
-#define TCA6416A_P1_IN		1
-#define TCA6416A_P0_OUT		2
-#define TCA6416A_P1_OUT		3
-#define TCA6416A_P0_POL		4
-#define TCA6416A_P1_POL		5
-#define TCA6416A_P0_CFG		6
-#define TCA6416A_P1_CFG		7
-#define TCA6416A_REG_MASK	7
-
-/* PIC function definition */
-#define PIC_ADDR		(0x24 << 1)
-#define PIC_REG_BOARD_TYPE	0
-#define PIC_REG_SW_VERSION	1
-#define PIC_REG_HW_VERSION	2
-#define PIC_REG_CTRL		3
-#define PIC_REG_SOC_TEMP	4
-
-#define PIC_BOARD_TYPE_SE5	3
-#define PIC_CMD_REBOOT		7
-
-static int is_pic_available;
+#define FACTORY_RESET_KEY_PORT	0
+#define FACTORY_RESET_KEY	(1 << 2)
 
 static struct {
 	int set_idx;
 	int idx;
 } gpioex_ctx;
-
-static inline int pic_write(uint8_t reg, uint8_t val)
-{
-	int err;
-
-	err = HAL_I2C_Mem_Write(&hi2c1, PIC_ADDR, reg, 1, &val, 1, SMBTO);
-
-	return err == HAL_OK ? 0 : -1;
-}
-
-static inline int pic_read(uint8_t reg)
-{
-	uint8_t tmp;
-	int err;
-
-	err = HAL_I2C_Mem_Read(&hi2c1, PIC_ADDR, reg, 1, &tmp, 1, SMBTO);
-
-	if (err == HAL_OK)
-		return tmp;
-	else
-		return -1;
-}
-
-int __attribute__((noinline)) tca6416a_write(uint8_t reg, uint8_t val)
-{
-    int err;
-
-	err = HAL_I2C_Mem_Write(&hi2c1, TCA6416A_ADDR, reg, 1, &val, 1, SMBTO);
-    return err;
-}
-
-static inline int tca6416a_read(uint8_t reg)
-{
-	uint8_t tmp;
-    int err;
-
-	err = HAL_I2C_Mem_Read(&hi2c1, TCA6416A_ADDR, reg, 1, &tmp, 1, SMBTO);
-    if (err == HAL_OK)
-        return tmp;
-    else
-        return -1;
-}
-
-static inline void tca6416a_set(uint8_t port, uint8_t pin)
-{
-	uint8_t reg;
-	uint8_t val;
-
-	reg = TCA6416A_P0_OUT + (port ? 1 : 0);
-	val = tca6416a_read(reg);
-	val |= (1 << pin);
-	tca6416a_write(reg, val);
-}
-
-static inline void tca6416a_clr(uint8_t port, uint8_t pin)
-{
-	uint8_t reg;
-	uint8_t val;
-
-	reg = TCA6416A_P0_OUT + (port ? 1 : 0);
-	val = tca6416a_read(reg);
-	val &= ~(1 << pin);
-	tca6416a_write(reg, val);
-}
 
 static void se5_gpioex_match(void *priv, int dir)
 {
@@ -255,8 +176,28 @@ static struct i2c_slave_op slave = {
 	.read	= se5_gpioex_read,
 };
 
+#define SMB_ALERT_PORT	MCU_CPLD_ERR_GPIO_Port
+#define SMB_ALERT_PIN	MCU_CPLD_ERR_Pin
+
+static inline int is_smb_alert(void)
+{
+	return HAL_GPIO_ReadPin(SMB_ALERT_PORT, SMB_ALERT_PIN)
+		== GPIO_PIN_RESET;
+}
+
 int se5_gpioex_init(void)
 {
+	/* reconfig cpld error pin from output to input */
+	/* on sm5, this pin is defined as smbus alert */
+	/* effect low */
+	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	GPIO_InitStruct.Pin = SMB_ALERT_PIN;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(SMB_ALERT_PORT, &GPIO_InitStruct);
+
+
 	tca6416a_write(TCA6416A_P0_OUT, P0_OUT);
 	tca6416a_write(TCA6416A_P1_OUT, P1_OUT);
 	tca6416a_write(TCA6416A_P0_CFG, P0_CFG);
@@ -264,9 +205,9 @@ int se5_gpioex_init(void)
 	tca6416a_write(TCA6416A_P0_POL, P0_POL);
 	tca6416a_write(TCA6416A_P1_POL, P1_POL);
 
-	is_pic_available = pic_read(PIC_REG_BOARD_TYPE) == PIC_BOARD_TYPE_SE5;
-
 	i2c_slave_register(&i2c_ctx3,&slave);
+
+	kbd_init();
 	return 0;
 }
 
@@ -285,8 +226,65 @@ void se5_reset_board(void)
         ;
 }
 
-void se5_report_temp(int temp)
+static int is_heater_on;
+
+static inline void heater_on(void)
 {
-	if (is_pic_available)
-		pic_write(PIC_REG_SOC_TEMP, temp);
+	if (!is_heater_on)
+		pic_write(PIC_REG_HEATER_CTRL, 1);
+}
+
+static inline void heater_off(void)
+{
+	if (is_heater_on)
+		pic_write(PIC_REG_HEATER_CTRL, 0);
+}
+
+void se5_heater_ctrl(int temp)
+{
+	if (!is_pic_available)
+		return;
+
+	/* this function is called every 2 seconds
+	 * so it is not called so frequently
+	 */
+	if (temp < 3)
+		heater_on();
+	else
+		heater_off();
+}
+
+void se5_smb_alert(void)
+{
+	int err;
+
+	if (!is_smb_alert())
+		return;
+
+	if (is_pic_available) {
+		/* get request */
+		err = pic_read(PIC_REG_REQUEST);
+		switch (err) {
+		case PIC_REQ_POWER_OFF:
+			kbd_set(POWER_KEY_PORT, POWER_KEY);
+			break;
+		case PIC_REQ_REBOOT:
+			kbd_set(REBOOT_KEY_PORT, REBOOT_KEY);
+			break;
+		case PIC_REQ_FACTORY_RESET:
+			kbd_set(FACTORY_RESET_KEY_PORT, FACTORY_RESET_KEY);
+			break;
+		default:
+			break;
+		}
+		if (err > 0) {
+			pic_write(PIC_REG_REQUEST, err);
+			return;
+		}
+	}
+
+	/* process tca6416a */
+	/* this should enough to clear 6416a interrupt */
+	tca6416a_read(TCA6416A_P0_IN);
+	tca6416a_read(TCA6416A_P1_IN);
 }

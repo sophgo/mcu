@@ -77,12 +77,14 @@ AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
 CP = $(GCC_PATH)/$(PREFIX)objcopy
 SZ = $(GCC_PATH)/$(PREFIX)size
 DP = $(GCC_PATH)/$(PREFIX)objdump
+RD = $(GCC_PATH)/$(PREFIX)readelf
 else
 CC = $(PREFIX)gcc
 AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy
 SZ = $(PREFIX)size
 DP = $(PREFIX)objdump
+RD = $(PREFIX)readelf
 endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
@@ -188,13 +190,18 @@ $(BUILD_DIR)/%.hex: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(HEX) $< $@
 
 $(BUILD_DIR)/%.dis: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
-	$(DP) -D $< > $@
+	$(RD) -e $< > $@
+	$(DP) -D $< >> $@
 	
 $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 	$(BIN) $< $@	
 
 $(BUILD_DIR):
 	mkdir $@		
+
+
+burn: $(BUILD_DIR)/$(TARGET_LOADER).bin
+	st-flash write $< 0x08000000
 
 #######################################
 # clean up

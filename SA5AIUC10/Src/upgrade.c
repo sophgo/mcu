@@ -51,12 +51,10 @@ void upgrade_start(void)
 	  /* disable sys tick */
 	  SysTick->CTRL &= ~1;
 	  /* disable i2c1 and i2c3 */
-	  extern RTC_HandleTypeDef hrtc;
 	  __HAL_I2C_DISABLE(&hi2c1);
 	  __HAL_I2C_DISABLE(&hi2c3);
 	  HAL_LPTIM_MspDeInit(&hlptim1);
 	  // HAL_ADC_MspDeInit(&hadc);
-	  HAL_RTC_MspDeInit(&hrtc);
 
 	  /* disable all interrupt */
 	  __disable_irq();

@@ -43,7 +43,6 @@
 #include "adc.h"
 #include "i2c.h"
 #include "lptim.h"
-#include "rtc.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -51,16 +50,17 @@
 #include "i2c_slave.h"
 #include "mcu.h"
 #include "wdt.h"
-#include "ds1307.h"
 #include "tmp451.h"
 #include "soc_eeprom.h"
 #include "eeprom.h"
 #include "stdlib.h"
 #include "string.h"
 #include "stdio.h"
+#include "upgrade.h"
 #include "sm5_gpioex.h"
 #include "se5_gpioex.h"
-#include "upgrade.h"
+#include "tca6416a.h"
+#include "pic.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -106,27 +106,6 @@ void SystemClock_Config(void);
   * @param Delay specifies the delay time length, in milliseconds.
   * @retval None
   */
-#define HAL_MAX_DELAY_BM      0x00007FFFU
-
-void HAL_Delay(uint32_t Delay)
-{
-  uint32_t tickstart = HAL_GetTick();
-  uint32_t wait = Delay;
-
-  /* Add a period to guaranty minimum wait */
-//  if (wait < HAL_MAX_DELAY_BM)
-//  {
-//    wait++;
-//  }
-
-  while((HAL_GetTick() - tickstart) < wait)
-  {
-  }
-}
-
-void TurnOnLED(void);
-void TurnOffLED(void);
-
 #define PMIC_ADDR 0x3c
 
 #define IO_CHIPNAME		0x01
@@ -466,13 +445,23 @@ poweron_fail:
 	return;
 }
 
+static inline void intr_pin_set(int status)
+{
+	if (i2c_regs.vender == VENDER_SE5)
+		return;
+
+	status = status ? GPIO_PIN_SET : GPIO_PIN_RESET;
+
+	HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port,
+			  MCU_CPLD_ERR_Pin,
+			  status);
+}
+
 void intr_status_set(uint8_t intr)
 {
 	__disable_irq();
 	i2c_regs.intr_status1 |= intr;
-	HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin,
-			  (i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1)) ?
-			  GPIO_PIN_SET : GPIO_PIN_RESET);
+	intr_pin_set(i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1));
 	__enable_irq();
 }
 
@@ -480,9 +469,7 @@ void intr_status_clr(uint8_t intr)
 {
 	__disable_irq();
 	i2c_regs.intr_status1 &= ~intr;
-	HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin,
-			  (i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1)) ?
-			  GPIO_PIN_SET : GPIO_PIN_RESET);
+	intr_pin_set(i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1));
 	__enable_irq();
 }
 
@@ -490,9 +477,7 @@ void intr_mask_set(uint8_t mask)
 {
 	__disable_irq();
 	i2c_regs.intr_mask1 = mask;
-	HAL_GPIO_WritePin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin,
-			  (i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1)) ?
-			  GPIO_PIN_SET : GPIO_PIN_RESET);
+	intr_pin_set(i2c_regs.intr_status1 & ~(i2c_regs.intr_mask1));
 	__enable_irq();
 }
 
@@ -590,7 +575,8 @@ void BM1684_RST(void)
 void BM1684_REBOOT(void)
 {
 
-	if (i2c_regs.vender == VENDER_SE5) {
+	if (i2c_regs.vender == VENDER_SE5 &&
+	    (is_pic_available || is_tca6416a_available)) {
 		se5_reset_board();
 	} else {
 		PowerDOWN();
@@ -598,8 +584,6 @@ void BM1684_REBOOT(void)
 		PowerON();
 	}
 }
-
-uint8_t pg_core = 0;
 
 static inline void led_on(void)
 {
@@ -772,27 +756,7 @@ void READ_Temper(void)
 		alert_cnt = 0;
 		powerdown_cnt = 0;
 	}
-	/* report soc temperature to pic on se5 mother board */
-	se5_report_temp(i2c_regs.temp1684);
-}
-
-typedef struct factory_info_t {
-	uint16_t manufacturer;
-	uint16_t board_type;
-	uint16_t date;
-	uint16_t Serial_number;
-	uint8_t  PCB_Ver;
-	uint8_t  PCBA_Ver;
-	uint8_t  sub_unit_Ver;
-	uint16_t MAC_Addr;
-}Factory_Info;
-
-Factory_Info fty_Info;
-
-void Factory_Info_Get(void)
-{
-//	  EEPROM_Write(addr, writeFlashData);
-//	  EEPROM_ReadWords(addr_offset, &fty_Info.manufacturer, sizeof(Factory_Info));
+	se5_heater_ctrl(i2c_regs.temp1684);
 }
 
 #define POWER_OFF_TIME 5
@@ -826,8 +790,8 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-//  uint16_t board_type_addr = BOARD_TYPE;
+	/* USER CODE BEGIN 1 */
+	//  uint16_t board_type_addr = BOARD_TYPE;
 	setup_stage();
 	if (i2c_regs.stage == RUN_STAGE_LOADER) {
 		/* success */
@@ -835,180 +799,191 @@ int main(void)
 			app_start();
 		}
 	}
-  /* USER CODE END 1 */
-  
+	/* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	/* MCU Configuration--------------------------------------------------------*/
 
-  /* USER CODE BEGIN Init */
-  EEPROM_ReadBytes(VENDER_Addr, (uint8_t *)&i2c_regs.vender, 1);
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
+
+	/* USER CODE BEGIN Init */
+	EEPROM_ReadBytes(VENDER_Addr, (uint8_t *)&i2c_regs.vender, 1);
 #if 0
 	i2c_regs.vender = VENDER_SM5_S;
 	EEPROM_WriteBytes(VENDER_Addr, (uint8_t *)&i2c_regs.vender, 1);
 #endif
-  if (i2c_regs.vender == 0)
-	  i2c_regs.vender = VENDER_SA5;
+	if (i2c_regs.vender == 0)
+		i2c_regs.vender = VENDER_SA5;
 
-  i2c_regs.sw_ver = MCU_VERSION;
+	i2c_regs.sw_ver = MCU_VERSION;
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Configure the system clock */
+	SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_ADC_Init();
-  MX_I2C2_Init();// iic device
-  MX_I2C1_Init();// iic device
-  MX_I2C3_Init();// iic device
-  MX_LPTIM1_Init();
-  MX_RTC_Init();
-  /* USER CODE BEGIN 2 */
-  HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
-  /* put led to off state */
-  led_off();
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
+	MX_ADC_Init();
+	MX_I2C2_Init();// iic device
+	MX_I2C1_Init();// iic device
+	MX_I2C3_Init();// iic device
+	MX_LPTIM1_Init();
+	/* USER CODE BEGIN 2 */
+	HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
+	/* put led to off state */
+	led_off();
 
-  HAL_LPTIM_Start1HZ(&hlptim1);
-  /*
+	HAL_LPTIM_Start1HZ(&hlptim1);
+	/*
 
- 1684 -> hi2c3 -> 0x17	  MCU
- 1684 -> hi2c3 -> 0x40	  GPIOEX
- 1684 -> hi2c3 -> 0x69	  WDT
- 1684 -> hi2c3 -> 0x6A	  EEPROM
- 1684 -> hi2c3 -> 0x6B	  TMP451
+	   1684 -> hi2c3 -> 0x17	  MCU
+	   1684 -> hi2c3 -> 0x40	  GPIOEX
+	   1684 -> hi2c3 -> 0x69	  WDT
+	   1684 -> hi2c3 -> 0x6A	  EEPROM
+	   1684 -> hi2c3 -> 0x6B	  TMP451
 
-  if i2c_regs.vender == VENDER_SA5
-  {
-	  control -> hi2c1 -> 0x38-3F MCU
-	  control -> hi2c1 -> 0x6A	  EEPROM
-	  1684	  -> hi2c3 -> 0x68	  RTC DS1307
-  }
-  else //VENDER_SM5
-  {
-	  1684	  -> hi2c3 -> 0x6C	  TCA6416  i2c to 16 gpio
+	   if i2c_regs.vender == VENDER_SA5
+	   {
+	   control -> hi2c1 -> 0x38-3F MCU
+	   control -> hi2c1 -> 0x6A	  EEPROM
+	   1684	  -> hi2c3 -> 0x68	  RTC DS1307
+	   }
+	   else //VENDER_SM5
+	   {
+	   1684	  -> hi2c3 -> 0x6C	  TCA6416  i2c to 16 gpio
 
-	  hi2c1 -> TCA6416	i2c to 16 gpio
-  }
-  */
+	   hi2c1 -> TCA6416	i2c to 16 gpio
+	   }
+	   */
 
-//  Factory_Info_Get();
+	tca6416a_probe();
+	pic_probe();
 
-  i2c_ctx1.id = 1;
-  i2c_ctx3.id = 3;
+	if (is_tca6416a_available && is_pic_available) {
+		/* SM5 V3 or later motherboard */
+		i2c_regs.vender = VENDER_SE5;
+	} else if (!is_tca6416a_available &&
+		   !is_pic_available &&
+		   i2c_regs.vender != VENDER_SM5_P) {
+		/* SA5 motherboard board */
+		i2c_regs.vender = VENDER_SA5;
+	} else if (i2c_regs.vender == VENDER_SM5_S ||
+		   i2c_regs.vender == VENDER_SM5_P) {
+		i2c_regs.vender = is_tca6416a_available ? VENDER_SM5_S : VENDER_SM5_P;
+	}
 
-  if (i2c_regs.vender == VENDER_SA5)
-	  i2c_init(&i2c_ctx1, hi2c1.Instance);
+	i2c_ctx1.id = 1;
+	i2c_ctx3.id = 3;
 
-  i2c_init(&i2c_ctx3, hi2c3.Instance);
+	if (i2c_regs.vender == VENDER_SA5)
+		i2c_init(&i2c_ctx1, hi2c1.Instance);
 
-  if (i2c_regs.vender == VENDER_SA5)
-	  ds1307_init();//RTC
+	i2c_init(&i2c_ctx3, hi2c3.Instance);
 
-  if (i2c_regs.vender == VENDER_SM5_S ||
-      i2c_regs.vender == VENDER_SM5_P) {
-      if (sm5_gpioex_init()) {
-          /* SM5 SoC mode but no I2C GPIO extension chip */
-          /* OK maybe I am on PCIE slot, act as a PCIE card ^_^ */
-          if (i2c_regs.vender == VENDER_SM5_S)
-              i2c_regs.vender = VENDER_SM5_P;
-      } else {
-          /* SM5 PCIE mode but with I2C GPIO extension chip */
-          /* OK maybe I am on SM5 motherboard, act as a SoC module ^_^ */
-          if (i2c_regs.vender == VENDER_SM5_P)
-              i2c_regs.vender = VENDER_SM5_S;
-      }
-  } else if (i2c_regs.vender == VENDER_SE5) {
-      se5_gpioex_init();
-  }
-  tmp451_init();
-  mcu_init();
-  wdt_init();
-  eeprom_init();
+	switch (i2c_regs.vender) {
+	case VENDER_SA5:
+		break;
+	case VENDER_SM5_S:
+		sm5_gpioex_init();
+		HAL_Delay(200);
+		sm5_gpioex_12v_on();
+		sm5_gpioex_led1_on();
+		PowerON();
+		break;
+	case VENDER_SM5_P:
+		PowerON();
+		break;
+	case VENDER_SE5:
+		se5_gpioex_init();
+		PowerON();
+		break;
+	}
 
-  i2c_slave_start(&i2c_ctx3);
-  if (i2c_regs.vender == VENDER_SA5) {
-	  i2c_slave_start(&i2c_ctx1);
-  }
+	tmp451_init();
+	mcu_init();
+	wdt_init();
+	eeprom_init();
 
-  // make sure PB6 is high
-//  HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
-//  HAL_GPIO_WritePin(GPIOB, TPU_I2C_ADD3_Pin, GPIO_PIN_SET);
-  // set PCB & BOM version by voltage value
-  SET_HW_Ver();
+	i2c_slave_start(&i2c_ctx3);
+	if (i2c_regs.vender == VENDER_SA5)
+		i2c_slave_start(&i2c_ctx1);
 
-  if ((i2c_regs.vender == VENDER_SM5_S)
-  	|| (i2c_regs.vender == VENDER_SE5)) {
-  	// power on after button bush 2s
-  	HAL_Delay(2000);//2s
-	sm5_gpioex_12v_on();
-	sm5_gpioex_led1_on();
-	PowerON();
-  }
-  else if (i2c_regs.vender == VENDER_SM5_P)
-  {
-  	PowerON();
-  }
+	// make sure PB6 is high
+	//  HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_SET);
+	//  HAL_GPIO_WritePin(GPIOB, TPU_I2C_ADD3_Pin, GPIO_PIN_SET);
+	// set PCB & BOM version by voltage value
+	SET_HW_Ver();
 
-  /* USER CODE END 2 */
+	if (i2c_regs.vender == VENDER_SA5) {
+		unsigned int tick_start = HAL_GetTick();
+		while (!i2c_regs.power_good) {
+			unsigned int tick_elapse = HAL_GetTick() - tick_start;
+			if (tick_elapse > 1000)
+				PowerON();
+		}
+	}
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  // response CPLD's commands
-	  extern void mcu_process_cmd_slow(void);
-	  mcu_process_cmd_slow();
-	  soc_wdt_reset_process();
+	/* USER CODE END 2 */
 
-	  // read temperature every 2 seconds
-	  static uint32_t last_read_time = 0;
-	  static int ever_read = 0;
-	  if (ever_read == 0) {
-		  /* read temperature at boot time */
-		  READ_Temper();
-		  ever_read = 1;
-		  last_read_time = HAL_GetTick();
-	  } else {
-		  uint32_t read_time = HAL_GetTick();
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
+	while (1)
+	{
+		// response CPLD's commands
+		extern void mcu_process_cmd_slow(void);
+		mcu_process_cmd_slow();
+		soc_wdt_reset_process();
 
-		  if (read_time - last_read_time > 2000) {
-			  READ_Temper();
-			  last_read_time = read_time;
-		  }
-	  }
-	  led_update();
+		// read temperature every 2 seconds
+		static uint32_t last_read_time = 0;
+		static int ever_read = 0;
+		if (ever_read == 0) {
+			/* read temperature at boot time */
+			READ_Temper();
+			ever_read = 1;
+			last_read_time = HAL_GetTick();
+		} else {
+			uint32_t read_time = HAL_GetTick();
 
-	  //POLL PCIEE_RST STATUS FOR SYS_RST
-	  if ((i2c_regs.vender == VENDER_SM5_P) &&
-	      (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
-											  PCIE_RST_MCU_Pin))) {
-		  i2c_regs.mode_flag = 2;
-		  HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
-		  HAL_Delay(30);
-		  while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
-		  		;
-		  HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
-	  }
-    /* USER CODE END WHILE */
+			if (read_time - last_read_time > 2000) {
+				READ_Temper();
+				last_read_time = read_time;
+			}
+		}
+		led_update();
 
-    /* USER CODE BEGIN 3 */
-	  if (needpoweroff)
-	  {
-	  	needpoweroff = 0;
-	  	PowerDOWN();
-		sm5_gpioex_led1_off();
-		sm5_gpioex_12v_off();
-	  }
-  }
-  /* USER CODE END 3 */
+		//POLL PCIEE_RST STATUS FOR SYS_RST
+		if ((i2c_regs.vender == VENDER_SM5_P) &&
+		    (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
+							PCIE_RST_MCU_Pin))) {
+			i2c_regs.mode_flag = 2;
+			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+			HAL_Delay(30);
+			while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
+				;
+			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
+		}
+		/* USER CODE END WHILE */
+
+		/* USER CODE BEGIN 3 */
+		if (needpoweroff)
+		{
+			needpoweroff = 0;
+			PowerDOWN();
+			sm5_gpioex_led1_off();
+			sm5_gpioex_12v_off();
+		}
+
+		if (i2c_regs.vender == VENDER_SE5)
+			se5_smb_alert();
+	}
+	/* USER CODE END 3 */
 }
 
 /**
@@ -1050,10 +1025,9 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C3
-                              |RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_LPTIM1;
+                              |RCC_PERIPHCLK_LPTIM1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInit.I2c3ClockSelection = RCC_I2C3CLKSOURCE_PCLK1;
-  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   PeriphClkInit.LptimClockSelection = RCC_LPTIM1CLKSOURCE_LSI;
 
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)

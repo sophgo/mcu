@@ -9,7 +9,6 @@
 #include "main.h"
 #include "i2c_slave.h"
 #include "eeprom.h"
-#include "rtc.h"
 #include "debug.h"
 #include "upgrade.h"
 #include "string.h"
@@ -21,7 +20,6 @@ static unsigned short uptime;
 struct mcu_ctx {
 	int set_idx;
 	int idx;
-	int setrtc;
 	int load_cmd_reg;
 	I2C_REGS *map;
 };
@@ -142,7 +140,6 @@ void mcu_process_cmd_slow(void)
 static void mcu_write(void *priv, volatile uint8_t data)
 {
 	struct mcu_ctx *ctx = priv;
-	int offset;
 
 	if (ctx->set_idx) {
 		idx_set(ctx, data);
@@ -167,11 +164,6 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_INTR_MASK1:
 		intr_mask_set(data);
-		break;
-	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
-		offset = ctx->idx - REG_SYS_RTC_YEAR;
-		map->rtc[offset] = data;
-		ctx->setrtc = 1;
 		break;
 	case REG_CMD:
 		map->cmd = data;
@@ -201,9 +193,6 @@ static uint8_t mcu_read(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
 	uint8_t ret = 0;
-	static RTC_DateTypeDef sDate;
-	static RTC_TimeTypeDef sTime;
-	int offset;
 	I2C_REGS *map = ctx->map;
 
 	switch (ctx->idx) {
@@ -245,24 +234,6 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_CAUSE_PWR_DOWN:
 		ret = i2c_regs.cause_pwr_down;
-		break;
-	case REG_SYS_RTC_YEAR ... (REG_SYS_RTC_YEAR + 5):
-		offset = ctx->idx - REG_SYS_RTC_YEAR;
-		if (offset < 3)
-		{
-			HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BCD);
-			map->rtc[0] = sDate.Year;
-			map->rtc[1] = sDate.Month;
-			map->rtc[2] = sDate.Date;
-		}
-		else
-		{
-			HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BCD);
-			map->rtc[3] = sTime.Hours;
-			map->rtc[4] = sTime.Minutes;
-			map->rtc[5] = sTime.Seconds;
-		}
-		ret = map->rtc[offset];
 		break;
 	case REG_CMD:
 		ret = map->cmd;
@@ -322,25 +293,6 @@ static uint8_t mcu_read(void *priv)
 static void mcu_stop(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
-	if (ctx->setrtc)
-	{
-		ctx->setrtc = 0;
-		RTC_DateTypeDef sDate;
-		RTC_TimeTypeDef sTime;
-
-		memset(&sTime, 0x00, sizeof(sTime));
-		memset(&sDate, 0x00, sizeof(sDate));
-
-		sDate.Year		= ctx->map->rtc[0];
-		sDate.Month		= ctx->map->rtc[1];
-		sDate.Date		= ctx->map->rtc[2];
-		sTime.Hours		= ctx->map->rtc[3];
-		sTime.Minutes	= ctx->map->rtc[4];
-		sTime.Seconds	= ctx->map->rtc[5];
-
-		HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD);
-		HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD);
-	}
 	if (ctx->load_cmd_reg) {
 		i2c_regs.cmd_reg = ctx->load_cmd_reg;
 		ctx->load_cmd_reg = 0;
@@ -382,8 +334,6 @@ void mcu_init(void)
 	assert(sizeof(I2C_REGS) == 0x64);
 	mcu1_ctx.map = &mcu_reg;
 	mcu3_ctx.map = &mcu_reg;
-	mcu1_ctx.setrtc = 0;
-	mcu3_ctx.setrtc = 0;
 	uptime = 0;
 
 	if (i2c_regs.vender == VENDER_SA5) {
