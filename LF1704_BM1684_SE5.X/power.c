@@ -3,16 +3,21 @@
 #include "tick.h"
 #include "i2c.h"
 
-#define POWER_ON_DELAY      1500
-#define POWER_OFF_DELAY     4000
-#define REBOOT_DELAY         3000
-#define FACTORY_RESET_DELAY (REBOOT_DELAY + 10000)
-#define THERMAL_LED_FREQ    4
+#define FORCE_POWER_OFF_TIMEOUT     (20 * 1000)
+#define POWER_ON_DELAY              1500
+#define POWER_OFF_DELAY             500
+#define FORCE_POWER_OFF_DELAY       (POWER_OFF_DELAY + 4500)
+#define REBOOT_DELAY                500
+#define FACTORY_RESET_DELAY         (REBOOT_DELAY + 10000)
+#define THERMAL_LED_FREQ            4
 
 static uint8_t is_power_on;
 
 void power_on(void)
 {
+	if (is_power_on)
+        return;
+
     if (is_under_temp())
         heater_on();
 
@@ -35,14 +40,20 @@ void power_on(void)
 
 void power_off(void)
 {
+    di();
+    if (!is_power_on)
+        goto end;
+
     _power_off();
     power_led_off();
     is_power_on = false;
+end:
+    ei();
 }
 
 void power_ctrl(void)
 {
-    uint32_t start_tick, elapse;
+    uint32_t start, elapse;
     static uint8_t last_key_status = 0;
     uint8_t current_key_status;
 
@@ -52,13 +63,13 @@ void power_ctrl(void)
     if (!(current_key_status == 1 && last_key_status == 0))
         return;
 
-    start_tick = tick_get();
+    start = tick_get();
 
     while (is_power_key_down()) {
-        elapse = tick_get() - start_tick;
+        elapse = tick_get() - start;
         if (is_power_on) {
             /* power off soc */
-            if (elapse >= POWER_OFF_DELAY) {
+            if (elapse >= FORCE_POWER_OFF_DELAY) {
                 power_off();
                 break;
             }
@@ -70,26 +81,50 @@ void power_ctrl(void)
             }
         }
     }
+
+    if (elapse >= POWER_OFF_DELAY) {
+        req_power_off();
+        /* we have enter power off flow */
+        /* let power led flick until STM32 request power off */
+        /* if no response in 20 seconds from STM32, force power off */
+        start = tick_get();
+
+        while (is_power_on) {
+            elapse = tick_get() - start;
+            if (elapse > FORCE_POWER_OFF_TIMEOUT) {
+                power_off();
+                break;
+            }
+
+            di();
+            /* led control */
+            if (elapse & 1024)
+                power_led_on();
+            else 
+                power_led_off();
+            ei();
+        }
+    }
 }
 
 void reset_ctrl(void)
 {
-    uint32_t start_tick, elapse = 0;
+    uint32_t start, elapse = 0;
     static uint8_t last_key_status = 0;
 
     /* detect reset signal */
     if (!is_reset_key_down())
         return;
 
-    start_tick = tick_get();
+    start = tick_get();
 
     while (is_reset_key_down()) {
-        elapse = tick_get() - start_tick;
-	if (elapse >= FACTORY_RESET_DELAY) {
-		req_factory_reset();
-		return;
-	}
+        elapse = tick_get() - start;
+        if (elapse >= FACTORY_RESET_DELAY) {
+            req_factory_reset();
+            return;
+        }
     }
     if (elapse >= REBOOT_DELAY)
-	    req_reboot();
+        req_reboot();
 }
