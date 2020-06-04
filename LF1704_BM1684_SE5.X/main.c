@@ -43,7 +43,6 @@
 
 #include "mcc_generated_files/mcc.h"
 #include "common.h"
-#include "temp.h"
 #include "power.h"
 #include "tick.h"
 #include "i2c.h"
@@ -74,8 +73,6 @@ void main(void)
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
 
-    /* we would better init i2c slave before power on HDS */
-    i2c_slave_init();
 
     power_on();
 
@@ -83,7 +80,7 @@ void main(void)
     {
         power_ctrl();
         reset_ctrl();
-        temp_ctrl();
+        board_ctrl();
     }
 }
 /**

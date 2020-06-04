@@ -113,7 +113,7 @@ void I2C_Open()
 {
     I2C_SlaveOpen();
     I2C_SlaveSetSlaveAddr(I2C_SLAVE_ADDRESS << 1);
-    I2C_SlaveSetSlaveMask(I2C_SLAVE_MASK);
+    I2C_SlaveSetSlaveMask(I2C_SLAVE_MASK << 1);
     I2C_SlaveSetIsrHandler(I2C_Isr);
     I2C_SlaveSetBusColIntHandler(I2C_SlaveDefBusColInterruptHandler);
     I2C_SlaveSetWriteIntHandler(I2C_SlaveDefWrInterruptHandler);
@@ -187,7 +187,7 @@ static void I2C_Isr()
         case I2C_RX:
             if (I2C_SlaveIsData()) 
             {
-                if(I2C_SlaveIsRxBufFull())
+                //if(I2C_SlaveIsRxBufFull())
                 { 
                     I2C_SlaveRdCallBack();
                 }
