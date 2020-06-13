@@ -142,9 +142,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_VQPS:
 		if (data)
-			gpio_set(EN_VQPS_PORT, EN_VQPS_PIN);
+            ;
 		else
-			gpio_clear(EN_VQPS_PORT, EN_VQPS_PIN);
+            ;
 		break;
 	default:
 		break;
@@ -175,7 +175,7 @@ static uint8_t mcu_read(void *priv)
 		ret = get_stage();
 		break;
 	case REG_VQPS:
-		ret = gpio_get(EN_VQPS_PORT, EN_VQPS_PIN) ? 1 : 0;
+        ;
 		break;
 	case REG_CURRENT:
 		ret = ctx->current & 0xff;
@@ -226,24 +226,6 @@ void mcu_init(void)
 	unsigned long current, voltage;
 
 	i2c_slave_register(&i2c1_slave_ctx, &slave);
-
-	gpio_mode_setup(GPIOC,
-			GPIO_MODE_INPUT,
-			GPIO_PUPD_NONE,
-			GPIO14 | GPIO15);
-
-	gpio_mode_setup(GPIOH,
-			GPIO_MODE_INPUT,
-			GPIO_PUPD_NONE,
-			GPIO0 | GPIO1);
-
-	MCU_HW_VER = (gpio_port_read(GPIOC) >> 14) & 3;
-	MCU_HW_VER |= (gpio_port_read(GPIOH) & 3) << 4;
-
-	gpio_clear(EN_VQPS_PORT, EN_VQPS_PIN);
-	gpio_mode_setup(EN_VQPS_PORT, GPIO_MODE_OUTPUT,
-			GPIO_PUPD_NONE, EN_VQPS_PIN);
-
 
 	adc_read(&current, &voltage);
 	mcu_ctx.current = filter_init(&current_filter, current);

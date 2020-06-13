@@ -1,4 +1,4 @@
-PROJ ?= se5v2pic16
+PROJ ?= sa5
 TOP ?= ..
 OUTPUT ?= $(PROJ)
 

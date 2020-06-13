@@ -7,7 +7,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <stdio.h>
 #include <system.h>
-#include <power.h>
+#include <board_power.h>
 #include <i2c_master.h>
 #include <i2c_slave.h>
 #include <upgrade.h>
@@ -44,7 +44,7 @@ int main(void)
 	eeprom_init();
 	i2c_slave_start(&i2c1_slave_ctx);
 
-	power_on();
+	board_power_init();
 	led_on();
 
 	/* start listening pcie ep reset */

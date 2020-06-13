@@ -80,6 +80,7 @@
 #define GPIO_PORT_B_BASE		(IOPORT_BASE + 0x00400)
 #define GPIO_PORT_C_BASE		(IOPORT_BASE + 0x00800)
 #define GPIO_PORT_D_BASE		(IOPORT_BASE + 0x00c00)
+#define GPIO_PORT_E_BASE		(IOPORT_BASE + 0x01000)
 #define GPIO_PORT_H_BASE		(IOPORT_BASE + 0x01C00)
 
 /* Device Electronic Signature */
