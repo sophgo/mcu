@@ -46,8 +46,12 @@ void power_ctrl(void)
     current_key_status = is_power_key_down();
 
     /* detect raising edge */
-    if (!(current_key_status == 1 && last_key_status == 0))
+    if (!(current_key_status == 1 && last_key_status == 0)) {
+        last_key_status = current_key_status;
         return;
+    }
+
+    last_key_status = current_key_status;
     
     start_tick = tick_get();
     
@@ -71,6 +75,9 @@ void power_ctrl(void)
 
 void reset_ctrl(void)
 {
+    if (!is_power_on)
+        return;
+
     if (is_all_reset()) {
         __delay_ms(1);
         power_off();
