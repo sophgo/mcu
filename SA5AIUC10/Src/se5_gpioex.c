@@ -166,7 +166,7 @@ static uint8_t se5_gpioex_read(void *priv)
 
 	err = tca6416a_read(gpioex_ctx.idx);
 	gpioex_ctx.idx = (gpioex_ctx.idx + 1) % 8;
-    return err < 0 ? 0 : err;
+	return err < 0 ? 0 : err;
 }
 
 static struct i2c_slave_op slave = {
@@ -213,17 +213,31 @@ int se5_gpioex_init(void)
 
 void se5_reset_board(void)
 {
-    HAL_I2C_DeInit(&hi2c3);
-    PowerDOWN();
-    HAL_Delay(50);
-    if (is_pic_available)
-        pic_write(PIC_REG_CTRL, PIC_CMD_REBOOT);
-    else
-        tca6416a_clr(ALL_RESET_PORT, ALL_RESET_PIN);
-    /* wait the end of the world */
-    __disable_irq();
-    while (1)
-        ;
+	HAL_I2C_DeInit(&hi2c3);
+	PowerDOWN();
+	HAL_Delay(50);
+	if (is_pic_available)
+		pic_write(PIC_REG_CTRL, PIC_CMD_REBOOT);
+	else
+		tca6416a_clr(ALL_RESET_PORT, ALL_RESET_PIN);
+	/* wait the end of the world */
+	__disable_irq();
+	while (1)
+		;
+}
+
+void se5_power_off_board(void)
+{
+	if (!is_pic_available)
+		return;
+	HAL_I2C_DeInit(&hi2c3);
+	PowerDOWN();
+	HAL_Delay(50);
+	pic_write(PIC_REG_CTRL, PIC_CMD_POWER_OFF);
+	/* wait the end of the world */
+	__disable_irq();
+	while (1)
+		;
 }
 
 static int is_heater_on;
@@ -288,3 +302,9 @@ void se5_smb_alert(void)
 	tca6416a_read(TCA6416A_P0_IN);
 	tca6416a_read(TCA6416A_P1_IN);
 }
+
+void se5_error_led_on(void)
+{
+	tca6416a_set(LED2_PORT, LED2_PIN);
+}
+

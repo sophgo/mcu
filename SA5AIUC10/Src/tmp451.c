@@ -22,6 +22,7 @@ struct tmp451_reg {
 
 static struct tmp451_ctx {
 	int set_ptr;
+	int soc, board;	/* soc and board temperature */
 	volatile uint8_t *rptr, *wptr;
 	struct tmp451_reg map[TMP451_REG_MAX];
 } tmp451_ctx = {
@@ -29,7 +30,7 @@ static struct tmp451_ctx {
 		{0x00, PTRNA, 0x00},
 		{0x01, PTRNA, 0x00},
 		{0x02, PTRNA, PORNA},
-		{0x03, 0x09, 0x00},
+		{0x03, 0x09, 0x04},	/* enable extended mode by default */
 		{0x04, 0x0a, 0x08},
 		{0x05, 0x0b, 0x55},
 		{0x06, 0x0c, 0x00},
@@ -70,19 +71,17 @@ static void tmp451_match(void *priv, int dir)
 		tmp451_ctx.set_ptr = 1;
 }
 
-extern uint8_t temp1684;
-
 static void tmp451_write(void *priv, uint8_t data)
 {
 	if (tmp451_ctx.set_ptr) {
 		tmp451_ctx.set_ptr = 0;
 		switch (data){
 		case 0:
-			tmp451_ctx.rptr = &i2c_regs.temp_board;
+			tmp451_ctx.rptr = &(tmp451_ctx.map[0].value);
 			tmp451_ctx.wptr = NULL;
 			return;
 		case 1:
-			tmp451_ctx.rptr = &temp1684;
+			tmp451_ctx.rptr = &(tmp451_ctx.map[1].value);
 			tmp451_ctx.wptr = NULL;
 			return;
 		}
@@ -113,10 +112,42 @@ static void tmp451_write(void *priv, uint8_t data)
 	// error handling
 }
 
+static uint8_t real_temp_to_reg(int temp)
+{
+	int is_ex_mode = tmp451_ctx.map[3].value & (1 << 2);
+	uint8_t reg;
+
+	if (is_ex_mode) {
+		if (temp < -64)
+			temp = -64;
+		else if (temp > 191)
+			temp = 191;
+
+		reg = temp + 64;
+	} else {
+		if (temp < 0)
+			reg = 0;
+		else if (temp > 127)
+			reg = 127;
+		else
+			reg = temp;
+	}
+	return reg;
+}
+
 static uint8_t tmp451_read(void *priv)
 {
-	if (tmp451_ctx.rptr)
+	volatile uint8_t * volatile rptr = tmp451_ctx.rptr;
+
+	if (rptr == &(tmp451_ctx.map[0].value)) {
+		/* board */
+		return real_temp_to_reg(tmp451_ctx.board);
+	} else if (rptr == &(tmp451_ctx.map[1].value)) {
+		/* soc */
+		return real_temp_to_reg(tmp451_ctx.soc);
+	} else if (rptr) {
 		return *(tmp451_ctx.rptr);
+	}
 
 	// error handling
 	return 0;
@@ -135,3 +166,8 @@ void tmp451_init(void)
 	i2c_slave_register(&i2c_ctx3, &tmp451_slave);
 }
 
+void tmp451_set_temp(int soc, int board)
+{
+	tmp451_ctx.soc = soc;
+	tmp451_ctx.board = board;
+}

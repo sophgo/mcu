@@ -10,6 +10,7 @@
 
 extern void mcu_init(void);
 void mcu_tick_isr();
+void mcu_set_temp(int soc, int board);
 
 #endif /* MCU_H_ */
 

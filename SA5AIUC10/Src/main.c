@@ -435,6 +435,9 @@ void PowerON(void)
 
 poweron_fail:
 	if (i2c_regs.cause_pwr_down == 0) {
+		if (i2c_regs.vender == VENDER_SE5 && is_tca6416a_available)
+			se5_error_led_on();
+
 		i2c_regs.power_good = 1;
 	} else {
 		i2c_regs.power_good = 0;
@@ -683,7 +686,6 @@ void SET_HW_Ver(void)
 }
 
 #define TMP451_SLAVE_ADDR (0x98)
-uint8_t temp1684;	// before calibration
 static uint8_t alert_cnt = 0;
 static uint8_t powerdown_cnt = 0;
 
@@ -706,10 +708,16 @@ static uint8_t powerdown_cnt = 0;
 #define TMP451_ALERT		(0x22)
 #define TMP451_SMBTO_MASK	(1 << 7)
 
+#define TMP451_CONFIG_RD_ADDR	(0x03)
+#define TMP451_CONFIG_WR_ADDR	(0x09)
+#define TMP451_RANGE_MASK	(1 << 2)
+
 void READ_Temper(void)
 {
 	/* enable tmp451 smbus timeout feature */
 	static uint8_t smbto = 0;
+	int soc, board;
+	uint8_t tmp;
 
 	if (smbto == 0) {
 		/* tmp451 smbus timeout will release sda and scl after 20ms from i2c start */
@@ -722,31 +730,37 @@ void READ_Temper(void)
 			smbto |= TMP451_SMBTO_MASK;
 			TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, TMP451_SLAVE_ADDR, TMP451_ALERT, 1, &smbto, 1, 1000));
 		}
+		/* enable extended mode */
+		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2, TMP451_SLAVE_ADDR, TMP451_CONFIG_RD_ADDR, 1, &tmp, 1, 1000));
+		tmp |= TMP451_RANGE_MASK;
+		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, TMP451_SLAVE_ADDR, TMP451_CONFIG_WR_ADDR, 1, &tmp, 1, 1000));
 	}
 
 	// detection of temperature value
-	TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0,1, (uint8_t*)&i2c_regs.temp_board, 1, 1000));
+	TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x0, 1, &tmp, 1, 1000));
+	/* tmp451 is in extended mode, real temperature = register value - 64 */
+	board = (int)tmp - 64;
+	soc = board + 5;
+
 	if (i2c_regs.power_good) {
-		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &temp1684, 1, 1000));
-
-		if (temp1684 < 4) {
-			i2c_regs.temp1684 = 0;
-		} else {
-//			i2c_regs.temp1684 = (temp1684 * 232- 886) >> 8; //rough handling of tempareture calibration
-			i2c_regs.temp1684 = temp1684 - 5;
-		}
-	} else {
-		i2c_regs.temp1684 = i2c_regs.temp_board;
+		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &tmp, 1, 1000));
+		soc = (int)tmp - 64;
 	}
+	tmp451_set_temp(soc, board);
 
-	if ((i2c_regs.temp1684 > 95) && (i2c_regs.temp_board > 85)) {//temperature too high, powerdown
+	/* correct soc temperature */
+	soc -= 5;
+
+	mcu_set_temp(soc, board);
+
+	if (soc > 95 && board > 85) {//temperature too high, powerdown
 		powerdown_cnt++;
 		if (powerdown_cnt == 3) {
 			intr_status_set(OVER_TEMP_POWEROFF);
 			PowerDOWN();
 			powerdown_cnt = 0;
 		}
-	} else if ((i2c_regs.temp1684 > 85) && (i2c_regs.temp_board > 80)) {//temperature too high alert
+	} else if (soc > 85 && board > 80) {//temperature too high alert
 		alert_cnt++;
 		if (alert_cnt ==3) {
 			intr_status_set(OVER_TEMP_ALERT);
@@ -756,7 +770,7 @@ void READ_Temper(void)
 		alert_cnt = 0;
 		powerdown_cnt = 0;
 	}
-	se5_heater_ctrl(i2c_regs.temp1684);
+	se5_heater_ctrl(soc);
 }
 
 #define POWER_OFF_TIME 5
@@ -890,6 +904,7 @@ int main(void)
 	case VENDER_SA5:
 		break;
 	case VENDER_SM5_S:
+		HAL_NVIC_DisableIRQ(I2C1_IRQn);
 		sm5_gpioex_init();
 		HAL_Delay(200);
 		sm5_gpioex_12v_on();
@@ -897,9 +912,11 @@ int main(void)
 		PowerON();
 		break;
 	case VENDER_SM5_P:
+		HAL_NVIC_DisableIRQ(I2C1_IRQn);
 		PowerON();
 		break;
 	case VENDER_SE5:
+		HAL_NVIC_DisableIRQ(I2C1_IRQn);
 		se5_gpioex_init();
 		PowerON();
 		break;
@@ -980,8 +997,13 @@ int main(void)
 			sm5_gpioex_12v_off();
 		}
 
-		if (i2c_regs.vender == VENDER_SE5)
+		if (i2c_regs.vender == VENDER_SE5) {
+			HAL_NVIC_DisableIRQ(I2C3_IRQn);
+			HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
 			se5_smb_alert();
+			HAL_NVIC_EnableIRQ(I2C3_IRQn);
+			HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+		}
 	}
 	/* USER CODE END 3 */
 }

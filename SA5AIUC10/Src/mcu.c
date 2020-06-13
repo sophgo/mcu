@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "upgrade.h"
 #include "string.h"
+#include "se5_gpioex.h"
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
@@ -114,6 +115,8 @@ void mcu_process_cmd_slow(void)
 		PowerON();
 		break;
 	case CMD_CPLD_PWR_DOWN:
+		if (i2c_regs.vender == VENDER_SE5)
+			se5_power_off_board();
 		PowerDOWN();
 		break;
 	case CMD_CPLD_1684RST:
@@ -342,4 +345,25 @@ void mcu_init(void)
 	i2c_slave_register(&i2c_ctx3, &slave3);
 }
 
+void mcu_set_temp(int soc, int board)
+{
+	int8_t temp_soc, temp_board;
+
+	if (soc < -64)
+		temp_soc = -64;
+	else if (soc > 127)
+		temp_soc = 127;
+	else
+		temp_soc = soc;
+
+	if (board < -64)
+		temp_board = -64;
+	else if (board > 127)
+		temp_board = 127;
+	else
+		temp_board = board;
+
+	i2c_regs.temp1684 = *(uint8_t *)&temp_soc;
+	i2c_regs.temp_board = *(uint8_t *)&temp_board;
+}
 

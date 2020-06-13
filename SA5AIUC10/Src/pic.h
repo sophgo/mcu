@@ -18,6 +18,7 @@
 
 #define PIC_BOARD_TYPE_SE5	3
 #define PIC_CMD_REBOOT		7
+#define PIC_CMD_POWER_OFF	2
 
 #define PIC_REQ_NONE		0
 #define PIC_REQ_POWER_OFF	1
