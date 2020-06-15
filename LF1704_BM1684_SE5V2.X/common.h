@@ -4,6 +4,8 @@
 #include <xc.h>
 #include "mcc_generated_files/mcc.h"
 
+#define SW_VERSION          1
+
 #define _power_on()         POWER_SetHigh()
 #define	_power_off()        POWER_SetLow()
 

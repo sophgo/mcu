@@ -13,7 +13,7 @@
 #include <project_id.h>
 
 #define MCU_REG_MAX 0x64
-#define MCU_SW_VER 0;
+#define MCU_SW_VER 0
 unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
