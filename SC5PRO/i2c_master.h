@@ -14,6 +14,9 @@ int i2c_master_smbus_read_byte(int i2c, unsigned char addr,
 int i2c_master_smbus_write_byte(int i2c, unsigned char addr,
 				unsigned long timeout,
 				unsigned char cmd, unsigned char data);
-
+int i2c_master_smbus_write(int i2c, unsigned char addr,
+			   unsigned long timeout, unsigned char data);
+int i2c_master_smbus_read(int i2c, unsigned char addr,
+			  unsigned long timeout, unsigned char *data);
 
 #endif

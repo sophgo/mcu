@@ -63,6 +63,9 @@ void tim6_dac_isr(void)
 
 void timer_mdelay(unsigned long ms)
 {
+	if (ms == 0)
+		return;
+
 	timer_start(ms * 1000);
 	while (!timer_is_timeout())
 		;
@@ -71,6 +74,9 @@ void timer_mdelay(unsigned long ms)
 
 void timer_udelay(unsigned long us)
 {
+	if (us == 0)
+		return;
+
 	timer_start(us);
 	while (!timer_is_timeout())
 		;

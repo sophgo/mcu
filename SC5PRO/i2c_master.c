@@ -85,6 +85,12 @@ int i2c_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
 			r[i] = i2c_get_data(i2c);
 		}
 	}
+
+	/* wait stop condition */
+	while (i2c_busy(i2c))
+		if (tick_get() - start > timeout)
+			goto i2c_timeout;
+
 	return 0;
 i2c_timeout:
 	i2c_peripheral_disable(i2c);
@@ -116,5 +122,17 @@ int i2c_master_smbus_write_byte(int i2c, unsigned char addr,
 	tmp[0] = cmd;
 	tmp[1] = data;
 	return i2c_transfer7_timeout(i2c, addr, timeout, tmp, 2, NULL, 0);
+}
+
+int i2c_master_smbus_write(int i2c, unsigned char addr,
+			   unsigned long timeout, unsigned char data)
+{
+	return i2c_transfer7_timeout(i2c, addr, timeout, &data, 1, NULL, 0);
+}
+
+int i2c_master_smbus_read(int i2c, unsigned char addr,
+			  unsigned long timeout, unsigned char *data)
+{
+	return i2c_transfer7_timeout(i2c, addr, timeout, NULL, 0, data, 1);
 }
 

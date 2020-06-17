@@ -3,7 +3,7 @@
 
 int adc_init(void)
 {
-	uint8_t channels[] = {0, 1};
+	uint8_t channels[] = {13};
 
 	rcc_periph_clock_enable(RCC_ADC1);
 	/* init adc and dma */
@@ -24,18 +24,15 @@ int adc_init(void)
 
 void adc_read(unsigned long *current, unsigned long *voltage)
 {
-	/* channel 0 */
+	/* channel 13 */
 	ADC_CR(ADC1) |= ADC_CR_ADSTART;
 	/* software triggered, busy status */
 	while (ADC_CR(ADC1) & ADC_CR_ADSTART)
 		;
+	/* adc-voltage = (adc-value / 2^12) * 1.8
+	 */
 	*current = ADC_DR(ADC1);
 
-	/* channel 1 */
-	ADC_CR(ADC1) |= ADC_CR_ADSTART;
-	/* software triggered, busy status */
-	while (ADC_CR(ADC1) & ADC_CR_ADSTART)
-		;
-	*voltage = ADC_DR(ADC1);
+	*voltage = 12 * 1000;
 }
 

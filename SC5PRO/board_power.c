@@ -3,6 +3,7 @@
 #include <power.h>
 #include <pin.h>
 #include <common.h>
+#include <stdlib.h>
 
 int b12_vdd_0_8v_on(void);
 void b12_vdd_0_8v_off(void);
@@ -39,6 +40,15 @@ int b56_ddr_vddqlp_on(void);
 void b56_ddr_vddqlp_off(void);
 int b78_ddr_vddqlp_on(void);
 void b78_ddr_vddqlp_off(void);
+
+int sys_rst_deassert_on(void);
+void sys_rst_deassert_off(void);
+
+int ddr_power_good_on(void);
+void ddr_power_good_off(void);
+
+int sys_rst_assert_on(void);
+void sys_rst_assert_off(void);
 
 struct power_node const board_power_nodes[] = {
 
@@ -308,81 +318,47 @@ struct power_node const board_power_nodes[] = {
 						    EN_B78_VQPS_1_8V_PIN},
 						   }},
 
-	{"SYS-RST-ASSERT", NODE_TYPE_ENABLE, 100, 29600, {
+	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, 0, 1000, {
+							   {(unsigned long)
+							    sys_rst_deassert_on,
+							    (unsigned long)
+							    sys_rst_deassert_off},
+							   {(unsigned long)NULL,
+							    (unsigned long)
+							    NULL},
+							   {(unsigned long)NULL,
+							    (unsigned long)
+							    NULL},
+							   {(unsigned long)NULL,
+							    (unsigned long)
+							    NULL},
+							   }},
+
+	{"PG-DDR-0", NODE_TYPE_FUNCTION, 0, 30000, {
+						    {(unsigned long)
+						     ddr_power_good_on,
+						     (unsigned long)
+						     ddr_power_good_off},
+						    {(unsigned long)NULL,
+						     (unsigned long)NULL},
+						    {(unsigned long)NULL,
+						     (unsigned long)NULL},
+						    {(unsigned long)NULL,
+						     (unsigned long)NULL},
+						    }},
+
+	{"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, 0, 30000, {
 							  {(unsigned long)
-							   B1_SYS_RST_N_PORT,
+							   sys_rst_assert_on,
 							   (unsigned long)
-							   B1_SYS_RST_N_PIN},
-							  {(unsigned long)
-							   B3_SYS_RST_N_PORT,
-							   (unsigned long)
-							   B3_SYS_RST_N_PIN},
-							  {(unsigned long)
-							   B5_SYS_RST_N_PORT,
-							   (unsigned long)
-							   B5_SYS_RST_N_PIN},
-							  {(unsigned long)
-							   B7_SYS_RST_N_PORT,
-							   (unsigned long)
-							   B7_SYS_RST_N_PIN},
+							   sys_rst_assert_off},
+							  {(unsigned long)NULL,
+							   (unsigned long)NULL},
+							  {(unsigned long)NULL,
+							   (unsigned long)NULL},
+							  {(unsigned long)NULL,
+							   (unsigned long)NULL},
 							  }},
-
-	{"SYS-RST-DEASSERT", NODE_TYPE_ENABLE, 100, 0, {
-							{(unsigned long)
-							 B2_SYS_RST_N_PORT,
-							 (unsigned long)
-							 B2_SYS_RST_N_PIN},
-							{(unsigned long)
-							 B4_SYS_RST_N_PORT,
-							 (unsigned long)
-							 B4_SYS_RST_N_PIN},
-							{(unsigned long)
-							 B6_SYS_RST_N_PORT,
-							 (unsigned long)
-							 B6_SYS_RST_N_PIN},
-							{(unsigned long)
-							 B8_SYS_RST_N_PORT,
-							 (unsigned long)
-							 B8_SYS_RST_N_PIN},
-							}},
-
-	{"PG-DDR-0", NODE_TYPE_ENABLE, 100, 600, {
-						  {(unsigned long)
-						   B1_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B1_INPUT_PG4_PIN},
-						  {(unsigned long)
-						   B3_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B3_INPUT_PG4_PIN},
-						  {(unsigned long)
-						   B5_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B5_INPUT_PG4_PIN},
-						  {(unsigned long)
-						   B7_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B7_INPUT_PG4_PIN},
-						  }},
-
-	{"PG-DDR-1", NODE_TYPE_ENABLE, 100, 600, {
-						  {(unsigned long)
-						   B2_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B2_INPUT_PG4_PIN},
-						  {(unsigned long)
-						   B4_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B4_INPUT_PG4_PIN},
-						  {(unsigned long)
-						   B6_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B6_INPUT_PG4_PIN},
-						  {(unsigned long)
-						   B8_INPUT_PG4_PORT,
-						   (unsigned long)
-						   B8_INPUT_PG4_PIN},
-						  }},
 
 };
 

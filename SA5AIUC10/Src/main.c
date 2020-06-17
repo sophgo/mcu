@@ -150,7 +150,7 @@ int clean_pmic(void);
 			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);			\
 			LOG_ERROR_LINE();							\
 			LOG_ERROR_CODE(err);						\
-			goto poweron_fail;							\
+			/* goto poweron_fail; */							\
 		}												\
 	} while (0)
 
@@ -298,6 +298,9 @@ static int pin_state_error_line;
 		}						\
 	} while (0)
 
+static inline void led_on(void);
+static inline void led_off(void);
+
 void PowerON(void)
 {
 	unsigned char tmp[8];
@@ -308,7 +311,7 @@ void PowerON(void)
 	I2C_ClearBusyFlagErratum(&hi2c2);
 
 	if (clean_pmic()) {
-		goto poweron_fail;
+		// goto poweron_fail;
 	}
 
 	tmp[0] = 0;
@@ -327,23 +330,23 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDDIO18_GPIO_Port, PG_VDDIO18_Pin) == GPIO_PIN_RESET) {
-		i2c_regs.cause_pwr_down = ERR_VDDIO18;
-		goto poweron_fail;
+		i2c_regs.cause_pwr_down |= ERR_VDDIO18;
+		// goto poweron_fail;
 	}
 
 
 	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDDC_GPIO_Port, PG_VDDC_Pin) == GPIO_PIN_RESET) {
-		i2c_regs.cause_pwr_down = ERR_VDDC;
-		goto poweron_fail;
+		i2c_regs.cause_pwr_down |= ERR_VDDC;
+		// goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDDIO33_GPIO_Port, PG_VDDIO33_Pin) == GPIO_PIN_RESET) {
-		i2c_regs.cause_pwr_down = ERR_VDDIO33;
-		goto poweron_fail;
+		i2c_regs.cause_pwr_down |= ERR_VDDIO33;
+		// goto poweron_fail;
 	}
 
 	// 1 soc 2 PCIE
@@ -362,8 +365,8 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_PHY_Pin, GPIO_PIN_SET);//EN_PHY
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDD_PHY_GPIO_Port, PG_VDD_PHY_Pin) == GPIO_PIN_RESET) {
-		i2c_regs.cause_pwr_down = ERR_VDDPHY;
-		goto poweron_fail;
+		i2c_regs.cause_pwr_down |= ERR_VDDPHY;
+		// goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOA, P08_PWR_GOOD_Pin, GPIO_PIN_SET);
@@ -372,8 +375,8 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_PCIE_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDD_PCIE_GPIO_Port, PG_VDD_PCIE_Pin) == GPIO_PIN_RESET) {
-		i2c_regs.cause_pwr_down = ERR_VDDPCIE;
-		goto poweron_fail;
+		i2c_regs.cause_pwr_down |= ERR_VDDPCIE;
+		// goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOA, GPIO2_Pin, GPIO_PIN_SET);
@@ -381,8 +384,8 @@ void PowerON(void)
 	HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	if (HAL_GPIO_ReadPin(PG_VDD_TPU_GPIO_Port, PG_VDD_TPU_Pin) == GPIO_PIN_RESET) {
-		i2c_regs.cause_pwr_down = ERR_VDDTPU;
-		goto poweron_fail;
+		i2c_regs.cause_pwr_down |= ERR_VDDTPU;
+		// goto poweron_fail;
 	}
 
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_SET);
@@ -433,7 +436,7 @@ void PowerON(void)
 			  		;
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
-poweron_fail:
+// poweron_fail:
 	if (i2c_regs.cause_pwr_down == 0) {
 		if (i2c_regs.vender == VENDER_SE5 && is_tca6416a_available)
 			se5_error_led_on();
@@ -442,7 +445,14 @@ poweron_fail:
 	} else {
 		i2c_regs.power_good = 0;
 		intr_status_set(POWERON_ERR);
-		PowerDOWN();
+		// PowerDOWN();
+		while (1) {
+			led_on();
+			HAL_Delay(100);
+			led_off();
+			HAL_Delay(100);
+		}
+
 	}
 
 	return;
@@ -806,6 +816,7 @@ int main(void)
 {
 	/* USER CODE BEGIN 1 */
 	//  uint16_t board_type_addr = BOARD_TYPE;
+#if 0
 	setup_stage();
 	if (i2c_regs.stage == RUN_STAGE_LOADER) {
 		/* success */
@@ -813,6 +824,7 @@ int main(void)
 			app_start();
 		}
 	}
+#endif
 	/* USER CODE END 1 */
 
 

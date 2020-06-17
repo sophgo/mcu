@@ -11,34 +11,32 @@ void pin_init(void)
 	GPIO_OTYPER(GPIOA) = 0;
 	/* output speed, low, medium, high, very high */
 	GPIO_OSPEEDR(GPIOA) =
-	    (GPIO_OSPEEDR(GPIOA) & ~0xffffffff) | (GPIO_OSPEED_LOW << (0 * 2)) |
+	    (GPIO_OSPEEDR(GPIOA) & ~0xc3ffffff) | (GPIO_OSPEED_LOW << (0 * 2)) |
 	    (GPIO_OSPEED_LOW << (1 * 2)) | (GPIO_OSPEED_HIGH << (2 * 2)) |
 	    (GPIO_OSPEED_HIGH << (3 * 2)) | (GPIO_OSPEED_LOW << (4 * 2)) |
 	    (GPIO_OSPEED_LOW << (5 * 2)) | (GPIO_OSPEED_LOW << (6 * 2)) |
 	    (GPIO_OSPEED_LOW << (7 * 2)) | (GPIO_OSPEED_LOW << (8 * 2)) |
 	    (GPIO_OSPEED_HIGH << (9 * 2)) | (GPIO_OSPEED_HIGH << (10 * 2)) |
 	    (GPIO_OSPEED_LOW << (11 * 2)) | (GPIO_OSPEED_LOW << (12 * 2)) |
-	    (GPIO_OSPEED_LOW << (13 * 2)) | (GPIO_OSPEED_LOW << (14 * 2)) |
 	    (GPIO_OSPEED_LOW << (15 * 2));
 	/* pull-up pull-down */
 	GPIO_PUPDR(GPIOA) =
-	    (GPIO_PUPDR(GPIOA) & ~0xffffffff) | (GPIO_PUPD_NONE << (0 * 2)) |
+	    (GPIO_PUPDR(GPIOA) & ~0xc3ffffff) | (GPIO_PUPD_NONE << (0 * 2)) |
 	    (GPIO_PUPD_NONE << (1 * 2)) | (GPIO_PUPD_NONE << (2 * 2)) |
 	    (GPIO_PUPD_NONE << (3 * 2)) | (GPIO_PUPD_NONE << (4 * 2)) |
 	    (GPIO_PUPD_NONE << (5 * 2)) | (GPIO_PUPD_NONE << (6 * 2)) |
 	    (GPIO_PUPD_NONE << (7 * 2)) | (GPIO_PUPD_NONE << (8 * 2)) |
 	    (GPIO_PUPD_NONE << (9 * 2)) | (GPIO_PUPD_NONE << (10 * 2)) |
 	    (GPIO_PUPD_NONE << (11 * 2)) | (GPIO_PUPD_NONE << (12 * 2)) |
-	    (GPIO_PUPD_NONE << (13 * 2)) | (GPIO_PUPD_NONE << (14 * 2)) |
 	    (GPIO_PUPD_NONE << (15 * 2));
 	/* af, alternative function selection */
 	GPIO_AFRL(GPIOA) =
-	    (GPIO_AFRL(GPIOA) & ~0x00007700) | (GPIO_AF4 << (2 * 4)) | (GPIO_AF4
+	    (GPIO_AFRL(GPIOA) & ~0x0000ff00) | (GPIO_AF4 << (2 * 4)) | (GPIO_AF4
 									<< (3 *
 									    4));
 	GPIO_AFRH(GPIOA) =
-	    (GPIO_AFRH(GPIOA) & ~0x07700000) | (GPIO_AF4 << ((9 - 4) * 4)) |
-	    (GPIO_AF4 << ((10 - 4) * 4));
+	    (GPIO_AFRH(GPIOA) & ~0x00000ff0) | (GPIO_AF4 << ((9 - 8) * 4)) |
+	    (GPIO_AF4 << ((10 - 8) * 4));
 	/* mode, input, output, alternate function or analog */
 	GPIO_MODER(GPIOA) =
 	    (GPIO_MODER(GPIOA) & ~0xc3ffffff) | (GPIO_MODE_OUTPUT << (0 * 2)) |
@@ -82,9 +80,9 @@ void pin_init(void)
 	/* af, alternative function selection */
 	/* AFRL reset state */
 	GPIO_AFRH(GPIOB) =
-	    (GPIO_AFRH(GPIOB) & ~0x77770000) | (GPIO_AF4 << ((8 - 4) * 4)) |
-	    (GPIO_AF4 << ((9 - 4) * 4)) | (GPIO_AF6 << ((10 - 4) * 4)) |
-	    (GPIO_AF6 << ((11 - 4) * 4));
+	    (GPIO_AFRH(GPIOB) & ~0x0000ffff) | (GPIO_AF4 << ((8 - 8) * 4)) |
+	    (GPIO_AF4 << ((9 - 8) * 4)) | (GPIO_AF6 << ((10 - 8) * 4)) |
+	    (GPIO_AF6 << ((11 - 8) * 4));
 	/* mode, input, output, alternate function or analog */
 	GPIO_MODER(GPIOB) =
 	    (GPIO_MODER(GPIOB) & ~0xffffffff) | (GPIO_MODE_OUTPUT << (0 * 2)) |
@@ -126,7 +124,7 @@ void pin_init(void)
 	    (GPIO_PUPD_NONE << (15 * 2));
 	/* af, alternative function selection */
 	GPIO_AFRL(GPIOC) =
-	    (GPIO_AFRL(GPIOC) & ~0x00000077) | (GPIO_AF7 << (0 * 4)) | (GPIO_AF7
+	    (GPIO_AFRL(GPIOC) & ~0x000000ff) | (GPIO_AF7 << (0 * 4)) | (GPIO_AF7
 									<< (1 *
 									    4));
 	/* AFRH reset state */
@@ -211,8 +209,8 @@ void pin_init(void)
 	/* af, alternative function selection */
 	/* AFRL reset state */
 	GPIO_AFRH(GPIOE) =
-	    (GPIO_AFRH(GPIOE) & ~0x00770000) | (GPIO_AF6 << ((8 - 4) * 4)) |
-	    (GPIO_AF6 << ((9 - 4) * 4));
+	    (GPIO_AFRH(GPIOE) & ~0x000000ff) | (GPIO_AF6 << ((8 - 8) * 4)) |
+	    (GPIO_AF6 << ((9 - 8) * 4));
 	/* mode, input, output, alternate function or analog */
 	GPIO_MODER(GPIOE) =
 	    (GPIO_MODER(GPIOE) & ~0xffffffff) | (GPIO_MODE_OUTPUT << (0 * 2)) |

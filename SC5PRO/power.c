@@ -20,9 +20,12 @@ static int node_on(struct power_node const *node)
 		}
 	} else {
 		for (i = 0; i < ARRAY_SIZE(node->param); ++i) {
-			err = ((power_on_func)(node->param[i][0]))();
-			if (err)
-				break;
+			power_on_func func = (power_on_func)node->param[i][0];
+			if (func) {
+				err = func();
+				if (err)
+					break;
+			}
 			timer_udelay(node->group_delay);
 		}
 	}

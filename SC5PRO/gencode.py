@@ -264,9 +264,9 @@ class Port:
             #     print('GPIO{}{} AF{}'.format(pin.get_port(), pin.get_pin(), pin.get_af()))
             if pin.get_af() != None:
                 if pin.get_pin() < 4:
-                    mask_low |= 7 << (pin.get_pin() * 4)
+                    mask_low |= 0xf << (pin.get_pin() * 4)
                 else:
-                    mask_high |= 7 << ((pin.get_pin() - 4) * 4)
+                    mask_high |= 0xf << ((pin.get_pin() - 8) * 4)
 
         for pin in self.pins:
             if not pin:
@@ -277,7 +277,7 @@ class Port:
             if pin.get_pin() < 4:
                 reg_low += ' ({} << ({} * 4)) |'.format(val, pin.get_pin())
             else:
-                reg_high += ' ({} << (({} - 4) * 4)) |'.format(val, pin.get_pin())
+                reg_high += ' ({} << (({} - 8) * 4)) |'.format(val, pin.get_pin())
 
         if reg_low == '':
             reg_low = ' 0'
@@ -339,6 +339,7 @@ class Port:
                 continue
             code += '#define {}_PORT\t\tGPIO{}\n'.format(pin.get_code_name(), self.name)
             code += '#define {}_PIN\t\tGPIO{}\n'.format(pin.get_code_name(), pin.get_pin())
+            code += '#define {}_EXTI\t\tEXTI{}\n'.format(pin.get_code_name(), pin.get_pin())
         return code
 
 class PinList:
@@ -457,6 +458,8 @@ class PinList:
         for port in self.ports:
             if port:
                 code += port.gen_header() + '\n'
+
+        code += 'void pin_init(void);\n\n'
         code += '#endif\n'
         code += '/* AUTO GENERATED CODE END */'
         return code
@@ -473,6 +476,10 @@ class Node:
     def get_code_name(self):
         code_name = []
         for net_name in self.net_name:
+            if not net_name:
+                code_name.append(None)
+                continue
+
             tmp = net_name.replace('/', '_').replace('.', '_').replace(' ', '_')
             if self.type == 'FUNCTION':
                 tmp = tmp.lower()
@@ -486,8 +493,12 @@ class Node:
                 p0 = code_name + '_PORT'
                 p1 = code_name + '_PIN'
             else:
-                p0 = code_name + '_on'
-                p1 = code_name + '_off'
+                if code_name:
+                    p0 = code_name + '_on'
+                    p1 = code_name + '_off'
+                else:
+                    p0 = 'NULL'
+                    p1 = 'NULL'
             code += '{{(unsigned long){}, (unsigned long){}}},\n'.format(p0, p1)
 
         code += '}},\n'
@@ -498,6 +509,8 @@ class Node:
             return ''
         s = ''
         for code_name in self.get_code_name():
+            if not code_name:
+                continue
             p0 = code_name + '_on'
             p1 = code_name + '_off'
             s += 'int {}(void);\n'.format(p0)
@@ -509,6 +522,8 @@ class Node:
             return ''
         s = ''
         for code_name in self.get_code_name():
+            if not code_name:
+                continue
             p0 = code_name + '_on'
             p1 = code_name + '_off'
             s += 'int __weak {}(void)\n'.format(p0)
@@ -606,7 +621,8 @@ class Power:
 
         code += '#include <power.h>\n'
         code += '#include <pin.h>\n'
-        code += '#include <common.h>\n\n'
+        code += '#include <common.h>\n'
+        code += '#include <stdlib.h>\n\n'
 
         for node in self.nodes:
             code += node.gen_porting_func_dec() + '\n'

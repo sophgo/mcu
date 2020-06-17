@@ -16,11 +16,10 @@
 #include <adc.h>
 #include <timer.h>
 #include <pin.h>
-#include <led.h>
 #include <chip.h>
 
-#define UART			USART2
-#define RCC_UART		RCC_USART2
+#define UART			USART1
+#define RCC_UART		RCC_USART1
 
 #define AHB_FREQ	(32 * 1000 * 1000)
 #define APB1_FREQ	AHB_FREQ
@@ -40,48 +39,40 @@ void system_init(void)
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_GPIOC);
 	rcc_periph_clock_enable(RCC_GPIOD);
+	rcc_periph_clock_enable(RCC_GPIOE);
 	rcc_periph_clock_enable(RCC_GPIOH);
-
-	chip_init();
 
 	/* i2c1, i2c2 */
 	rcc_periph_clock_enable(RCC_I2C1);
 	rcc_periph_clock_enable(RCC_I2C2);
+	// rcc_periph_clock_enable(RCC_I2C3);
 
-	/* enable i2c1 interrupt */
-	nvic_enable_irq(NVIC_I2C1_IRQ);
+	/* usart 1, 2, 4 */
+	rcc_periph_clock_enable(RCC_USART1);
+	rcc_periph_clock_enable(RCC_USART2);
+	rcc_periph_clock_enable(RCC_USART4);
+
+	/* for external interrupts */
+	/* enable PCIE RESET PIN interrupt */
+	rcc_periph_clock_enable(RCC_SYSCFG);
+
+	pin_init();
+
+	/* TODO: remove it after refactor */
+	/* for uart output */
+	gpio_set(EN_B78_VDD_1_8V_PORT, EN_B78_VDD_1_8V_PIN);
 
 	tick_init();
-
 	timer_setup();
 	adc_init();
 
-	/* mux i2c2 pin to PB10 -- SCL, PB11 -- SDA */
-	/* mux i2c1 pin to PB8 -- SCL, PB9 -- SDA */
-	gpio_set(GPIOB, GPIO8 | GPIO9 | GPIO10 | GPIO11);
-	gpio_set_af(GPIOB, GPIO_AF6, GPIO10 | GPIO11);
-	gpio_set_af(GPIOB, GPIO_AF4, GPIO8 | GPIO9);
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_VERYHIGH,
-			GPIO10 | GPIO11 | GPIO8 | GPIO9);
-	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_NONE,
-			GPIO10 | GPIO11 | GPIO8 | GPIO9);
-
-	/* usart2 */
-	gpio_set_af(GPIOA, GPIO_AF4, GPIO2 | GPIO3);
-	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
-			GPIO2 | GPIO3);
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3);
-	rcc_periph_clock_enable(RCC_UART);
 	usart_enable(UART);
-	usart_set_baudrate(UART, 921600);
+	usart_set_baudrate(UART, 115200);
 	usart_set_databits(UART, 8);
 	usart_set_stopbits(UART, USART_STOPBITS_1);
 	usart_set_parity(UART, USART_PARITY_NONE);
 	usart_set_flow_control(UART, USART_FLOWCONTROL_NONE);
 	usart_set_mode(UART, USART_MODE_TX_RX);
-
-	/* init user led */
-	led_init();
 }
 
 void clock_init(void)

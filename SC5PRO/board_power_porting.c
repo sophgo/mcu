@@ -180,4 +180,37 @@ void __weak b78_ddr_vddqlp_off(void)
 	/* add customer code here */
 }
 
+int __weak sys_rst_deassert_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak sys_rst_deassert_off(void)
+{
+	/* add customer code here */
+}
+
+int __weak ddr_power_good_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak ddr_power_good_off(void)
+{
+	/* add customer code here */
+}
+
+int __weak sys_rst_assert_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak sys_rst_assert_off(void)
+{
+	/* add customer code here */
+}
+
 /* AUTO GENERATED CODE END */
