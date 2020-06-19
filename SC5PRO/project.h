@@ -9,4 +9,8 @@
 #define SM5S	5
 #define SA6	6
 
+#define SC5PLUS	7
+#define SC5H	8
+#define SC5PRO	9
+
 #endif

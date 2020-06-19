@@ -1,5 +1,5 @@
 TARGET = SC5PRO
-DEBUG = 1
+DEBUG = 0
 
 ifeq ($(strip $(V)), 1)
 	Q =
@@ -57,6 +57,7 @@ AS = $(CROSS_COMPILE)gcc
 LD = $(CROSS_COMPILE)gcc
 OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
+READELF = $(CROSS_COMPILE)readelf
 
 all:$(OUTDIR) \
 	$(OUTDIR)/$(TARGET)_APP.elf \
@@ -72,7 +73,8 @@ $(OUTDIR)/%.bin: $(OUTDIR)/%.elf
 
 $(OUTDIR)/%.dis: $(OUTDIR)/%.elf
 	@echo '[DP] $@'
-	$(Q)$(OBJDUMP) -D $< > $@
+	$(Q)$(READELF) -e $< > $@
+	$(Q)$(OBJDUMP) -D $< >> $@
 
 $(OUTDIR)/%.elf: $(OUTDIR)/%.ld $(OBJS)
 	@echo '[LD] $@'

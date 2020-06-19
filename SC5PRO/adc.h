@@ -2,6 +2,6 @@
 #define __ADC_C__
 
 int adc_init(void);
-void adc_read(unsigned long *current, unsigned long *voltage);
+unsigned long adc_read(void);
 
 #endif

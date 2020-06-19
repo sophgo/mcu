@@ -22,17 +22,20 @@ int adc_init(void)
 	return 0;
 }
 
-void adc_read(unsigned long *current, unsigned long *voltage)
+unsigned long adc_read(void)
 {
+	unsigned long current;
+
 	/* channel 13 */
 	ADC_CR(ADC1) |= ADC_CR_ADSTART;
 	/* software triggered, busy status */
 	while (ADC_CR(ADC1) & ADC_CR_ADSTART)
 		;
 	/* adc-voltage = (adc-value / 2^12) * 1.8
+	 * 100 times OP, and 0.5mO resistor
 	 */
-	*current = ADC_DR(ADC1);
+	current = (ADC_DR(ADC1) * 180 * 1000) / (4096 * 5);
 
-	*voltage = 12 * 1000;
+	return current;
 }
 

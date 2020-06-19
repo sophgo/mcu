@@ -8,7 +8,6 @@
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/usart.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <tick.h>
@@ -17,9 +16,7 @@
 #include <timer.h>
 #include <pin.h>
 #include <chip.h>
-
-#define UART			USART1
-#define RCC_UART		RCC_USART1
+#include <system.h>
 
 #define AHB_FREQ	(32 * 1000 * 1000)
 #define APB1_FREQ	AHB_FREQ
@@ -66,13 +63,29 @@ void system_init(void)
 	timer_setup();
 	adc_init();
 
-	usart_enable(UART);
-	usart_set_baudrate(UART, 115200);
-	usart_set_databits(UART, 8);
-	usart_set_stopbits(UART, USART_STOPBITS_1);
-	usart_set_parity(UART, USART_PARITY_NONE);
-	usart_set_flow_control(UART, USART_FLOWCONTROL_NONE);
-	usart_set_mode(UART, USART_MODE_TX_RX);
+	usart_enable(USART1);
+	usart_set_baudrate(USART1, USART1_BAUDRATE);
+	usart_set_databits(USART1, 8);
+	usart_set_stopbits(USART1, USART_STOPBITS_1);
+	usart_set_parity(USART1, USART_PARITY_NONE);
+	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
+	usart_set_mode(USART1, USART_MODE_TX_RX);
+
+	usart_enable(USART2);
+	usart_set_baudrate(USART2, USART2_BAUDRATE);
+	usart_set_databits(USART2, 8);
+	usart_set_stopbits(USART2, USART_STOPBITS_1);
+	usart_set_parity(USART2, USART_PARITY_NONE);
+	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
+	usart_set_mode(USART2, USART_MODE_TX_RX);
+
+	usart_enable(USART4);
+	usart_set_baudrate(USART4, USART4_BAUDRATE);
+	usart_set_databits(USART4, 8);
+	usart_set_stopbits(USART4, USART_STOPBITS_1);
+	usart_set_parity(USART4, USART_PARITY_NONE);
+	usart_set_flow_control(USART4, USART_FLOWCONTROL_NONE);
+	usart_set_mode(USART4, USART_MODE_TX_RX);
 }
 
 void clock_init(void)
@@ -102,16 +115,16 @@ void clock_init(void)
 	}
 }
 
-int uart_read(void)
+int std_read(void)
 {
-	if (!usart_is_recv_ready(UART))
+	if (!usart_is_recv_ready(STD_UART))
 		return -1;
-	return usart_recv(UART);
+	return usart_recv(STD_UART);
 }
 
 int putchar(int c)
 {
-	usart_send_blocking(UART, c);
+	usart_send_blocking(STD_UART, c);
 	return c;
 }
 
@@ -138,7 +151,7 @@ int printf(const char *fmt, ...)
 	char *q;
 
 	for (q = p; *q; ++q)
-		usart_send_blocking(UART, *q);
+		usart_send_blocking(STD_UART, *q);
 
 	return len;
 }

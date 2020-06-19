@@ -12,9 +12,11 @@
 #include <debug.h>
 #include <chip.h>
 #include <mp5475.h>
+#include <isl68224.h>
 #include <tca9554.h>
 #include <pin.h>
 #include <timer.h>
+#include <mon.h>
 
 int main(void)
 {
@@ -38,11 +40,21 @@ int main(void)
 	board_power_init();
 
 	chip_init();
+	mon_init();
+
+#if 0
+	int err;
+	err = i2c_master_smbus_write(I2C1, 0x70, 1, 1 << 4);
+	if (err)
+		debug("i2c switch write failed\n");
+	err = i2c_master_smbus_write(I2C1, 0x60,
+#endif
 
 	printf("\r\npress \'u\' to start uart upgrade\r\n");
 
 	while (1) {
 		chip_update();
+		mon_process();
 	}
 
 	return 0;

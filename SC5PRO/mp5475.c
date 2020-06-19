@@ -2,19 +2,15 @@
 #include <mp5475.h>
 #include <debug.h>
 #include <tick.h>
+#include <tca9548a.h>
 
 #define MP5475_SLAVE_ADDR	0x60
-#define TCA9548A_SLAVE_ADDR	0x70
 #define I2C			I2C1
 
-volatile static int current = -1;
 
 static inline void mp5475_select(int idx)
 {
-	if (current != idx) {
-		i2c_master_smbus_write(I2C, TCA9548A_SLAVE_ADDR, 1, 1 << idx);
-		current = idx;
-	}
+	tca9548a_set(TCA9548A0, 1 << idx);
 }
 
 static inline int mp5475_read_byte(int idx, unsigned char cmd)
@@ -65,6 +61,20 @@ int mp5475_voltage_config(int idx, unsigned int buck, unsigned int voltage)
 	mp5475_write_byte(idx, reg_h, val_h);
 	mp5475_write_byte(idx, reg_l, val_l);
 	return 0;
+}
+
+unsigned long mp5475_output_current(int idx, unsigned int buck)
+{
+	unsigned int reg = 0x59 + 2 * buck;
+
+	return mp5475_read_byte(idx, reg) * 50;
+}
+
+unsigned long mp5475_output_voltage(int idx, unsigned int buck)
+{
+	unsigned int reg = 0x5a + 2 * buck;
+
+	return mp5475_read_byte(idx, reg) * 25;
 }
 
 int _mp5475_init(int idx)
