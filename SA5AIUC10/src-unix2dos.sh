@@ -6,6 +6,7 @@ for suffix in $suffix_list; do
     list=`find -type f -name "*.$suffix"`
     for file in $list; do
         dos2unix $file 1>/dev/null 2>&1
+        sed -i s/'2020 STMicroelectronics'/'2019 STMicroelectronics/' $file
     done
 done
 

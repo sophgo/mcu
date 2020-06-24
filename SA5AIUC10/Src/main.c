@@ -301,6 +301,59 @@ static int pin_state_error_line;
 static inline void led_on(void);
 static inline void led_off(void);
 
+static volatile int is_chip_alive;
+static volatile int is_chip_ready = 1;
+static volatile unsigned long timer_start_tick;
+static volatile unsigned long timer_timeout;
+
+static inline void timer_start(unsigned long timeout)
+{
+	__disable_irq();
+	timer_timeout = timeout;
+	timer_start_tick = HAL_GetTick();
+	__enable_irq();
+}
+
+static inline int timer_is_timeout(void)
+{
+	int is_timeout;
+	if (timer_timeout) {
+		is_timeout = HAL_GetTick() - timer_start_tick >= timer_timeout;
+        if (is_timeout)
+            timer_timeout = 0;
+	} else {
+		is_timeout = 1;
+    }
+	return is_timeout;
+}
+
+void poll_pcie_rst(void)
+{
+	__disable_irq();
+	if (is_chip_ready) {
+		if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
+						     PCIE_RST_MCU_Pin)) {
+
+			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin,
+					  GPIO_PIN_SET);
+			is_chip_alive = 1;
+		}
+	} else {
+		is_chip_ready = timer_is_timeout();
+	}
+	__enable_irq();
+}
+/* this function should be called when pcie ep reset falling edge */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
+	timer_start(30);
+	is_chip_ready = 0;
+	is_chip_alive = 0;
+}
+
+
+
 void PowerON(void)
 {
 	unsigned char tmp[8];
@@ -433,7 +486,7 @@ void PowerON(void)
 	HAL_Delay(30);
 	//POLL PCIEE_RST STATUS FOR SYS_RST
 	while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
-			  		;
+		;
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 poweron_fail:
@@ -442,6 +495,7 @@ poweron_fail:
 			se5_error_led_on();
 
 		i2c_regs.power_good = 1;
+		is_chip_alive = 1;
 	} else {
 		i2c_regs.power_good = 0;
 		intr_status_set(POWERON_ERR);
@@ -798,7 +852,6 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 		}
 	}
 }
-
 /* USER CODE END 0 */
 
 /**
@@ -809,7 +862,6 @@ int main(void)
 {
 	/* USER CODE BEGIN 1 */
 	//  uint16_t board_type_addr = BOARD_TYPE;
-#if 0
 	setup_stage();
 	if (i2c_regs.stage == RUN_STAGE_LOADER) {
 		/* success */
@@ -817,7 +869,6 @@ int main(void)
 			app_start();
 		}
 	}
-#endif
 	/* USER CODE END 1 */
 
 
@@ -849,9 +900,9 @@ int main(void)
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_ADC_Init();
-	MX_I2C2_Init();// iic device
-	MX_I2C1_Init();// iic device
-	MX_I2C3_Init();// iic device
+	MX_I2C2_Init();
+	MX_I2C1_Init();
+	MX_I2C3_Init();
 	MX_LPTIM1_Init();
 	/* USER CODE BEGIN 2 */
 	HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
@@ -887,14 +938,14 @@ int main(void)
 	if (is_tca6416a_available && is_pic_available) {
 		/* SM5 V3 or later motherboard */
 		i2c_regs.vender = VENDER_SE5;
+	} else if (i2c_regs.vender == VENDER_SM5_S ||
+		   i2c_regs.vender == VENDER_SM5_P) {
+		i2c_regs.vender = is_tca6416a_available ? VENDER_SM5_S : VENDER_SM5_P;
 	} else if (!is_tca6416a_available &&
 		   !is_pic_available &&
 		   i2c_regs.vender != VENDER_SM5_P) {
 		/* SA5 motherboard board */
 		i2c_regs.vender = VENDER_SA5;
-	} else if (i2c_regs.vender == VENDER_SM5_S ||
-		   i2c_regs.vender == VENDER_SM5_P) {
-		i2c_regs.vender = is_tca6416a_available ? VENDER_SM5_S : VENDER_SM5_P;
 	}
 
 	i2c_ctx1.id = 1;
@@ -962,34 +1013,31 @@ int main(void)
 		mcu_process_cmd_slow();
 		soc_wdt_reset_process();
 
-		// read temperature every 2 seconds
-		static uint32_t last_read_time = 0;
-		static int ever_read = 0;
-		if (ever_read == 0) {
-			/* read temperature at boot time */
-			READ_Temper();
-			ever_read = 1;
-			last_read_time = HAL_GetTick();
-		} else {
-			uint32_t read_time = HAL_GetTick();
-
-			if (read_time - last_read_time > 2000) {
+		if (is_chip_alive) {
+			// read temperature every 2 seconds
+			static uint32_t last_read_time = 0;
+			static int ever_read = 0;
+			if (ever_read == 0) {
+				/* read temperature at boot time */
 				READ_Temper();
-				last_read_time = read_time;
+				ever_read = 1;
+				last_read_time = HAL_GetTick();
+			} else {
+				uint32_t read_time = HAL_GetTick();
+
+				if (read_time - last_read_time > 2000) {
+					READ_Temper();
+					last_read_time = read_time;
+				}
 			}
 		}
+
 		led_update();
 
 		//POLL PCIEE_RST STATUS FOR SYS_RST
-		if ((i2c_regs.vender == VENDER_SM5_P) &&
-		    (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
-							PCIE_RST_MCU_Pin))) {
+		if (i2c_regs.vender == VENDER_SM5_P) {
 			i2c_regs.mode_flag = 2;
-			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
-			HAL_Delay(30);
-			while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port, PCIE_RST_MCU_Pin))
-				;
-			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
+			poll_pcie_rst();
 		}
 		/* USER CODE END WHILE */
 
@@ -1064,6 +1112,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 
 /* USER CODE END 4 */
 

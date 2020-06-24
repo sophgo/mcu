@@ -49,7 +49,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
-#include "stm32l0xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -96,6 +95,7 @@ void Error_Handler(void);
 #define SYS_RST_X_GPIO_Port GPIOC
 #define PCIE_RST_MCU_Pin GPIO_PIN_14
 #define PCIE_RST_MCU_GPIO_Port GPIOC
+#define PCIE_RST_MCU_EXTI_IRQn EXTI4_15_IRQn
 #define PMIC_INT_Pin GPIO_PIN_15
 #define PMIC_INT_GPIO_Port GPIOC
 #define PG_VDDC_Pin GPIO_PIN_0
@@ -348,7 +348,7 @@ void intr_mask_set(uint8_t mask);
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION	0x25
+#define MCU_VERSION	0x26
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
