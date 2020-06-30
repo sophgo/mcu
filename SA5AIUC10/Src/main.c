@@ -330,22 +330,30 @@ static inline int timer_is_timeout(void)
 void poll_pcie_rst(void)
 {
 	__disable_irq();
-	if (is_chip_ready) {
-		if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
-						     PCIE_RST_MCU_Pin)) {
+	if (i2c_regs.mode_flag == 2) {
+		if (is_chip_ready) {
+			if (GPIO_PIN_SET ==
+			    HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
+					     PCIE_RST_MCU_Pin)) {
 
-			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin,
-					  GPIO_PIN_SET);
-			is_chip_alive = 1;
+				HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port,
+						  SYS_RST_X_Pin,
+						  GPIO_PIN_SET);
+				is_chip_alive = 1;
+			}
+		} else {
+			is_chip_ready = timer_is_timeout();
 		}
-	} else {
-		is_chip_ready = timer_is_timeout();
 	}
 	__enable_irq();
 }
 /* this function should be called when pcie ep reset falling edge */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	/* we must working on pcie adapter */
+	i2c_regs.vender = VENDER_SM5_P;
+	i2c_regs.mode_flag = 2;
+
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	timer_start(30);
 	is_chip_ready = 0;
@@ -837,7 +845,8 @@ void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
 	wdt_isr();
 	mcu_tick_isr();
-	if (i2c_regs.vender == VENDER_SM5_S) {
+	if (i2c_regs.vender == VENDER_SM5_S &&
+	    is_tca6416a_available) {
 		if (sm5_gpioex_getpoweroff() == 1)
 		{
 			poweroffcheck--;
@@ -938,14 +947,52 @@ int main(void)
 	if (is_tca6416a_available && is_pic_available) {
 		/* SM5 V3 or later motherboard */
 		i2c_regs.vender = VENDER_SE5;
-	} else if (i2c_regs.vender == VENDER_SM5_S ||
-		   i2c_regs.vender == VENDER_SM5_P) {
-		i2c_regs.vender = is_tca6416a_available ? VENDER_SM5_S : VENDER_SM5_P;
-	} else if (!is_tca6416a_available &&
-		   !is_pic_available &&
-		   i2c_regs.vender != VENDER_SM5_P) {
-		/* SA5 motherboard board */
-		i2c_regs.vender = VENDER_SA5;
+	} else if (!is_tca6416a_available) {
+		/* pcie board or test board */
+		if (i2c_regs.vender != VENDER_SA5) {
+			PowerON();
+			if (i2c_regs.mode_flag == 2) {
+				/* on pcie board */
+				/* SA5 --> SA5 */
+				/* SE5 --> SM5P */
+				/* SM5S --> SM5P */
+				/* SM5P --> SM5P */
+				i2c_regs.vender = VENDER_SM5_P;
+			} else {
+				/* sm5s on test board */
+				/* SA5 --> SA5 */
+				/* SE5 --> SM5S */
+				/* SM5S --> SM5S */
+				/* SM5P --> SM5S */
+				i2c_regs.vender = VENDER_SM5_S;
+			}
+		}
+	} else {
+		/* only tca6416a present */
+		/* se5 motherboard or sm5s motherboard */
+		/* working at se5 mode or sm5s mode */
+		/* SE5 --> SE5 */
+		/* SA5 --> SE5 */
+		/* SM5S --> SM5S */
+		/* SM5P --> SM5S */
+		switch (i2c_regs.vender) {
+		case VENDER_SA5:
+			i2c_regs.vender = VENDER_SE5;
+			break;
+		case VENDER_SM5_P:
+			i2c_regs.vender = VENDER_SM5_S;
+			break;
+		}
+
+		if (i2c_regs.vender == VENDER_SM5_S) {
+			sm5_gpioex_init();
+			HAL_Delay(200);
+			sm5_gpioex_12v_on();
+			sm5_gpioex_led1_on();
+		} else {
+			se5_gpioex_init();
+		}
+		PowerON();
 	}
 
 	i2c_ctx1.id = 1;
@@ -953,30 +1000,10 @@ int main(void)
 
 	if (i2c_regs.vender == VENDER_SA5)
 		i2c_init(&i2c_ctx1, hi2c1.Instance);
+	else
+		HAL_NVIC_DisableIRQ(I2C1_IRQn);
 
 	i2c_init(&i2c_ctx3, hi2c3.Instance);
-
-	switch (i2c_regs.vender) {
-	case VENDER_SA5:
-		break;
-	case VENDER_SM5_S:
-		HAL_NVIC_DisableIRQ(I2C1_IRQn);
-		sm5_gpioex_init();
-		HAL_Delay(200);
-		sm5_gpioex_12v_on();
-		sm5_gpioex_led1_on();
-		PowerON();
-		break;
-	case VENDER_SM5_P:
-		HAL_NVIC_DisableIRQ(I2C1_IRQn);
-		PowerON();
-		break;
-	case VENDER_SE5:
-		HAL_NVIC_DisableIRQ(I2C1_IRQn);
-		se5_gpioex_init();
-		PowerON();
-		break;
-	}
 
 	tmp451_init();
 	mcu_init();
@@ -1035,10 +1062,7 @@ int main(void)
 		led_update();
 
 		//POLL PCIEE_RST STATUS FOR SYS_RST
-		if (i2c_regs.vender == VENDER_SM5_P) {
-			i2c_regs.mode_flag = 2;
-			poll_pcie_rst();
-		}
+		poll_pcie_rst();
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
