@@ -9,9 +9,9 @@
 #include <stdarg.h>
 
 #define OUTPUT_BASE64
-/* #define OUTPUT_TEXT */
+// #define OUTPUT_TEXT
 
-#define FILTER_DISABLE
+// #define FILTER_DISABLE
 
 #define MCU_SW_VER	0
 #define MCU_HW_VER	0

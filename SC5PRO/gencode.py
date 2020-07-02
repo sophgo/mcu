@@ -263,7 +263,7 @@ class Port:
             # if pin.get_af() != None:
             #     print('GPIO{}{} AF{}'.format(pin.get_port(), pin.get_pin(), pin.get_af()))
             if pin.get_af() != None:
-                if pin.get_pin() < 4:
+                if pin.get_pin() < 8:
                     mask_low |= 0xf << (pin.get_pin() * 4)
                 else:
                     mask_high |= 0xf << ((pin.get_pin() - 8) * 4)
@@ -420,8 +420,8 @@ class PinList:
             pin_data['description'] = sheet[cell].value
 
             pin = Pin(pin_data)
-
-            if pin_data['net name'].lower() != 'nc':
+    
+            if pin_data['net name'] and pin_data['net name'].lower() != 'nc':
                 port = pin.get_port()
                 num = pin.get_pin()
                 if port:

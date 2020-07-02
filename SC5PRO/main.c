@@ -26,7 +26,7 @@ int main(void)
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
 
-	debug("BITMAIN SOPHONE SC5H -- %s\r\n", VERSION);
+	debug("BITMAIN SOPHONE SC5PRO -- %s\r\n", VERSION);
 
 	/* enable power supply of pcie switch */
 	gpio_set(P0V9_E_EN_PORT, P0V9_E_EN_PIN);
