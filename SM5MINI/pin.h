@@ -1,0 +1,105 @@
+/* THIS IS AUTO GENERATED CODE */
+
+#ifndef __PIN_H__
+#define __PIN_H__
+
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+
+/* port A definition */
+#define PCB_VER_PORT		GPIOA
+#define PCB_VER_PIN		GPIO0
+#define PCB_VER_EXTI		EXTI0
+#define BOM_VER_PORT		GPIOA
+#define BOM_VER_PIN		GPIO1
+#define BOM_VER_EXTI		EXTI1
+#define USART2_TX_PORT		GPIOA
+#define USART2_TX_PIN		GPIO2
+#define USART2_TX_EXTI		EXTI2
+#define USART2_RX_PORT		GPIOA
+#define USART2_RX_PIN		GPIO3
+#define USART2_RX_EXTI		EXTI3
+#define SMBALERT_PORT		GPIOA
+#define SMBALERT_PIN		GPIO4
+#define SMBALERT_EXTI		EXTI4
+#define CURRENT_PORT		GPIOA
+#define CURRENT_PIN		GPIO5
+#define CURRENT_EXTI		EXTI5
+#define PG_VDD_TPU_PORT		GPIOA
+#define PG_VDD_TPU_PIN		GPIO6
+#define PG_VDD_TPU_EXTI		EXTI6
+#define PG_VDD_TPU_MEM_PORT		GPIOA
+#define PG_VDD_TPU_MEM_PIN		GPIO7
+#define PG_VDD_TPU_MEM_EXTI		EXTI7
+#define PCIE_RST_PORT		GPIOA
+#define PCIE_RST_PIN		GPIO8
+#define PCIE_RST_EXTI		EXTI8
+#define EN_VQPS18_PORT		GPIOA
+#define EN_VQPS18_PIN		GPIO9
+#define EN_VQPS18_EXTI		EXTI9
+#define PG_TPU_MEM_PORT		GPIOA
+#define PG_TPU_MEM_PIN		GPIO10
+#define PG_TPU_MEM_EXTI		EXTI10
+#define PG_0P8_PORT		GPIOA
+#define PG_0P8_PIN		GPIO11
+#define PG_0P8_EXTI		EXTI11
+#define SYS_RST_PORT		GPIOA
+#define SYS_RST_PIN		GPIO12
+#define SYS_RST_EXTI		EXTI12
+#define SWDIO_PORT		GPIOA
+#define SWDIO_PIN		GPIO13
+#define SWDIO_EXTI		EXTI13
+#define SWCLK_PORT		GPIOA
+#define SWCLK_PIN		GPIO14
+#define SWCLK_EXTI		EXTI14
+#define PG_DDR_PORT		GPIOA
+#define PG_DDR_PIN		GPIO15
+#define PG_DDR_EXTI		EXTI15
+
+/* port B definition */
+#define EN_VDD_IO33_PORT		GPIOB
+#define EN_VDD_IO33_PIN		GPIO0
+#define EN_VDD_IO33_EXTI		EXTI0
+#define EN_VDD_TPU_MEM_PORT		GPIOB
+#define EN_VDD_TPU_MEM_PIN		GPIO1
+#define EN_VDD_TPU_MEM_EXTI		EXTI1
+#define PG_PCIE_PORT		GPIOB
+#define PG_PCIE_PIN		GPIO2
+#define PG_PCIE_EXTI		EXTI2
+#define PG_TPU_PORT		GPIOB
+#define PG_TPU_PIN		GPIO3
+#define PG_TPU_EXTI		EXTI3
+#define EN_VDD_IO18_PORT		GPIOB
+#define EN_VDD_IO18_PIN		GPIO4
+#define EN_VDD_IO18_EXTI		EXTI4
+#define EN_VDD_TPU_PORT		GPIOB
+#define EN_VDD_TPU_PIN		GPIO5
+#define EN_VDD_TPU_EXTI		EXTI5
+#define I2C1_SCL_PORT		GPIOB
+#define I2C1_SCL_PIN		GPIO6
+#define I2C1_SCL_EXTI		EXTI6
+#define I2C1_SDA_PORT		GPIOB
+#define I2C1_SDA_PIN		GPIO7
+#define I2C1_SDA_EXTI		EXTI7
+#define EN_VDD_C_PORT		GPIOB
+#define EN_VDD_C_PIN		GPIO8
+#define EN_VDD_C_EXTI		EXTI8
+#define I2C2_SCL_PORT		GPIOB
+#define I2C2_SCL_PIN		GPIO10
+#define I2C2_SCL_EXTI		EXTI10
+#define I2C2_SDA_PORT		GPIOB
+#define I2C2_SDA_PIN		GPIO11
+#define I2C2_SDA_EXTI		EXTI11
+
+/* port C definition */
+#define LED_PORT		GPIOC
+#define LED_PIN		GPIO14
+#define LED_EXTI		EXTI14
+#define PG_VDD_C_PORT		GPIOC
+#define PG_VDD_C_PIN		GPIO15
+#define PG_VDD_C_EXTI		EXTI15
+
+void pin_init(void);
+
+#endif
+/* AUTO GENERATED CODE END */
