@@ -14,6 +14,11 @@
 #include <pin.h>
 #include <timer.h>
 #include <mon.h>
+#include <mcu.h>
+#include <common.h>
+#include <mcu.h>
+
+struct i2c_slave_ctx i2c1_slave_ctx;
 
 int main(void)
 {
@@ -28,6 +33,15 @@ int main(void)
 	mp5475_init();
 	chip_init();
 	mon_init();
+
+	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
+		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
+
+	/* register i2c slaves */
+	mcu_init(&i2c1_slave_ctx);
+
+	/* start i2c slaves */
+	i2c_slave_start(&i2c1_slave_ctx);
 
 	printf("\r\npress \'u\' to start uart upgrade\r\n");
 

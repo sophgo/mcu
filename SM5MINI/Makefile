@@ -15,8 +15,8 @@ VERSION := $(shell ./version.sh $(TARGET))
 OPENCM3_DIR = ../libopencm3
 
 OUTDIR = build
-SRCDIR = .
-INCDIR = . $(OPENCM3_DIR)/include
+SRCDIR = . i2c-slaves
+INCDIR = . $(OPENCM3_DIR)/include i2c-slaves
 
 C_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
 S_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.s))
