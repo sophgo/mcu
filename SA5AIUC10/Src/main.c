@@ -821,6 +821,7 @@ void READ_Temper(void)
 	if (soc > 95 && board > 85) {//temperature too high, powerdown
 		powerdown_cnt++;
 		if (powerdown_cnt == 3) {
+			eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_OVER_HEAT);
 			intr_status_set(OVER_TEMP_POWEROFF);
 			PowerDOWN();
 			powerdown_cnt = 0;
@@ -1080,6 +1081,7 @@ int main(void)
 			se5_smb_alert();
 			HAL_NVIC_EnableIRQ(I2C3_IRQn);
 			HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+			se5_led_ctrl();
 		}
 	}
 	/* USER CODE END 3 */

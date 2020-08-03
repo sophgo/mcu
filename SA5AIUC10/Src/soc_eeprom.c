@@ -9,6 +9,7 @@
 #include "eeprom.h"
 
 #define EEPROM_SIZE	(EEPROM_BANK_SIZE)
+#define EEPROM_POWER_OFF_REASON_OFFSET		(5 * 32)
 
 static struct eeprom_ctx {
 	int set_idx;
@@ -89,5 +90,12 @@ void eeprom_init(void)
 		i2c_slave_register(&i2c_ctx1, &slave1);
 	}
 	i2c_slave_register(&i2c_ctx3, &slave3);
+}
+
+void eeprom_log_power_off_reason(int reason)
+{
+	uint8_t tmp = reason;
+
+	EEPROM_WriteBytes(EEPROM_POWER_OFF_REASON_OFFSET, &tmp, 1);
 }
 

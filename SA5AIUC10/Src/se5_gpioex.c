@@ -122,6 +122,7 @@
 static struct {
 	int set_idx;
 	int idx;
+	int temp;
 } gpioex_ctx;
 
 static void se5_gpioex_match(void *priv, int dir)
@@ -256,6 +257,8 @@ static inline void heater_off(void)
 
 void se5_heater_ctrl(int temp)
 {
+	gpioex_ctx.temp = temp;
+
 	if (!is_pic_available)
 		return;
 
@@ -306,5 +309,38 @@ void se5_smb_alert(void)
 void se5_error_led_on(void)
 {
 	tca6416a_set(LED2_PORT, LED2_PIN);
+}
+
+void se5_error_led_off(void)
+{
+	tca6416a_clr(LED2_PORT, LED2_PIN);
+}
+
+static inline void se5_error_led_flicker(void)
+{
+	if (HAL_GetTick() & (1 << 10))
+		se5_error_led_on();
+	else
+		se5_error_led_off();
+}
+
+void se5_led_ctrl(void)
+{
+	/* no alert as default state */
+	static int alert;
+	static int last_alert;
+
+	if (gpioex_ctx.temp >= 90)
+		alert = 1;
+	else if (gpioex_ctx.temp < 85)
+		alert = 0;
+	/* other situations, remain alert value */
+
+	if (alert)
+		se5_error_led_flicker();
+	else if (last_alert)
+		se5_error_led_off();
+
+	last_alert = alert;
 }
 

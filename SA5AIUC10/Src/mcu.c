@@ -13,6 +13,7 @@
 #include "upgrade.h"
 #include "string.h"
 #include "se5_gpioex.h"
+#include "soc_eeprom.h"
 //uint32_t addr_debug = 0x08080010;
 //extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
@@ -115,15 +116,18 @@ void mcu_process_cmd_slow(void)
 		PowerON();
 		break;
 	case CMD_CPLD_PWR_DOWN:
+		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		if (i2c_regs.vender == VENDER_SE5)
 			se5_power_off_board();
 		PowerDOWN();
 		break;
 	case CMD_CPLD_1684RST:
+		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
 		BM1684_RST();
 		i2c_regs.rst_1684_times++;
 		break;
 	case CMD_BM1684_REBOOT:
+		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
 		BM1684_REBOOT();
 		break;
 	case CMD_MCU_UPDATE:

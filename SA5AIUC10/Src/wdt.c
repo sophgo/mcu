@@ -10,6 +10,7 @@
 #include "i2c_slave.h"
 #include "lptim.h"
 #include "stm32l0xx_hal.h"
+#include "soc_eeprom.h"
 
 /* magic number for different type of watchdogs, no need now */
 /* this byte is used to handle some different software implementations of wdt */
@@ -127,6 +128,7 @@ static void wdt_reset(void)
 void soc_wdt_reset_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
+		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		BM1684_RST();
 		i2c_regs.intr_status1 = WDT_RST;
 		wdt_reset();	/* reset to initial state */
