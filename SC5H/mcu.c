@@ -16,7 +16,7 @@
 #include <tick.h>
 
 #define MCU_REG_MAX	0x64
-#define MCU_SW_VER	4
+#define MCU_SW_VER	5
 unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
@@ -224,6 +224,7 @@ static struct i2c_slave_op slave = {
 void mcu_init(void)
 {
 	unsigned long current, voltage;
+	unsigned char pcb_ver, bom_ver;
 
 	i2c_slave_register(&i2c1_slave_ctx, &slave);
 
@@ -237,8 +238,10 @@ void mcu_init(void)
 			GPIO_PUPD_NONE,
 			GPIO0 | GPIO1);
 
-	MCU_HW_VER = (gpio_port_read(GPIOC) >> 14) & 3;
-	MCU_HW_VER |= (gpio_port_read(GPIOH) & 3) << 4;
+	pcb_ver = (gpio_port_read(GPIOC) >> 14) & 3;
+	bom_ver = gpio_port_read(GPIOH) & 3;
+
+	MCU_HW_VER = (pcb_ver << 4) | bom_ver;
 
 	gpio_clear(EN_VQPS_PORT, EN_VQPS_PIN);
 	gpio_mode_setup(EN_VQPS_PORT, GPIO_MODE_OUTPUT,
