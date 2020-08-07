@@ -71,7 +71,17 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = PCIE_RST_MCU_Pin;
+#if 0
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+#else
+  /* though we config pcie reset pin to interrupt mode,
+   * but we found a bug on it, pcie reset pin will generate a falling edge
+   * interrupt during power on, this will cause base board auto detection
+   * getting wrong types. using input mode instead of interrupt mode, enable
+   * interrupt mode after power on done.
+   */
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+#endif
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(PCIE_RST_MCU_GPIO_Port, &GPIO_InitStruct);
 
@@ -135,9 +145,11 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(EN_VDD_TPU_MEM_GPIO_Port, &GPIO_InitStruct);
 
+#if 0
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+#endif
 
 }
 
