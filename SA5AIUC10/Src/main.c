@@ -1039,15 +1039,6 @@ int main(void)
 	// set PCB & BOM version by voltage value
 	SET_HW_Ver();
 
-	if (i2c_regs.vender == VENDER_SA5) {
-		unsigned int tick_start = HAL_GetTick();
-		while (!i2c_regs.power_good) {
-			unsigned int tick_elapse = HAL_GetTick() - tick_start;
-			if (tick_elapse > 1000)
-				PowerON();
-		}
-	}
-
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
