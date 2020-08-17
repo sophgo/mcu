@@ -245,14 +245,18 @@ static int is_heater_on;
 
 static inline void heater_on(void)
 {
-	if (!is_heater_on)
+	if (!is_heater_on) {
+		is_heater_on = 1;
 		pic_write(PIC_REG_HEATER_CTRL, 1);
+	}
 }
 
 static inline void heater_off(void)
 {
-	if (is_heater_on)
+	if (is_heater_on) {
+		is_heater_on = 0;
 		pic_write(PIC_REG_HEATER_CTRL, 0);
+	}
 }
 
 void se5_heater_ctrl(int temp)
@@ -326,6 +330,7 @@ static inline void se5_error_led_flicker(void)
 
 void se5_led_ctrl(void)
 {
+#if 0
 	/* no alert as default state */
 	static int alert;
 	static int last_alert;
@@ -342,5 +347,6 @@ void se5_led_ctrl(void)
 		se5_error_led_off();
 
 	last_alert = alert;
+#endif
 }
 

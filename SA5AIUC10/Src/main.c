@@ -818,6 +818,11 @@ void READ_Temper(void)
 		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2, TMP451_SLAVE_ADDR, TMP451_CONFIG_RD_ADDR, 1, &tmp, 1, 1000));
 		tmp |= TMP451_RANGE_MASK;
 		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, TMP451_SLAVE_ADDR, TMP451_CONFIG_WR_ADDR, 1, &tmp, 1, 1000));
+
+		/* value will changed on next conversion */
+		/* default conversion rate is 16/s, it is 62.5ms pertimes */
+		/* so wait 63 ms for next conversion */
+		HAL_Delay(63);
 	}
 
 	// detection of temperature value
@@ -965,6 +970,8 @@ int main(void)
 
 	if (is_tca6416a_available && is_pic_available) {
 		/* SM5 V3 or later motherboard */
+		se5_gpioex_init();
+		PowerON();
 		i2c_regs.vender = VENDER_SE5;
 	} else if (!is_tca6416a_available) {
 		/* pcie board or test board */
