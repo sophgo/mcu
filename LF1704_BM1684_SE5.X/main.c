@@ -73,6 +73,11 @@ void main(void)
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
 
+    /* under temperature switch should works in 20ms from
+     * power on, so wait for it
+     */
+    __delay_ms(50);
+
 
     power_on();
 
