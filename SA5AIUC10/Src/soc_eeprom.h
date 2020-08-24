@@ -8,6 +8,8 @@
 #ifndef __SOC_EEPROM__
 #define __SOC_EEPROM__
 
+#include <stdint.h>
+
 void eeprom_init(void);
 void eeprom_log_power_off_reason(int reason);
 
@@ -16,5 +18,10 @@ void eeprom_log_power_off_reason(int reason);
 #define EEPROM_POWER_OFF_REASON_REBOOT		0x82
 #define EEPROM_POWER_OFF_REASON_OVER_HEAT	0x83
 #define EEPROM_POWER_OFF_REASON_WATCHDOG	0x84
+
+
+int eeprom_get_lock_status(void);
+void eeprom_lock_code(uint8_t code);
+void eeprom_write_byte_protected(uint16_t offset, uint8_t data);
 
 #endif /* DS1307_H_ */

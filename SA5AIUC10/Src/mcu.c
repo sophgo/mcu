@@ -14,8 +14,6 @@
 #include "string.h"
 #include "se5_gpioex.h"
 #include "soc_eeprom.h"
-//uint32_t addr_debug = 0x08080010;
-//extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
 static unsigned short uptime;
 
@@ -183,11 +181,10 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
-		EEPROM_WriteBytes(eeprom_offset(ctx), (uint8_t *)&data, 1);
+		eeprom_write_byte_protected(eeprom_offset(ctx), data);
 		break;
-//	case REG_VENDER_VAL:
-//		i2c_regs.vender_val = data;
-//		EEPROM_WriteBytes(VENDER_Addr, (uint8_t *)&data, 1);
+	case REG_EEPROM_LOCK:
+		eeprom_lock_code(data);
 		break;
 	default:
 		break;
@@ -261,6 +258,9 @@ static uint8_t mcu_read(void *priv)
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
 		EEPROM_ReadBytes(eeprom_offset(ctx), &ret, 1);
 		break;
+	case REG_EEPROM_LOCK:
+		ret = eeprom_get_lock_status();
+		break;
 	case REG_MODE_FLAG:
 		ret = i2c_regs.mode_flag;
 		break;
@@ -275,18 +275,6 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_STAGE:
 		ret = i2c_regs.stage;
-		break;
-	case REG_ERROR_LINE_L:
-		ret = i2c_regs.error_line_l;
-		break;
-	case REG_ERROR_LINE_H:
-		ret = i2c_regs.error_line_h;
-		break;
-	case REG_ERROR_CODE:
-		ret = i2c_regs.error_code;
-		break;
-	case REG_I2C2_STATE:
-		ret = hi2c2.State;
 		break;
 	default:
 		ret = 0xff;

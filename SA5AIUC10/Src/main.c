@@ -127,31 +127,18 @@ void SystemClock_Config(void);
 
 int clean_pmic(void);
 
-#define LOG_ERROR_LINE()								\
-	do {												\
-		i2c_regs.error_line_l = __LINE__ & 0xff;		\
-		i2c_regs.error_line_h = (__LINE__ >> 8) & 0xff;	\
+#define LOG_ERROR_CAUSE(cause)					\
+	do {							\
+		i2c_regs.cause_pwr_down = cause;		\
 	} while(0)
 
-#define LOG_ERROR_CAUSE(cause)							\
-	do {												\
-		i2c_regs.cause_pwr_down = cause;				\
-	} while(0)
-
-#define LOG_ERROR_CODE(code)							\
-	do {												\
-		i2c_regs.error_code = code;						\
-	} while(0)
-
-#define PMIC_PWR_ON_I2C_CHECK(op)						\
-	do {												\
-		int err = (op);									\
-		if (err != HAL_OK) {							\
-			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);			\
-			LOG_ERROR_LINE();							\
-			LOG_ERROR_CODE(err);						\
-			goto poweron_fail;							\
-		}												\
+#define PMIC_PWR_ON_I2C_CHECK(op)				\
+	do {							\
+		int err = (op);					\
+		if (err != HAL_OK) {				\
+			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);	\
+			goto poweron_fail;			\
+		}						\
 	} while (0)
 
 void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *instance)
@@ -559,15 +546,13 @@ void intr_mask_set(uint8_t mask)
 	__enable_irq();
 }
 
-#define PMIC_CLEAN_I2C_CHECK(op)						\
-	do {												\
-		int err = (op);									\
-		if (err != HAL_OK) {							\
-			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);			\
-			LOG_ERROR_LINE();							\
-			LOG_ERROR_CODE(err);						\
-			return -1;									\
-		}												\
+#define PMIC_CLEAN_I2C_CHECK(op)					\
+	do {								\
+		int err = (op);						\
+		if (err != HAL_OK) {					\
+			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);		\
+			return -1;					\
+		}							\
 	} while (0)
 
 int clean_pmic(void)
@@ -774,19 +759,17 @@ static uint8_t alert_cnt = 0;
 static uint8_t powerdown_cnt = 0;
 
 #define TMP451_MAIN_I2C_CHECK(op)				\
-	do {										\
-		int err, retry;							\
-		for (retry = 0; retry < 5; ++retry) {	\
-			err = (op);							\
-			if (err == HAL_OK)					\
-				break;							\
+	do {							\
+		int err, retry;					\
+		for (retry = 0; retry < 5; ++retry) {		\
+			err = (op);				\
+			if (err == HAL_OK)			\
+				break;				\
 			I2C_ClearBusyFlagErratum(&hi2c2);	\
-		}										\
-		if (err != HAL_OK) {					\
+		}						\
+		if (err != HAL_OK) {				\
 			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);	\
-			LOG_ERROR_LINE();					\
-			LOG_ERROR_CODE(err);				\
-		}										\
+		}						\
 	} while (0)
 
 #define TMP451_ALERT		(0x22)
