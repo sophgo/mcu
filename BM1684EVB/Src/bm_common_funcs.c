@@ -404,8 +404,6 @@ void Scan_Cuerrent(void)
 
 	  memcpy(&i2c_regs.current, &curr_evb, sizeof(CURRENT_VAL));
 
-//	  EEPROM_Write(addr, ADC_Buf[0]);
-
 	  HAL_ADC_Stop(&hadc);
 }
 
@@ -498,7 +496,6 @@ void Set_HW_Ver(void)
 
 void Factory_Info_get(void)
 {
-//	  EEPROM_Write(addr, writeFlashData);
 	  EEPROM_ReadBytes(addr_offset, (void *)&(fty_Info.board_type), sizeof(Factory_Info));
 }
 
@@ -508,16 +505,6 @@ void led_all_on(void)
 	HAL_GPIO_WritePin(STATUS_LED1_GPIO_Port, STATUS_LED1_Pin, GPIO_PIN_SET);
 }
 
-void clean_update_flag(void)
-{
-	uint8_t Buffer;
-
-	EEPROM_ReadBytes(UPDATE_FLAG_OFFSET, &Buffer, 1);
-
-	if (Buffer == 8) {
-		EEPROM_WriteBytes(UPDATE_FLAG_OFFSET, 0x0, 1);
-	}
-}
 void nct80_init(void)
 {
 	uint8_t val = 0;
@@ -550,8 +537,6 @@ void module_init(void)
 	HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
 
 	config_regs();
-
-	clean_update_flag();
 }
 
 void cmd_process(void)

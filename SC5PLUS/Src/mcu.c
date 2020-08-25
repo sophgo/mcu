@@ -11,6 +11,7 @@
 #include "i2c_bm.h"
 
 #include "eeprom.h"
+#include "soc_eeprom.h"
 #include "rtc.h"
 #include "upgrade.h"
 //uint32_t addr_debug = 0x08080010;
@@ -84,6 +85,9 @@ static void mcu_write(volatile uint8_t data)
 	case REG_DDR:
 		mcu_ctx.map.ddr = data;
 		i2c_regs.ddr = data;
+		break;
+	case REG_EEPROM_LOCK:
+		eeprom_lock_code(data);
 		break;
 	default:
 		break;
@@ -242,6 +246,9 @@ static uint8_t mcu_read(void)
 		break;
 	case REG_MCUADDR:
 		ret = i2c_regs.mcu_addr;
+		break;
+	case REG_EEPROM_LOCK:
+		ret = eeprom_get_lock_status();
 		break;
 	default:
 		ret = 0xff;

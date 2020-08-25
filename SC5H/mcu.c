@@ -14,9 +14,10 @@
 #include <pin.h>
 #include <adc.h>
 #include <tick.h>
+#include <eeprom.h>
 
 #define MCU_REG_MAX	0x64
-#define MCU_SW_VER	5
+#define MCU_SW_VER	6
 unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
@@ -25,6 +26,7 @@ unsigned char MCU_HW_VER;
 #define REG_CMD_REG	0x03
 #define REG_VQPS	0x09
 #define REG_STAGE	0x3c
+#define REG_EEPROM_LOCK	0x60
 
 #define REG_VOLTAGE	0x26
 #define REG_CURRENT	0x28
@@ -146,6 +148,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		else
 			gpio_clear(EN_VQPS_PORT, EN_VQPS_PIN);
 		break;
+	case REG_EEPROM_LOCK:
+		eeprom_lock_code(data);
+		break;
 	default:
 		break;
 	}
@@ -188,6 +193,9 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_VOLTAGE + 1:
 		ret = (ctx->voltage >> 8) & 0xff;
+		break;
+	case REG_EEPROM_LOCK:
+		ret = eeprom_get_lock_status();
 		break;
 	default:
 		ret = 0xff;

@@ -10,9 +10,8 @@
 #include "i2c_bm.h"
 
 #include "eeprom.h"
+#include "soc_eeprom.h"
 #include "upgrade.h"
-//uint32_t addr_debug = 0x08080010;
-//extern void EEPROM_Write(uint32_t Addr, uint32_t writeFlashData);
 
 static struct mcu_ctx {
 	int set_idx;
@@ -74,6 +73,9 @@ static void mcu_write(volatile uint8_t data)
 	case REG_DDR:
 		mcu_ctx.map.ddr = data;
 		i2c_regs.ddr = data;
+		break;
+	case REG_EEPROM_LOCK:
+		eeprom_lock_code(data);
 		break;
 	default:
 		break;
@@ -213,6 +215,9 @@ static uint8_t mcu_read(void)
 		break;
 	case REG_STAGE:
 		ret = i2c_regs.stage;
+		break;
+	case REG_EEPROM_LOCK:
+		ret = eeprom_get_lock_status();
 		break;
 	default:
 		ret = 0xff;

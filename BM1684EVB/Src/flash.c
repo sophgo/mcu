@@ -18,7 +18,9 @@ void flash_unlock(void)
 
 void flash_lock(void)
 {
+	FLASH->PECR |= FLASH_PECR_OPTLOCK;
 	FLASH->PECR |= FLASH_PECR_PRGLOCK;
+	FLASH->PECR |= FLASH_PECR_PELOCK;
 }
 
 int flash_is_busy(void)
