@@ -28,7 +28,7 @@
 #include "main.h"
 
 /** Declarations **/
-static const char * const mcu_ver = "2.0.3";
+static const char * const mcu_ver = "2.0.4";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
 extern volatile testStage tStage;
@@ -99,8 +99,8 @@ static BaseType_t prvSUartCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvI2CStateCommand(char * pcWriteBuffer, size_t xWriteBufferLen, const char * pcCommandString);
 static BaseType_t prvGetTypeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t prvSetTypeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
-
-
+static BaseType_t prvUnlockCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
+static BaseType_t prvLockCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 
 
 static uint8_t isHexChar(char data);
@@ -278,6 +278,16 @@ static const CLI_Command_Definition_t xI2CSTATECommand = {
 		"\r\niicstate:\r\n i2c state\r\n",
 		prvI2CStateCommand,
 		10 };
+static const CLI_Command_Definition_t xUnlockCommand = {
+		"unlock",
+		"\r\nunlock:\r\n unlock eeprom\r\n",
+		prvUnlockCommand,
+		10 };
+static const CLI_Command_Definition_t xLockCommand = {
+		"lock",
+		"\r\nlock:\r\n lock eeprom\r\n",
+		prvLockCommand,
+		10 };
 
 
 
@@ -322,6 +332,8 @@ void Shell_RegisterCommand(void) {
 	FreeRTOS_CLIRegisterCommand(&xRegResetCommand);
 	FreeRTOS_CLIRegisterCommand(&xGetTypeCommand);
 	FreeRTOS_CLIRegisterCommand(&xSetTypeCommand);
+	FreeRTOS_CLIRegisterCommand(&xUnlockCommand);
+	FreeRTOS_CLIRegisterCommand(&xLockCommand);
 }
 
 /*-----------------------------------------------------------*/
@@ -330,6 +342,50 @@ static BaseType_t prvVersionCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	sprintf(pcWriteBuffer, "mcu version:%s\r\n", mcu_ver);
 		return pdFALSE;
 }
+
+
+/*-----------------------------------------------------------*/
+static BaseType_t prvUnlockCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString) {
+	static uint8_t data[2];
+	osDelay(100);
+	data[0]=0x43;
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+	{
+		sprintf(pcWriteBuffer, "[unlock] unlock stage 1 failed\r\nQA_FAIL_SN\r\n");
+		return pdFALSE;
+	}
+	data[0]=0x4b;
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+	{
+		sprintf(pcWriteBuffer, "[unlock] unlock stage 2 failed\r\nQA_FAIL_SN\r\n");
+		return pdFALSE;
+	}
+	sprintf(pcWriteBuffer, "[unlock] QA_PASS_UNLOCK\r\n");
+	return pdFALSE;
+}
+
+/*-----------------------------------------------------------*/
+static BaseType_t prvLockCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+		const char *pcCommandString) {
+	static uint8_t data[2];
+	osDelay(100);
+	data[0]=0x4c;
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+	{
+		sprintf(pcWriteBuffer, "[lock] lock stage 1 failed\r\nQA_FAIL_SN\r\n");
+		return pdFALSE;
+	}
+	data[0]=0x4f;
+	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+	{
+		sprintf(pcWriteBuffer, "[lock] lock stage 2 failed\r\nQA_FAIL_SN\r\n");
+		return pdFALSE;
+	}
+	sprintf(pcWriteBuffer, "[lock] QA_PASS_LOCK\r\n");
+	return pdFALSE;
+}
+
 /*-----------------------------------------------------------*/
 static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
@@ -1087,44 +1143,49 @@ static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString){
 	if (tStage == STAGE_KERNEL)
     {
-        uint8_t flag = 0;
-        HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_SET);
-        osDelay(1000);
-        if ((reg[0x03] != 3)||(reg[0x04] != 5))
+        static uint8_t flag = 0;
+        if(0 == flag)
+		{
+			sprintf(pcWriteBuffer, "[gpio] flag = %x, reg3 = 0x%x, reg4 = 0x%x\r\n", flag, reg[0x03], reg[0x04]);
+			if ((reg[0x03] != 3)||(reg[0x04] != 5))
+			{
+				return pdFALSE;
+			}
+			flag = 1;
+			return pdTRUE;
+		}
+        else if(1 == flag)
         {
-            sprintf(pcWriteBuffer, "[gpio1] reg3 = 0x%x, reg4 = 0x%x\r\nQA_FAIL_GPIO\r\n", reg[0x03], reg[0x04]);
-            return pdFALSE;
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
+			reg[0x05] = 0x55;
+			for(int i = 10; i > 0; i--)
+			{
+				osDelay(1000);
+				if ((reg[0x03] == 0)&&(reg[0x04] == 2))
+				{
+					flag = 2;
+					break;
+				}
+			}
+
+			if(2 == flag)
+			{
+				sprintf(pcWriteBuffer, "[gpio] flag = %x, reg3 = 0x%x, reg4 = 0x%x\r\nQA_PASS_GPIO\r\n", flag, reg[0x03], reg[0x04]);
+			}
+			else
+			{
+				sprintf(pcWriteBuffer, "[gpio] flag = %x, reg3 = 0x%x, reg4 = 0x%x\r\nQA_FAIL_GPIO\r\n", flag, reg[0x03], reg[0x04]);
+			}
+
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_SET);
+			return pdFALSE;
         }
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
-		reg[0x05] = 0x55;
-		for(int i = 10; i > 0; i--)
-		{
-		    osDelay(1000);
-		    if ((reg[0x03] == 0)&&(reg[0x04] == 2))
-		    {
-		        flag = 1;
-		        break;
-		    }
-		}
-		if(flag)
-		{
-		    sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x, reg4 = 0x%x\r\nQA_PASS_GPIO\r\n", reg[0x03], reg[0x04]);
-		}
-		else
-		{
-		    sprintf(pcWriteBuffer, "[gpio] reg3 = 0x%x, reg4 = 0x%x\r\nQA_FAIL_GPIO\r\n", reg[0x03], reg[0x04]);
-		}
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_SET);
-        return pdFALSE;
     }
     sprintf(pcWriteBuffer, "[gpio] 1684 not in kernel\r\nQA_FAIL_GPIO\r\n");
     return pdFALSE;

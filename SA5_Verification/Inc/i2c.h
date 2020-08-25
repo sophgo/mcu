@@ -47,6 +47,7 @@ extern I2C_HandleTypeDef hi2c3;
 #define MCU_EEPROM_LADDR_IIC    0x3E    //MCU eeprom low addr register
 #define MCU_EEPROM_HADDR_IIC    0x3F    //MCU eeprom hign addr register
 #define MCU_EEPROM_DATA_IIC     0x40    //MCU eeprom data iic
+#define MCU_EEPROM_LOCK_IIC     0x60    //MCU eeprom data iic
 
 #define MCU_EEPROM_SN_ADDR      0x0000
 #define MCU_EEPROM_MAC0_ADDR    0x0020
