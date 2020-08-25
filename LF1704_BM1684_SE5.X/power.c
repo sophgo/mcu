@@ -11,7 +11,8 @@
 #define FACTORY_RESET_DELAY         (REBOOT_DELAY + 11000)
 #define THERMAL_LED_FREQ            4
 
-static uint8_t is_power_on;
+volatile static uint8_t is_power_on;
+extern volatile uint8_t cmd;
 
 void power_on(void)
 {
@@ -101,7 +102,7 @@ void power_ctrl(void)
         /* if no response in 20 seconds from STM32, force power off */
         start = tick_get();
 
-        while (is_power_on) {
+        while (cmd != CMD_POWER_OFF) {
             elapse = tick_get() - start;
             if (elapse > FORCE_POWER_OFF_TIMEOUT) {
                 di();

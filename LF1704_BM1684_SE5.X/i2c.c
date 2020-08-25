@@ -2,6 +2,7 @@
 #include "power.h"
 #include "common.h"
 #include "tick.h"
+#include "i2c.h"
 
 #define REG_BOARD_TYPE      0
 #define REG_SW_VERSION      1
@@ -13,11 +14,8 @@
 #define REG_MASK            7
 
 #define BOARD_TYPE_SE5      3
-#define SW_VERSION          1
-#define HW_VERSION          0
-
-#define CMD_REBOOT          7
-#define CMD_POWER_OFF       2
+#define SW_VERSION          2
+#define HW_VERSION          2
 
 #define REQ_NONE            0
 #define REQ_POWER_OFF       1
