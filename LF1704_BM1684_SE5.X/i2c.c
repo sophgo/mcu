@@ -16,7 +16,7 @@
 #define REG_MASK            15
 
 #define BOARD_TYPE_SE5      3
-#define SW_VERSION          2
+#define SW_VERSION          3
 #define HW_VERSION          2
 
 #define REQ_NONE            0
