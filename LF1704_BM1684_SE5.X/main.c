@@ -79,10 +79,12 @@ void main(void)
     __delay_ms(50);
 
 
+    power_init();
     power_on();
 
     while (1)
     {
+        power_acquire();
         power_ctrl();
         reset_ctrl();
         board_ctrl();

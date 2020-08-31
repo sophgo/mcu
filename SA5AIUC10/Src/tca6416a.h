@@ -37,10 +37,12 @@ static inline int tca6416a_write(uint8_t reg, uint8_t val)
 {
 	int err;
 
-	if (is_tca6416a_available)
+	if (is_tca6416a_available) {
+		HAL_NVIC_DisableIRQ(I2C3_IRQn);
 		err = HAL_I2C_Mem_Write(&hi2c1, TCA6416A_ADDR, reg, 1,
 					&val, 1, TCA6416A_SMBTO);
-	else {
+		HAL_NVIC_EnableIRQ(I2C3_IRQn);
+	} else {
 		dummy_tca6416a_regmap[reg & TCA6416A_REG_MASK] = val;
 		err = HAL_OK;
 	}
@@ -53,10 +55,12 @@ static inline int tca6416a_read(uint8_t reg)
 	uint8_t tmp;
 	int err;
 
-	if (is_tca6416a_available)
+	if (is_tca6416a_available) {
+		HAL_NVIC_DisableIRQ(I2C3_IRQn);
 		err = HAL_I2C_Mem_Read(&hi2c1, TCA6416A_ADDR, reg, 1,
 			       &tmp, 1, TCA6416A_SMBTO);
-	else {
+		HAL_NVIC_EnableIRQ(I2C3_IRQn);
+	} else {
 		tmp = dummy_tca6416a_regmap[reg & TCA6416A_REG_MASK];
 		err = HAL_OK;
 	}

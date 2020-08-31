@@ -25,7 +25,7 @@
 #define PIC_REQ_REBOOT		2
 #define PIC_REQ_FACTORY_RESET	3
 
-extern int is_pic_available;
+extern volatile int is_pic_available;
 
 static inline int pic_probe(void)
 {
@@ -42,7 +42,9 @@ static inline int pic_write(uint8_t reg, uint8_t val)
 {
 	int err;
 
+	HAL_NVIC_DisableIRQ(I2C3_IRQn);
 	err = HAL_I2C_Mem_Write(&hi2c1, PIC_ADDR, reg, 1, &val, 1, PIC_SMBTO);
+	HAL_NVIC_EnableIRQ(I2C3_IRQn);
 
 	return err == HAL_OK ? 0 : -1;
 }
@@ -53,12 +55,16 @@ static inline int pic_read(uint8_t reg)
 	uint8_t tmp;
 	int err;
 
+	HAL_NVIC_DisableIRQ(I2C3_IRQn);
 	err = HAL_I2C_Mem_Read(&hi2c1, PIC_ADDR, reg, 1, &tmp, 1, PIC_SMBTO);
+	HAL_NVIC_EnableIRQ(I2C3_IRQn);
 
 	if (err == HAL_OK)
 		return tmp;
 	else
 		return -1;
 }
+
+void pic_i2c_slave_init(void);
 
 #endif

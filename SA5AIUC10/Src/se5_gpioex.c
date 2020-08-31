@@ -209,6 +209,8 @@ int se5_gpioex_init(void)
 	i2c_slave_register(&i2c_ctx3,&slave);
 
 	kbd_init();
+	if (is_pic_available)
+		pic_i2c_slave_init();
 	return 0;
 }
 

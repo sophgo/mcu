@@ -11,7 +11,9 @@
 #define REG_SOC_TEMP        4
 #define REG_HEATER_CTRL     5
 #define REG_REQUEST         6
-#define REG_MASK            7
+#define REG_POWER_LO        7
+#define REG_POWER_HI        8
+#define REG_MASK            15
 
 #define BOARD_TYPE_SE5      3
 #define SW_VERSION          2
@@ -23,6 +25,87 @@
 #define REQ_FACTORY_RESET   3
 
 #define DEFAULT_SOC_TEMP    20
+
+#define FILTER_DATA_WIDTH   16
+#define FILTER_DEPTH_SHIFT  7
+#define FILTER_DEPTH        (1 << FILTER_DEPTH_SHIFT)
+#define FILTER_DEPTH_MASK   (FILTER_DEPTH - 1)
+
+#if FILTER_DATA_WIDTH == 16
+typedef uint16_t filter_data_t;
+#else
+#error undefined filter width or unsupported filter width
+#endif
+
+struct filter {
+    filter_data_t data[FILTER_DEPTH];
+    uint32_t total;
+    int p;
+};
+
+static filter_data_t filter_init(struct filter *f, filter_data_t d)
+{
+    int i;
+
+    f->p = 0;
+    f->total = 0;
+    for (i = 0; i < FILTER_DEPTH; ++i) {
+        f->data[i] = d;
+        f->total += d;
+    }
+    return d;
+}
+
+static filter_data_t filter_in(struct filter *f, filter_data_t d)
+{
+    f->total -= f->data[f->p];
+    f->total += d;
+    f->data[f->p] = d;
+    f->p = (f->p + 1) & FILTER_DEPTH_MASK;
+
+    return f->total >> FILTER_DEPTH_SHIFT;
+}
+
+#define POWER_ACQUIRE_CH    1
+#define POWER_MULTIPLIER    40
+
+volatile uint16_t power;
+volatile uint16_t power_shadow;
+
+static struct filter power_filter;
+
+void power_init(void)
+{
+    power = filter_init(&power_filter, ADC_GetConversion(POWER_ACQUIRE_CH));
+}
+
+void power_acquire(void)
+{
+    static uint32_t last_tick;
+    uint32_t current_tick;
+
+    current_tick = tick_get();
+    if (current_tick != last_tick) {
+        power = filter_in(&power_filter,
+                  ADC_GetConversion(POWER_ACQUIRE_CH));
+        last_tick = current_tick;
+    }
+}
+
+static inline void power_load_shadow(void)
+{
+    uint32_t tmp;
+
+    /*
+     * x / 1023 * 3.3 * 1000 * 40 = power (mW)
+     */
+    tmp = power * 129;
+
+    if (tmp > 0xffff)
+        power_shadow = 0xffff;
+    else
+        power_shadow = tmp;
+}
 
 volatile uint8_t cmd;
 volatile uint32_t cmd_time_stamp;
@@ -127,6 +210,13 @@ static void read_isr(void)
     case REG_REQUEST:
         ret = req_cur();
         break;
+    case REG_POWER_LO:
+        power_load_shadow();
+        ret = power_shadow & 0xff;
+        break;
+    case REG_POWER_HI:
+        ret = power_shadow >> 8;
+        break;
     default:
         ret = 0xff;
         break;
@@ -135,7 +225,6 @@ static void read_isr(void)
     I2C_Write(ret);
     ack();
 }
-
 
 void board_ctrl(void)
 {
