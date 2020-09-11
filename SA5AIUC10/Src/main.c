@@ -995,8 +995,6 @@ int main(void)
 
 		if (i2c_regs.vender == VENDER_SM5_S) {
 			sm5_gpioex_init();
-			HAL_Delay(200);
-			sm5_gpioex_12v_on();
 			sm5_gpioex_led1_on();
 		} else {
 			se5_gpioex_init();
