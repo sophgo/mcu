@@ -51,7 +51,7 @@ static inline int pic_write(uint8_t reg, uint8_t val)
 		err = HAL_I2C_Mem_Write(&hi2c1, PIC_ADDR,
 					reg, 1, &val, 1, PIC_SMBTO);
 		++i;
-	} while (err < 0 && i <= ERROR_RETRY);
+	} while (err != HAL_OK && i <= ERROR_RETRY);
 
 
 	HAL_NVIC_EnableIRQ(I2C3_IRQn);
@@ -72,14 +72,11 @@ static inline int pic_read(uint8_t reg)
 		err = HAL_I2C_Mem_Read(&hi2c1, PIC_ADDR,
 				       reg, 1, &tmp, 1, PIC_SMBTO);
 		++i;
-	} while (err < 0 && i <= ERROR_RETRY);
+	} while (err != HAL_OK && i <= ERROR_RETRY);
 
 	HAL_NVIC_EnableIRQ(I2C3_IRQn);
 
-	if (err == HAL_OK)
-		return tmp;
-	else
-		return -1;
+	return err == HAL_OK ? tmp : -1;
 }
 
 void pic_i2c_slave_init(void);
