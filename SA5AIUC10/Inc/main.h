@@ -343,7 +343,7 @@ void intr_mask_set(uint8_t mask);
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION	0x2e
+#define MCU_VERSION	0x2f
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

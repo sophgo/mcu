@@ -4,6 +4,14 @@
 #include "tick.h"
 #include "i2c.h"
 
+
+#define I2C_Write(data) do { SSP1BUF = data; } while (0)
+#define I2C_SendAck()                           \
+        do {                                    \
+                SSP1CON2bits.ACKDT = 0;         \
+                SSP1CON2bits.ACKEN = 1;         \
+        } while (0)
+
 #define REG_BOARD_TYPE      0
 #define REG_SW_VERSION      1
 #define REG_HW_VERSION      2
@@ -83,28 +91,25 @@ void power_acquire(void)
 {
     static uint32_t last_tick;
     uint32_t current_tick;
+    uint32_t tmp;
 
     current_tick = tick_get();
     if (current_tick != last_tick) {
-        power = filter_in(&power_filter,
+        tmp = filter_in(&power_filter,
                   ADC_GetConversion(POWER_ACQUIRE_CH));
+
+	 /* x / 1023 * 3.3 * 1000 * 40 = power (mW) */
+	tmp *= 129;
+
+	if (tmp > 0xffff)
+		tmp = 0xffff;
+
+	di();
+	power = tmp;
+	ei();
+
         last_tick = current_tick;
     }
-}
-
-static inline void power_load_shadow(void)
-{
-    uint32_t tmp;
-
-    /*
-     * x / 1023 * 3.3 * 1000 * 40 = power (mW)
-     */
-    tmp = power * 129;
-
-    if (tmp > 0xffff)
-        power_shadow = 0xffff;
-    else
-        power_shadow = tmp;
 }
 
 volatile uint8_t cmd;
@@ -177,18 +182,19 @@ static inline bool i2c_dir_is_read()
     return (SSP1STATbits.R_nW);
 }
 
-static inline void ack(void)
-{
-    idx = (idx + 1) & REG_MASK;
-    I2C_SendAck();
-}
-
 /* called when i2c read transaction received */
 static void read_isr(void)
 {
     uint8_t ret;
 
     switch (idx) {
+    case REG_POWER_LO:
+        power_shadow = power;
+        ret = power_shadow & 0xff;
+        break;
+    case REG_POWER_HI:
+        ret = power_shadow >> 8;
+        break;
     case REG_BOARD_TYPE:
         ret = BOARD_TYPE_SE5;
         break;
@@ -210,20 +216,14 @@ static void read_isr(void)
     case REG_REQUEST:
         ret = req_cur();
         break;
-    case REG_POWER_LO:
-        power_load_shadow();
-        ret = power_shadow & 0xff;
-        break;
-    case REG_POWER_HI:
-        ret = power_shadow >> 8;
-        break;
     default:
         ret = 0xff;
         break;
     }
 
     I2C_Write(ret);
-    ack();
+    idx = (idx + 1) & REG_MASK;
+    I2C_SendAck();
 }
 
 void board_ctrl(void)
@@ -290,7 +290,8 @@ static void write_isr(void)
     default:
         break;
     }
-    ack();
+    idx = (idx + 1) & REG_MASK;
+    I2C_SendAck();
 }
 
 /* address match */
