@@ -15,9 +15,10 @@
 #include <adc.h>
 #include <tick.h>
 #include <eeprom.h>
+#include <power.h>
 
 #define MCU_REG_MAX	0x64
-#define MCU_SW_VER	6
+#define MCU_SW_VER	7
 unsigned char MCU_HW_VER;
 
 #define REG_PROJECT	0x00
@@ -30,6 +31,12 @@ unsigned char MCU_HW_VER;
 
 #define REG_VOLTAGE	0x26
 #define REG_CURRENT	0x28
+
+#define CMD_PWR_ON	0x01
+#define CMD_PWR_OFF	0x02
+#define CMD_RESET_SOC	0x06
+#define CMD_REBOOT_SOC	0x06
+#define CMD_UPGRADE	0x08
 
 extern struct i2c_slave_ctx i2c1_slave_ctx;
 
@@ -120,11 +127,14 @@ void mcu_cmd_process(void)
 	}
 
 	switch (mcu_ctx.cmd) {
-		case 8:
-			i2c_upgrade_start();
-			break;
-		default:
-			break;
+	case CMD_PWR_OFF:
+		power_off();
+		break;
+	case CMD_UPGRADE:
+		i2c_upgrade_start();
+		break;
+	default:
+		break;
 	}
 }
 
