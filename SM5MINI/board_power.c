@@ -1,112 +1,119 @@
+/* AUTO GENERATED CODE */
+
 #include <power.h>
-#include <common.h>
-#include <mp5475.h>
 #include <pin.h>
-#include <timer.h>
+#include <common.h>
+#include <stdlib.h>
 
-static int io18_on(void)
-{
-	return mp5475_buck_on(0);
-}
+int pmic_channel_a_on(void);
+void pmic_channel_a_off(void);
 
-static int io18_off(void)
-{
-	mp5475_buck_off(0);
-	return 0;
-}
+int pmic_channel_d_on(void);
+void pmic_channel_d_off(void);
 
-static int pcie_on(void)
-{
-	return mp5475_buck_on(3);
-}
+int pmic_channel_b_on(void);
+void pmic_channel_b_off(void);
 
-static int pcie_off(void)
-{
-	mp5475_buck_off(3);
-	return 0;
-}
+int pmic_channel_c_on(void);
+void pmic_channel_c_off(void);
 
-static int q_on(void)
-{
-	return mp5475_buck_on(1);
-}
+int sys_rst_deassert_on(void);
+void sys_rst_deassert_off(void);
 
-static int q_off(void)
-{
-	mp5475_buck_off(1);
-	return 0;
-}
+int sys_rst_assert_on(void);
+void sys_rst_assert_off(void);
 
-static int qlp_on(void)
-{
-	return mp5475_buck_on(2);
-}
+struct power_node const board_power_nodes[] = {
 
-static int qlp_off(void)
-{
-	mp5475_buck_off(2);
-	return 0;
-}
+	{"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, 0,
+	 {(unsigned long)pmic_channel_a_on, (unsigned long)pmic_channel_a_off},
+	 },
 
-static int sys_on(void)
-{
-	gpio_set(SYS_RST_PORT, SYS_RST_PIN);
-	timer_mdelay(30);
-	gpio_clear(SYS_RST_PORT, SYS_RST_PIN);
-	timer_mdelay(30);
-	gpio_set(PG_DDR_PORT, PG_DDR_PIN);
-	return 0;
-}
+	{"VDD-1.8V", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
+	 },
 
-static int sys_off(void)
-{
-	gpio_clear(SYS_RST_PORT, SYS_RST_PIN);
-	gpio_clear(PG_DDR_PORT, PG_DDR_PIN);
-	return 0;
-}
+	{"VDD-CORE", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
+	 },
 
-#define PWR_FUNC(name, func, delay)			\
-	{						\
-		name, NODE_TYPE_FUNCTION, delay,	\
-		{					\
-			(unsigned long)(func ## _on),	\
-			(unsigned long)(func ## _off)	\
-		}					\
-	}
+	{"VDD-3.3V", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDDIO33_PORT, (unsigned long)EN_VDDIO33_PIN},
+	 },
 
-#define PWR_GPIO(name, io, delay)			\
-	{						\
-		name, NODE_TYPE_ENABLE, delay,		\
-		{					\
-			(unsigned long)(io ## _PORT),	\
-			(unsigned long)(io ## _PIN)	\
-		}					\
-	}
+	{"VDD-0.8V", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)pmic_channel_d_on, (unsigned long)pmic_channel_d_off},
+	 },
 
-static struct power_node power_chain[] = {
-	PWR_FUNC("bulk0-io-1.8", io18, 1000),
-	PWR_GPIO("en-io-1.8", EN_VDD_IO18, 1000),
-	PWR_GPIO("en-core", EN_VDD_C, 1000),
-	PWR_GPIO("en-io-3.3", EN_VDD_IO33, 1000),
-	PWR_FUNC("bulk3-pcie", pcie, 1000),
-	PWR_GPIO("pg-0.8", PG_0P8, 1000),
-	PWR_GPIO("pg-pcie", PG_PCIE, 1000),
-	PWR_GPIO("en-tpu", EN_VDD_TPU, 1000),
-	PWR_GPIO("pg-tpu", PG_VDD_TPU, 1000),
-	PWR_FUNC("bulk1-q", q, 1000),
-	PWR_FUNC("bulk1-qlp", qlp, 1000),
-	PWR_GPIO("en-tpu-mem", EN_VDD_TPU_MEM, 1000),
-	PWR_GPIO("pg-tpu-mem", PG_VDD_TPU_MEM, 1000),
-	PWR_GPIO("en-vqps-1.8", EN_VQPS18, 1000),
-	PWR_FUNC("sys-rst", sys, 1000),
+	{"ACK-PCIE", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)GPIO2_PORT, (unsigned long)GPIO2_PIN},
+	 },
+
+	{"ACK-P08", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)P08_PWR_GOOD_PORT, (unsigned long)P08_PWR_GOOD_PIN},
+	 },
+
+	{"VDD-TPU", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_TPU_PORT, (unsigned long)EN_VDD_TPU_PIN},
+	 },
+
+	{"CHECK-VDD-TPU", NODE_TYPE_CHECK, 0,
+	 {(unsigned long)PG_VDD_TPU_PORT, (unsigned long)PG_VDD_TPU_PIN},
+	 },
+
+	{"ACK-TPU", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)GPIO3_PORT, (unsigned long)GPIO3_PIN},
+	 },
+
+	{"DDR-VDDQ", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)pmic_channel_b_on, (unsigned long)pmic_channel_b_off},
+	 },
+
+	{"DDR-VDDQLP", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)pmic_channel_c_on, (unsigned long)pmic_channel_c_off},
+	 },
+
+	{"VDD-TPU-MEM", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_TPU_MEM_PORT,
+	  (unsigned long)EN_VDD_TPU_MEM_PIN},
+	 },
+
+	{"CHECK-TPU-MEM", NODE_TYPE_CHECK, 0,
+	 {(unsigned long)PG_VDD_TPU_MEM_PORT,
+	  (unsigned long)PG_VDD_TPU_MEM_PIN},
+	 },
+
+	{"ACK-TPU_MEM", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)GPIO1_PORT, (unsigned long)GPIO1_PIN},
+	 },
+
+	{"VQPS-1.8V", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
+	 },
+
+	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)sys_rst_deassert_on,
+	  (unsigned long)sys_rst_deassert_off},
+	 },
+
+	{"ACK-DDR", NODE_TYPE_ENABLE, 29000,
+	 {(unsigned long)DDR_PWR_GOOD_PORT, (unsigned long)DDR_PWR_GOOD_PIN},
+	 },
+
+	{"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, 30000,
+	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
+	 },
+
 };
 
 int board_power_on(void)
 {
-	return power_on(power_chain, ARRAY_SIZE(power_chain));
+	return power_on(board_power_nodes, ARRAY_SIZE(board_power_nodes));
 }
 
 void board_power_off(void)
 {
-	power_off(power_chain, ARRAY_SIZE(power_chain));
+	return power_off(board_power_nodes, ARRAY_SIZE(board_power_nodes));
 }
+
+/* AUTO GENERATED CODE END */

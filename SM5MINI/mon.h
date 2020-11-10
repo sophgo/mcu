@@ -3,5 +3,9 @@
 
 void mon_init(void);
 void mon_process(void);
+uint16_t get_current(void);
+uint8_t get_pcb_version(void);
+uint8_t get_bom_version(void);
+uint8_t get_hardware_version(void);
 
 #endif

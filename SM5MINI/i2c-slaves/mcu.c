@@ -1,31 +1,64 @@
 #include <string.h>
 #include <project.h>
 #include <i2c_slave.h>
+#include <common.h>
+#include <mon.h>
+#include <upgrade.h>
+#include <loop.h>
+#include <chip.h>
+#include <eeprom.h>
+#include <board_power.h>
 
-#define MCU_REG_MAX	0x64
-#define MCU_SW_VER	4
-unsigned char MCU_HW_VER;
+#define REG_BOARD_TYPE		0x00
+#define REG_SW_VER		0x01
+#define REG_HW_VER		0x02
+#define REG_CMD			0x03
+#define REG_INT_STATUS		0x06
+#define REG_INT_MASK		0x08
+#define REG_SOC_RST_TIMES	0x0a
+#define REG_UPTIME_LO		0x0b
+#define REG_UPTIME_HI		0x0c
 
-#define REG_PROJECT	0x00
-#define REG_SW_VER	0x01
-#define REG_HW_VER	0x02
-#define REG_CMD_REG	0x03
-#define REG_STAGE	0x3c
+#define REG_GP0			0x14
+#define REG_DDR			0x15
+#define REG_PWR_GOOD		0x16
+#define REG_MODE_FLAG		0x17
 
-#define REG_VOLTAGE	0x26
-#define REG_CURRENT	0x28
+#define REG_CURRENT_LO		0x28
+#define REG_CURRENT_HI		0x29
 
+#define REG_STAGE		0x3c
+#define REG_EEPROM_OFFSET_LO	0x3e	/* 16bit eeprom address, low 8bits */
+#define REG_EEPROM_OFFSET_HI	0x3f	/* 16bit eeprom address, high 8bits */
+#define REG_EEPROM_DATA		0x40	/* eeprom data */
+#define REG_EEPROM_LOCK		0x60	/* eeprom write lock */
+#define MCU_REG_MAX		0x64
+
+#define MCU_EEPROM_DATA_MAX	0x20
 
 struct mcu_ctx {
 	int set_idx;
 	int idx;
 	int cmd_tmp;
 	uint8_t cmd;
-	unsigned long current;
-	unsigned long voltage;
+	uint8_t int_status;
+	uint8_t gp0;
+	uint8_t eeprom_offset_l, eeprom_offset_h;
+
+	uint16_t tmp;
 };
 
 static struct mcu_ctx mcu_ctx;
+
+void mcu_raise_interrupt(uint8_t interrupts)
+{
+	mcu_ctx.int_status |= interrupts;
+}
+
+void mcu_clear_interrupt(uint8_t interrupts)
+{
+	mcu_ctx.int_status &= ~interrupts;
+}
 
 static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
 {
@@ -45,15 +78,43 @@ static void mcu_match(void *priv, int dir)
 		ctx->set_idx = 1;
 }
 
-void mcu_cmd_process(void)
+#define CMD_POWER_OFF		0x02
+#define CMD_RESET		0x03
+#define CMD_REBOOT		0x07       // power is always on
+#define CMD_UPDATE		0x08       // MCU UPDATE
+
+void mcu_process(void)
 {
 	switch (mcu_ctx.cmd) {
-		case 8:
-			// i2c_upgrade_start();
-			break;
-		default:
-			break;
+	case CMD_POWER_OFF:
+		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
+		board_power_off();
+		break;
+	case CMD_RESET:
+		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
+		chip_reset();
+		break;
+	case CMD_REBOOT:
+		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
+		board_power_off();
+		board_power_on();
+		chip_reset();
+		break;
+	case CMD_UPDATE:
+		i2c_upgrade_start();
+		break;
+	default:
+		break;
 	}
+}
+
+static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)
+{
+	uint16_t offset_base = ctx->eeprom_offset_l |
+		(ctx->eeprom_offset_h << 8);
+	uint16_t offset_off =
+		ctx->idx - REG_EEPROM_DATA;
+	return offset_base + offset_off;
 }
 
 static void mcu_write(void *priv, volatile uint8_t data)
@@ -67,8 +128,27 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	}
 
 	switch (ctx->idx) {
-	case REG_CMD_REG:
+	case REG_CMD:
 		ctx->cmd_tmp = data;
+		break;
+	case REG_INT_STATUS:
+		mcu_clear_interrupt(data);
+		break;
+	case REG_GP0:
+		ctx->gp0 = data;
+		break;
+	case REG_EEPROM_OFFSET_LO:
+		ctx->eeprom_offset_l = data;
+		break;
+	case REG_EEPROM_OFFSET_HI:
+		ctx->eeprom_offset_h = data;
+		break;
+	case REG_EEPROM_DATA ...
+		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
+		eeprom_write_byte_protected(eeprom_offset(ctx), data);
+		break;
+	case REG_EEPROM_LOCK:
+		eeprom_lock_code(data);
 		break;
 	default:
 		break;
@@ -83,28 +163,69 @@ static uint8_t mcu_read(void *priv)
 	uint8_t ret = 0;
 
 	switch (ctx->idx) {
-	case REG_CMD_REG:
-		ret = 0;
-		break;
-	case REG_PROJECT:
-		ret = SM5MINI;
+	case REG_BOARD_TYPE:
+		ret = get_board_type();
 		break;
 	case REG_SW_VER:
-		ret = MCU_SW_VER;
+		ret = get_firmware_version();
 		break;
 	case REG_HW_VER:
-		ret = MCU_HW_VER;
+		ret = get_hardware_version();
 		break;
-#if 0
+	case REG_CMD:
+		ret = 0;
+		break;
+	case REG_INT_STATUS:
+		ret = ctx->int_status;
+		break;
+	case REG_INT_MASK:
+		/* mask is not supported */
+		ret = 0;
+		break;
+	case REG_SOC_RST_TIMES:
+		ret = chip_reset_times() & 0xff;
+		break;
+	case REG_UPTIME_LO:
+		ctx->tmp = chip_uptime();
+		ret = ctx->tmp & 0xff;
+		break;
+	case REG_UPTIME_HI:
+		ret = (ctx->tmp >> 8) & 0xff;
+		break;
+	case REG_GP0:
+		ret = ctx->gp0;
+		break;
+	case REG_DDR:
+		ret = get_ddr_type();
+		break;
+	case REG_PWR_GOOD:
+		ret = 1;
+		break;
+	case REG_MODE_FLAG:
+		ret = get_work_mode();
+		break;
+	case REG_CURRENT_LO:
+		ctx->tmp = get_current();
+		ret = ctx->tmp & 0xff;
+		break;
+	case REG_CURRENT_HI:
+		ret = (ctx->tmp >> 8) & 0xff;
+		break;
 	case REG_STAGE:
 		ret = get_stage();
 		break;
-#endif
-	case REG_CURRENT:
-		ret = ctx->current & 0xff;
+	case REG_EEPROM_OFFSET_LO:
+		ret = ctx->eeprom_offset_l;
 		break;
-	case REG_CURRENT + 1:
-		ret = (ctx->current >> 8) & 0xff;
+	case REG_EEPROM_OFFSET_HI:
+		ret = ctx->eeprom_offset_h;
+		break;
+	case REG_EEPROM_DATA ...
+		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
+		ret = eeprom_read_byte(eeprom_offset(ctx));
+		break;
+	case REG_EEPROM_LOCK:
+		ret = eeprom_get_lock_status();
 		break;
 	default:
 		ret = 0xff;
@@ -140,6 +261,7 @@ static struct i2c_slave_op slave = {
 
 void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
+	loop_add(mcu_process);
 	i2c_slave_register(i2c_slave_ctx, &slave);
 }
 

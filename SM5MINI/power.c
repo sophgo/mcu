@@ -4,6 +4,28 @@
 #include <timer.h>
 #include <power.h>
 
+/* in us */
+#define NODE_CHECK_TIMEOUT	1000
+
+static int node_check(struct power_node const *node)
+{
+	int err = 0;
+	uint32_t port = node->param[0];
+	uint16_t pin = node->param[1];
+
+	timer_start(NODE_CHECK_TIMEOUT);
+
+	while (gpio_get(port, pin) == 0) {
+		if (timer_is_timeout()) {
+			err = -1;
+			break;
+		}
+	}
+	timer_stop();
+
+	return err;
+}
+
 static int node_on(struct power_node const *node)
 {
 	int err = 0;
@@ -12,6 +34,8 @@ static int node_on(struct power_node const *node)
 
 	if (node->type == NODE_TYPE_ENABLE) {
 		gpio_set(node->param[0], node->param[1]);
+	} else if (node->type == NODE_TYPE_CHECK) {
+		err = node_check(node);
 	} else {
 		power_on_func func = (power_on_func)node->param[0];
 		if (func)
@@ -28,9 +52,10 @@ static void node_off(struct power_node const *node)
 {
 	debug("power off %s\r\n", node->name);
 
-	if (node->type == NODE_TYPE_ENABLE)
+	/* skip check nodes */
+	if (node->type == NODE_TYPE_ENABLE) {
 		gpio_clear(node->param[0], node->param[1]);
-	else {
+	} else if (node->type == NODE_TYPE_FUNCTION) {
 		power_off_func func = (power_off_func)node->param[1];
 		if (func)
 			func();

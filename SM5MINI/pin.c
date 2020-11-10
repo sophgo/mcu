@@ -11,16 +11,20 @@ void pin_init(void)
 	GPIO_OTYPER(GPIOA) = (GPIO_OTYPE_OD << 2) | (GPIO_OTYPE_OD << 3);
 	/* output speed, low, medium, high, very high */
 	GPIO_OSPEEDR(GPIOA) =
-	    (GPIO_OSPEEDR(GPIOA) & ~0x000000f0) | (GPIO_OSPEED_HIGH << (2 * 2))
-	    | (GPIO_OSPEED_HIGH << (3 * 2));
+	    (GPIO_OSPEEDR(GPIOA) & ~0xc3fc00f0) | (GPIO_OSPEED_HIGH << (2 * 2))
+	    | (GPIO_OSPEED_HIGH << (3 * 2)) | (GPIO_OSPEED_LOW << (9 * 2)) |
+	    (GPIO_OSPEED_LOW << (10 * 2)) | (GPIO_OSPEED_LOW << (11 * 2)) |
+	    (GPIO_OSPEED_LOW << (12 * 2)) | (GPIO_OSPEED_LOW << (15 * 2));
 	/* pull-up pull-down */
 	GPIO_PUPDR(GPIOA) =
-	    (GPIO_PUPDR(GPIOA) & ~0xc3fff3f0) | (GPIO_PUPD_PULLUP << (2 * 2)) |
-	    (GPIO_PUPD_PULLUP << (3 * 2)) | (GPIO_PUPD_NONE << (4 * 2)) |
-	    (GPIO_PUPD_NONE << (6 * 2)) | (GPIO_PUPD_NONE << (7 * 2)) |
-	    (GPIO_PUPD_NONE << (8 * 2)) | (GPIO_PUPD_NONE << (9 * 2)) |
-	    (GPIO_PUPD_NONE << (10 * 2)) | (GPIO_PUPD_NONE << (11 * 2)) |
-	    (GPIO_PUPD_NONE << (12 * 2)) | (GPIO_PUPD_NONE << (15 * 2));
+	    (GPIO_PUPDR(GPIOA) & ~0xc3ffffff) | (GPIO_PUPD_NONE << (0 * 2)) |
+	    (GPIO_PUPD_NONE << (1 * 2)) | (GPIO_PUPD_NONE << (2 * 2)) |
+	    (GPIO_PUPD_NONE << (3 * 2)) | (GPIO_PUPD_PULLUP << (4 * 2)) |
+	    (GPIO_PUPD_NONE << (5 * 2)) | (GPIO_PUPD_NONE << (6 * 2)) |
+	    (GPIO_PUPD_NONE << (7 * 2)) | (GPIO_PUPD_PULLUP << (8 * 2)) |
+	    (GPIO_PUPD_PULLDOWN << (9 * 2)) | (GPIO_PUPD_PULLDOWN << (10 * 2)) |
+	    (GPIO_PUPD_PULLDOWN << (11 * 2)) | (GPIO_PUPD_PULLDOWN << (12 * 2))
+	    | (GPIO_PUPD_PULLDOWN << (15 * 2));
 	/* af, alternative function selection */
 	GPIO_AFRL(GPIOA) =
 	    (GPIO_AFRL(GPIOA) & ~0x0000ff00) | (GPIO_AF4 << (2 * 4)) | (GPIO_AF4
@@ -47,16 +51,19 @@ void pin_init(void)
 	    | (GPIO_OTYPE_OD << 11);
 	/* output speed, low, medium, high, very high */
 	GPIO_OSPEEDR(GPIOB) =
-	    (GPIO_OSPEEDR(GPIOB) & ~0x00f0f000) | (GPIO_OSPEED_HIGH << (6 * 2))
-	    | (GPIO_OSPEED_HIGH << (7 * 2)) | (GPIO_OSPEED_HIGH << (10 * 2)) |
-	    (GPIO_OSPEED_HIGH << (11 * 2));
+	    (GPIO_OSPEEDR(GPIOB) & ~0x00f3ffff) | (GPIO_OSPEED_LOW << (0 * 2)) |
+	    (GPIO_OSPEED_LOW << (1 * 2)) | (GPIO_OSPEED_LOW << (2 * 2)) |
+	    (GPIO_OSPEED_LOW << (3 * 2)) | (GPIO_OSPEED_LOW << (4 * 2)) |
+	    (GPIO_OSPEED_LOW << (5 * 2)) | (GPIO_OSPEED_HIGH << (6 * 2)) |
+	    (GPIO_OSPEED_HIGH << (7 * 2)) | (GPIO_OSPEED_LOW << (8 * 2)) |
+	    (GPIO_OSPEED_HIGH << (10 * 2)) | (GPIO_OSPEED_HIGH << (11 * 2));
 	/* pull-up pull-down */
 	GPIO_PUPDR(GPIOB) =
-	    (GPIO_PUPDR(GPIOB) & ~0x00f3ffff) | (GPIO_PUPD_NONE << (0 * 2)) |
-	    (GPIO_PUPD_NONE << (1 * 2)) | (GPIO_PUPD_NONE << (2 * 2)) |
-	    (GPIO_PUPD_NONE << (3 * 2)) | (GPIO_PUPD_NONE << (4 * 2)) |
-	    (GPIO_PUPD_NONE << (5 * 2)) | (GPIO_PUPD_NONE << (6 * 2)) |
-	    (GPIO_PUPD_NONE << (7 * 2)) | (GPIO_PUPD_NONE << (8 * 2)) |
+	    (GPIO_PUPDR(GPIOB) & ~0x00f3ffff) | (GPIO_PUPD_PULLDOWN << (0 * 2))
+	    | (GPIO_PUPD_PULLDOWN << (1 * 2)) | (GPIO_PUPD_PULLDOWN << (2 * 2))
+	    | (GPIO_PUPD_PULLDOWN << (3 * 2)) | (GPIO_PUPD_PULLDOWN << (4 * 2))
+	    | (GPIO_PUPD_PULLDOWN << (5 * 2)) | (GPIO_PUPD_NONE << (6 * 2)) |
+	    (GPIO_PUPD_NONE << (7 * 2)) | (GPIO_PUPD_PULLDOWN << (8 * 2)) |
 	    (GPIO_PUPD_NONE << (10 * 2)) | (GPIO_PUPD_NONE << (11 * 2));
 	/* af, alternative function selection */
 	GPIO_AFRL(GPIOB) =
@@ -81,11 +88,12 @@ void pin_init(void)
 	/* output type, push-pull or open-drain */
 	GPIO_OTYPER(GPIOC) = 0;
 	/* output speed, low, medium, high, very high */
-	/* reset state */
+	GPIO_OSPEEDR(GPIOC) =
+	    (GPIO_OSPEEDR(GPIOC) & ~0x30000000) | (GPIO_OSPEED_LOW << (14 * 2));
 	/* pull-up pull-down */
 	GPIO_PUPDR(GPIOC) =
-	    (GPIO_PUPDR(GPIOC) & ~0xf0000000) | (GPIO_PUPD_NONE << (14 * 2)) |
-	    (GPIO_PUPD_NONE << (15 * 2));
+	    (GPIO_PUPDR(GPIOC) & ~0xf0000000) | (GPIO_PUPD_PULLDOWN << (14 * 2))
+	    | (GPIO_PUPD_NONE << (15 * 2));
 	/* af, alternative function selection */
 	/* AFRL reset state */
 	/* AFRH reset state */

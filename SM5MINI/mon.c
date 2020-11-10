@@ -1,10 +1,11 @@
+#include <libopencm3/stm32/adc.h>
 #include <system.h>
 #include <common.h>
 #include <stdio.h>
 #include <tick.h>
 #include <project.h>
 #include <stdarg.h>
-#include <libopencm3/stm32/adc.h>
+#include <loop.h>
 
 #define FILTER_DISABLE
 
@@ -53,6 +54,26 @@ static struct filter i12v;
 static unsigned int pcb_ver;
 static unsigned int bom_ver;
 
+uint16_t get_current(void)
+{
+	return i12v.value;
+}
+
+uint8_t get_pcb_version(void)
+{
+	return pcb_ver;
+}
+
+uint8_t get_bom_version(void)
+{
+	return bom_ver;
+}
+
+uint8_t get_hardware_version(void)
+{
+	return (pcb_ver << 4) | bom_ver;
+}
+
 static unsigned long adc_read(void)
 {
 	ADC_CR(ADC1) |= ADC_CR_ADSTART;
@@ -75,6 +96,11 @@ static int adc2ver(unsigned short adc)
 		if (adc < version_table[i])
 			return i;
 	return i;
+}
+
+void mon_process(void)
+{
+	filter_in(&i12v, adc_read());
 }
 
 void mon_init(void)
@@ -108,9 +134,7 @@ void mon_init(void)
 	channels[0] = 5;
 	adc_set_regular_sequence(ADC1, 1, channels);
 	adc_power_on(ADC1);
+
+	loop_add(mon_process);
 }
 
-void mon_process(void)
-{
-	filter_in(&i12v, adc_read());
-}

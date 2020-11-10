@@ -252,20 +252,17 @@ void upgrader_init(void)
 
 	switch(project) {
 	case EVB:
-		i2c1_init(0x17, 0);
-		break;
-	case SA5:
-		i2c1_init(0x38, 0x07);
-		i2c3_init(0x17, 0);
-		break;
 	case SC5H3:
 	case SC5H:
+	case SM5ME:
+	case SM5MP:
+	case SM5MS:
 		i2c1_init(0x17, 0x00);
 		break;
 	default:
-		/* sa5 type */
+		/* sa5, sm5p, sm5s, se5 type */
 		i2c1_init(0x38, 0x07);
-		i2c3_init(0x17, 0);
+		i2c3_init(0x17, 0x00);
 		break;
 	}
 }

@@ -465,76 +465,72 @@ class PinList:
         return code
 
 class Node:
-    def __init__(self, name, node_type, group_delay, node_delay, net_name):
+    def __init__(self, name, node_type, delay, net_name):
         self.name = name
         self.type = node_type
-        self.group_delay = group_delay
-        self.node_delay = node_delay
+        self.delay = delay
         self.net_name = net_name
     def __str__(self):
-        return '{} {} {}us {}us'.format(self.name, self.type, self.group_delay, self.node_delay)
+        return '{} {} {} {}us'.format(self.name, self.net_name, self.type, self.delay)
     def get_code_name(self):
-        code_name = []
-        for net_name in self.net_name:
-            if not net_name:
-                code_name.append(None)
-                continue
+        if not self.net_name:
+            return None
 
-            tmp = net_name.replace('/', '_').replace('.', '_').replace(' ', '_')
-            if self.type == 'FUNCTION':
-                tmp = tmp.lower()
-            code_name.append(tmp)
-        return code_name
+        tmp = self.net_name.replace('/', '_').replace('.', '_').replace(' ', '_')
+        if self.type == 'FUNCTION':
+            tmp = tmp.lower()
+        return tmp 
+
     def gen_code(self):
-        code = '{{\"{}\", NODE_TYPE_{}, {}, {}, {{\n'.format(self.name, self.type, self.group_delay, self.node_delay)
+        code = '{{\"{}\", NODE_TYPE_{}, {},\n'.format(self.name, self.type, self.delay)
 
-        for code_name in self.get_code_name():
-            if self.type == 'ENABLE':
-                p0 = code_name + '_PORT'
-                p1 = code_name + '_PIN'
+        code_name = self.get_code_name();
+        if self.type == 'ENABLE' or self.type == 'CHECK':
+            p0 = code_name + '_PORT'
+            p1 = code_name + '_PIN'
+        else:
+            if code_name:
+                p0 = code_name + '_on'
+                p1 = code_name + '_off'
             else:
-                if code_name:
-                    p0 = code_name + '_on'
-                    p1 = code_name + '_off'
-                else:
-                    p0 = 'NULL'
-                    p1 = 'NULL'
-            code += '{{(unsigned long){}, (unsigned long){}}},\n'.format(p0, p1)
+                p0 = 'NULL'
+                p1 = 'NULL'
+        code += '{{(unsigned long){}, (unsigned long){}}},\n'.format(p0, p1)
 
-        code += '}},\n'
+        code += '},\n'
         return code
 
     def gen_porting_func_dec(self):
-        if self.type == 'ENABLE':
+        if self.type == 'ENABLE' or self.type == 'CHECK':
             return ''
         s = ''
-        for code_name in self.get_code_name():
-            if not code_name:
-                continue
-            p0 = code_name + '_on'
-            p1 = code_name + '_off'
-            s += 'int {}(void);\n'.format(p0)
-            s += 'void {}(void);\n'.format(p1)
+        code_name = self.get_code_name()
+        if not code_name:
+            return ''
+        p0 = code_name + '_on'
+        p1 = code_name + '_off'
+        s += 'int {}(void);\n'.format(p0)
+        s += 'void {}(void);\n'.format(p1)
         return s
 
     def gen_porting_func_imp(self):
-        if self.type == 'ENABLE':
+        if self.type == 'ENABLE' or self.type == 'CHECK':
             return ''
         s = ''
-        for code_name in self.get_code_name():
-            if not code_name:
-                continue
-            p0 = code_name + '_on'
-            p1 = code_name + '_off'
-            s += 'int __weak {}(void)\n'.format(p0)
-            s += '{\n'
-            s += '\t/* add customer code here */\n'
-            s += '\treturn 0;\n'
-            s += '}\n'
-            s += 'void __weak {}(void)\n'.format(p1)
-            s += '{\n'
-            s += '\t/* add customer code here */\n'
-            s += '}\n'
+        code_name = self.get_code_name()
+        if not code_name:
+            return ''
+        p0 = code_name + '_on'
+        p1 = code_name + '_off'
+        s += 'int __weak {}(void)\n'.format(p0)
+        s += '{\n'
+        s += '\t/* add customer code here */\n'
+        s += '\treturn 0;\n'
+        s += '}\n'
+        s += 'void __weak {}(void)\n'.format(p1)
+        s += '{\n'
+        s += '\t/* add customer code here */\n'
+        s += '}\n'
         return s
 
 class Power:
@@ -550,13 +546,9 @@ class Power:
         sheet = self.sheet
         self.cols = {
             'name': 'Z',
-            'b12': 'Z',
-            'b34': 'Z',
-            'b56': 'Z',
-            'b78': 'Z',
+            'net name': 'Z',
             'type': 'Z',
-            'group delay': 'Z',
-            'node delay': 'Z',
+            'delay': 'Z',
         }
         # search the first row -- table header
         for col in range(ord('A'), ord('Z')):
@@ -567,7 +559,7 @@ class Power:
                 self.cols[str(value).lower()] = chr(col)
         for key, value in self.cols.items():
             if value == 'Z':
-                error(key, 'not found')
+                error('{} not found'.format(key))
                 return False
         # phase pins
         row = 2
@@ -580,32 +572,19 @@ class Power:
             node_data = {}
             node_data['name'] = name_value
 
-            cell = '{}{}'.format(self.cols['b12'], row)
-            node_data['b12'] = sheet[cell].value
-
-            cell = '{}{}'.format(self.cols['b34'], row)
-            node_data['b34'] = sheet[cell].value
-
-            cell = '{}{}'.format(self.cols['b56'], row)
-            node_data['b56'] = sheet[cell].value
-
-            cell = '{}{}'.format(self.cols['b78'], row)
-            node_data['b78'] = sheet[cell].value
+            cell = '{}{}'.format(self.cols['net name'], row)
+            node_data['net name'] = sheet[cell].value
 
             cell = '{}{}'.format(self.cols['type'], row)
             node_data['type'] = sheet[cell].value
 
-            cell = '{}{}'.format(self.cols['group delay'], row)
-            node_data['group delay'] = sheet[cell].value
+            cell = '{}{}'.format(self.cols['delay'], row)
+            node_data['delay'] = sheet[cell].value
 
-            cell = '{}{}'.format(self.cols['node delay'], row)
-            node_data['node delay'] = sheet[cell].value
-
-            self.nodes.append(Node(  node_data['name'], \
+            self.nodes.append(Node( node_data['name'], \
                                     node_data['type'], \
-                                    node_data['group delay'], \
-                                    node_data['node delay'], \
-                                    [node_data['b12'], node_data['b34'], node_data['b56'], node_data['b78']]))
+                                    node_data['delay'], \
+                                    node_data['net name']))
 
             row = row + 1
 
@@ -634,10 +613,16 @@ class Power:
 
         code += '\n};\n'
 
-        code += 'int board_power_init(void)\n'
+        code += 'int board_power_on(void)\n'
         code += '{\n'
         code += '\treturn power_on(board_power_nodes, ARRAY_SIZE(board_power_nodes));\n'
         code += '}\n\n'
+
+        code += 'void board_power_off(void)\n'
+        code += '{\n'
+        code += '\treturn power_off(board_power_nodes, ARRAY_SIZE(board_power_nodes));\n'
+        code += '}\n\n'
+
 
         code += '\n/* AUTO GENERATED CODE END */'
         return code
@@ -656,7 +641,8 @@ class Power:
         code = '/* AUTO GENERATED CODE */\n\n'
         code = '#ifndef __BOARD_POWER_H__\n'
         code += '#define __BOARD_POWER_H__\n\n'
-        code += 'int board_power_init(void);\n\n'
+        code += 'int board_power_on(void);\n\n'
+        code += 'void board_power_off(void);\n\n'
         code += '#endif\n'
         code += '\n/* AUTO GENERATED CODE END */'
         return code

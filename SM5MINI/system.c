@@ -8,6 +8,7 @@
 #include <libopencm3/stm32/flash.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
+#include <libopencm3/cm3/nvic.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <tick.h>
@@ -60,6 +61,8 @@ void system_init(void)
 	usart_set_parity(USART2, USART_PARITY_NONE);
 	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
 	usart_set_mode(USART2, USART_MODE_TX_RX);
+
+	nvic_enable_irq(NVIC_I2C1_IRQ);
 }
 
 void clock_init(void)
