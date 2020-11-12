@@ -1,4 +1,4 @@
-PROJ ?= sa5
+PROJ ?= sm5mini
 TOP ?= ..
 OUTPUT ?= $(PROJ)
 

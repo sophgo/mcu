@@ -1,4 +1,4 @@
-list='bm1684evb sa5 sc5h sc5plus sm5pcie se5v2pic16 se5pic16'
+list='sm5mini'
 top=..
 
 unset rm
@@ -48,6 +48,10 @@ function version()
     se5pic16)
         dir="$top/LF1704_BM1684_SE5.X"
         key_word='SW_VERSION'
+        ;;
+    sm5mini)
+        dir="$top/SM5MINI"
+        key_word='MCU_SW_VER'
         ;;
     esac
     _version
