@@ -1,14 +1,15 @@
 list='bm1684evb sa5 sc5h sc5plus sm5mini'
 top="$PWD/.."
 
-if [ "x$TOP_DIR" != "x" ]; then
-TOOLCHAIN_BASE=$TOP_DIR/host-tools/gcc
-export PATH=$TOOLCHAIN_BASE/gcc-atollic-eabi-6-x86_64-linux/bin:$PATH
-export PATH=$TOOLCHAIN_BASE/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH
-export PATH=$TOOLCHAIN_BASE/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin:$PATH
-fi
-
 unset rm
+
+echo $#
+
+if [ $# -gt 0 ]; then
+bsp_top=$1
+TOOLCHAIN_BASE=$bsp_top/host-tools/gcc
+source $top/tools/toolchain/setup.sh $top $TOOLCHAIN_BASE
+fi
 
 function _version()
 {
