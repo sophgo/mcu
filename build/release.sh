@@ -1,5 +1,12 @@
-list='sm5mini'
-top=..
+list='bm1684evb sa5 sc5h sc5plus sm5mini'
+top="$PWD/.."
+
+if [ "x$TOP_DIR" != "x" ]; then
+TOOLCHAIN_BASE=$TOP_DIR/host-tools/gcc
+export PATH=$TOOLCHAIN_BASE/gcc-atollic-eabi-6-x86_64-linux/bin:$PATH
+export PATH=$TOOLCHAIN_BASE/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH
+export PATH=$TOOLCHAIN_BASE/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin:$PATH
+fi
 
 unset rm
 
@@ -60,6 +67,7 @@ function version()
 
 function clean()
 {
+    rm -rf release
     for dir in $list; do
         rm -rf $dir
     done
@@ -67,7 +75,7 @@ function clean()
 
 function build()
 {
-    clean
+    mkdir -p release
 
     # build libopencm3 first
     pushd ../libopencm3
@@ -90,8 +98,25 @@ function build()
         file_name=$proj-mcu-v$fw_ver-$date.$suffix
         cp $proj/$proj-mcu.$suffix $proj/$file_name
         md5sum $proj/$file_name
+        cp -r $proj/$file_name release
     done
 }
 
-build
+function build_util()
+{
+    mkdir -p release
+    pushd $top/tools/util
+        # build host util(x86-64)
+        make clean && make
+        cp mcu-util $top/build/release/mcu-util-amd64
+        # build aarch64 util
+        make clean && make CROSS_COMPILE=aarch64-linux-gnu-
+        cp mcu-util $top/build/release/mcu-util-aarch64
+    popd
+}
 
+clean
+build_util
+build
+# append release notes
+cp $top/ReleaseNotes.md $top/build/release
