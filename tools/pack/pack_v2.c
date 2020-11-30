@@ -204,7 +204,7 @@ int pack_v2(int argc, char *argv[])
 		comp.efie.offset = offset;
 		comp.efie.type = type;
 		strncpy((char *)comp.efie.padding, name,
-			sizeof(comp.efie.padding));
+			sizeof(comp.efie.padding) - 1);
 		print_efie(&comp.efie);
 		if (img_fill(img, offset, comp.buf, comp.size)) {
 			error("component overlap\n");
