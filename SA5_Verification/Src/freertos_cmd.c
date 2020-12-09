@@ -352,13 +352,13 @@ static BaseType_t prvUnlockCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	data[0]=0x43;
 	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
 	{
-		sprintf(pcWriteBuffer, "[unlock] unlock stage 1 failed\r\nQA_FAIL_SN\r\n");
+		sprintf(pcWriteBuffer, "[unlock] unlock stage 1 failed\r\nQA_FAIL_UNLOCK\r\n");
 		return pdFALSE;
 	}
 	data[0]=0x4b;
 	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
 	{
-		sprintf(pcWriteBuffer, "[unlock] unlock stage 2 failed\r\nQA_FAIL_SN\r\n");
+		sprintf(pcWriteBuffer, "[unlock] unlock stage 2 failed\r\nQA_FAIL_UNLOCK\r\n");
 		return pdFALSE;
 	}
 	sprintf(pcWriteBuffer, "[unlock] QA_PASS_UNLOCK\r\n");
@@ -373,13 +373,13 @@ static BaseType_t prvLockCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	data[0]=0x4c;
 	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
 	{
-		sprintf(pcWriteBuffer, "[lock] lock stage 1 failed\r\nQA_FAIL_SN\r\n");
+		sprintf(pcWriteBuffer, "[lock] lock stage 1 failed\r\nQA_FAIL_LOCK\r\n");
 		return pdFALSE;
 	}
 	data[0]=0x4f;
 	if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
 	{
-		sprintf(pcWriteBuffer, "[lock] lock stage 2 failed\r\nQA_FAIL_SN\r\n");
+		sprintf(pcWriteBuffer, "[lock] lock stage 2 failed\r\nQA_FAIL_LOCK\r\n");
 		return pdFALSE;
 	}
 	sprintf(pcWriteBuffer, "[lock] QA_PASS_LOCK\r\n");
