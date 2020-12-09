@@ -223,9 +223,6 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_runShell */
 void runShell(void const * argument)
 {
-    
-    
-    
 
   /* USER CODE BEGIN runShell */
 	osEvent evt;

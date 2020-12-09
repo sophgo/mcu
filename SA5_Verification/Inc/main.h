@@ -92,10 +92,6 @@ void Notify(const char *fmt, ...);
 #define MCU_CPLD_ERR_EXTI_IRQn EXTI4_15_IRQn
 #define CORE_3V3_Pin GPIO_PIN_0
 #define CORE_3V3_GPIO_Port GPIOB
-#define UART0_RX_Pin GPIO_PIN_10
-#define UART0_RX_GPIO_Port GPIOB
-#define UART0_TX_Pin GPIO_PIN_11
-#define UART0_TX_GPIO_Port GPIOB
 #define CPLD_TPU_SCL_Pin GPIO_PIN_8
 #define CPLD_TPU_SCL_GPIO_Port GPIOA
 #define UART_TX_Pin GPIO_PIN_9

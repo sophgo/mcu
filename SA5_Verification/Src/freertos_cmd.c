@@ -28,7 +28,7 @@
 #include "main.h"
 
 /** Declarations **/
-static const char * const mcu_ver = "2.0.4";
+static const char * const mcu_ver = "2.0.5";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
 extern volatile testStage tStage;
@@ -74,8 +74,8 @@ static BaseType_t prvI2CDbgCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
 static BaseType_t prvSlotIDCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
-static BaseType_t prvUart0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
-		const char *pcCommandString);
+//static BaseType_t prvUart0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
+//		const char *pcCommandString);
 static BaseType_t prvUart1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
 static BaseType_t prvUart2Command(char *pcWriteBuffer, size_t xWriteBufferLen,
@@ -94,8 +94,8 @@ static BaseType_t prvI2CDbgAddrCommand(char *pcWriteBuffer, size_t xWriteBufferL
 		const char *pcCommandString);
 static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString);
-static BaseType_t prvSUartCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
-		const char *pcCommandString);
+//static BaseType_t prvSUartCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+//		const char *pcCommandString);
 static BaseType_t prvI2CStateCommand(char * pcWriteBuffer, size_t xWriteBufferLen, const char * pcCommandString);
 static BaseType_t prvGetTypeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
 static BaseType_t prvSetTypeCommand(char *pcWriteBuffer, size_t xWriteBufferLen, const char *pcCommandString);
@@ -217,11 +217,11 @@ static const CLI_Command_Definition_t xSlotIDCommand = {
 		"\r\nslotid:\r\n Test the SLOT_ID\r\n",
 		prvSlotIDCommand,
 		0 };
-static const CLI_Command_Definition_t xUart0Command = {
-		"uart0",
-		"\r\nuart0:\r\n Test the UART0\r\n",
-		prvUart0Command,
-		0 };
+//static const CLI_Command_Definition_t xUart0Command = {
+//		"uart0",
+//		"\r\nuart0:\r\n Test the UART0\r\n",
+//		prvUart0Command,
+//		0 };
 static const CLI_Command_Definition_t xUart1Command = {
 		"uart1",
 		"\r\nuart1:\r\n Test the UART1\r\n",
@@ -268,11 +268,11 @@ static const CLI_Command_Definition_t xGPIOCommand = {
 		"\r\ngpio:\r\n gpio test\r\n",
 		prvGPIOCommand,
 		0 };
-static const CLI_Command_Definition_t xSUartCommand = {
-		"s",
-		"\r\ns:\r\n suart test\r\n",
-		prvSUartCommand,
-		10 };
+//static const CLI_Command_Definition_t xSUartCommand = {
+//		"s",
+//		"\r\ns:\r\n suart test\r\n",
+//		prvSUartCommand,
+//		10 };
 static const CLI_Command_Definition_t xI2CSTATECommand = {
 		"iicstate",
 		"\r\niicstate:\r\n i2c state\r\n",
@@ -318,7 +318,7 @@ void Shell_RegisterCommand(void) {
 	FreeRTOS_CLIRegisterCommand(&xI2c1684Command);
 	FreeRTOS_CLIRegisterCommand(&xIDbgCommand);
 	FreeRTOS_CLIRegisterCommand(&xSlotIDCommand);
-	FreeRTOS_CLIRegisterCommand(&xUart0Command);
+//	FreeRTOS_CLIRegisterCommand(&xUart0Command);
 	FreeRTOS_CLIRegisterCommand(&xUart1Command);
 	FreeRTOS_CLIRegisterCommand(&xUart2Command);
 	FreeRTOS_CLIRegisterCommand(&xPcieCommand);
@@ -327,7 +327,7 @@ void Shell_RegisterCommand(void) {
 	FreeRTOS_CLIRegisterCommand(&xRegReadCommand);
 	FreeRTOS_CLIRegisterCommand(&xI2CDbgAddrCommand);
 	FreeRTOS_CLIRegisterCommand(&xGPIOCommand);
-	FreeRTOS_CLIRegisterCommand(&xSUartCommand);
+//	FreeRTOS_CLIRegisterCommand(&xSUartCommand);
 	FreeRTOS_CLIRegisterCommand(&xI2CSTATECommand);
 	FreeRTOS_CLIRegisterCommand(&xRegResetCommand);
 	FreeRTOS_CLIRegisterCommand(&xGetTypeCommand);
@@ -1231,84 +1231,84 @@ static BaseType_t prvSdioCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
     return pdFALSE;
 }
 /*-----------------------------------------------------------*/
-static BaseType_t prvSUartCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
-		const char *pcCommandString) {
-	static uint8_t stage;
-	static const char *pPara;
-	static char sbuf[64] = {0};
-	static char rbuf[configCOMMAND_INT_MAX_OUTPUT_SIZE] = {0};
-	
-	if (stage == 0) {
-		BaseType_t ParaStrLen;
-		uint8_t para_num = 0;
-		para_num = prvGetNumberOfParameters(pcCommandString);
-		if (para_num > 10) { // incorrect para length
-			sprintf(pcWriteBuffer, "[suart] cmd para num out of range\r\n");
-			return pdFALSE;
-		}
-	    pPara = FreeRTOS_CLIGetParameter(pcCommandString, 1, &ParaStrLen);
-	    if (ParaStrLen == 0) { // incorrect length
-		    sprintf(pcWriteBuffer, "[suart] null cmd\r\n");
-		    return pdFALSE;
-	    }
-	    sprintf(sbuf, "%s\n", pPara);
-		stage = 1;
-		return pdTRUE;
-	}
-	else if(1 == stage)
-	{
-		HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)rbuf, configCOMMAND_INT_MAX_OUTPUT_SIZE-10);
-		osDelay(100);
-		if (HAL_UART_Transmit(&hlpuart1, (uint8_t *)sbuf, strlen(sbuf), 100) != HAL_OK) {
-			sprintf(pcWriteBuffer, "[suart] cmd send failed\r\nQA_FAIL_SUART\r\n");
-			return pdFALSE;
-		}
-		osDelay(100);
-		HAL_UART_Abort(&hlpuart1);
-	    sprintf(pcWriteBuffer, "%s\r\n", rbuf);
-	    memset(rbuf,0,configCOMMAND_INT_MAX_OUTPUT_SIZE);
-	    stage = 2;
-		return pdTRUE;
-    }
-    else
-    {
-        sprintf(pcWriteBuffer, "QA_PASS_SUART\r\n");
-        stage = 0;
-        return pdFALSE;
-    }
-    sprintf(pcWriteBuffer, "\r\nQA_FAIL_SUART\r\n");
-    return pdFALSE;
-}
+//static BaseType_t prvSUartCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
+//		const char *pcCommandString) {
+//	static uint8_t stage;
+//	static const char *pPara;
+//	static char sbuf[64] = {0};
+//	static char rbuf[configCOMMAND_INT_MAX_OUTPUT_SIZE] = {0};
+//
+//	if (stage == 0) {
+//		BaseType_t ParaStrLen;
+//		uint8_t para_num = 0;
+//		para_num = prvGetNumberOfParameters(pcCommandString);
+//		if (para_num > 10) { // incorrect para length
+//			sprintf(pcWriteBuffer, "[suart] cmd para num out of range\r\n");
+//			return pdFALSE;
+//		}
+//	    pPara = FreeRTOS_CLIGetParameter(pcCommandString, 1, &ParaStrLen);
+//	    if (ParaStrLen == 0) { // incorrect length
+//		    sprintf(pcWriteBuffer, "[suart] null cmd\r\n");
+//		    return pdFALSE;
+//	    }
+//	    sprintf(sbuf, "%s\n", pPara);
+//		stage = 1;
+//		return pdTRUE;
+//	}
+//	else if(1 == stage)
+//	{
+//		HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)rbuf, configCOMMAND_INT_MAX_OUTPUT_SIZE-10);
+//		osDelay(100);
+//		if (HAL_UART_Transmit(&hlpuart1, (uint8_t *)sbuf, strlen(sbuf), 100) != HAL_OK) {
+//			sprintf(pcWriteBuffer, "[suart] cmd send failed\r\nQA_FAIL_SUART\r\n");
+//			return pdFALSE;
+//		}
+//		osDelay(100);
+//		HAL_UART_Abort(&hlpuart1);
+//	    sprintf(pcWriteBuffer, "%s\r\n", rbuf);
+//	    memset(rbuf,0,configCOMMAND_INT_MAX_OUTPUT_SIZE);
+//	    stage = 2;
+//		return pdTRUE;
+//    }
+//    else
+//    {
+//        sprintf(pcWriteBuffer, "QA_PASS_SUART\r\n");
+//        stage = 0;
+//        return pdFALSE;
+//    }
+//    sprintf(pcWriteBuffer, "\r\nQA_FAIL_SUART\r\n");
+//    return pdFALSE;
+//}
 /*-----------------------------------------------------------*/
-static BaseType_t prvUart0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
-		const char *pcCommandString) {
-	const char *tbuf = "linaro\r\n";
-	const char *texp = "4.9.38";
-	static char rbuf[configCOMMAND_INT_MAX_OUTPUT_SIZE] = {0};
-	for(int i = 0; i < 10; i++)
-	{
-    	HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)rbuf, configCOMMAND_INT_MAX_OUTPUT_SIZE-2);
-    	if (HAL_UART_Transmit(&hlpuart1, (uint8_t *)tbuf, strlen(tbuf), 100) != HAL_OK)
-    	{
-    	    sprintf(pcWriteBuffer, "[uart0] uart0 transmit failed\r\nQA_FAIL_UART0\r\n");
-    		HAL_UART_Abort(&hlpuart1);
-    		return pdFALSE;
-    	}
-    	
-        osDelay(100);
-        HAL_UART_Abort(&hlpuart1);
-        
-        if(strstr(rbuf, texp))
-        {
-            sprintf(pcWriteBuffer, "[uart0] cmd response received\r\nQA_PASS_UART0\r\n");
-    	    return pdFALSE;
-        }
-        memset(rbuf, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
-    }
-	    
-    sprintf(pcWriteBuffer, "[uart0] cmd response timeout\r\nQA_FAIL_UART0\r\n");
-    return pdFALSE;
-}
+//static BaseType_t prvUart0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
+//		const char *pcCommandString) {
+//	const char *tbuf = "linaro\r\n";
+//	const char *texp = "4.9.38";
+//	static char rbuf[configCOMMAND_INT_MAX_OUTPUT_SIZE] = {0};
+//	for(int i = 0; i < 10; i++)
+//	{
+//    	HAL_UART_Receive_IT(&hlpuart1, (uint8_t *)rbuf, configCOMMAND_INT_MAX_OUTPUT_SIZE-2);
+//    	if (HAL_UART_Transmit(&hlpuart1, (uint8_t *)tbuf, strlen(tbuf), 100) != HAL_OK)
+//    	{
+//    	    sprintf(pcWriteBuffer, "[uart0] uart0 transmit failed\r\nQA_FAIL_UART0\r\n");
+//    		HAL_UART_Abort(&hlpuart1);
+//    		return pdFALSE;
+//    	}
+//
+//        osDelay(100);
+//        HAL_UART_Abort(&hlpuart1);
+//
+//        if(strstr(rbuf, texp))
+//        {
+//            sprintf(pcWriteBuffer, "[uart0] cmd response received\r\nQA_PASS_UART0\r\n");
+//    	    return pdFALSE;
+//        }
+//        memset(rbuf, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+//    }
+//
+//    sprintf(pcWriteBuffer, "[uart0] cmd response timeout\r\nQA_FAIL_UART0\r\n");
+//    return pdFALSE;
+//}
 
 /*-----------------------------------------------------------*/
 static BaseType_t prvUart1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
