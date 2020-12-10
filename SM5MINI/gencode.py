@@ -606,23 +606,12 @@ class Power:
         for node in self.nodes:
             code += node.gen_porting_func_dec() + '\n'
 
-        code += 'struct power_node const board_power_nodes[] = {\n\n'
+        code += 'struct power_node const board_power_nodes[{}] = {{\n\n'.format(len(self.nodes))
 
         for node in self.nodes:
             code += node.gen_code() + '\n'
 
         code += '\n};\n'
-
-        code += 'int board_power_on(void)\n'
-        code += '{\n'
-        code += '\treturn power_on(board_power_nodes, ARRAY_SIZE(board_power_nodes));\n'
-        code += '}\n\n'
-
-        code += 'void board_power_off(void)\n'
-        code += '{\n'
-        code += '\treturn power_off(board_power_nodes, ARRAY_SIZE(board_power_nodes));\n'
-        code += '}\n\n'
-
 
         code += '\n/* AUTO GENERATED CODE END */'
         return code
@@ -641,8 +630,7 @@ class Power:
         code = '/* AUTO GENERATED CODE */\n\n'
         code = '#ifndef __BOARD_POWER_H__\n'
         code += '#define __BOARD_POWER_H__\n\n'
-        code += 'int board_power_on(void);\n\n'
-        code += 'void board_power_off(void);\n\n'
+        code += 'extern struct power_node const board_power_nodes[{}];\n\n'.format(len(self.nodes))
         code += '#endif\n'
         code += '\n/* AUTO GENERATED CODE END */'
         return code

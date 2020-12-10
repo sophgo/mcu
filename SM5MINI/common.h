@@ -9,7 +9,7 @@
 
 #define I2C1_OA1		0x17
 #define I2C1_OA2		0x68
-#define I2C1_OA2_MASK		0x07
+#define I2C1_OA2_MASK		0x03
 
 #define PCIE_RESET_PORT	PCIEE_RST_MCU_PORT
 #define PCIE_RESET_PIN	PCIEE_RST_MCU_PIN
@@ -19,8 +19,8 @@
 #define SYS_RST_PORT	SYS_RST_X_PORT
 #define SYS_RST_PIN	SYS_RST_X_PIN
 
-#define EEPROM_BASE	0x08080c00
-#define EEPROM_SIZE	0x00000c00
+#define EEPROM_BASE	0x08080000
+#define EEPROM_SIZE	0x00000800
 
 #define EEPROM_CELL_SIZE	32
 #define EEPROM_CELL_OFFSET(n)	(EEPROM_CELL_SIZE * n)
@@ -40,6 +40,9 @@
 
 #define BIT(n)		(1 << n)
 
+#define LED_FREQ_ALWAYS_ON	1000
+#define LED_FREQ_ALWAYS_OFF	0
+
 enum {
 	WORK_MODE_SOC = 1,
 	WORK_MODE_PCIE = 2,
@@ -58,5 +61,7 @@ void board_init(void);
 uint8_t get_declared_board_type(void);
 uint8_t get_ddr_type(void);
 char *get_board_type_name();
+void led_init(void);
+void led_set_frequency(unsigned long freq);
 
 #endif

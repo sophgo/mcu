@@ -78,6 +78,7 @@ void main(void)
      */
     __delay_ms(50);
 
+    flash_init();
 
     power_init();
     power_on();

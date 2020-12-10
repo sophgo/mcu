@@ -13,5 +13,6 @@ void req_power_off(void);
 void board_ctrl(void);
 void power_acquire(void);
 void power_init(void);
+void flash_init(void);
 
 #endif

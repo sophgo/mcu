@@ -1,5 +1,6 @@
 #include <mp5475.h>
 #include <chip.h>
+#include <common.h>
 
 int pmic_channel_a_on(void)
 {
@@ -61,4 +62,14 @@ void sys_rst_assert_off(void)
 {
 	/* reset chip firstly when power off */
 	chip_disable();
+}
+
+int check_pcie_reset_on(void)
+{
+	board_init();
+	return 0;
+}
+
+void check_pcie_reset_off(void)
+{
 }

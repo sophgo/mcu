@@ -1,5 +1,6 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/systick.h>
+#include <libopencmsis/core_cm3.h>
 #include <common.h>
 
 #define TICK_TASK_MAX	4
@@ -36,7 +37,15 @@ int tick_register_task(void (*func)(void), unsigned long interval)
 	task[task_num].interval = interval;
 	task[task_num].func = func;
 	++task_num;
-	return 0;
+	return task_num - 1;
+}
+
+void tick_set_task_interval(int handle, unsigned long interval)
+{
+	__disable_irq();
+	task[handle].interval = interval;
+	task[handle].tick = 0;
+	__enable_irq();
 }
 
 void mdelay(unsigned long ms)
@@ -55,8 +64,12 @@ void sys_tick_handler(void)
 	++tick;
 
 	for (i = 0; i < task_num; ++i) {
+		if (task[i].interval == 0)
+			continue;
 		++task[i].tick;
-		if (task[i].tick >= task[i].interval)
+		if (task[i].tick >= task[i].interval) {
 			task[i].func();
+			task[i].tick = 0;
+		}
 	}
 }

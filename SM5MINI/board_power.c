@@ -17,13 +17,16 @@ void pmic_channel_b_off(void);
 int pmic_channel_c_on(void);
 void pmic_channel_c_off(void);
 
+int check_pcie_reset_on(void);
+void check_pcie_reset_off(void);
+
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
 
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
-struct power_node const board_power_nodes[] = {
+struct power_node const board_power_nodes[20] = {
 
 	{"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, 0,
 	 {(unsigned long)pmic_channel_a_on, (unsigned long)pmic_channel_a_off},
@@ -91,6 +94,11 @@ struct power_node const board_power_nodes[] = {
 	 {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
 	 },
 
+	{"CHECK-PCIE-RESET", NODE_TYPE_FUNCTION, 0,
+	 {(unsigned long)check_pcie_reset_on,
+	  (unsigned long)check_pcie_reset_off},
+	 },
+
 	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, 1000,
 	 {(unsigned long)sys_rst_deassert_on,
 	  (unsigned long)sys_rst_deassert_off},
@@ -105,15 +113,5 @@ struct power_node const board_power_nodes[] = {
 	 },
 
 };
-
-int board_power_on(void)
-{
-	return power_on(board_power_nodes, ARRAY_SIZE(board_power_nodes));
-}
-
-void board_power_off(void)
-{
-	return power_off(board_power_nodes, ARRAY_SIZE(board_power_nodes));
-}
 
 /* AUTO GENERATED CODE END */

@@ -3,6 +3,8 @@
 #include <debug.h>
 #include <timer.h>
 #include <power.h>
+#include <common.h>
+#include <board_power.h>
 
 /* in us */
 #define NODE_CHECK_TIMEOUT	1000
@@ -62,7 +64,7 @@ static void node_off(struct power_node const *node)
 	}
 }
 
-int power_on(struct power_node const *node, unsigned int num)
+int node_seqon(struct power_node const *node, unsigned int num)
 {
 	int err, i;
 
@@ -73,20 +75,49 @@ int power_on(struct power_node const *node, unsigned int num)
 		if (err)
 			break;
 	}
-	if (i != num) {
+
+	/* donot power off */
+#if 0
+	if (err) {
 		--i;
 		while (i >= 0) {
 			node_off(node + i);
 			--i;
 		}
 	}
+#endif
 	return err;
 }
 
-void power_off(struct power_node const *node, unsigned int num)
+void node_seqoff(struct power_node const *node, unsigned int num)
 {
 	int i;
 
-	for (i = num; i >= 0; --i)
+	for (i = num - 1; i >= 0; --i)
 		node_off(node + i);
 }
+
+int power_on(void)
+{
+	int err = node_seqon(board_power_nodes, ARRAY_SIZE(board_power_nodes));
+
+	if (err) {
+		led_set_frequency(5);
+	} else {
+		led_set_frequency(1);
+	}
+
+	return err;
+}
+
+void power_off(void)
+{
+	node_seqoff(board_power_nodes, ARRAY_SIZE(board_power_nodes));
+	led_set_frequency(LED_FREQ_ALWAYS_OFF);
+}
+
+void power_init(void)
+{
+	led_set_frequency(LED_FREQ_ALWAYS_OFF);
+}
+

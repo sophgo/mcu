@@ -14,4 +14,5 @@
 #define SM5ME	10
 #define SM5MP	11
 #define SM5MS	12
+#define SM5MA	13
 #endif

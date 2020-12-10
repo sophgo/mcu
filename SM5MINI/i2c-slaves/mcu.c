@@ -7,7 +7,8 @@
 #include <loop.h>
 #include <chip.h>
 #include <eeprom.h>
-#include <board_power.h>
+#include <power.h>
+#include <se5.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -79,16 +80,19 @@ static void mcu_match(void *priv, int dir)
 }
 
 #define CMD_POWER_OFF		0x02
-#define CMD_RESET		0x03
-#define CMD_REBOOT		0x07       // power is always on
-#define CMD_UPDATE		0x08       // MCU UPDATE
+#define CMD_RESET		0x03	// drag reset pin
+#define CMD_REBOOT		0x07	// power off - power on
+#define CMD_UPDATE		0x08
 
 void mcu_process(void)
 {
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
-		board_power_off();
+		if (get_board_type() == SM5ME)
+			se5_power_off_board();
+		else
+			power_off();
 		break;
 	case CMD_RESET:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
@@ -96,9 +100,13 @@ void mcu_process(void)
 		break;
 	case CMD_REBOOT:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
-		board_power_off();
-		board_power_on();
-		chip_reset();
+		if (get_board_type() == SM5ME) {
+			se5_reset_board();
+		} else {
+			power_off();
+			power_on();
+			chip_reset();
+		}
 		break;
 	case CMD_UPDATE:
 		i2c_upgrade_start();
@@ -106,6 +114,7 @@ void mcu_process(void)
 	default:
 		break;
 	}
+	mcu_ctx.cmd = 0;
 }
 
 static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)

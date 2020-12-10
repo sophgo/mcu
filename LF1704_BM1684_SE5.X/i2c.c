@@ -3,7 +3,7 @@
 #include "common.h"
 #include "tick.h"
 #include "i2c.h"
-
+#include "flash.h"
 
 #define I2C_Write(data) do { SSP1BUF = data; } while (0)
 #define I2C_SendAck()                           \
@@ -21,16 +21,56 @@
 #define REG_REQUEST         6
 #define REG_POWER_LO        7
 #define REG_POWER_HI        8
-#define REG_MASK            15
+#define REG_FLASH_CMD       29
+#define REG_FLASH_ADRL      30
+#define REG_FLASH_ADRH      31
+#define REG_FLASH_DATA      32
+#define REG_MASK            63
 
 #define BOARD_TYPE_SE5      3
-#define SW_VERSION          4
+#define SW_VERSION          5
 #define HW_VERSION          2
 
 #define REQ_NONE            0
 #define REQ_POWER_OFF       1
 #define REQ_REBOOT          2
 #define REQ_FACTORY_RESET   3
+
+#define FLASH_CMD_LOAD      1
+#define FLASH_CMD_STORE     2
+
+uint8_t flash_row[FLASH_ROW_SIZE];
+uint16_t flash_offset;
+
+static void flash_load(void)
+{
+    flash_read_row(flash_offset, flash_row);
+}
+
+static void flash_store(void)
+{
+    flash_write_row(flash_offset, flash_row);
+}
+
+void flash_init(void)
+{
+    flash_offset = 0;
+    flash_load();
+}
+
+void flash_ctrl(int cmd)
+{
+    switch (cmd) {
+        case FLASH_CMD_LOAD:
+            flash_load();
+            break;
+        case FLASH_CMD_STORE:
+            flash_store();
+            break;
+        default:
+            break;
+    }
+}
 
 #define DEFAULT_SOC_TEMP    20
 
@@ -216,8 +256,21 @@ static void read_isr(void)
     case REG_REQUEST:
         ret = req_cur();
         break;
+    case REG_FLASH_CMD:
+        ret = 0;
+        break;
+    case REG_FLASH_ADRL:
+        ret = flash_offset & 0xff;
+        break;
+    case REG_FLASH_ADRH:
+        ret = flash_offset >> 8;
+        break;
     default:
-        ret = 0xff;
+        if (idx >= REG_FLASH_DATA && idx < REG_FLASH_DATA + FLASH_ROW_SIZE) {
+            ret = flash_row[idx - REG_FLASH_DATA];
+        } else {
+            ret = 0xff;
+        }
         break;
     }
 
@@ -287,7 +340,18 @@ static void write_isr(void)
     case REG_REQUEST:
         req_ack();
         break;
+    case REG_FLASH_CMD:
+        flash_ctrl(data);
+        break;
+    case REG_FLASH_ADRL:
+        flash_offset = (flash_offset & 0xff00) | data;
+        break;
+    case REG_FLASH_ADRH:
+        flash_offset = (flash_offset & 0x00ff) | (data << 8);
+        break;
     default:
+        if (idx >= REG_FLASH_DATA && idx < REG_FLASH_DATA + FLASH_ROW_SIZE)
+            flash_row[idx - REG_FLASH_DATA] = data;
         break;
     }
     idx = (idx + 1) & REG_MASK;

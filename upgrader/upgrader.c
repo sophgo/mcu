@@ -5,6 +5,7 @@
 #include <string.h>
 #include <project.h>
 
+#define REG_CMD			(0x03)
 #define REG_STAGE		(0x3c)
 
 #define REG_LOG			(0x62)
@@ -15,6 +16,10 @@
 #define REG_OFFSET		(0x7c)
 #define REG_DATA		(0x80)
 #define REG_FLUSH		(0xff)
+
+#define CMD_POWER_OFF		(0x02)
+#define CMD_RESET		(0x03)
+#define CMD_REBOOT		(0x07)       // power is always on
 
 /* smbus index to host endian with give type */
 #define S2HT(base, idx, type, var, data)				\
@@ -109,6 +114,18 @@ void upgrader_calc_cksum(void)
 	calc_cksum = 0;
 }
 
+static void upgrader_cmd_process(uint8_t cmd)
+{
+
+	switch (cmd) {
+	case CMD_POWER_OFF:
+	case CMD_RESET:
+	case CMD_REBOOT:
+		NVIC_SystemReset();
+		break;
+	}
+}
+
 static void upgrader_write(void *priv, uint8_t data)
 {
 	struct upgrader_ctx *ctx = priv;
@@ -140,6 +157,9 @@ static void upgrader_write(void *priv, uint8_t data)
 		break;
 	case REG_LOG:
 		log_rd_idx = data;
+		break;
+	case REG_CMD:
+		upgrader_cmd_process(data);
 		break;
 	default:
 		break;
@@ -257,6 +277,7 @@ void upgrader_init(void)
 	case SM5ME:
 	case SM5MP:
 	case SM5MS:
+	case SM5MA:
 		i2c1_init(0x17, 0x00);
 		break;
 	default:

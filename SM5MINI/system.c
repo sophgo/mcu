@@ -34,6 +34,7 @@ void system_init(void)
 	/* enable all gpio power and clock */
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_GPIOC);
 
 	/* i2c1, i2c2 */
 	rcc_periph_clock_enable(RCC_I2C1);
@@ -61,8 +62,6 @@ void system_init(void)
 	usart_set_parity(USART2, USART_PARITY_NONE);
 	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
 	usart_set_mode(USART2, USART_MODE_TX_RX);
-
-	nvic_enable_irq(NVIC_I2C1_IRQ);
 }
 
 void clock_init(void)

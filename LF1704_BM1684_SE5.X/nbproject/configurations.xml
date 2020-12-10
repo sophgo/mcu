@@ -19,8 +19,8 @@
       <itemPath>common.h</itemPath>
       <itemPath>i2c.h</itemPath>
       <itemPath>power.h</itemPath>
-      <itemPath>temp.h</itemPath>
       <itemPath>tick.h</itemPath>
+      <itemPath>flash.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -47,6 +47,7 @@
       <itemPath>tick.c</itemPath>
       <itemPath>common.c</itemPath>
       <itemPath>powerup.as</itemPath>
+      <itemPath>flash.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -69,10 +70,8 @@
         <platform>2</platform>
       </toolsSet>
       <packs>
-        <pack name="PIC12-16F1xxx_DFP" vendor="Microchip" version="1.1.53"/>
+        <pack name="PIC12-16F1xxx_DFP" vendor="Microchip" version="1.2.63"/>
       </packs>
-      <ScriptingSettings>
-      </ScriptingSettings>
       <compileType>
         <linkerTool>
           <linkerLibItems>
@@ -144,7 +143,7 @@
         <property key="calibrate-oscillator-value" value="0x3400"/>
         <property key="clear-bss" value="true"/>
         <property key="code-model-external" value="wordwrite"/>
-        <property key="code-model-rom" value=""/>
+        <property key="code-model-rom" value="default,-f80-fff"/>
         <property key="create-html-files" value="false"/>
         <property key="data-model-ram" value=""/>
         <property key="data-model-size-of-double" value="32"/>

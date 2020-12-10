@@ -5,6 +5,13 @@ enum {
 	NODE_TYPE_ENABLE,
 	NODE_TYPE_CHECK,
 	NODE_TYPE_FUNCTION,
+	NODE_TYPE_INVALID,
+};
+
+enum {
+	POWER_STATUS_OFF,
+	POWER_STATUS_ON,
+	POWER_STATUS_ERR,
 };
 
 struct power_node {
@@ -18,7 +25,7 @@ typedef int (*power_on_func)(void);
 typedef int (*power_off_func)(void);
 
 void power_init(void);
-int power_on(struct power_node const *node, unsigned int num);
-void power_off(struct power_node const *node, unsigned int num);
+int power_on(void);
+void power_off(void);
 
 #endif

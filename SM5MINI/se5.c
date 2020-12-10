@@ -2,7 +2,7 @@
 #include <pin.h>
 #include <pic.h>
 #include <tca6416a.h>
-#include <board_power.h>
+#include <power.h>
 #include <keyboard.h>
 #include <tick.h>
 #include <loop.h>
@@ -115,7 +115,7 @@ static inline int is_smb_alert(void)
 void se5_reset_board(void)
 {
 	nvic_disable_irq(NVIC_I2C1_IRQ);
-	board_power_off();
+	power_off();
 	if (pic_available())
 		pic_write(PIC_REG_CTRL, PIC_CMD_REBOOT);
 	else
@@ -131,7 +131,7 @@ void se5_power_off_board(void)
 		return;
 
 	nvic_disable_irq(NVIC_I2C1_IRQ);
-	board_power_off();
+	power_off();
 	pic_write(PIC_REG_CTRL, PIC_CMD_POWER_OFF);
 	/* wait the end of the world */
 	while (1)

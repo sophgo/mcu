@@ -51,8 +51,10 @@ static inline void led_init(void)
 			MCU_LED_PORT = GPIOA;
 			MCU_LED_PIN = GPIO_PIN_5;
 			break;
+		case SM5ME:
 		case SM5MP:
 		case SM5MS:
+		case SM5MA:
 			MCU_LED_PORT = GPIOC;
 			MCU_LED_PIN = GPIO_PIN_14;
 			break;

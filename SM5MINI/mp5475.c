@@ -4,7 +4,7 @@
 #include <tick.h>
 
 #define MP5475_SLAVE_ADDR	0x60
-#define I2C			I2C1
+#define I2C			I2C2
 
 
 static inline int mp5475_read_byte(unsigned char cmd)
@@ -76,7 +76,7 @@ int mp5475_init(void)
 	mp5475_voltage_config(0, 1800);
 	mp5475_voltage_config(1, 1100);
 	mp5475_voltage_config(2, 600);
-	mp5475_voltage_config(3, 800);
+	mp5475_voltage_config(3, 840);
 	return 0;
 }
 

@@ -1,9 +1,7 @@
 #ifndef __BOARD_POWER_H__
 #define __BOARD_POWER_H__
 
-int board_power_on(void);
-
-void board_power_off(void);
+extern struct power_node const board_power_nodes[20];
 
 #endif
 
