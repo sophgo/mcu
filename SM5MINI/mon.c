@@ -96,9 +96,22 @@ static int adc2ver(unsigned short adc)
 	return i;
 }
 
+static uint16_t adc2current(unsigned short adc)
+{
+	/* step 1: real-voltage = 1.8 * adc / 2^12 /100
+	 *	1.8v: stm32 vcc
+	 *	100: 100 times op-amp
+	 *	2^12: stm32 ADC resolution 12bit
+	 * step 2: current = real-voltage / 0.003
+	 *	0.003: 3mO resistor
+	 * step 3: convert ampere to mili-ampere
+	 */
+	return 3000UL * adc / 2048;
+}
+
 void mon_process(void)
 {
-	filter_in(&i12v, adc_read());
+	filter_in(&i12v, adc2current(adc_read()));
 }
 
 void mon_init(void)
