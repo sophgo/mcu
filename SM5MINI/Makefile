@@ -1,5 +1,5 @@
 TARGET = SM5MINI
-DEBUG = 1
+# DEBUG = 1
 
 ifeq ($(strip $(V)), 1)
 	Q =

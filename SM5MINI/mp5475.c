@@ -6,6 +6,9 @@
 #define MP5475_SLAVE_ADDR	0x60
 #define I2C			I2C2
 
+#define MP5475_ENABLE_REG_DEFAULT_VALUE	(1 << 7)
+
+static uint8_t mp5475_enable_reg_value = MP5475_ENABLE_REG_DEFAULT_VALUE;
 
 static inline int mp5475_read_byte(unsigned char cmd)
 {
@@ -27,19 +30,15 @@ static inline int mp5475_write_byte(unsigned char cmd,
 
 int mp5475_buck_on(unsigned int buck)
 {
-	unsigned char tmp;
-	tmp = mp5475_read_byte(0x40);
-	tmp |= (1 << 5) >> buck;
-	mp5475_write_byte(0x40, tmp);
+	mp5475_enable_reg_value |= (1 << 5) >> buck;
+	mp5475_write_byte(0x40, mp5475_enable_reg_value);
 	return 0;
 }
 
 void mp5475_buck_off(unsigned int buck)
 {
-	unsigned char tmp;
-	tmp = mp5475_read_byte(0x40);
-	tmp &= ~((1 << 5) >> buck);
-	mp5475_write_byte(0x40, tmp);
+	mp5475_enable_reg_value &= ~((1 << 5) >> buck);
+	mp5475_write_byte(0x40, mp5475_enable_reg_value);
 }
 
 int mp5475_voltage_config(unsigned int buck, unsigned int voltage)
@@ -72,7 +71,7 @@ unsigned long mp5475_output_voltage(unsigned int buck)
 int mp5475_init(void)
 {
 	/* enable system enable, disable buck 1, 2, 3, 4 */
-	mp5475_write_byte(0x40, 1 << 7);
+	mp5475_write_byte(0x40, mp5475_enable_reg_value);
 	mp5475_voltage_config(0, 1800);
 	mp5475_voltage_config(1, 1100);
 	mp5475_voltage_config(2, 600);

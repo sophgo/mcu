@@ -1,4 +1,5 @@
 #include <libopencm3/stm32/gpio.h>
+#include <libopencmsis/core_cm3.h>
 #include <stdio.h>
 #include <debug.h>
 #include <timer.h>
@@ -7,7 +8,7 @@
 #include <board_power.h>
 
 /* in us */
-#define NODE_CHECK_TIMEOUT	1000
+#define NODE_CHECK_TIMEOUT	4000
 
 static int node_check(struct power_node const *node)
 {
@@ -32,7 +33,7 @@ static int node_on(struct power_node const *node)
 {
 	int err = 0;
 
-	debug("power on %s\r\n", node->name);
+	debug("%s ", node->name);
 
 	if (node->type == NODE_TYPE_ENABLE) {
 		gpio_set(node->param[0], node->param[1]);
@@ -44,6 +45,8 @@ static int node_on(struct power_node const *node)
 			err = func();
 	}
 
+	debug("[%c]\n", err ? 'X' : 'O');
+
 	if (err == 0 && node->delay)
 		timer_udelay(node->delay);
 
@@ -52,7 +55,7 @@ static int node_on(struct power_node const *node)
 
 static void node_off(struct power_node const *node)
 {
-	debug("power off %s\r\n", node->name);
+	debug("%s\n", node->name);
 
 	/* skip check nodes */
 	if (node->type == NODE_TYPE_ENABLE) {

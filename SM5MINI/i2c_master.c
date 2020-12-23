@@ -1,6 +1,8 @@
 #include <libopencm3/stm32/i2c.h>
 #include <libopencm3/stm32/rcc.h>
 #include <tick.h>
+#include <debug.h>
+#include <timer.h>
 
 int i2c_master_init(int i2c)
 {
@@ -30,7 +32,7 @@ int i2c_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
 			   uint8_t *w, size_t wn,
 			   uint8_t *r, size_t rn)
 {
-	unsigned int start = tick_get();
+	timer_start(timeout * 1000);
 
 	/*  waiting for busy is unnecessary. read the RM */
 	if (wn) {
@@ -50,10 +52,10 @@ int i2c_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
 				if (i2c_transmit_int_status(i2c)) {
 					wait = false;
 				}
-				if (tick_get() - start > timeout)
+				if (timer_is_timeout())
 					goto i2c_timeout;
 				while (i2c_nack(i2c))
-					if (tick_get() - start > timeout)
+					if (timer_is_timeout())
 						goto i2c_timeout;
 			}
 			i2c_send_data(i2c, *w++);
@@ -63,7 +65,7 @@ int i2c_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
 		 */
 		if (rn) {
 			while (!i2c_transfer_complete(i2c))
-				if (tick_get() - start > timeout)
+				if (timer_is_timeout())
 					goto i2c_timeout;
 		}
 	}
@@ -80,7 +82,7 @@ int i2c_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
 
 		for (size_t i = 0; i < rn; i++) {
 			while (i2c_received_data(i2c) == 0)
-				if (tick_get() - start > timeout)
+				if (timer_is_timeout())
 					goto i2c_timeout;
 			r[i] = i2c_get_data(i2c);
 		}
@@ -88,8 +90,10 @@ int i2c_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
 
 	/* wait stop condition */
 	while (i2c_busy(i2c))
-		if (tick_get() - start > timeout)
+		if (timer_is_timeout())
 			goto i2c_timeout;
+
+	timer_stop();
 
 	return 0;
 i2c_timeout:

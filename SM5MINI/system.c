@@ -55,13 +55,13 @@ void system_init(void)
 	tick_init();
 	timer_setup();
 
-	usart_enable(USART2);
 	usart_set_baudrate(USART2, USART2_BAUDRATE);
 	usart_set_databits(USART2, 8);
 	usart_set_stopbits(USART2, USART_STOPBITS_1);
 	usart_set_parity(USART2, USART_PARITY_NONE);
 	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
 	usart_set_mode(USART2, USART_MODE_TX_RX);
+	usart_enable(USART2);
 }
 
 void clock_init(void)
@@ -117,17 +117,23 @@ int puts(const char *s)
 int printf(const char *fmt, ...)
 {
 	va_list ap;
-	char p[128];
+	char p[128], pch;
 	int len;
+	char *q;
 
 	va_start(ap, fmt);
 	len = vsnprintf(p, sizeof(p), fmt, ap);
 	va_end(ap);
 
-	char *q;
+	pch = 0;
 
-	for (q = p; *q; ++q)
-		usart_send_blocking(STD_UART, *q);
+	for (q = p; *q; ++q) {
+		/* insert \r to \n if we have not send \r out before \n */
+		if (*q == '\n' && pch != '\r')
+			putchar('\r');
+		putchar(*q);
+		pch = *q;
+	}
 
 	return len;
 }

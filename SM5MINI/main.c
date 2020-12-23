@@ -38,7 +38,7 @@ int main(void)
 	clock_init();
 	system_init();
 
-	debug("\r\nBITMAIN SOPHONE SM5MINI -- %s\r\n", VERSION);
+	debug("\nBITMAIN SOPHONE SM5MINI -- %s\n", VERSION);
 
 	if (get_stage() == RUN_STAGE_LOADER && check_app() == 0)
 		app_start();
@@ -54,9 +54,10 @@ int main(void)
 	power_init();
 	mp5475_init();
 	power_on();
+	chip_init();
 	tmp451_init();
 
-	debug("%s %s working at %s mode\r\n",
+	debug("%s %s working at %s mode\n",
 	      get_board_type_name(),
 	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application",
 	      get_work_mode() == WORK_MODE_SOC ? "soc" : "pcie");

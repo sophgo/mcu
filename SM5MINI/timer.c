@@ -44,19 +44,24 @@ void timer_start(unsigned long us)
 	timer_enable_counter(TIM6);
 }
 
-int timer_is_timeout(void)
-{
-	return (TIM_CR1(TIM6) & TIM_CR1_CEN) == 0;
-}
-
 void timer_stop(void)
 {
 	timer_disable_counter(TIM6);
 }
 
+int timer_is_timeout(void)
+{
+	int timeout = (TIM_CR1(TIM6) & TIM_CR1_CEN) == 0;
+
+	if (timeout)
+		timer_stop();
+
+	return timeout;
+}
+
 void tim6_dac_isr(void)
 {
-	debug("tim6 isr %lu\r\n", (unsigned long)tick_get());
+	debug("tim6 isr %lu\n", (unsigned long)tick_get());
 	++tim6_cnt;
 	timer_clear_flag(TIM6, TIM_SR_UIF);
 }
@@ -69,7 +74,6 @@ void timer_mdelay(unsigned long ms)
 	timer_start(ms * 1000);
 	while (!timer_is_timeout())
 		;
-	timer_stop();
 }
 
 void timer_udelay(unsigned long us)
@@ -80,7 +84,6 @@ void timer_udelay(unsigned long us)
 	timer_start(us);
 	while (!timer_is_timeout())
 		;
-	timer_stop();
 }
 
 void timer_test(void)
@@ -89,17 +92,17 @@ void timer_test(void)
 	nvic_enable_irq(NVIC_TIM6_DAC_IRQ);
 	timer_enable_irq(TIM6, TIM_DIER_UIE);
 	timer_start(1 * 1000 * 1000);
-	debug("apb1 frequency %ld\r\n", rcc_apb1_frequency);
+	debug("apb1 frequency %ld\n", rcc_apb1_frequency);
 #else
 	unsigned long i;
 
-	debug("start timer\r\n");
+	debug("start timer\n");
 	for (i = 0; i < 60; ++i) {
 		timer_start(1 * 1000 * 1000);
 		while (!timer_is_timeout())
 			;
 		// timer_stop();
-		debug("%ld seconds\r\n", i);
+		debug("%ld seconds\n", i);
 	}
 #endif
 }

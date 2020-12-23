@@ -3,7 +3,7 @@
 #include <libopencmsis/core_cm3.h>
 #include <common.h>
 
-#define TICK_TASK_MAX	4
+#define TICK_TASK_MAX	8
 
 /* software system tick in ms */
 static volatile unsigned long tick;
