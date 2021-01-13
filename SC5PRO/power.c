@@ -11,7 +11,7 @@ static int node_on(struct power_node const *node)
 {
 	int i, err = 0;
 
-	debug("power on %s\r\n", node->name);
+	debug("power on %s\n", node->name);
 
 	if (node->type == NODE_TYPE_ENABLE) {
 		for (i = 0; i < ARRAY_SIZE(node->param); ++i) {
@@ -40,7 +40,7 @@ static void node_off(struct power_node const *node)
 {
 	int i;
 
-	debug("power off %s\r\n", node->name);
+	debug("power off %s\n", node->name);
 
 	if (node->type == NODE_TYPE_ENABLE)
 		for (i = 0; i < ARRAY_SIZE(node->param); ++i)

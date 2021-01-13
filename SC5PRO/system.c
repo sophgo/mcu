@@ -42,7 +42,7 @@ void system_init(void)
 	/* i2c1, i2c2 */
 	rcc_periph_clock_enable(RCC_I2C1);
 	rcc_periph_clock_enable(RCC_I2C2);
-	// rcc_periph_clock_enable(RCC_I2C3);
+	rcc_periph_clock_enable(RCC_I2C3);
 
 	/* usart 1, 2, 4 */
 	rcc_periph_clock_enable(RCC_USART1);
@@ -115,15 +115,10 @@ void clock_init(void)
 	}
 }
 
-int std_read(void)
-{
-	if (!usart_is_recv_ready(STD_UART))
-		return -1;
-	return usart_recv(STD_UART);
-}
-
 int putchar(int c)
 {
+	if (c == '\n')
+		usart_send_blocking(STD_UART, '\r');
 	usart_send_blocking(STD_UART, c);
 	return c;
 }
@@ -132,8 +127,10 @@ int puts(const char *s)
 {
 	int i;
 
-	for (i = 0; *s; ++s, ++i)
+	for (i = 0; *s; ++s, ++i) {
 		putchar(*s);
+	}
+	putchar('\n');
 
 	return i;
 }
@@ -151,7 +148,7 @@ int printf(const char *fmt, ...)
 	char *q;
 
 	for (q = p; *q; ++q)
-		usart_send_blocking(STD_UART, *q);
+		putchar(*q);
 
 	return len;
 }
@@ -161,10 +158,35 @@ void *_sbrk(unsigned long inc)
 	void *last;
 
 	if (heap_start == 0) {
-		heap_start = (unsigned long)_ebss;
+		heap_start = (unsigned long)&_ebss;
 		heap_end = heap_start;
 	}
 	last = (void *)heap_end;
 	heap_end += inc;
 	return last;
+}
+
+void uart_putc(int c)
+{
+	usart_send_blocking(UPG_UART, c);
+}
+
+int uart_getc(void)
+{
+	if (usart_is_recv_ready(UPG_UART))
+		return usart_recv(UPG_UART);
+	return -1;
+}
+
+int uart_puts(const char *s)
+{
+	int i;
+
+	for (i = 0; s[i]; ++i) {
+		if (s[i] == '\n')
+			usart_send_blocking(UPG_UART, '\r');
+		usart_send_blocking(UPG_UART, s[i]);
+	}
+
+	return i;
 }

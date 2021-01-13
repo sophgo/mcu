@@ -14,7 +14,7 @@ struct i2c_slave_op {
 	uint8_t addr;
 	uint8_t mask;
 
-	void (*match)(void *priv, int dir);
+	void (*match)(void *priv, uint8_t addr, int dir);
 	uint8_t (*read)(void *priv);
 	void (*write)(void *priv, uint8_t data);
 	void (*stop)(void *priv);

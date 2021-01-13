@@ -149,7 +149,8 @@ void isr_stopf_clr(struct i2c_slave_ctx *ctx, struct i2c_isr_op *isr_op)
 	ctx->reg->icr |= 1 << isr_op->bit;
 }
 
-static inline struct i2c_slave_op *find_slave(struct i2c_slave_ctx *ctx, unsigned int addr)
+static inline struct i2c_slave_op *find_slave(struct i2c_slave_ctx *ctx,
+					      unsigned int addr)
 {
 	int i;
 	struct i2c_slave_op *slave;
@@ -176,7 +177,7 @@ void isr_addr_cb(struct i2c_slave_ctx *ctx)
 	ctx->slave = find_slave(ctx, addr);
 	if (ctx->slave) {
 		if (ctx->slave->match)
-			ctx->slave->match(ctx->slave->priv, dir);
+			ctx->slave->match(ctx->slave->priv, addr, dir);
 		if (dir == I2C_SLAVE_READ && ctx->slave->read) {
 			ctx->reg->cr1 |= CR1_TXIE; /*Set transmit IT*/
 			ctx->reg->txdr = ctx->slave->read(ctx->slave->priv);
@@ -243,7 +244,8 @@ void i2c_slave_isr(struct i2c_slave_ctx *ctx)
 	i2c_intr_restore(ctx, old);
 }
 
-int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg, int oa1, int oa2, int oa2mask)
+int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg,
+		   int oa1, int oa2, int oa2mask)
 {
 	int i;
 

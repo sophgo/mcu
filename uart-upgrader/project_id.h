@@ -10,6 +10,11 @@
 #define PROJ_SA6		6
 #define PROJ_SC5H3		7
 #define PROJ_SC5H		8
+#define PROJ_SC5PRO		9
+#define PROJ_SM5ME		10
+#define PROJ_SM5MP		11
+#define PROJ_SM5MS		12
+#define PROJ_SM5MA		13
 
 #define PROJ_INVALID		-1
 

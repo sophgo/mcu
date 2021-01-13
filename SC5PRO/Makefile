@@ -1,5 +1,6 @@
 TARGET = SC5PRO
 DEBUG = 0
+STANDALONE = 0
 
 ifeq ($(strip $(V)), 1)
 	Q =
@@ -15,7 +16,7 @@ VERSION := $(shell ./version.sh $(TARGET))
 OPENCM3_DIR = ../libopencm3
 
 OUTDIR = build
-SRCDIR = .
+SRCDIR = . ecdc
 INCDIR = . $(OPENCM3_DIR)/include
 
 C_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
@@ -43,6 +44,10 @@ CFLAGS = $(CPPFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) \
 
 ifeq ($(strip $(DEBUG)), 1)
 CFLAGS += -DDEBUG
+endif
+
+ifeq ($(strip $(STANDALONE)), 1)
+CFLAGS += -DSTANDALONE
 endif
 
 ASFLAGS = $(CFLAGS) -x assembler-with-cpp -Wa,--no-warn
@@ -84,14 +89,14 @@ $(OUTDIR)/%.elf: $(OUTDIR)/%.ld $(OBJS)
 $(OUTDIR)/$(LDSCRIPT_APP): target.ldi
 	@echo '[XP] $@'
 	$(Q)$(CC) $(CPPFLAGS) \
-	-D'ROM_START=0x08008000' -D'ROM_SIZE=32K' \
+	-D'ROM_START=0x08008000' -D'ROM_SIZE=20K' \
 	-D'RAM_START=0x20000000' -D'RAM_SIZE=20K' \
 	-E -xc -P -C $< > $@
 
 $(OUTDIR)/$(LDSCRIPT_LOADER): target.ldi
 	@echo '[XP] $@'
 	$(Q)$(CC) $(CPPFLAGS) \
-	-D'ROM_START=0x08000000' -D'ROM_SIZE=32K' \
+	-D'ROM_START=0x08000000' -D'ROM_SIZE=20K' \
 	-D'RAM_START=0x20000000' -D'RAM_SIZE=20K' \
 	-E -xc -P -C $< > $@
 

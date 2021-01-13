@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<firmware>
+	<name>SC5PRO</name>
+	<size>0x10000</size>
+	<efit>
+		<offset>0x7000</offset>
+		<size>4096</size>
+	</efit>
+	<component>
+		<name>application</name>
+		<type>0</type>
+		<file>../SC5PRO/build/SC5PRO_APP.bin</file>
+		<offset>0x8000</offset>
+	</component>
+	<component>
+		<name>uart-upgrader</name>
+		<type>3</type>
+		<file>../uart-upgrader/build/uart-upgrader.bin</file>
+		<offset>0xd000</offset>
+	</component>
+	<component>
+		<name>loader</name>
+		<type>1</type>
+		<file>../SC5PRO/build/SC5PRO_LOADER.bin</file>
+		<offset>0x0000</offset>
+	</component>
+</firmware>

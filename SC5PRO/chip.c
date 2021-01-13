@@ -2,18 +2,31 @@
 #include <libopencm3/stm32/exti.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/cm3/nvic.h>
+#include <libopencmsis/core_cm3.h>
 #include <pin.h>
 #include <tick.h>
 #include <timer.h>
 #include <debug.h>
 #include <tca9554.h>
+#include <stdio.h>
 
+/* wait debug i2c ready */
+#define CHIP_BOOT_TIME	1500
 #define PCIE_RESET_PORT	PCIE_RST_X_18_PORT
 #define PCIE_RESET_PIN	PCIE_RST_X_18_PIN
 #define PCIE_RESET_EXTI	PCIE_RST_X_18_EXTI
 #define PCIE_RESET_NVIC	NVIC_EXTI2_3_IRQ
 
 static volatile int is_chip_ready;
+static volatile int is_chip_enabled;
+
+int chip_is_enabled(void)
+{
+	if (is_chip_enabled)
+		return tick64_get() > CHIP_BOOT_TIME;
+	else
+		return false;
+}
 
 void chip_init(void)
 {
@@ -56,10 +69,15 @@ static inline void sys_rst_enable(void)
 	BN_SYS_RST_ENABLE(6);
 	BN_SYS_RST_ENABLE(7);
 	BN_SYS_RST_ENABLE(8);
+	/* count from 0 when first time enabled */
+	if (!is_chip_enabled)
+		tick64_set(0);
+	is_chip_enabled = true;
 }
 
 static inline void sys_rst_disable(void)
 {
+	is_chip_enabled = false;
 	BN_SYS_RST_DISABLE(1);
 	BN_SYS_RST_DISABLE(2);
 	BN_SYS_RST_DISABLE(3);
@@ -85,7 +103,7 @@ void chip_update(void)
 
 void exti2_3_isr(void)
 {
-	debug("pcie ep reset falling edge\r\n");
+	debug("pcie ep reset falling edge\n");
 	sys_rst_disable();
 	timer_start(30000);
 	is_chip_ready = 0;

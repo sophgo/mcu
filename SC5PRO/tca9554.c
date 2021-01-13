@@ -26,7 +26,7 @@ static inline void tca9554_write_byte(unsigned char cmd,
 	do {
 		err = i2c_master_smbus_write_byte(I2C, TCA9554_SLAVE_ADDR,
 						  1, cmd, data);
-		// debug("tca9554 i2c err %d\r\n", err);
+		// debug("tca9554 i2c err %d\n", err);
 	} while (err);
 }
 

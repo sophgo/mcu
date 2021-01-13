@@ -11,13 +11,29 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/flash.h>
+#include <libopencm3/stm32/desig.h>
 #include <string.h>
-#include <project_id.h>
+#include <project.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 /* software system tick in ms */
 static volatile unsigned long tick;
-static int stduart;
-uint32_t project;
+static int uart_port;
+static int uart_rcc;
+static int uart_rate;
+
+void system_set_stdout(int port, int rcc, int baudrate)
+{
+	uart_port = port;
+	uart_rcc = rcc;
+	uart_rate = baudrate;
+}
+
+unsigned long system_get_flash_size(void)
+{
+	return desig_get_flash_size() * 1024;
+}
 
 static inline void tick_init(void)
 {
@@ -48,7 +64,7 @@ void isr_systick(void)
 	++tick;
 }
 
-void sc5h_clock_init(void)
+void clock_init(void)
 {
 	const unsigned long AHB_FREQ = 32 * 1000 * 1000;
 	const unsigned long APB1_FREQ = AHB_FREQ;
@@ -79,99 +95,71 @@ void sc5h_clock_init(void)
 	}
 }
 
-void sc5h_init(void)
-{
-	const int uart = USART2;
-	const int rcc_uart = RCC_USART2;
-
-	sc5h_clock_init();
-
-	rcc_periph_clock_enable(RCC_GPIOA);
-	rcc_periph_clock_enable(rcc_uart);
-
-	/* usart2 */
-	gpio_set_af(GPIOA, GPIO_AF4, GPIO2 | GPIO3);
-	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
-			GPIO2 | GPIO3);
-	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3);
-
-	usart_disable(uart);
-	usart_enable(uart);
-
-	usart_set_baudrate(uart, 921600);
-	usart_set_databits(uart, 8);
-	usart_set_stopbits(uart, USART_STOPBITS_1);
-	usart_set_parity(uart, USART_PARITY_NONE);
-	usart_set_flow_control(uart, USART_FLOWCONTROL_NONE);
-	usart_set_mode(uart, USART_MODE_TX_RX);
-	stduart = uart;
-}
-
-struct proj_ops {
-	uint32_t id;
-	void (*init)(void);
-};
-
-struct proj_ops proj_ops_table[] = {
-	{PROJ_SC5H, sc5h_init},
-};
-
-#define ARRAY_SIZE(array)	(sizeof(array) / sizeof((array)[0]))
-
 void system_init(void)
 {
-	struct proj_ops *proj_ops;
-	int i;
-	for (i = 0; i < ARRAY_SIZE(proj_ops_table); ++i) {
-		proj_ops = proj_ops_table + i;
-		if (proj_ops->id == project) {
-			proj_ops->init();
-		}
-	}
+	clock_init();
+
+	project_init();
+
+	rcc_periph_clock_enable(uart_rcc);
+	usart_disable(uart_port);
+	usart_enable(uart_port);
+
+	usart_set_baudrate(uart_port, uart_rate);
+	usart_set_databits(uart_port, 8);
+	usart_set_stopbits(uart_port, USART_STOPBITS_1);
+	usart_set_parity(uart_port, USART_PARITY_NONE);
+	usart_set_flow_control(uart_port, USART_FLOWCONTROL_NONE);
+	usart_set_mode(uart_port, USART_MODE_TX_RX);
+
 	tick_init();
 }
 
 static unsigned long heap_start;
 static unsigned long heap_end;
 
-int _write(int file, char *s, int len)
+extern unsigned char __ld_bss_end[];
+
+int putchar(int c)
+{
+	usart_send_blocking(uart_port, c);
+	return c;
+}
+
+int puts(const char *s)
 {
 	int i;
 
-	for (i = 0; i < len; ++i) {
-		usart_send_blocking(stduart, s[i]);
-	}
+	for (i = 0; *s; ++s, ++i)
+		putchar(*s);
 
 	return i;
 }
 
-int _read(int file, char *s, int len)
+int printf(const char *fmt, ...)
 {
-	memset(s, 0x00, len);
+	va_list ap;
+	char p[128], pch;
+	int len;
+	char *q;
+
+	va_start(ap, fmt);
+	len = vsnprintf(p, sizeof(p), fmt, ap);
+	va_end(ap);
+
+	pch = 0;
+
+	for (q = p; *q; ++q) {
+		/* insert \r to \n if we have not send \r out before \n */
+		if (*q == '\n' && pch != '\r')
+			putchar('\r');
+		putchar(*q);
+		pch = *q;
+	}
+
 	return len;
 }
 
-int _close(int file)
-{
-	return 0;
-}
-
-int _fstat(int fd, void *unsued)
-{
-	return 0;
-}
-
-int _lseek(int fd, long offset, unsigned int whence)
-{
-	return 0;
-}
-
-int _isatty(int fd)
-{
-	return 0;
-}
-
-extern unsigned char __ld_bss_end[];
 
 void *_sbrk(unsigned long inc)
 {
@@ -189,7 +177,7 @@ void *_sbrk(unsigned long inc)
 
 int xmodem_uart_send(int data)
 {
-    usart_send_blocking(stduart, data);
+    usart_send_blocking(uart_port, data);
     return 0;
 }
 
@@ -198,9 +186,34 @@ int xmodem_uart_recv(unsigned long timeout)
 {
     unsigned long tick_start = tick_get();
     do {
-        if (usart_is_recv_ready(stduart)) {
-            return usart_recv(stduart);
+        if (usart_is_recv_ready(uart_port)) {
+            return usart_recv(uart_port);
         }
     } while (tick_get() - tick_start <= timeout || timeout == 0xffffffff);
     return -1;
+}
+
+void uart_putc(int c)
+{
+	usart_send_blocking(uart_port, c);
+}
+
+int uart_getc(void)
+{
+	if (usart_is_recv_ready(uart_port))
+		return usart_recv(uart_port);
+	return -1;
+}
+
+int uart_puts(const char *s)
+{
+	int i;
+
+	for (i = 0; s[i]; ++i) {
+		if (s[i] == '\n')
+			usart_send_blocking(uart_port, '\r');
+		usart_send_blocking(uart_port, s[i]);
+	}
+
+	return i;
 }

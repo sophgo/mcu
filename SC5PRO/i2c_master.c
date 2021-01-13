@@ -144,3 +144,27 @@ int i2c_master_smbus_read_word(int i2c, unsigned char addr,
 				     &cmd, 1, (uint8_t *)data, 2);
 }
 
+int i2c_master_write_byte(int i2c, unsigned char addr,
+			  unsigned long timeout,
+			  unsigned char data)
+{
+	return i2c_transfer7_timeout(i2c, addr, timeout,
+				     (uint8_t *)&data, 1, NULL, 0);
+}
+
+int i2c_master_write_block(int i2c, unsigned char addr,
+			   unsigned long timeout,
+			   unsigned char *data, unsigned int len)
+{
+	return i2c_transfer7_timeout(i2c, addr, timeout,
+				     (uint8_t *)data, len, NULL, 0);
+}
+
+int i2c_master_read_block(int i2c, unsigned char addr,
+			  unsigned long timeout,
+			  unsigned char *data, unsigned int len)
+{
+	return i2c_transfer7_timeout(i2c, addr, timeout,
+				     NULL, 0, (uint8_t *)data, len);
+}
+

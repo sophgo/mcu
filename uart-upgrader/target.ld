@@ -9,7 +9,7 @@ MEMORY
     RAM : ORIGIN = 0x20000000, LENGTH = 20K
     /* ROM only hold a picec of code that copy real code to its position */
     /* ROM code should position independent */
-    ROM : ORIGIN = 0x08000000, LENGTH = 12K
+    ROM : ORIGIN = 0x08000000, LENGTH = 16K
 }
 
 SECTIONS
@@ -32,6 +32,14 @@ SECTIONS
     __ld_loader_lma = LOADADDR(.loader);
     __ld_vector_lma = LOADADDR(.vector);
     __ld_vector_offset = __ld_vector_lma - __ld_loader_lma;
+
+    .project :
+    {
+        . = ALIGN(4);
+        __ld_project_table_start = .;
+        KEEP (*(.project));
+        __ld_project_table_end = .;
+    } > RAM AT > ROM
 
     .text :
     {

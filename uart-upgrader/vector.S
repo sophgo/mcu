@@ -16,7 +16,7 @@
 	.word	__ld_ram_end
 	.word	pre_loader
 pre_loader:
-	ldr	r0, =PROJ_SC5H
+	ldr	r0, =PROJ_SC5PRO
 	b	loader_start
 #endif
 loader_start:
@@ -28,7 +28,7 @@ loader_start:
 
 	/* save r0, parameters, donnot modify r4 untill main */
 	mov	r4, r0
-	
+
 	mov	r0, r3
 
 	ldr	r1, =__ld_vector_offset
@@ -40,7 +40,6 @@ loader_start:
 	/* now r1 is program vma address, copy destination */
 	/* get program end */
 	ldr	r2, =__ld_program_end
-	
 
 copy_program_start:
 	cmp	r2, r1
@@ -71,7 +70,7 @@ zero_bss_end:
 	ldr	r2, =(1 << 9)
 	orrs	r1, r1, r2
 	str	r1, [r0]
-	
+
 	/* reconfig scb->vtor */
 	ldr	r0, =SCB_VTOR
 	ldr	r1, =reset
@@ -83,7 +82,7 @@ zero_bss_end:
 	ldr	r0, =upgrader_start
 	adds	r0, r0, 1
 	bx	r0
-	
+
 loader_end:
 	b	loader_end
 
@@ -148,8 +147,8 @@ reset:
 upgrader_start:
 	ldr	r0, =__ld_ram_end
 	mov	sp, r0
-	/* setup project */
-	ldr	r0, =project
+	/* setup project id */
+	ldr	r0, =_project_id
 	str	r4, [r0]
 	bl	main
 end:

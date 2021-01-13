@@ -10,5 +10,6 @@ enum {
 };
 
 void tca9548a_set(int id, unsigned int mask);
+void tca9548a_init(void);
 
 #endif

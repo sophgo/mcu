@@ -97,12 +97,12 @@ static int recv_pack(void *data)
 	/* check crc16 */
 	if (crc16(pack + 3, pack_len + 2) == 0)
 		return pack_len;
-	
+
 	return -CRC;
 }
 
-long xmodem_receive(int (*save)(void *data, unsigned long len),
-			     unsigned long length)
+long xmodem_receive(int (*save)(void *priv, void *data, unsigned long len),
+		    void *priv)
 {
 	volatile char __attribute__((unused)) file[128];
 	uint8_t pack[1024 + 8];
@@ -138,14 +138,7 @@ long xmodem_receive(int (*save)(void *data, unsigned long len),
 			continue;
 		}
 
-		if (recv_len + pack_len > length) {
-			/* overflow, cancel transmission */
-			xmodem_uart_send(CAN);
-			xmodem_uart_send(CAN);
-			break;
-		}
-
-		if (save(data, pack_len)) {
+		if (save(priv, data, pack_len)) {
 			/* device error, cancel transmission */
 			xmodem_uart_send(CAN);
 			xmodem_uart_send(CAN);

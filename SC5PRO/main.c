@@ -9,6 +9,7 @@
 #include <system.h>
 #include <board_power.h>
 #include <i2c_master.h>
+#include <i2c_slave.h>
 #include <debug.h>
 #include <chip.h>
 #include <mp5475.h>
@@ -17,16 +18,37 @@
 #include <pin.h>
 #include <timer.h>
 #include <mon.h>
+#include <tca9548a.h>
+#include <dbgi2c.h>
+#include <console.h>
+#include <upgrade.h>
+
+struct i2c_slave_ctx i2c3_slave_ctx;
+#define I2C3_OA1	0x60
+#define I2C3_OA2	0x60
+/* mask 3 lsb, aka 0x60, 0x61 ... 0x67 */
+#define I2C3_OA2_MASK	0x03
 
 int main(void)
 {
 	clock_init();
+
+#ifndef STANDALONE
+	if (get_stage() == RUN_STAGE_LOADER) {
+		if (check_app() == 0)
+			app_start();
+	}
+#endif
+
 	system_init();
 
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
+	i2c_master_init(I2C3);
 
-	debug("BITMAIN SOPHONE SC5PRO -- %s\r\n", VERSION);
+	debug("BITMAIN SOPHONE SC5PRO -- %s\n", VERSION);
+
+	tca9548a_init();
 
 	/* enable power supply of pcie switch */
 	gpio_set(P0V9_E_EN_PORT, P0V9_E_EN_PIN);
@@ -42,20 +64,27 @@ int main(void)
 	chip_init();
 	mon_init();
 
-#if 0
-	int err;
-	err = i2c_master_smbus_write(I2C1, 0x70, 1, 1 << 4);
-	if (err)
-		debug("i2c switch write failed\n");
-	err = i2c_master_smbus_write(I2C1, 0x60,
-#endif
+	i2c_slave_init(&i2c3_slave_ctx, (void *)I2C3_BASE,
+		       I2C3_OA1, I2C3_OA2, I2C3_OA2_MASK);
 
-	printf("\r\npress \'u\' to start uart upgrade\r\n");
+	dbgi2c_init(&i2c3_slave_ctx);
+	console_init();
+
+	i2c_slave_start(&i2c3_slave_ctx);
 
 	while (1) {
 		chip_update();
 		mon_process();
+		console_poll();
 	}
 
 	return 0;
 }
+
+/* i2c3 interrupt handler */
+
+void i2c3_isr(void)
+{
+	i2c_slave_isr(&i2c3_slave_ctx);
+}
+

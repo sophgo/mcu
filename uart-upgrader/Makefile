@@ -16,7 +16,7 @@ VERSION := $(shell ./version.sh $(TARGET))
 OPENCM3_DIR = ../libopencm3
 
 OUTDIR = build
-SRCDIR = .
+SRCDIR = . ecdc
 INCDIR = . $(OPENCM3_DIR)/include
 
 C_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
