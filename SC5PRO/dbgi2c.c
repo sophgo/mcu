@@ -208,10 +208,9 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 {
 	int i;
 
-	for (i = 0; i < sizeof(struct dbgi2c_info) / 4; ++i) {
+	for (i = 0; i < sizeof(struct dbgi2c_info) / 4; ++i)
 		dbgi2c_write32(idx, DBGI2C_MCU_INFO_BASE + i * 4,
-			       ((uint32_t *)&info[i])[i]);
-	}
+			       ((uint32_t *)info)[i]);
 }
 
 /* i2c slave operations */

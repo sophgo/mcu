@@ -16,33 +16,21 @@ static inline void mp5475_select(int idx)
 
 static inline int mp5475_read_byte(int idx, unsigned char cmd)
 {
-#if 0
 	unsigned char tmp;
+
 	mp5475_select(idx);
+
 	while (i2c_master_smbus_read_byte(I2C, MP5475_SLAVE_ADDR,
 					  1, cmd, &tmp));
 		;
 	return tmp;
-#else
-	unsigned char tmp;
-
-	mp5475_select(idx);
-
-	if (i2c_master_smbus_read_byte(I2C, MP5475_SLAVE_ADDR,
-				       1, cmd, &tmp)) {
-		while (true) {
-			printf("mp5475 smbus read failed\n");
-		}
-	}
-
-	return tmp;
-#endif
 }
 
 static inline int mp5475_write_byte(int idx, unsigned char cmd,
 				    unsigned char data)
 {
 	mp5475_select(idx);
+
 	while (i2c_master_smbus_write_byte(I2C, MP5475_SLAVE_ADDR,
 					  1, cmd, data));
 		;
