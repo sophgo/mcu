@@ -10,7 +10,7 @@
 
 static int init(struct project *proj)
 {
-	system_set_stdout(UART_PORT, UART_RCC, 921600);
+	system_set_stdout(UART_PORT, UART_RCC, 115200);
 
 	rcc_periph_clock_enable(RCC_GPIOE);
 

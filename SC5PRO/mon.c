@@ -18,7 +18,7 @@
 
 // #define FILTER_DISABLE
 
-#define MCU_SW_VER	0
+#define MCU_SW_VER	1
 
 #define BROADCAST_INTERVAL	100
 #define COLLECT_INTERVAL	10

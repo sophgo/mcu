@@ -158,7 +158,7 @@ void *_sbrk(unsigned long inc)
 	void *last;
 
 	if (heap_start == 0) {
-		heap_start = (unsigned long)_ebss;
+		heap_start = (unsigned long)&_ebss;
 		heap_end = heap_start;
 	}
 	last = (void *)heap_end;
