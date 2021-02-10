@@ -60,22 +60,29 @@ static void cmd_show(void *hint, int argc, char const *argv[])
 	mon_put_text();
 }
 
-static const char * const cmd_verbose_usage =
-"verbose [on|off]\n"
-"    switch on or off verbose mode when collect information\n"
-"    if on or off ommited, this command shows current verbose mode\n";
+static const char * const cmd_monmode_usage =
+"monmode [clear|normal|verbose]\n"
+"    switch mon collection mode between clear, normal and verbose\n"
+"    if on or off ommited, this command shows current verbose mode\n"
+"    valid collection modes are:\n"
+"    -----------------------------------------------------------------------\n"
+"    clear: MCU never collect information from MP5475 and ISL68224\n"
+"    normal: MCU only collect TPU voltage, current and power from ISL68224\n"
+"    verbose: MCU collect all information from both MP5475 and ISL68224\n";
 
-static void cmd_verbose(void *hint, int argc, char const *argv[])
+static void cmd_monmode(void *hint, int argc, char const *argv[])
 {
 	if (argc > 2)
 		printf("invalid usage\n");
 	else if (argc == 1)
-		printf("current verbose mode %s\n",
-		       mon_get_verbose() ? "on" : "off");
-	else if (strcmp("on", argv[1]) == 0)
-		mon_set_verbose(true);
-	else if (strcmp("off", argv[1]) == 0)
-		mon_set_verbose(false);
+		printf("current collect mode %s\n",
+		       mon_get_mode() ? "on" : "off");
+	else if (strcmp("clear", argv[1]) == 0)
+		mon_set_mode(MON_MODE_CLEAR);
+	else if (strcmp("normal", argv[1]) == 0)
+		mon_set_mode(MON_MODE_NORMAL);
+	else if (strcmp("verbose", argv[1]) == 0)
+		mon_set_mode(MON_MODE_VERBOSE);
 	else
 		printf("invalid verbose mode \'%s\'", argv[1]);
 }
@@ -132,7 +139,7 @@ static struct command command_list[] = {
 	{"hello", NULL , NULL, cmd_hello},
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
 	{"show", NULL, cmd_show_usage, cmd_show},
-	{"verbose", NULL, cmd_verbose_usage, cmd_verbose},
+	{"monmode", NULL, cmd_monmode_usage, cmd_monmode},
 	{"sn", NULL, cmd_sn_usage, cmd_sn},
 };
 

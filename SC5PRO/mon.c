@@ -11,6 +11,7 @@
 #include <chip.h>
 #include <timer.h>
 #include <common.h>
+#include <mon.h>
 
 #ifndef __maybe_unused
 #define __maybe_unused __attribute__((unused))
@@ -18,7 +19,7 @@
 
 // #define FILTER_DISABLE
 
-#define MCU_SW_VER	1
+#define MCU_SW_VER	2
 
 #define BROADCAST_INTERVAL	100
 #define COLLECT_INTERVAL	10
@@ -64,7 +65,7 @@ static unsigned long filter_in(struct filter *f, unsigned long d)
 
 static unsigned long last_time_broadcast;
 static unsigned long last_time_collect;
-static int mon_verbose_mode;
+static int mon_mode = MON_MODE_NORMAL;
 static struct filter i12v;
 static struct filter mp5475_current[4][4];
 static struct filter mp5475_voltage[4][4];
@@ -191,10 +192,10 @@ static void collect(void)
 	/* get 12v current from adc */
 	pkg.i12v = filter_in(&i12v, adc_read_i12v());
 
-	if (mon_verbose_mode) {
+	if (mon_mode == MON_MODE_VERBOSE) {
 		collect_mp5475();
 		collect_isl68224();
-	} else {
+	} else if (mon_mode == MON_MODE_NORMAL) {
 		collect_tpu();
 	}
 
@@ -245,6 +246,13 @@ static void mon_put_normal(void)
 	}
 }
 
+static void mon_put_clear(void)
+{
+	mon_printf("software version %u\n", pkg.sw_ver);
+	mon_printf("hardware version %u\n", pkg.hw_ver);
+	mon_printf("12v current(mA): %lu\n", pkg.i12v);
+}
+
 static void mon_put_verbose(void)
 {
 	int i, j;
@@ -284,10 +292,12 @@ static void mon_put_verbose(void)
 
 void mon_put_text(void)
 {
-	if (mon_verbose_mode)
+	if (mon_mode == MON_MODE_VERBOSE)
 		mon_put_verbose();
-	else
+	else if (mon_mode == MON_MODE_NORMAL)
 		mon_put_normal();
+	else if (mon_mode == MON_MODE_CLEAR)
+		mon_put_clear();
 }
 
 static void __maybe_unused broadcast(void)
@@ -321,14 +331,14 @@ static void __maybe_unused broadcast(void)
 	soc_idx = (soc_idx + 1) & 0x07;
 }
 
-void mon_set_verbose(int verbose)
+void mon_set_mode(int mode)
 {
-	mon_verbose_mode = verbose;
+	mon_mode = mode;
 }
 
-int mon_get_verbose(void)
+int mon_get_mode(void)
 {
-	return mon_verbose_mode;
+	return mon_mode;
 }
 
 void mon_process(void)
