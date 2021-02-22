@@ -1,0 +1,6 @@
+mcr
+mcr.elf
+mcr.map
+*.o
+*.swp
+*.bin
