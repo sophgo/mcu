@@ -825,23 +825,46 @@ void READ_Temper(void)
 
 	mcu_set_temp(soc, board);
 
-	if (soc > 95 && board > 85) {//temperature too high, powerdown
-		powerdown_cnt++;
-		if (powerdown_cnt == 3) {
-			eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_OVER_HEAT);
-			intr_status_set(OVER_TEMP_POWEROFF);
-			PowerDOWN();
+	if (i2c_regs.hw_ver == 0x12) {
+		if (soc > 120) {
+			++powerdown_cnt;
+			if (powerdown_cnt == 3) {
+				eeprom_log_power_off_reason(
+					EEPROM_POWER_OFF_REASON_OVER_HEAT);
+				intr_status_set(OVER_TEMP_POWEROFF);
+				PowerDOWN();
+				powerdown_cnt = 0;
+			}
+		} else if (soc > 110) {
+			++alert_cnt;
+			if (alert_cnt == 3) {
+				intr_status_set(OVER_TEMP_ALERT);
+				alert_cnt = 0;
+			}
+		} else {
+			alert_cnt = 0;
 			powerdown_cnt = 0;
 		}
-	} else if (soc > 85 && board > 80) {//temperature too high alert
-		alert_cnt++;
-		if (alert_cnt ==3) {
-			intr_status_set(OVER_TEMP_ALERT);
-			alert_cnt = 0;
-		}
 	} else {
-		alert_cnt = 0;
-		powerdown_cnt = 0;
+		if (soc > 95 && board > 85) {//temperature too high, powerdown
+			powerdown_cnt++;
+			if (powerdown_cnt == 3) {
+				eeprom_log_power_off_reason(
+					EEPROM_POWER_OFF_REASON_OVER_HEAT);
+				intr_status_set(OVER_TEMP_POWEROFF);
+				PowerDOWN();
+				powerdown_cnt = 0;
+			}
+		} else if (soc > 85 && board > 80) {//temperature too high alert
+			alert_cnt++;
+			if (alert_cnt ==3) {
+				intr_status_set(OVER_TEMP_ALERT);
+				alert_cnt = 0;
+			}
+		} else {
+			alert_cnt = 0;
+			powerdown_cnt = 0;
+		}
 	}
 	se5_heater_ctrl(soc);
 }
