@@ -7,9 +7,16 @@
 #include <stdarg.h>
 #include <loop.h>
 
-#define FILTER_DISABLE
+/* filter depth 256, acquire interval 10ms
+ * so current value is an average of past (256 * 10)ms
+ */
 
-#define FILTER_DEPTH_SHIFT	6
+/* in ms */
+#define ACQUIRE_INTERVAL	10
+
+/* #define FILTER_DISABLE */
+
+#define FILTER_DEPTH_SHIFT	8
 #define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
 #define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
 
@@ -109,9 +116,16 @@ static uint16_t adc2current(unsigned short adc)
 	return 3000UL * adc / 2048;
 }
 
+static unsigned long current_time;
+static unsigned long last_time;
+
 void mon_process(void)
 {
-	filter_in(&i12v, adc2current(adc_read()));
+	current_time = tick_get();
+	if (current_time - last_time >= ACQUIRE_INTERVAL) {
+		filter_in(&i12v, adc2current(adc_read()));
+		last_time = current_time;
+	}
 }
 
 void mon_init(void)
@@ -138,6 +152,7 @@ void mon_init(void)
 	pcb_ver = adc2ver(adc_read());
 	bom_ver = adc2ver(adc_read());
 
+	last_time = tick_get();
 	filter_init(&i12v, adc_read());
 
 	/* donnot get version again */
