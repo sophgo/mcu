@@ -374,5 +374,29 @@ void usart_disable_error_interrupt(uint32_t usart)
 	USART_CR3(usart) &= ~USART_CR3_EIE;
 }
 
+/*---------------------------------------------------------------------------*/
+/** @brief USART Overrun Detection Disable
+
+@param[in] usart unsigned 32 bit. USART block register address base @ref
+usart_reg_base
+*/
+
+void usart_enable_overrun_detection(uint32_t usart)
+{
+	USART_CR3(usart) &= ~USART_CR3_OVRDIS;
+}
+
+/*---------------------------------------------------------------------------*/
+/** @brief USART Overrun Detection Enable
+
+@param[in] usart unsigned 32 bit. USART block register address base @ref
+usart_reg_base
+*/
+
+void usart_disable_overrun_detection(uint32_t usart)
+{
+	USART_CR3(usart) |= USART_CR3_OVRDIS;
+}
+
 /**@}*/
 
