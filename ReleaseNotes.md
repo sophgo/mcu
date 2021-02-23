@@ -35,6 +35,20 @@ Version 7:
 
     1. add data eeprom lock
 
+## SC5PRO
+
+Version 0:
+
+    1. Initial release
+
+Version 1:
+
+    1. Change baudrate from 921600 to 115200
+
+Version 2:
+
+    1. Add clear mode for mon collection
+
 ## SA5/SM5/SE5
 
 Version 34:
@@ -98,6 +112,10 @@ Version 46:
 Version 47:
 
     1. workaround: retry at most 10 times if pic not ack address
+
+Version 48:
+
+    1. Wide temperature operating core board adaption
 
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
