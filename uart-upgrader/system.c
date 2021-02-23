@@ -102,8 +102,8 @@ void system_init(void)
 	project_init();
 
 	rcc_periph_clock_enable(uart_rcc);
+
 	usart_disable(uart_port);
-	usart_enable(uart_port);
 
 	usart_set_baudrate(uart_port, uart_rate);
 	usart_set_databits(uart_port, 8);
@@ -111,6 +111,9 @@ void system_init(void)
 	usart_set_parity(uart_port, USART_PARITY_NONE);
 	usart_set_flow_control(uart_port, USART_FLOWCONTROL_NONE);
 	usart_set_mode(uart_port, USART_MODE_TX_RX);
+	usart_disable_overrun_detection(uart_port);
+
+	usart_enable(uart_port);
 
 	tick_init();
 }

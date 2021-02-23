@@ -73,13 +73,14 @@ void system_init(void)
 			GPIO2 | GPIO3);
 	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3);
 	rcc_periph_clock_enable(RCC_UART);
-	usart_enable(UART);
 	usart_set_baudrate(UART, 921600);
 	usart_set_databits(UART, 8);
 	usart_set_stopbits(UART, USART_STOPBITS_1);
 	usart_set_parity(UART, USART_PARITY_NONE);
 	usart_set_flow_control(UART, USART_FLOWCONTROL_NONE);
 	usart_set_mode(UART, USART_MODE_TX_RX);
+	usart_disable_overrun_detection(UART);
+	usart_enable(UART);
 
 	/* init user led */
 	led_init();

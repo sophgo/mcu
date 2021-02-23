@@ -36,6 +36,7 @@ int std_stub_init(int _uart)
 	usart_set_parity(uart, USART_PARITY_NONE);
 	usart_set_flow_control(uart, USART_FLOWCONTROL_NONE);
 	usart_set_mode(uart, USART_MODE_TX_RX);
+	usart_disable_overrun_detection(uart);
 	usart_enable(uart);
 	return 0;
 }

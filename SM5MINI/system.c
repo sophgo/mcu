@@ -61,6 +61,7 @@ void system_init(void)
 	usart_set_parity(USART2, USART_PARITY_NONE);
 	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
 	usart_set_mode(USART2, USART_MODE_TX_RX);
+	usart_disable_overrun_detection(USART2);
 	usart_enable(USART2);
 }
 

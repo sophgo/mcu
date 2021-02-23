@@ -49,6 +49,10 @@ Version 2:
 
     1. Add clear mode for mon collection
 
+Version 3:
+
+    1. Fixbug, MCU uart console may hangup
+
 ## SA5/SM5/SE5
 
 Version 34:

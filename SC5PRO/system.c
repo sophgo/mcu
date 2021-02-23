@@ -25,6 +25,19 @@
 static unsigned long heap_start;
 static unsigned long heap_end;
 
+static void usart_init(uint32_t usart)
+{
+	usart_disable(usart);
+	usart_set_baudrate(usart, DEFAULT_BAUDRATE);
+	usart_set_databits(usart, 8);
+	usart_set_stopbits(usart, USART_STOPBITS_1);
+	usart_set_parity(usart, USART_PARITY_NONE);
+	usart_set_flow_control(usart, USART_FLOWCONTROL_NONE);
+	usart_disable_overrun_detection(usart);
+	usart_set_mode(usart, USART_MODE_TX_RX);
+	usart_enable(usart);
+}
+
 void system_init(void)
 {
 	/* we may load this to a place other than default reset address */
@@ -63,29 +76,9 @@ void system_init(void)
 	timer_setup();
 	adc_init();
 
-	usart_enable(USART1);
-	usart_set_baudrate(USART1, USART1_BAUDRATE);
-	usart_set_databits(USART1, 8);
-	usart_set_stopbits(USART1, USART_STOPBITS_1);
-	usart_set_parity(USART1, USART_PARITY_NONE);
-	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
-	usart_set_mode(USART1, USART_MODE_TX_RX);
-
-	usart_enable(USART2);
-	usart_set_baudrate(USART2, USART2_BAUDRATE);
-	usart_set_databits(USART2, 8);
-	usart_set_stopbits(USART2, USART_STOPBITS_1);
-	usart_set_parity(USART2, USART_PARITY_NONE);
-	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
-	usart_set_mode(USART2, USART_MODE_TX_RX);
-
-	usart_enable(USART4);
-	usart_set_baudrate(USART4, USART4_BAUDRATE);
-	usart_set_databits(USART4, 8);
-	usart_set_stopbits(USART4, USART_STOPBITS_1);
-	usart_set_parity(USART4, USART_PARITY_NONE);
-	usart_set_flow_control(USART4, USART_FLOWCONTROL_NONE);
-	usart_set_mode(USART4, USART_MODE_TX_RX);
+	usart_init(USART1);
+	usart_init(USART2);
+	usart_init(USART4);
 }
 
 void clock_init(void)
