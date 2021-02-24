@@ -157,7 +157,24 @@ int pack_v2(int argc, char *argv[])
 
 	img = img_alloc(firmware_size);
 	if (img == NULL) {
-		error("memory overflow");
+		error("memory overflow\n");
+		err = 1;
+		goto err_xml;
+	}
+
+	/* append firmware information */
+	int firmware_type = get_firmware_type(firmware_name);
+	if (firmware_type < 0) {
+		error("unknown firmware type\n");
+		err = 1;
+		goto err_xml;
+	}
+
+	struct fwinfo fwinfo;
+	init_fwinfo(&fwinfo);
+	fwinfo.type = firmware_type;
+	if (img_fill(img, img->size - 128 + 16, &fwinfo, sizeof(fwinfo))){
+		error("firmware information out of range\n");
 		err = 1;
 		goto err_xml;
 	}

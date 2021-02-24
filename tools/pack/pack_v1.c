@@ -20,6 +20,14 @@
 #define FLASH_SIZE		(64 * 1024)
 #define PROGRAM_LIMIT		(FLASH_SIZE - 128)
 
+#define MD5_START		(PROGRAM_LIMIT)
+#define MD5_SIZE		(16)
+#define MD5_END			(MD5_START + MD5_SIZE)
+
+#define FWINFO_START		(MD5_END)
+#define FWINFO_SIZE		(FWINFO_END - FWINFO_START)
+#define FWINFO_END		(FLASH_SIZE)
+
 #define LOADER_START		0
 #define LOADER_SIZE		(28 * 1024)
 #define LOADER_END		(LOADER_START + LOADER_SIZE)
@@ -81,7 +89,7 @@ int pack_v1(int argc, char *argv[])
 {
 	int err = -1;
 
-	if (argc != 7) {
+	if (argc != 7 && argc != 8) {
 		return 1;
 	}
 	assert(sizeof(struct efie) == 128);
@@ -134,7 +142,20 @@ int pack_v1(int argc, char *argv[])
 	MD5Update(&md_ctx, image, md_size);
 	MD5Final(dgst, &md_ctx);
 
-	store_file(image, FLASH_SIZE, argv[6]);
+	char *output_file;
+	/* append firmware information */
+	if (argc == 8) {
+		struct fwinfo *fwinfo;
+
+		fwinfo = (void *)(image + FWINFO_START);
+		init_fwinfo(fwinfo);
+		fwinfo->type = strtol(argv[6], NULL, 0);
+		output_file = argv[7];
+	} else {
+		output_file = argv[6];
+	}
+
+	store_file(image, FLASH_SIZE, output_file);
 
 	err = 0;
 unload_upgrader:

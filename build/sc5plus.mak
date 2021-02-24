@@ -10,6 +10,7 @@ PACK_ROOT = $(TOOLS)/pack
 PACK = $(PACK_ROOT)/pack
 UTILROOT = $(TOOLS)/util
 UPGRADE = $(UTILROOT)/mcu-util
+FIRMWARE_TYPE = 7
 
 $(TARGET): FORCE
 	$(Q)rm -rf $(OUTPUT)
@@ -19,7 +20,7 @@ $(TARGET): FORCE
 	$(Q)cd $(PACK_ROOT) && make distclean && make
 	$(Q)cd $(UTILROOT) && make clean && make && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-amd64
 	$(Q)cd $(UTILROOT) && make clean && make CROSS_COMPILE=$(AARCH64_CROSS_COMPILE) && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-aarch64
-	$(Q)$(PACK) $(LOADER) $(APP) $(APP_OFFSET) $(UPGRADER) $(UPGRADER_OFFSET) $@ $(E) && mv $@ $(OUTPUT)/
+	$(Q)$(PACK) $(LOADER) $(APP) $(APP_OFFSET) $(UPGRADER) $(UPGRADER_OFFSET) $(FIRMWARE_TYPE) $@ $(E) && mv $@ $(OUTPUT)/
 
 clean: FORCE
 	$(Q)cd $(APP_ROOT) && make clean

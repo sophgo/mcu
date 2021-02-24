@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -120,4 +121,35 @@ void print_efie(struct efie *efie)
 	printf("\n");
 }
 
+#include <project.h>
 
+struct {
+	char *name;
+	int id[16];
+} firmware_table[] = {
+	{"EVB",		{EVB, SC5}},
+	{"SA5",		{SA5, SE5, SM5P, SM5S}},
+	{"SC5PLUS",	{SC5PLUS}},
+	{"SC5H",	{SC5H}},
+	{"SC5PRO",	{SC5PRO}},
+	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA}},
+};
+
+int get_firmware_type(char *name)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(firmware_table); ++i) {
+		if (strcasecmp(firmware_table[i].name, name) == 0)
+			return firmware_table[i].id[0];
+	}
+
+	return -1;
+}
+
+void init_fwinfo(struct fwinfo *fwinfo)
+{
+	memset(fwinfo, 0, sizeof(struct fwinfo));
+	memcpy(fwinfo->magic, "MCUF", sizeof(fwinfo->magic));
+	fwinfo->timestamp = (uint32_t)time(NULL);
+}

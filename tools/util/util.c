@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include <linux/types.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -12,6 +13,9 @@
 #include <global.h>
 #include <md5.h>
 #include <i2c.h>
+#include <project.h>
+
+#define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 
 #define FLASH_SIZE		(64 * 1024)
 #define PROGRAM_LIMIT		(FLASH_SIZE - 128)
@@ -35,6 +39,7 @@
 #define UPGRADER_END		(UPGRADER_START + UPGRADER_SIZE)
 #endif
 
+#define REG_BOARD_TYPE		(0x00)
 #define REG_STAGE		(0x3c)
 #define REG_LOG			(0x62)
 #define REG_CMD			(0x03)
@@ -65,6 +70,28 @@ struct comp {
 	unsigned char *buf;
 	struct efie efie;
 };
+
+struct {
+	char *name;
+	int id[16];
+} firmware_table[] = {
+	{"EVB",		{EVB, SC5, -1}},
+	{"SA5",		{SA5, SE5, SM5P, SM5S, -1}},
+	{"SC5PLUS",	{SC5PLUS, -1}},
+	{"SC5H",	{SC5H, -1}},
+	{"SC5PRO",	{SC5PRO, -1}},
+	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA, -1}},
+};
+
+struct fwinfo {
+	uint8_t		magic[4];
+	uint8_t		type;
+	uint8_t		r0[3];
+	uint32_t	timestamp;
+} __attribute__((packed));
+
+
+static int fd;
 
 void hexdump_string(void *data, unsigned long len)
 {
@@ -338,6 +365,28 @@ close_file:
 	return err;
 }
 
+int enter_upgrader(void)
+{
+	int err;
+	//check if we are in upgrader stage
+	do {
+		err = i2c_smbus_read_byte_data(fd, REG_STAGE);
+		if (err < 0) {
+			fprintf(stderr, "i2c bus cannot access\n");
+			close(fd);
+			return -1;
+		}
+		if (err != STAGE_UPGRADER) {
+			// we are not in upgrader stage
+			fprintf(stderr, "not in upgrader stage try to enter, stage %d\n", err);
+			i2c_smbus_write_byte_data(fd, REG_CMD, CMD_MCU_UPDATE);
+			sleep(1);
+		} else
+			break;
+	} while (1);
+	return 0;
+}
+
 int i2c_bus_init(int bus, int addr)
 {
 	int fd;
@@ -356,23 +405,6 @@ int i2c_bus_init(int bus, int addr)
 		return -1;
 	}
 
-	//check if we are in upgrader stage
-	do {
-		err = i2c_smbus_read_byte_data(fd, REG_STAGE);
-		if (err < 0) {
-			fprintf(stderr, "i2c bus cannot access\n");
-			close(fd);
-			return -1;
-		}
-		if (err != STAGE_UPGRADER) {
-			// we are not in upgrader stage
-			fprintf(stderr, "not in upgrader stage try to enter, stage %d\n", err);
-			i2c_smbus_write_byte_data(fd, REG_CMD, CMD_MCU_UPDATE);
-			sleep(1);
-		} else
-			break;
-	} while (1);
-
 	return fd;
 }
 
@@ -380,8 +412,6 @@ void i2c_bus_destroy(int fd)
 {
 	close(fd);
 }
-
-static int fd;
 
 const char *usage_str[] = {
 	"upgrade bus addr file",
@@ -408,6 +438,10 @@ int version(void)
 {
 
 	int err;
+
+	if (enter_upgrader())
+		return -1;
+
 	if (i2c_smbus_write_byte_data(fd, REG_LOG, 0)) {
 		fprintf(stderr, "failed to reset log pointer\n");
 		return -1;
@@ -424,6 +458,67 @@ int version(void)
 	} while (err);
 	printf("\n");
 	return 0;
+}
+
+int is_valid_firmware(void *image, unsigned long size)
+{
+	struct fwinfo *fwinfo;
+	int i, j, firmware_type, err;
+	int board_type;
+
+	fwinfo = (void *)(((char *)image) + size - 128 + 16);
+
+	/* check magic */
+	if (memcmp(fwinfo->magic, "MCUF", sizeof(fwinfo->magic))) {
+		/* lagecy firmware, that does not contain firmware type,
+		 * let it go
+		 */
+		return true;
+	}
+
+	err = i2c_smbus_read_byte_data(fd, REG_STAGE);
+	if (err < 0) {
+		fprintf(stderr, "i2c bus cannot access\n");
+		return false;
+	}
+
+	if (err == STAGE_UPGRADER) {
+		/* user execute this command when mcu is working on upgrader
+		 * stage, i2c upgrader does not support getting board type.
+		 * let it go
+		 */
+		return true;
+	}
+	/* try to get board type */
+	err = i2c_smbus_read_byte_data(fd, REG_BOARD_TYPE);
+	if (err < 0) {
+		fprintf(stderr,
+			"i2c bus cannot access\n");
+		close(fd);
+		return false;
+	}
+	board_type = err;
+
+	firmware_type = fwinfo->type;
+
+	for (i = 0; i < ARRAY_SIZE(firmware_table); ++i) {
+		if (firmware_table[i].id[0] == firmware_type)
+			break;
+	}
+
+	if (i == ARRAY_SIZE(firmware_table)) {
+		/* unknown firmware type? strange */
+		fprintf(stderr, "firmware not supported by this util\n");
+		return false;
+	}
+
+	for (j = 0; firmware_table[i].id[j] >= 0; ++j) {
+		if (firmware_table[i].id[j] == board_type)
+			return true;
+	}
+
+	fprintf(stderr, "firmware and board not match\n");
+	return false;
 }
 
 int is_invalid(void *_image, unsigned long size)
@@ -449,6 +544,12 @@ int is_invalid(void *_image, unsigned long size)
 	if (memcmp(expected_dgst, calculated_dgst, 16)) {
 		fprintf(stderr, "md5 check failed\n");
 		fprintf(stderr, "maybe not a valid upgrade file or being damaged\n");
+		return -1;
+	}
+
+	/* check board type */
+	if (!is_valid_firmware(_image, size)) {
+		fprintf(stderr, "firmware and board not match\n");
 		return -1;
 	}
 
@@ -485,6 +586,11 @@ int mcu_upgrade(char *file)
 		return -1;
 
 	if (is_invalid(img.buf, img.size)) {
+		err = -1;
+		goto unload;
+	}
+
+	if (enter_upgrader()) {
 		err = -1;
 		goto unload;
 	}
@@ -545,6 +651,11 @@ int mcu_upgrade_full(char *file)
 		goto unload;
 	}
 
+	if (enter_upgrader()) {
+		err = -1;
+		goto unload;
+	}
+
 	// program image
 	if (i2c_program_flash(fd, img.buf, img.size, 0, 1)) {
 		err = -1;
@@ -560,6 +671,9 @@ unload:
 int mcu_cksum(unsigned long offset, unsigned long length)
 {
 	unsigned char calc_cksum[16];
+
+	if (enter_upgrader())
+		return -1;
 	if (i2c_get_checksum(fd, offset, length, calc_cksum)) {
 		return -1;
 	}
@@ -589,6 +703,9 @@ int mcu_read(unsigned long offset, unsigned long length)
 		fprintf(stderr, "cannot allocate memory\n");
 		return -1;
 	}
+
+	if (enter_upgrader())
+		return -1;
 
 	unsigned long i, xoffset;
 
@@ -626,6 +743,9 @@ int mcu_write(unsigned long offset, char *file)
 		err = -1;
 		goto unload;
 	}
+
+	if (enter_upgrader())
+		return -1;
 
 	if (i2c_program_flash(fd, comp.buf, comp.size, offset, 1)) {
 		fprintf(stderr, "offset must 128 bytes aligned\n");

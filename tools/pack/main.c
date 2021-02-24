@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 	int err;
 	int (*pack)(int argc, char *argv[]);
 
-	if (argc == 7)
+	if (argc == 7 || argc == 8)
 		pack = pack_v1;
 	else
 		pack = pack_v2;

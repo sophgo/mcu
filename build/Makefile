@@ -1,4 +1,4 @@
-PROJ ?= sc5pro
+PROJ ?= sc5h
 TOP ?= ..
 OUTPUT ?= $(PROJ)
 
