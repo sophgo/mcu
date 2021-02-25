@@ -173,7 +173,7 @@ extern I2C_REGS i2c_regs;
 #define MAC0_Addr	(EEPROM_BASE_ADDR + 32 * 0)
 #define MAC1_Addr	(EEPROM_BASE_ADDR + 32 * 1)
 
-#define MCU_VERSION	0x0a
+#define MCU_VERSION	0x0b
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
