@@ -8,7 +8,6 @@
 
 #include "i2c_bm.h"
 #include "mcu.h"
-#include "wdt.h"
 #include "ds1307.h"
 #include "soc_eeprom.h"
 #include "eeprom.h"

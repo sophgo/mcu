@@ -38,7 +38,7 @@ int main(void)
 	clock_init();
 	system_init();
 
-	debug("\nBITMAIN SOPHONE SM5MINI -- %s\n", VERSION);
+	debug("\nBITMAIN SOPHONE SM5MINI\n");
 
 	if (get_stage() == RUN_STAGE_LOADER && check_app() == 0)
 		app_start();

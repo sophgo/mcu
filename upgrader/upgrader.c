@@ -261,15 +261,8 @@ static void i2c3_init(uint8_t addr, uint8_t mask)
 	i2c_slave_start(&i2c3);
 }
 
-#ifndef VERSION
-#define VERSION	"no-version"
-#endif
-static const char version[32] = VERSION;
-
 void upgrader_init(void)
 {
-	upgrader_log(version);
-
 	switch(project) {
 	case EVB:
 	case SC5H3:

@@ -127,12 +127,14 @@ __weak void soc_wdt_reset(void)
 	i2c_regs.cmd_reg = 0x03;
 }
 
-static void wdt_reset(void)
+void wdt_reset(void)
 {
+	__disable_irq();
 	memset(&wdt_ctx, 0, sizeof(wdt_ctx));
 	wdt_ctx.clock = (37 * 1000) / 128;
 	wdt_ctx.counter = wdt_ctx.counter_shadow =
 		wdt_ctx.timeout = wdt_ctx.timeout_shadow = 0xffffffff;
+	__enable_irq();
 }
 
 void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)

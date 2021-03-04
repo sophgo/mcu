@@ -9,5 +9,6 @@
 #define WDT_H_
 
 extern void wdt_init(void);
+extern void wdt_reset(void);
 
 #endif /* WDT_H_ */

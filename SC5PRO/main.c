@@ -46,7 +46,7 @@ int main(void)
 	i2c_master_init(I2C2);
 	i2c_master_init(I2C3);
 
-	debug("BITMAIN SOPHONE SC5PRO -- %s\n", VERSION);
+	debug("BITMAIN SOPHONE SC5PRO\n");
 
 	tca9548a_init();
 

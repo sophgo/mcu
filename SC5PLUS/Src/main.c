@@ -30,7 +30,6 @@
 /* USER CODE BEGIN Includes */
 #include "bm_common_func.h"
 #include "mcu.h"
-#include "wdt.h"
 #include "upgrade.h"
 /* USER CODE END Includes */
 
@@ -66,7 +65,6 @@ void SystemClock_Config(void);
 
 void HAL_LPTIM_CompareMatchCallback(LPTIM_HandleTypeDef *hlptim)
 {
-	wdt_isr();
 	mcu_tick_isr();
 }
 

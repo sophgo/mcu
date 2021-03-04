@@ -23,7 +23,7 @@ static void console_putc(void *console_hint, char c)
 
 static void cmd_hello(void *hint, int argc, char const *argv[])
 {
-	printf("Hello BITMAIN SM5 PCIE adapter, version %s\n\r", VERSION);
+	printf("Hello BITMAIN SM5 PCIE adapter\n\r");
 }
 
 static void cmd_current(void *hint, int argc, char const *argv[])

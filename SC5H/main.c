@@ -35,7 +35,7 @@ int main(void)
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
 
-	debug("BITMAIN SOPHONE SC5H -- %s\r\n", VERSION);
+	debug("BITMAIN SOPHONE SC5H\r\n");
 
 	i2c1_slave_ctx.id = 1;
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,

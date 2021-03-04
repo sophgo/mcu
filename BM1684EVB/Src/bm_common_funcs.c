@@ -289,6 +289,8 @@ void PowerDOWN(void)
 	Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
 
 	i2c_regs.cmd_reg  = 0;
+
+	wdt_reset();
 }
 
 void BM1684_RST(void)
@@ -297,6 +299,7 @@ void BM1684_RST(void)
 
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
+	wdt_reset();
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 	Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
@@ -621,4 +624,5 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	timer_start(30);
 	is_chip_ready = 0;
+	wdt_reset();
 }

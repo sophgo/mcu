@@ -10,6 +10,14 @@ Version 10:
 
     1. add data eeprom lock
 
+Version 11:
+
+    1. Add board type in firmware
+
+version 12:
+
+    1. reset watchdog on system startup
+
 ## SC5H
 
 Version 4:
@@ -120,6 +128,32 @@ Version 47:
 Version 48:
 
     1. Wide temperature operating core board adaption
+
+Version 49:
+
+    1. Add board type in firmware
+
+version 50:
+
+    1. reset watchdog on system startup
+
+## SM5MIN
+Version 0:
+
+    1. first release
+
+Version 1:
+
+    1. fixbug: pcie reboot failed
+
+Version 3:
+
+    1. Add board type in firmware
+    2. Fixbug, not power off 1.8v on startup
+
+version 4:
+
+    1. reset watchdog on system startup
 
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 

@@ -6,6 +6,7 @@
 #include <debug.h>
 #include <chip.h>
 #include <tick.h>
+#include <wdt.h>
 
 static volatile int is_chip_ready;
 static int pcie_task;
@@ -20,6 +21,7 @@ void exti4_15_isr(void)
 	else {
 		chip_disable();
 		tick_set_task_interval(pcie_task, 30);
+		wdt_reset();
 		debug("pcie e-reset falling edge\n");
 	}
 

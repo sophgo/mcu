@@ -1,7 +1,5 @@
 TARGET = upgrader
 
-VERSION := $(shell ./version.sh $(TARGET))
-
 CROSS_COMPILE = arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)gcc
@@ -31,7 +29,6 @@ CFLAGS = $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) -std=gnu11 \
 	 -ffunction-sections -fdata-sections -Wall -Werror \
 	 -DUSE_HAL_DRIVER -DSTM32L071xx -D"__weak=__attribute__((weak))" \
 	 -D__packed="__attribute__((__packed__))" \
-	 -DVERSION='"$(VERSION)"' \
 	 $(foreach dir, $(INCDIR), -I$(dir))
 
 ASFLAGS = $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) -x assembler-with-cpp \

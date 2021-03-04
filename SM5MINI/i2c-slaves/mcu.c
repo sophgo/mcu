@@ -9,6 +9,7 @@
 #include <eeprom.h>
 #include <power.h>
 #include <se5.h>
+#include <wdt.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -93,10 +94,12 @@ void mcu_process(void)
 			se5_power_off_board();
 		else
 			power_off();
+		wdt_reset();
 		break;
 	case CMD_RESET:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
 		chip_reset();
+		wdt_reset();
 		break;
 	case CMD_REBOOT:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
@@ -107,6 +110,7 @@ void mcu_process(void)
 			power_on();
 			chip_reset();
 		}
+		wdt_reset();
 		break;
 	case CMD_UPDATE:
 		i2c_upgrade_start();

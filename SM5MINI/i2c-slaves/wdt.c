@@ -4,6 +4,7 @@
  *  Created on: Apr 25, 2019
  *      Author: weic
  */
+#include <libopencmsis/core_cm3.h>
 #include <stdio.h>
 #include <string.h>
 #include <i2c_slave.h>
@@ -13,6 +14,8 @@
 #include <eeprom.h>
 #include <tick.h>
 #include <mcu.h>
+#include <project.h>
+#include <se5.h>
 
 /* magic number for different type of watchdogs, no need now */
 /* this byte is used to handle some different software implementations of wdt */
@@ -119,12 +122,14 @@ static struct i2c_slave_op slave = {
 	.stop = wdt_stop,
 };
 
-static void wdt_reset(void)
+void wdt_reset(void)
 {
+	__disable_irq();
 	memset(&wdt_ctx, 0, sizeof(wdt_ctx));
 //	wdt_ctx.clock = (37 * 1000) / 128;
 	wdt_ctx.counter = wdt_ctx.counter_shadow =
 		wdt_ctx.timeout = wdt_ctx.timeout_shadow = 0xffffffff;
+	__enable_irq();
 }
 
 void wdt_process(void)
@@ -134,7 +139,10 @@ void wdt_process(void)
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		mcu_raise_interrupt(MCU_INT_WDT_RST);
 		wdt_reset();	/* reset to initial state */
-		chip_reset();
+		if (get_board_type() == SM5ME)
+			se5_reset_board();
+		else
+			chip_reset();
 	}
 }
 

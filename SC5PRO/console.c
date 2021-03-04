@@ -27,7 +27,7 @@ static void console_putc(void *console_hint, char c)
 
 static void cmd_hello(void *hint, int argc, char const *argv[])
 {
-	printf("Hello BITMAIN SOPHON, version %s\n", VERSION);
+	printf("Hello BITMAIN SOPHON\n");
 }
 
 

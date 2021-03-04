@@ -11,6 +11,9 @@
 #include "lptim.h"
 #include "stm32l0xx_hal.h"
 #include "soc_eeprom.h"
+#include "tca6416a.h"
+#include "pic.h"
+#include "se5_gpioex.h"
 
 /* magic number for different type of watchdogs, no need now */
 /* this byte is used to handle some different software implementations of wdt */
@@ -117,21 +120,26 @@ static struct i2c_slave_op slave = {
 	.stop = wdt_stop,
 };
 
-static void wdt_reset(void)
+void wdt_reset(void)
 {
+	__disable_irq();
 	memset(&wdt_ctx, 0, sizeof(wdt_ctx));
 //	wdt_ctx.clock = (37 * 1000) / 128;
 	wdt_ctx.counter = wdt_ctx.counter_shadow =
 		wdt_ctx.timeout = wdt_ctx.timeout_shadow = 0xffffffff;
+	__enable_irq();
 }
 
 void soc_wdt_reset_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
-		BM1684_RST();
+		if (i2c_regs.vender == VENDER_SE5 &&
+		    (is_pic_available || is_tca6416a_available))
+			se5_reset_board();
+		else
+			BM1684_RST();
 		i2c_regs.intr_status1 = WDT_RST;
-		wdt_reset();	/* reset to initial state */
 	}
 }
 

@@ -272,17 +272,9 @@ void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *instance)
     HAL_I2C_Init(instance);
 }
 
-static int pin_state_error;
-static int pin_state_error_line;
-
 #define GPIO_SET_CHECK(port, pin, state)			\
 	do {							\
 		HAL_GPIO_WritePin(port, pin, state);		\
-		HAL_Delay(1);					\
-		if (HAL_GPIO_ReadPin(port, pin) != state) {	\
-			pin_state_error = 1;			\
-			pin_state_error_line = __LINE__;	\
-		}						\
 	} while (0)
 
 static inline void led_on(void);
@@ -345,6 +337,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	timer_start(30);
 	is_chip_ready = 0;
 	is_chip_alive = 0;
+	wdt_reset();	/* reset to initial state */
 }
 
 
@@ -631,6 +624,8 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 
 	i2c_slave_reset(&i2c_ctx3);
+
+	wdt_reset();	/* reset to initial state */
 }
 
 void BM1684_RST(void)
@@ -639,6 +634,7 @@ void BM1684_RST(void)
 
 	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
+	wdt_reset();	/* reset to initial state */
 	GPIO_SET_CHECK(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
 	return ;
@@ -693,9 +689,7 @@ static inline void led_flicker_high(void)
 static void led_update(void)
 {
 
-	if (pin_state_error)
-		led_flicker_high();
-	else if (i2c_regs.intr_status1 & (OVER_TEMP_POWEROFF | OVER_TEMP_ALERT))
+	if (i2c_regs.intr_status1 & (OVER_TEMP_POWEROFF | OVER_TEMP_ALERT))
 		led_on();
 	else if (i2c_regs.power_good)
 		led_flicker();

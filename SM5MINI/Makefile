@@ -9,9 +9,6 @@ else
 	E = 1>/dev/null 2>&1
 endif
 
-
-VERSION := $(shell ./version.sh $(TARGET))
-
 OPENCM3_DIR = ../libopencm3
 
 OUTDIR = build
@@ -36,7 +33,7 @@ OPT_CFLAGS = -g -O2
 ARCH_CFLAGS = -mthumb -mcpu=cortex-m0plus
 SPEC_CFLAGS = -specs=nano.specs
 
-CPPFLAGS = -DVERSION='"$(VERSION)"' $(foreach dir, $(INCDIR), -I$(dir))
+CPPFLAGS = $(foreach dir, $(INCDIR), -I$(dir))
 CFLAGS = $(CPPFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) \
 	  -std=gnu11 -ffunction-sections -fdata-sections -Wall -Werror \
 	  -DSTM32L0

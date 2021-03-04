@@ -122,7 +122,7 @@ int main(void)
 
 	tick_init(1000);
 
-	info("\r\nBITMAIN SOPHONE SM5 PCIE BOARD -- %s\r\n", VERSION);
+	info("\r\nBITMAIN SOPHONE SM5 PCIE BOARD\r\n");
 	info("%ld samples acquired\r\n", (unsigned long)info.samples);
 
 
