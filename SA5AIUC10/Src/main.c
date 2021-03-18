@@ -340,7 +340,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	wdt_reset();	/* reset to initial state */
 }
 
-
+#define isl91212_voltage(v, val)				\
+	do {							\
+		const int step = 1200;				\
+		uint16_t dac = (v * 1000 * 1000) / step;	\
+		((uint8_t *)val)[0] = (dac >> 2) & 0xff;	\
+		((uint8_t *)val)[1] = (dac & 0x3) << 6;		\
+	} while (0)
 
 void PowerON(void)
 {
@@ -348,8 +354,6 @@ void PowerON(void)
 	i2c_regs.cause_pwr_down = 0;
 	uint8_t i = 0;
 	uint8_t pcie_mode = 0;
-
-	I2C_ClearBusyFlagErratum(&hi2c2);
 
 	if (clean_pmic()) {
 		goto poweron_fail;
@@ -363,8 +367,7 @@ void PowerON(void)
 	tmp[0] = 0xE5;
 	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, tmp, 1, 1000));// enable buck1-3
 
-	tmp[0] = 0xD0;
-	tmp[1] = 0x00;
+	isl91212_voltage(1, tmp);
 	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK1_DVS0CFG1,1, tmp, 2, 1000));// LDO1V_IN
 
 	HAL_Delay(2);
@@ -375,6 +378,18 @@ void PowerON(void)
 		goto poweron_fail;
 	}
 
+	isl91212_voltage(1.1, tmp);
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, tmp, 2, 1000));//DDR_VDDQ 1.1v
+#if 0
+	/* LPDDR4 */
+	isl91212_voltage(1.1, tmp);
+	i2c_regs.ddr = 1;
+#else
+	/* LPDDR4X */
+	isl91212_voltage(0.6, tmp);
+	i2c_regs.ddr = 0;
+#endif
+	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, tmp, 2, 1000));//DDR*_DDR_VDDQLP 0.6v
 
 	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
@@ -431,22 +446,7 @@ void PowerON(void)
 
 	HAL_GPIO_WritePin(GPIOA, GPIO3_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
-	tmp[0] = 0xE5;
-	tmp[1] = 0x00;
-	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK2_DVS0CFG1,1, tmp, 2, 1000));//DDR_VDDQ 1.1v
-	HAL_Delay(1);
-#if 0  //DDR4
-	tmp[0] = 0xE5;
-	tmp[1] = 0x00;
-	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, tmp, 2, 1000));//DDR*_DDR_VDDQLP 1.1v
-	i2c_regs.ddr = 1;
-#else //ddr4x
-	tmp[0] = 0x7D;//1.8ms
-	tmp[1] = 0x00;//1.8ms
-	PMIC_PWR_ON_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, BUCK3_DVS0CFG1,1, tmp, 2, 1000));//DDR*_DDR_VDDQLP 0.6v
-	i2c_regs.ddr = 0;
-#endif
-	HAL_Delay(1);//5ms
+
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_TPU_MEM_Pin, GPIO_PIN_RESET);
 	HAL_Delay(2);
 #if 0 //PG can not be detect in some board
@@ -589,8 +589,6 @@ void PowerDOWN(void)
 	HAL_GPIO_Init(PCIE_RST_MCU_GPIO_Port, &GPIO_InitStruct);
 
 	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
-
-	I2C_ClearBusyFlagErratum(&hi2c2);
 
 	i2c_regs.power_good = 0;
 	clean_pmic();
