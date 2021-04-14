@@ -9,6 +9,7 @@
 #include <libopencm3/cm3/nvic.h>
 #include <dbgi2c.h>
 #include <tick.h>
+#include <timer.h>
 
 #define DBGI2C_ADDR_BASE	0x28
 #define DBGI2C_I2C_MASTER	I2C2
@@ -202,22 +203,53 @@ void dbgi2c_test(void)
 	}
 }
 
+static void dbgi2c_collect(void);
+
 /* i2c master operations */
-#define DBGI2C_MCU_INFO_BASE	0x201bf00
+#define DBGI2C_MCU_INFO_BASE	0x201bf00ULL
 void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 {
 	int i;
 
-	for (i = 0; i < sizeof(struct dbgi2c_info) / 4; ++i)
+	for (i = 0; i < sizeof(struct dbgi2c_info) / 4; ++i) {
 		dbgi2c_write32(idx, DBGI2C_MCU_INFO_BASE + i * 4,
 			       ((uint32_t *)info)[i]);
+
+	}
+
+	if (idx == 0)
+		dbgi2c_collect();
+
 }
 
 /* i2c slave operations */
 
 #define DBGI2C_SLAVE_BASE	0x60
-#define DBGI2C_SOC_INFO_BASE	0x201bf80
-#define DBGI2C_REG_MASK		(128 - 1)
+#define DBGI2C_SOC_INFO_BASE	0x201bf80ULL
+#define DBGI2C_REG_MASK		(0xff)
+#define CHIP_MAP_SIZE		0x30
+
+#define DBGI2C_SOC_INFO_TEMP_OFFSET	0
+#define DBGI2C_SOC_INFO_ADDR(reg)	(DBGI2C_SOC_INFO_BASE +	\
+					 DBGI2C_SOC_INFO_ ## reg ## _OFFSET)
+
+static uint8_t dbgi2c_chip_map[CHIP_MAP_SIZE];
+static uint8_t soc_temp[8];
+
+static void dbgi2c_collect(void)
+{
+	int i;
+
+	for (i = 0; i < sizeof(dbgi2c_chip_map) / 4; ++i) {
+		dbgi2c_read32(0, DBGI2C_SOC_INFO_BASE + i * 4,
+			      &((uint32_t *)dbgi2c_chip_map)[i]);
+	}
+
+	for (i = 0; i < 8; ++i) {
+		timer_udelay(100);
+		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(TEMP), &soc_temp[i]);
+	}
+}
 
 struct dbgi2c_i2c_ctx {
 	int set_idx;
@@ -244,18 +276,13 @@ static void dbgi2c_i2c_slave_match(void *priv, uint8_t addr,  int dir)
 
 static void dbgi2c_i2c_slave_write(void *priv, uint8_t data)
 {
-	uint64_t soc_addr;
-
 	if (ctx.set_idx) {
 		idx_set(data);
 		ctx.set_idx = 0;
 		return;
 	}
 
-	if (chip_is_enabled()) {
-		soc_addr = DBGI2C_SOC_INFO_BASE + ctx.idx;
-		dbgi2c_write8(ctx.soc, soc_addr, data);
-	}
+	/* ignore write, just increase index */
 
 	idx_inc();
 }
@@ -263,13 +290,21 @@ static void dbgi2c_i2c_slave_write(void *priv, uint8_t data)
 static uint8_t dbgi2c_i2c_slave_read(void *priv)
 {
 	uint8_t data = 0;
-	uint64_t soc_addr;
+	int soc = ctx.soc % 8;
 
 	if (chip_is_enabled()) {
-		soc_addr = DBGI2C_SOC_INFO_BASE + ctx.idx;
-		dbgi2c_read8(ctx.soc, soc_addr, &data);
+		switch (ctx.idx) {
+		case DBGI2C_SOC_INFO_TEMP_OFFSET:
+			data = soc_temp[soc];
+			break;
+		default:
+			if (ctx.idx < sizeof(dbgi2c_chip_map))
+				data = dbgi2c_chip_map[ctx.idx];
+			else
+				data = 0xff;
+		}
 	} else {
-		data = (ctx.soc << 8) | ctx.idx;
+		data = (soc << 8) | ctx.idx;
 	}
 
 	idx_inc();
