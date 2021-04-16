@@ -56,33 +56,6 @@ uint16_t addr_offset = 0x0;
   */
 //#define HAL_MAX_DELAY_BM      0x00007FFFU
 
-enum {
-	SYS_RST_MODE_OUTPUT = 0,
-	SYS_RST_MODE_INPUT,
-};
-
-void Convert_sysrst_gpio(int io)
-{
-	  GPIO_InitTypeDef GPIO_InitStruct = {0};
-	  if (io == SYS_RST_MODE_INPUT) {//input
-		  /*Configure GPIO pin : PtPin */
-		  GPIO_InitStruct.Pin = SYS_RST_X_Pin;
-		  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-		  GPIO_InitStruct.Pull = GPIO_PULLUP;
-		  HAL_GPIO_Init(SYS_RST_X_GPIO_Port, &GPIO_InitStruct);
-	  } else {
-		  /*Configure GPIO pin Output Level */
-		    HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin, GPIO_PIN_RESET);
-		  /*Configure GPIO pins : PCPin PCPin PCPin */
-		    GPIO_InitStruct.Pin = SYS_RST_X_Pin;
-		    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-		    GPIO_InitStruct.Pull = GPIO_NOPULL;
-		    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-		    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-	  }
-
-}
-
 void HAL_Delay(uint32_t Delay)
 {
   uint32_t tickstart = HAL_GetTick();
@@ -146,7 +119,7 @@ void PowerON(void)
 	val[0] = 0xF5;
 	HAL_I2C_Mem_Write(&hi2c2,PMIC_ADDR, IO_MODECTRL,1, val, 1, 1000);// 1.2v
 
-	HAL_Delay(30);
+	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_SET);
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN1_ISL68127_Pin, GPIO_PIN_SET);
@@ -235,9 +208,6 @@ void PowerON(void)
 	//delay 30ms until power good and can detect SYS_RST signal
 	HAL_Delay(30);
 
-
-	Convert_sysrst_gpio(SYS_RST_MODE_OUTPUT);
-
 	HAL_GPIO_WritePin(GPIOC, SYS_RST_X_Pin, GPIO_PIN_SET);
 	HAL_Delay(30);
 	HAL_GPIO_WritePin(GPIOA, DDR_PWR_GOOD_Pin, GPIO_PIN_SET);
@@ -248,16 +218,12 @@ void PowerON(void)
 			;
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
 
-	Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
-
 	i2c_regs.power_good = 1;
 	i2c_regs.cmd_reg  = 0;
 }
 
 void PowerDOWN(void)
 {
-	Convert_sysrst_gpio(SYS_RST_MODE_OUTPUT);
-
 	clean_pmic();
 	HAL_Delay(100);
 
@@ -286,8 +252,6 @@ void PowerDOWN(void)
 	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
 
-	Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
-
 	i2c_regs.cmd_reg  = 0;
 
 	wdt_reset();
@@ -295,14 +259,10 @@ void PowerDOWN(void)
 
 void BM1684_RST(void)
 {
-	Convert_sysrst_gpio(SYS_RST_MODE_OUTPUT);
-
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	HAL_Delay(30);
 	wdt_reset();
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_SET);
-
-	Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
 
 	i2c_regs.cmd_reg  = 0;
 
@@ -601,16 +561,35 @@ static inline int timer_is_timeout(void)
 	return is_timeout;
 }
 
+static inline void led_set(unsigned int led, unsigned int on)
+{
+	const struct {
+		GPIO_TypeDef *port;
+		uint16_t pin;
+	} led_table[] = {
+		{STATUS_LED0_GPIO_Port, STATUS_LED0_Pin},
+		{STATUS_LED1_GPIO_Port, STATUS_LED1_Pin},
+	};
+
+	int state = on ? GPIO_PIN_SET : GPIO_PIN_RESET;
+
+	HAL_GPIO_WritePin(led_table[led].port,
+			  led_table[led].pin,
+			  state);
+}
+
 void poll_pcie_rst(void)
 {
+	GPIO_PinState prst = HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port,
+					      PCIEE_RST_X_MCU_Pin);
+
+	led_set(0, prst);
+
 	__disable_irq();
 	if (is_chip_ready) {
-		if (GPIO_PIN_SET == HAL_GPIO_ReadPin(PCIEE_RST_X_MCU_GPIO_Port,
-						     PCIEE_RST_X_MCU_Pin)) {
-
+		if (GPIO_PIN_SET == prst) {
 			HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin,
 					  GPIO_PIN_SET);
-			Convert_sysrst_gpio(SYS_RST_MODE_INPUT);
 		}
 	} else {
 		is_chip_ready = timer_is_timeout();
@@ -620,9 +599,10 @@ void poll_pcie_rst(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	Convert_sysrst_gpio(SYS_RST_MODE_OUTPUT);
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	timer_start(30);
 	is_chip_ready = 0;
+	/* change 1684 working mode to pcie */
+	i2c_regs.mode_flag = 2;
 	wdt_reset();
 }

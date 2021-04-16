@@ -194,6 +194,10 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir $@		
 
+
+burn: $(BUILD_DIR)/$(TARGET_LOADER).bin
+	st-flash write $< 0x08000000
+
 #######################################
 # clean up
 #######################################
