@@ -144,126 +144,30 @@ int clean_pmic(void);
 void I2C_ClearBusyFlagErratum(I2C_HandleTypeDef *instance)
 {
     GPIO_InitTypeDef GPIO_InitStruct;
-    int timeout =100;
-    int timeout_cnt=0;
 
     // 1. Clear PE bit.
     instance->Instance->CR1 &= ~(0x0001);
 
-    //  2. Configure the SCL and SDA I/Os as General Purpose Output Open-Drain, High level (Write 1 to GPIOx_ODR).
+    //  2. config scl and sdl to gpio output mode
     GPIO_InitStruct.Pin = PMIC_SCL_Pin|PMIC_SDA_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF6_I2C2;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    //fix tmp451 hold I2C bus BUG. stay low for 40ms ,make sure I2C slave can be reset by themselves
+    // 3. set scl and sda to low for 40ms, tmp451 will release i2c bus
     HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_RESET);
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
     HAL_GPIO_WritePin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin, GPIO_PIN_RESET);
-    HAL_Delay(30);
+    HAL_Delay(40);
 
-    HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_SET);
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    asm volatile ("nop");
-    HAL_GPIO_WritePin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin, GPIO_PIN_SET);
-
-
-    // 3. Check SCL and SDA High level in GPIOx_IDR.
-    while (GPIO_PIN_SET != HAL_GPIO_ReadPin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin))
-    {
-        timeout_cnt++;
-        if(timeout_cnt>timeout)
-            return;
-    }
-
-    while (GPIO_PIN_SET != HAL_GPIO_ReadPin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin))
-    {
-        //Move clock to release I2C
-        HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_RESET);
-        asm("nop");
-        HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_SET);
-
-        timeout_cnt++;
-        if(timeout_cnt>timeout)
-            return;
-    }
-
-    // 4. Configure the SDA I/O as General Purpose Output Open-Drain, Low level (Write 0 to GPIOx_ODR).
-    HAL_GPIO_WritePin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin, GPIO_PIN_RESET);
-
-    //  5. Check SDA Low level in GPIOx_IDR.
-    while (GPIO_PIN_RESET != HAL_GPIO_ReadPin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin))
-    {
-        timeout_cnt++;
-        if(timeout_cnt>timeout)
-            return;
-    }
-
-    // 6. Configure the SCL I/O as General Purpose Output Open-Drain, Low level (Write 0 to GPIOx_ODR).
-    HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_RESET);
-
-    //  7. Check SCL Low level in GPIOx_IDR.
-    while (GPIO_PIN_RESET != HAL_GPIO_ReadPin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin))
-    {
-        timeout_cnt++;
-        if(timeout_cnt>timeout)
-            return;
-    }
-
-    // 8. Configure the SCL I/O as General Purpose Output Open-Drain, High level (Write 1 to GPIOx_ODR).
-    HAL_GPIO_WritePin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin, GPIO_PIN_SET);
-
-    // 9. Check SCL High level in GPIOx_IDR.
-    while (GPIO_PIN_SET != HAL_GPIO_ReadPin(PMIC_SCL_GPIO_Port, PMIC_SCL_Pin))
-    {
-        timeout_cnt++;
-        if(timeout_cnt>timeout)
-            return;
-    }
-
-    // 10. Configure the SDA I/O as General Purpose Output Open-Drain , High level (Write 1 to GPIOx_ODR).
-    HAL_GPIO_WritePin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin, GPIO_PIN_SET);
-
-    // 11. Check SDA High level in GPIOx_IDR.
-    while (GPIO_PIN_SET != HAL_GPIO_ReadPin(PMIC_SDA_GPIO_Port, PMIC_SDA_Pin))
-    {
-        timeout_cnt++;
-        if(timeout_cnt>timeout)
-            return;
-    }
-
-    // 12. Configure the SCL and SDA I/Os as Alternate function Open-Drain.
+    // 4. reconfig scl and sda to i2c functional pin
     GPIO_InitStruct.Pin = PMIC_SCL_Pin|PMIC_SDA_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF6_I2C2;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-#if 0
-    // STM32L071 donnot have SWRST bit.
-    // It is RXDMAEN at that bit position.
-    // 13. Set SWRST bit in I2Cx_CR1 register.
-    instance->Instance->CR1 |= 0x8000;
-
-    asm("nop");
-
-    // 14. Clear SWRST bit in I2Cx_CR1 register.
-    instance->Instance->CR1 &= ~0x8000;
-
-    asm("nop");
-#endif
 
     // 15. Enable the I2C peripheral by setting the PE bit in I2Cx_CR1 register
     instance->Instance->CR1 |= 0x0001;
@@ -1093,7 +997,6 @@ int main(void)
 			se5_smb_alert();
 			HAL_NVIC_EnableIRQ(I2C3_IRQn);
 			HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
-			se5_led_ctrl();
 		}
 	}
 	/* USER CODE END 3 */

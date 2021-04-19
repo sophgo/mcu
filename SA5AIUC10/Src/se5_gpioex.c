@@ -186,8 +186,15 @@ static inline int is_smb_alert(void)
 		== GPIO_PIN_RESET;
 }
 
+void se5_reset_board(void);
+void se5_error_led_on();
+void se5_error_led_off();
+
 int se5_gpioex_init(void)
 {
+	uint32_t rcc_csr;
+	int i;
+
 	/* reconfig cpld error pin from output to input */
 	/* on sm5, this pin is defined as smbus alert */
 	/* effect low */
@@ -205,6 +212,22 @@ int se5_gpioex_init(void)
 	tca6416a_write(TCA6416A_P1_CFG, P1_CFG);
 	tca6416a_write(TCA6416A_P0_POL, P0_POL);
 	tca6416a_write(TCA6416A_P1_POL, P1_POL);
+
+	rcc_csr = RCC->CSR;
+	/* check if we are software reset by upgrader */
+	if (rcc_csr & RCC_CSR_SFTRSTF) {
+		/* clear soft-reset bit */
+		RCC->CSR = rcc_csr | RCC_CSR_RMVF;
+
+		for (i = 0; i < 5; ++i) {
+			se5_error_led_on();
+			HAL_Delay(100);
+			se5_error_led_off();
+			HAL_Delay(100);
+		}
+
+		se5_reset_board();
+	}
 
 	i2c_slave_register(&i2c_ctx3,&slave);
 
@@ -328,27 +351,5 @@ static inline void se5_error_led_flicker(void)
 		se5_error_led_on();
 	else
 		se5_error_led_off();
-}
-
-void se5_led_ctrl(void)
-{
-#if 0
-	/* no alert as default state */
-	static int alert;
-	static int last_alert;
-
-	if (gpioex_ctx.temp >= 90)
-		alert = 1;
-	else if (gpioex_ctx.temp < 85)
-		alert = 0;
-	/* other situations, remain alert value */
-
-	if (alert)
-		se5_error_led_flicker();
-	else if (last_alert)
-		se5_error_led_off();
-
-	last_alert = alert;
-#endif
 }
 
