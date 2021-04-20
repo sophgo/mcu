@@ -1,3 +1,5 @@
+#include <libopencm3/cm3/nvic.h>
+#include <i2c_master.h>
 #include <string.h>
 #include <project.h>
 #include <i2c_slave.h>
@@ -87,6 +89,11 @@ static void mcu_match(void *priv, int dir)
 
 void mcu_process(void)
 {
+	if (mcu_ctx.cmd == 0)
+		return;
+
+	i2c_peripheral_disable(I2C1);
+	nvic_disable_irq(NVIC_I2C1_IRQ);
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
@@ -103,13 +110,10 @@ void mcu_process(void)
 		break;
 	case CMD_REBOOT:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
-		if (get_board_type() == SM5ME) {
+		if (get_board_type() == SM5ME)
 			se5_reset_board();
-		} else {
-			power_off();
-			power_on();
-			chip_reset();
-		}
+		else
+			chip_popd_reset();
 		wdt_reset();
 		break;
 	case CMD_UPDATE:
@@ -119,6 +123,9 @@ void mcu_process(void)
 		break;
 	}
 	mcu_ctx.cmd = 0;
+	mcu_ctx.cmd_tmp = 0;
+	i2c_peripheral_enable(I2C1);
+	nvic_enable_irq(NVIC_I2C1_IRQ);
 }
 
 static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)

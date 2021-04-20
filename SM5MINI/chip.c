@@ -8,6 +8,7 @@
 #include <debug.h>
 #include <common.h>
 #include <loop.h>
+#include <power.h>
 
 static uint32_t uptime;
 static uint32_t reset_times;
@@ -40,6 +41,16 @@ void chip_reset(void)
 {
 	chip_disable();
 	mdelay(30);
+	uptime = 0;
+	++reset_times;
+	chip_enable();
+}
+
+void chip_popd_reset(void)
+{
+	power_off();
+	mdelay(50);
+	power_on();
 	uptime = 0;
 	++reset_times;
 	chip_enable();

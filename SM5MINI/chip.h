@@ -7,6 +7,7 @@ void chip_init(void);
 void chip_enable(void);
 void chip_disable(void);
 void chip_reset(void);
+void chip_popd_reset(void);
 uint32_t chip_uptime(void);
 uint32_t chip_reset_times(void);
 

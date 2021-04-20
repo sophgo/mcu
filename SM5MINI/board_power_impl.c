@@ -9,7 +9,6 @@ int pmic_channel_a_on(void)
 
 void pmic_channel_a_off(void)
 {
-	mp5475_buck_off(0);
 }
 
 int pmic_channel_d_on(void)

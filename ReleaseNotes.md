@@ -17,6 +17,7 @@ Version 11:
 version 12:
 
     1. reset watchdog on system startup
+    2. fixbug, pcie mode check failed
 
 ## SC5H
 
@@ -33,6 +34,10 @@ Version 6:
 
     1. add data eeprom lock
 
+Version 7:
+
+    1. Add board type in firmware
+
 ## SC5PLUS
 
 Version 6:
@@ -42,6 +47,10 @@ Version 6:
 Version 7:
 
     1. add data eeprom lock
+
+Version 8:
+
+    1. Add board type in firmware
 
 ## SC5PRO
 
@@ -60,6 +69,10 @@ Version 2:
 Version 3:
 
     1. Fixbug, MCU uart console may hangup
+
+Version 4:
+
+    1. fixbug, sc5pro smbus cannot working
 
 ## SA5/SM5/SE5
 
@@ -137,6 +150,10 @@ version 50:
 
     1. reset watchdog on system startup
 
+Version 51:
+
+    1. new feature, se5 motherboard re-power just after upgrade firmware
+
 ## SM5MIN
 Version 0:
 
@@ -154,6 +171,7 @@ Version 3:
 version 4:
 
     1. reset watchdog on system startup
+    2. fixbug, power-on power-off reboot failed
 
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
