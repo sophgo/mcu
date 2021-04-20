@@ -153,6 +153,7 @@ version 50:
 Version 51:
 
     1. new feature, se5 motherboard re-power just after upgrade firmware
+    2. fixbug, power-on power-off reboot failed, on wide temperature operation board
 
 ## SM5MIN
 Version 0:
@@ -166,7 +167,7 @@ Version 1:
 Version 3:
 
     1. Add board type in firmware
-    2. Fixbug, not power off 1.8v on startup
+    2. Fixbug, not power off 1.8v on startup, on wide temperature operation board
 
 version 4:
 
