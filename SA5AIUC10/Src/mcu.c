@@ -68,6 +68,7 @@ static void mcu_process_cmd_slow_start(void)
 	/* faster than execute switch-case every times*/
 	if (i2c_regs.cmd_reg == 0)
 		return;
+
 	switch (i2c_regs.cmd_reg) {
 		/* fast calls */
 		case CMD_CPLD_SWRST:
@@ -86,9 +87,6 @@ static void mcu_process_cmd_slow_start(void)
 		case CMD_CPLD_1684RST:
 		case CMD_BM1684_REBOOT:
 		case CMD_MCU_UPDATE:
-			__HAL_I2C_DISABLE(&hi2c1);
-			HAL_NVIC_DisableIRQ(I2C1_IRQn);
-			//HAL_NVIC_DisableIRQ(I2C3_IRQn);
 			break;
 		default:
 			/* invalid command */
@@ -99,6 +97,12 @@ static void mcu_process_cmd_slow_start(void)
 
 void mcu_process_cmd_slow(void)
 {
+	if (i2c_regs.cmd_reg == 0)
+		return;
+
+	__HAL_I2C_DISABLE(&hi2c3);
+	HAL_NVIC_DisableIRQ(I2C3_IRQn);
+
 	switch (i2c_regs.cmd_reg) {
 	case CMD_CPLD_PWR_ON:
 		PowerON();
@@ -119,15 +123,14 @@ void mcu_process_cmd_slow(void)
 		BM1684_REBOOT();
 		break;
 	case CMD_MCU_UPDATE:
-		HAL_I2C_MspInit(&hi2c1);
 		upgrade_start();
 		break;
 	}
 
 	i2c_regs.cmd_reg = 0;
-	// re-enable i2c controller
-	HAL_NVIC_EnableIRQ(I2C1_IRQn);
-	__HAL_I2C_ENABLE(&hi2c1);
+
+	HAL_NVIC_EnableIRQ(I2C3_IRQn);
+	__HAL_I2C_ENABLE(&hi2c3);
 }
 
 static void mcu_write(void *priv, volatile uint8_t data)
