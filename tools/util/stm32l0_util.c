@@ -71,7 +71,7 @@ struct comp {
 	struct efie efie;
 };
 
-struct {
+static struct {
 	char *name;
 	int id[16];
 } firmware_table[] = {
@@ -93,14 +93,14 @@ struct fwinfo {
 
 static int fd;
 
-void hexdump_string(void *data, unsigned long len)
+static void hexdump_string(void *data, unsigned long len)
 {
 	int i;
 	for (i = 0; i < len; ++i)
 		printf("%02x", ((unsigned char *)data)[i]);
 }
 
-void checksum(void *out, void *in, unsigned long len)
+static void checksum(void *out, void *in, unsigned long len)
 {
 	uint32_t *src = in;
 	char *init = "*BITMAIN-SOPHON*";
@@ -120,7 +120,8 @@ void checksum(void *out, void *in, unsigned long len)
 	memcpy(out, result, sizeof(result));
 }
 
-int i2c_read_i2c_block(int fd, unsigned int reg, void *data, unsigned int len)
+static int i2c_read_i2c_block(int fd, unsigned int reg,
+			      void *data, unsigned int len)
 {
 	int err;
 	int i;
@@ -135,7 +136,7 @@ int i2c_read_i2c_block(int fd, unsigned int reg, void *data, unsigned int len)
 	return 0;
 }
 
-int i2c_send_u32(int fd, __u8 reg, __u32 val)
+static int i2c_send_u32(int fd, __u8 reg, __u32 val)
 {
 	__u8 buf[4];
 	int err;
@@ -154,7 +155,7 @@ int i2c_send_u32(int fd, __u8 reg, __u32 val)
 	return 0;
 }
 
-int i2c_send_page(int fd, void *data, unsigned long offset)
+static int i2c_send_page(int fd, void *data, unsigned long offset)
 {
 	int block, err;
 	if (i2c_send_u32(fd, REG_OFFSET, offset))
@@ -190,8 +191,8 @@ int i2c_send_page(int fd, void *data, unsigned long offset)
 	return 0;
 }
 
-int i2c_get_checksum(int fd, unsigned long offset,
-		     unsigned long length, void *cksum)
+static int i2c_get_checksum(int fd, unsigned long offset,
+			    unsigned long length, void *cksum)
 {
 	unsigned char calc_cksum[16];
 	// start offset
@@ -226,8 +227,8 @@ int i2c_get_checksum(int fd, unsigned long offset,
 	return 0;
 }
 
-int i2c_program_flash(int fd, void *data, unsigned long size,
-		      unsigned long offset, int verify)
+static int i2c_program_flash(int fd, void *data, unsigned long size,
+			     unsigned long offset, int verify)
 {
 	if (offset & (128 - 1)) {
 		fprintf(stderr, "program offset must 128 byte aligned\n");
@@ -281,7 +282,8 @@ int i2c_program_flash(int fd, void *data, unsigned long size,
 	return 0;
 }
 
-int i2c_read_flash(int fd, void *data, unsigned long size, unsigned long offset)
+static int i2c_read_flash(int fd, void *data,
+			  unsigned long size, unsigned long offset)
 {
 	if (offset & (128 - 1)) {
 		fprintf(stderr, "program offset must 128 byte aligned\n");
@@ -305,7 +307,7 @@ int i2c_read_flash(int fd, void *data, unsigned long size, unsigned long offset)
 	return 0;
 }
 
-void print_efie(struct efie *efie)
+static void print_efie(struct efie *efie)
 {
 	printf("offset 0x%08x length 0x%08x checksum ",
 	       efie->offset, efie->length);
@@ -316,13 +318,13 @@ void print_efie(struct efie *efie)
 }
 
 
-void unload_file(struct comp *comp)
+static void unload_file(struct comp *comp)
 {
 	if (comp->buf)
 		free(comp->buf);
 }
 
-int load_file(struct comp *comp, const char *file)
+static int load_file(struct comp *comp, const char *file)
 {
 	int fd;
 	int err = -1;
@@ -365,7 +367,7 @@ close_file:
 	return err;
 }
 
-int enter_upgrader(void)
+static int enter_upgrader(void)
 {
 	int err;
 	//check if we are in upgrader stage
@@ -387,7 +389,7 @@ int enter_upgrader(void)
 	return 0;
 }
 
-int i2c_bus_init(int bus, int addr)
+static int i2c_bus_init(int bus, int addr)
 {
 	int fd;
 	char dev_name[16];
@@ -408,12 +410,12 @@ int i2c_bus_init(int bus, int addr)
 	return fd;
 }
 
-void i2c_bus_destroy(int fd)
+static void i2c_bus_destroy(int fd)
 {
 	close(fd);
 }
 
-const char *usage_str[] = {
+static const char *usage_str[] = {
 	"upgrade bus addr file",
 	"upgrade-full bus addr file",
 	"read bus addr offset length",
@@ -422,19 +424,19 @@ const char *usage_str[] = {
 	"version bus addr",
 };
 
-void usage(void)
+void stm32l0_usage(void)
 {
-#ifndef VERSION
-#define VERSION "unversioned"
-#endif
-	printf("mcu-util %s\n", VERSION " " __DATE__ " " __TIME__);
-	printf("usage:\n");
 	int i;
 	for (i = 0; i < sizeof(usage_str)/sizeof(usage_str[0]); ++i)
 		printf("\tmcu-util %s\n", usage_str[i]);
 }
 
-int version(void)
+static void usage(void)
+{
+	stm32l0_usage();
+}
+
+static int version(void)
 {
 
 	int err;
@@ -460,7 +462,7 @@ int version(void)
 	return 0;
 }
 
-int is_valid_firmware(void *image, unsigned long size)
+static int is_valid_firmware(void *image, unsigned long size)
 {
 	struct fwinfo *fwinfo;
 	int i, j, firmware_type, err;
@@ -521,7 +523,7 @@ int is_valid_firmware(void *image, unsigned long size)
 	return false;
 }
 
-int is_invalid(void *_image, unsigned long size)
+static int is_invalid(void *_image, unsigned long size)
 {
 	unsigned char * const image = _image;
 
@@ -576,7 +578,7 @@ int is_invalid(void *_image, unsigned long size)
 	return 0;
 }
 
-int mcu_upgrade(char *file)
+static int mcu_upgrade(char *file)
 {
 	int err;
 	// load file from disk
@@ -637,7 +639,7 @@ unload:
 	return err;
 }
 
-int mcu_upgrade_full(char *file)
+static int mcu_upgrade_full(char *file)
 {
 	int err;
 	// load file from disk
@@ -668,7 +670,7 @@ unload:
 	return err;
 }
 
-int mcu_cksum(unsigned long offset, unsigned long length)
+static int mcu_cksum(unsigned long offset, unsigned long length)
 {
 	unsigned char calc_cksum[16];
 
@@ -684,7 +686,7 @@ int mcu_cksum(unsigned long offset, unsigned long length)
 	return 0;
 }
 
-int mcu_read(unsigned long offset, unsigned long length)
+static int mcu_read(unsigned long offset, unsigned long length)
 {
 	int err;
 
@@ -730,7 +732,7 @@ free_data:
 	return err;
 }
 
-int mcu_write(unsigned long offset, char *file)
+static int mcu_write(unsigned long offset, char *file)
 {
 	struct comp comp;
 	int err;
@@ -758,10 +760,10 @@ unload:
 	return err;
 }
 
-int main(int argc, char *argv[])
+int stm32l0_main(int argc, char *argv[])
 {
-
-	if (argc < 4) {
+	if (argc < 5) {
+		printf("invalid usage\n");
 		usage();
 		return 1;
 	}

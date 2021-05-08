@@ -107,6 +107,25 @@ static inline __s32 i2c_smbus_read_block_data(int file, __u8 command,
 	}
 }
 
+static inline __s32 i2c_smbus_read_i2c_block_data(int file, __u8 command,
+						  __u8 length, __u8 *values)
+{
+	union i2c_smbus_data data;
+	int i, err;
+	if (length > 32)
+		length = 32;
+	for (i = 1; i <= length; i++)
+		data.block[i] = 0;
+	data.block[0] = length;
+	err = i2c_smbus_access(file,I2C_SMBUS_READ,command,
+			I2C_SMBUS_I2C_BLOCK_DATA, &data);
+
+	for (i = 0; i < length; ++i)
+		values[i] = data.block[i + 1];
+
+	return err;
+}
+
 static inline __s32 i2c_smbus_write_block_data(int file, __u8 command,
 					       __u8 length, __u8 *values)
 {

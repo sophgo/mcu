@@ -1,7 +1,11 @@
 
 extern char __ld_stack_top[0];
+extern void __ld_reset_handler(void);
 
-void __attribute__((weak)) default_isr(void)
+/* real address to thumb mode */
+#define RESET_HANDLER	((void *)((unsigned long)__ld_reset_handler + 1))
+
+void default_isr(void)
 {
 	while (1)
 		;
@@ -94,12 +98,15 @@ void __attribute__((weak, alias("default_isr"))) USART5_IRQHandler(void);
 void __attribute__((weak, alias("default_isr"))) I2C2_WKUP_IRQHandler(void);
 void __attribute__((weak, alias("default_isr"))) USART5_WKUP_IRQHandler(void);
 
+/* we run on sram, but burned into flash, the startup code should run in flash
+ * so Reset_Handler address should located at flash
+ */
+
 void *
 __attribute__((section(".vector"), unused))
-__attribute__((weak))
 exception_table[] = {
 	__ld_stack_top,		/* Top of Stack */
-	Reset_Handler,		/* Reset Handler */
+	RESET_HANDLER,		/* Reset Handler */
 	NMI_Handler,		/* NMI Handler */
 	HardFault_Handler,	/* Hard Fault Handler */
 	MemManage_Handler,	/* MPU Fault Handler */

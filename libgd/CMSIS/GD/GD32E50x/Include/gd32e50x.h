@@ -459,6 +459,7 @@ typedef enum IRQn
 #include "core_cm33.h"
 #include "system_gd32e50x.h"
 #include <stdint.h>
+#include <stddef.h>
 
 /* enum definitions */
 typedef enum {DISABLE = 0, ENABLE = !DISABLE} EventStatus, ControlStatus;

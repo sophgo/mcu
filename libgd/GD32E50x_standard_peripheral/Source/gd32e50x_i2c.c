@@ -1729,3 +1729,146 @@ void i2c2_interrupt_flag_clear(uint32_t i2c_periph, i2c2_interrupt_flag_enum int
 {
     I2C2_STATC(i2c_periph) |= BIT(I2C_BIT_POS2(int_flag));
 }
+
+/*
+ * i2c transfer implementation, from libopencm3 i2c_common_v1.c, stm32f10x
+ * compatible
+ */
+
+/* register definition */
+#define I2C_CR1		I2C_CTL0
+#define I2C_CR2		I2C_CTL1
+#define I2C_DR		I2C_DATA
+
+#define I2C_SR1		I2C_STAT0
+#define I2C_SR2		I2C_STAT1
+
+/* field definition */
+#define I2C_CR1_START	I2C_CTL0_START
+#define I2C_CR1_STOP	I2C_CTL0_STOP
+#define I2C_CR1_ACK	I2C_CTL0_ACKEN
+
+#define I2C_SR1_SB	I2C_STAT0_SBSEND
+#define I2C_SR1_ADDR	I2C_STAT0_ADDSEND
+#define I2C_SR1_BTF	I2C_STAT0_BTC
+#define I2C_SR1_RxNE	I2C_STAT0_RBNE
+
+#define I2C_SR2_BUSY	I2C_STAT1_I2CBSY
+#define I2C_SR2_MSL	I2C_STAT1_MASTER
+
+#define I2C_WRITE	0
+#define I2C_READ	1
+
+static void i2c_disable_ack(uint32_t i2c)
+{
+	I2C_CR1(i2c) &= ~I2C_CR1_ACK;
+}
+
+static void i2c_enable_ack(uint32_t i2c)
+{
+	I2C_CR1(i2c) |= I2C_CR1_ACK;
+}
+
+static void i2c_send_7bit_address(uint32_t i2c, uint8_t slave, uint8_t readwrite)
+{
+	I2C_DR(i2c) = (uint8_t)((slave << 1) | readwrite);
+}
+
+static uint8_t i2c_get_data(uint32_t i2c)
+{
+	return I2C_DR(i2c) & 0xff;
+}
+
+static void i2c_send_data(uint32_t i2c, uint8_t data)
+{
+	I2C_DR(i2c) = data;
+}
+
+static void i2c_send_stop(uint32_t i2c)
+{
+	I2C_CR1(i2c) |= I2C_CR1_STOP;
+}
+
+static void i2c_send_start(uint32_t i2c)
+{
+	I2C_CR1(i2c) |= I2C_CR1_START;
+}
+
+static void i2c_write7_v1(uint32_t i2c, int addr, uint8_t *data, size_t n)
+{
+	while ((I2C_SR2(i2c) & I2C_SR2_BUSY)) {
+	}
+
+	i2c_send_start(i2c);
+
+	/* Wait for master mode selected */
+	while (!((I2C_SR1(i2c) & I2C_SR1_SB)
+		& (I2C_SR2(i2c) & (I2C_SR2_MSL | I2C_SR2_BUSY))));
+
+	i2c_send_7bit_address(i2c, addr, I2C_WRITE);
+
+	/* Waiting for address is transferred. */
+	while (!(I2C_SR1(i2c) & I2C_SR1_ADDR));
+
+	/* Clearing ADDR condition sequence. */
+	(void)I2C_SR2(i2c);
+
+	for (size_t i = 0; i < n; i++) {
+		i2c_send_data(i2c, data[i]);
+		while (!(I2C_SR1(i2c) & (I2C_SR1_BTF)));
+	}
+}
+
+static void i2c_read7_v1(uint32_t i2c, int addr, uint8_t *res, size_t n)
+{
+	i2c_send_start(i2c);
+	i2c_enable_ack(i2c);
+
+	/* Wait for master mode selected */
+	while (!((I2C_SR1(i2c) & I2C_SR1_SB)
+		& (I2C_SR2(i2c) & (I2C_SR2_MSL | I2C_SR2_BUSY))));
+
+	i2c_send_7bit_address(i2c, addr, I2C_READ);
+
+	/* Waiting for address is transferred. */
+	while (!(I2C_SR1(i2c) & I2C_SR1_ADDR));
+	/* Clearing ADDR condition sequence. */
+	(void)I2C_SR2(i2c);
+
+	for (size_t i = 0; i < n; ++i) {
+		if (i == n - 1) {
+			i2c_disable_ack(i2c);
+		}
+		while (!(I2C_SR1(i2c) & I2C_SR1_RxNE));
+		res[i] = i2c_get_data(i2c);
+	}
+	i2c_send_stop(i2c);
+
+	return;
+}
+
+/**
+ * Run a write/read transaction to a given 7bit i2c address
+ * If both write & read are provided, the read will use repeated start.
+ * Both write and read are optional
+ * There are likely still issues with repeated start/stop condtions!
+ * @param i2c peripheral of choice, eg I2C1
+ * @param addr 7 bit i2c device address
+ * @param w buffer of data to write
+ * @param wn length of w
+ * @param r destination buffer to read into
+ * @param rn number of bytes to read (r should be at least this long)
+ */
+void i2c_transfer7(uint32_t i2c, uint8_t addr,
+		   uint8_t *w, size_t wn,
+		   uint8_t *r, size_t rn)
+{
+	if (wn) {
+		i2c_write7_v1(i2c, addr, w, wn);
+	}
+	if (rn) {
+		i2c_read7_v1(i2c, addr, r, rn);
+	} else {
+		i2c_send_stop(i2c);
+	}
+}

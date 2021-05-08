@@ -26,7 +26,6 @@ struct image {
 static struct image *img_alloc(unsigned long size)
 {
 	struct image *img;
-	unsigned long i;
 
 	img = malloc(sizeof(*img) + size * 2);
 	if (img == NULL)
@@ -36,9 +35,6 @@ static struct image *img_alloc(unsigned long size)
 	img->map = img->img + size;
 	img->size = size;
 	memset(img->img, 0x00, size * 2);
-	/* last 16byte store md5 digest */
-	for (i = size - 16; i < size; ++i)
-		((unsigned char *)(img->map))[i] = 1;
 
 	return img;
 }
@@ -93,6 +89,7 @@ int pack_v2(int argc, char *argv[])
 	int err;
 	ezxml_t p;
 	char * __attribute__((unused)) firmware_name = "unknown_firmware";
+	char * __attribute__((unused)) mcu_family_name = "STM32L0";
 	unsigned long firmware_size = 64 * 1024;
 	struct image *img;
 
@@ -116,6 +113,10 @@ int pack_v2(int argc, char *argv[])
 		warn("warn: cannot find firmware name\n");
 
 	firmware_name = p->txt;
+
+	p = ezxml_child(firmware, "family");
+	if (p)
+		mcu_family_name = p->txt;
 
 	p = ezxml_child(firmware, "size");
 	if (p == NULL)
@@ -165,14 +166,25 @@ int pack_v2(int argc, char *argv[])
 	/* append firmware information */
 	int firmware_type = get_firmware_type(firmware_name);
 	if (firmware_type < 0) {
-		error("unknown firmware type\n");
+		error("unknown firmware type %s\n", firmware_name);
 		err = 1;
 		goto err_xml;
 	}
 
+	int mcu_family = get_mcu_family(mcu_family_name);
+	if (mcu_family < 0) {
+		error("unknown mcu family %s\n", mcu_family_name);
+		err = 1;
+		goto err_xml;
+	}
+
+	if (mcu_family == GD32E50)
+		memset(img->img, 0xff, firmware_size);
+
 	struct fwinfo fwinfo;
 	init_fwinfo(&fwinfo);
 	fwinfo.type = firmware_type;
+	fwinfo.mcu_family = mcu_family;
 	if (img_fill(img, img->size - 128 + 16, &fwinfo, sizeof(fwinfo))){
 		error("firmware information out of range\n");
 		err = 1;

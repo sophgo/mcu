@@ -22,8 +22,10 @@ struct efie {
 struct fwinfo {
 	uint8_t		magic[4];
 	uint8_t		type;
-	uint8_t		r0[3];
+	uint8_t		mcu_family;
+	uint8_t		r0[2];
 	uint32_t	timestamp;
+	uint8_t		r1[100];
 } __attribute__((packed));
 
 struct comp {
@@ -33,6 +35,11 @@ struct comp {
 	struct efie efie;
 };
 
+enum {
+	STM32L0 = 0,
+	GD32E50,
+};
+
 void checksum(void *out, void *in, unsigned long len);
 int load_file(struct comp *comp, const char *file);
 void unload_file(struct comp *comp);
@@ -40,5 +47,6 @@ int store_file(void *buf, unsigned long size, const char *file);
 void print_efie(struct efie *efie);
 int get_firmware_type(char *name);
 void init_fwinfo(struct fwinfo *fwinfo);
+int get_mcu_family(char *name);
 
 #endif

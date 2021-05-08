@@ -135,6 +135,8 @@ struct {
 	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA}},
 };
 
+const char *mcu_family[] = {"STM32L0", "GD32E50"};
+
 int get_firmware_type(char *name)
 {
 	int i;
@@ -144,6 +146,17 @@ int get_firmware_type(char *name)
 			return firmware_table[i].id[0];
 	}
 
+	return -1;
+}
+
+int get_mcu_family(char *name)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(mcu_family); ++i) {
+		if (strcasecmp(mcu_family[i], name) == 0)
+			return i;
+	}
 	return -1;
 }
 

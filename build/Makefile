@@ -1,4 +1,4 @@
-PROJ ?= sc5h
+PROJ ?= sm5gd32
 TOP ?= ..
 OUTPUT ?= $(PROJ)
 

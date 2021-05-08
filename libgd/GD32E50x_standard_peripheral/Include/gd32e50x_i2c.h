@@ -764,4 +764,9 @@ FlagStatus i2c2_interrupt_flag_get(uint32_t i2c_periph, i2c2_interrupt_flag_enum
 /* clear I2C interrupt flag status */
 void i2c2_interrupt_flag_clear(uint32_t i2c_periph, i2c2_interrupt_flag_enum int_flag);
 
+/* append transfer function */
+void i2c_transfer7(uint32_t i2c, uint8_t addr,
+		   uint8_t *w, size_t wn,
+		   uint8_t *r, size_t rn);
+
 #endif /* GD32E50X_I2C_H */

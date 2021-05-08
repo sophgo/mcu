@@ -80,13 +80,14 @@ static void gpio_init(void)
 #endif
 
 	/* i2c1 scl, sda */
-	gpio_set(GPIOB, GPIO0 | GPIO1 | GPIO2 | GPIO7);
 	gpio_set_af(GPIOB, GPIO_AF4, GPIO8 | GPIO9);
-	gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_VERYHIGH,
+	gpio_set_output_options(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_VERYHIGH,
 			       GPIO8 | GPIO9);
 	gpio_mode_setup(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP,
 			GPIO8 | GPIO9);
+
 	/* led, sdoe */
+	gpio_set(GPIOB, GPIO0 | GPIO1 | GPIO2 | GPIO7);
 	gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 			GPIO0 | GPIO1 | GPIO2 | GPIO7);
 #ifdef NUCLEO

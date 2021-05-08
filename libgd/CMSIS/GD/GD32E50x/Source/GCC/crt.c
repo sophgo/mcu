@@ -8,7 +8,7 @@ extern uint32_t __ld_bss_start[0], __ld_bss_end[0];
 extern void SystemInit(void);
 extern void main(void);
 
-void crt_init(void)
+void __attribute__((weak)) crt_init(void)
 {
 	/* stack is ready after chip init */
 	/* copy data */
@@ -28,7 +28,7 @@ void crt_init(void)
 		*dst = 0;
 }
 
-void Reset_Handler(void)
+void __attribute__((weak)) Reset_Handler(void)
 {
 	SystemInit();
 	crt_init();
