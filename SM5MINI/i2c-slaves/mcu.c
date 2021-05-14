@@ -117,6 +117,7 @@ void mcu_process(void)
 		wdt_reset();
 		break;
 	case CMD_UPDATE:
+		nvic_enable_irq(NVIC_I2C1_IRQ);
 		i2c_upgrade_start();
 		break;
 	default:

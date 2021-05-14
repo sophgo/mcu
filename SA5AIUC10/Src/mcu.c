@@ -123,6 +123,7 @@ void mcu_process_cmd_slow(void)
 		BM1684_REBOOT();
 		break;
 	case CMD_MCU_UPDATE:
+		HAL_NVIC_EnableIRQ(I2C3_IRQn);
 		upgrade_start();
 		break;
 	}
@@ -148,7 +149,6 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	switch (ctx->idx) {
 	case REG_CMD_REG:
 		ctx->load_cmd_reg = data;
-		i2c_regs.cmd_reg_bkup = data;
 		break;
 	case REG_INTR_STATUS1:
 		intr_status_clr(data);
@@ -254,15 +254,6 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_MODE_FLAG:
 		ret = i2c_regs.mode_flag;
-		break;
-	case REG_PMIC_STATUS:
-		ret = i2c_regs.pmic_status;
-		break;
-	case REG_PWRON_CMD:
-		ret = i2c_regs.power_on_cmd;
-		break;
-	case REG_CMD_BKUP:
-		ret = i2c_regs.cmd_reg_bkup;
 		break;
 	case REG_STAGE:
 		ret = i2c_regs.stage;

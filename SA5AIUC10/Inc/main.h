@@ -188,11 +188,8 @@ typedef struct I2C_REGS_t
 	volatile uint8_t ddr;//0x15,21
 	volatile uint8_t power_good;
 	volatile uint8_t mode_flag;
-	volatile uint8_t pmic_status;
 
-	volatile uint8_t power_on_cmd;//0x19
-	volatile uint8_t cmd_reg_bkup;
-	volatile uint8_t reserved1[13];
+	volatile uint8_t reserved1[16];
 	volatile CURRENT_VAL current;
 	volatile uint8_t stage;			/* 0: application, 1: loader, 2: upgrader */
 	volatile uint8_t reserved2[1];
@@ -343,7 +340,7 @@ void intr_mask_set(uint8_t mask);
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION	0x33
+#define MCU_VERSION	0x34
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02
