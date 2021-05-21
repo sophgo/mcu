@@ -3,6 +3,7 @@
 #include <power.h>
 #include <debug.h>
 #include <common.h>
+#include <upgrade.h>
 #include <board_power.h>
 
 #include <stdio.h>
@@ -114,7 +115,10 @@ int power_on(void)
 	if (err) {
 		led_set_frequency(5);
 	} else {
-		led_set_frequency(1);
+		if (get_stage() == RUN_STAGE_LOADER)
+			led_set_frequency(3);
+		else
+			led_set_frequency(1);
 		power_is_on = true;
 	}
 

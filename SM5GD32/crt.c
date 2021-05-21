@@ -15,17 +15,18 @@ void __attribute__((noinline)) crt_init(void)
 {
 	/* stack is ready after chip init */
 
-	/* copy program */
 	uint32_t *src;
 	uint32_t *dst = __ld_program_start;
 	register uint32_t pc;
+	register uint32_t st;
 
 	asm volatile ("mov %0, pc" : "=r" (pc));
 	if (pc < MEMMAP_LOADER_END)
-		stage = RUN_STAGE_LOADER;
+		st = RUN_STAGE_LOADER;
 	else
-		stage = RUN_STAGE_APP;
+		st = RUN_STAGE_APP;
 
+	/* copy program */
 	src = (void *)(pc & ~FLASH_PAGE_MASK);
 
 	while (dst != __ld_program_end) {
@@ -42,6 +43,8 @@ void __attribute__((noinline)) crt_init(void)
 		*dst = 0;
 
 	SCB->VTOR = (unsigned long)__ld_program_start;
+
+	stage = st;
 }
 
 void Reset_Handler(void)

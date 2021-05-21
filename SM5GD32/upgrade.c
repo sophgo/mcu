@@ -6,6 +6,16 @@
 #include <tick.h>
 #include <flash.h>
 
+struct fwinfo {
+	uint8_t		md5[16];
+	uint8_t		magic[4];
+	uint8_t		type;
+	uint8_t		mcu_family;
+	uint8_t		r0[2];
+	uint32_t	timestamp;
+	uint8_t		r1[100];
+} __attribute__((packed));
+
 int stage;
 
 void app_start(void)
@@ -36,5 +46,10 @@ int get_stage(void)
  */
 int check_app(void)
 {
+	struct fwinfo *fwinfo = (void *)MEMMAP_TAG_START;
+
+	if (memcmp(fwinfo->magic, "MCUF", sizeof(fwinfo->magic)))
+		return -1;
+
 	return 0;
 }
