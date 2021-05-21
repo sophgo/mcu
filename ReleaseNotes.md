@@ -155,6 +155,10 @@ Version 51:
     1. new feature, se5 motherboard re-power just after upgrade firmware
     2. fixbug, power-on power-off reboot failed, on wide temperature operation board
 
+Version 52:
+
+    1. fixbug: i2c upgrader cannot work
+
 ## SM5MIN
 Version 0:
 
@@ -173,6 +177,10 @@ version 4:
 
     1. reset watchdog on system startup
     2. fixbug, power-on power-off reboot failed
+
+Version 5:
+
+    1. fixbug: i2c upgrader cannot work
 
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
@@ -197,4 +205,18 @@ Version 3:
 Version 4:
 
     1. Fixbug: thermal led flicker just after power plug.
+
+Version 5:
+
+    1. new feature: 128 bytes program flash based none volatile memory
+
+## SE5 Motherboard V2
+
+Version 0:
+
+    1. se5 support motherboard power off reboot
+
+Version 1:
+
+    1. se5 fixbug, power button keep pressed down after board powered down will cause board power on.
 
