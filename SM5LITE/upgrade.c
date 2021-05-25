@@ -6,7 +6,6 @@
 #include <string.h>
 #include <project.h>
 #include <i2c_master.h>
-#include <pcie.h>
 #include <common.h>
 
 struct efie {
@@ -44,9 +43,6 @@ static void upgrade_start(unsigned int type)
 	/* disable i2c1 and i2c2 */
 	i2c_master_destroy(I2C1);
 	i2c_master_destroy(I2C2);
-
-	if (get_work_mode() == WORK_MODE_PCIE)
-		pcie_destroy();
 
 	/* disable all interrupt */
 	cm_disable_interrupts();

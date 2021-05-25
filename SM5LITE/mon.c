@@ -132,9 +132,9 @@ void mon_init(void)
 {
 	/* 0: PCB version
 	 * 1: BOM version
-	 * 5: 12V current
+	 * 4: 12V current
 	 */
-	uint8_t channels[] = {0, 1, 5};
+	uint8_t channels[] = {0, 1, 4};
 
 	/* init adc and dma */
 	adc_power_off(ADC1);

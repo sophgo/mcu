@@ -14,13 +14,6 @@
 #define TCA6416A_REG_MAX	8
 #define TCA6416A_REG_MASK	(TCA6416A_REG_MAX - 1)
 
-int tca6416a_probe(void);
-int tca6416a_write(uint8_t reg, uint8_t val);
-int tca6416a_read(uint8_t reg);
-int tca6416a_get(uint8_t port, uint8_t pin);
-void tca6416a_set(uint8_t port, uint8_t pin);
-void tca6416a_clr(uint8_t port, uint8_t pin);
-int tca6416a_available(void);
 int tca6416a_init(struct i2c_slave_ctx *i2c);
 
 #endif

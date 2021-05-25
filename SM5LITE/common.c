@@ -4,12 +4,35 @@
 #include <common.h>
 #include <pin.h>
 #include <tick.h>
+#include <power.h>
+#include <chip.h>
 
-#define MCU_SW_VER	5
+#define MCU_SW_VER	0
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
-static uint8_t work_mode;
+
+static int board_temp, soc_temp;
+
+int get_board_temp(void)
+{
+	return board_temp;
+}
+
+int get_soc_temp(void)
+{
+	return soc_temp;
+}
+
+void set_board_temp(int temp)
+{
+	board_temp = temp;
+}
+
+void set_soc_temp(int temp)
+{
+	soc_temp = temp;
+}
 
 uint8_t get_ddr_type(void)
 {
@@ -18,18 +41,7 @@ uint8_t get_ddr_type(void)
 
 char *get_board_type_name()
 {
-	switch (board_type) {
-	case SM5ME:
-		return "SM5-MINI-E";
-	case SM5MS:
-		return "SM5-MINI-S";
-	case SM5MP:
-		return "SM5-MINI-P";
-	case SM5MA:
-		return "SM5-MINI-A";
-	};
-	/* U means unknown type */
-	return "SM5-MINI-U";
+	return "SE5";
 }
 
 void set_board_type(uint8_t type)
@@ -45,21 +57,6 @@ uint8_t get_board_type(void)
 uint8_t get_firmware_version(void)
 {
 	return MCU_SW_VER;
-}
-
-void board_init(void)
-{
-	/* donot probe twice */
-	if (work_mode)
-		return;
-
-	work_mode = gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN) ?
-		WORK_MODE_SOC : WORK_MODE_PCIE;
-}
-
-int get_work_mode(void)
-{
-	return work_mode;
 }
 
 uint8_t get_declared_board_type(void)
@@ -112,4 +109,25 @@ void led_isr(void)
 		led_on();
 	else
 		led_off();
+}
+
+void root_power_on(void)
+{
+	gpio_set(POWER_ON_PORT, POWER_ON_PIN);
+	gpio_clear(POWER_LED_PORT, POWER_LED_PIN);
+}
+
+void root_power_off(void)
+{
+	gpio_clear(POWER_ON_PORT, POWER_ON_PIN);
+	gpio_set(POWER_LED_PORT, POWER_LED_PIN);
+}
+
+void root_power_reboot(void)
+{
+	root_power_off();
+	mdelay(1000);
+	root_power_on();
+	power_on();
+	chip_enable();
 }

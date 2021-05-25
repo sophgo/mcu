@@ -48,17 +48,6 @@ void __weak pmic_channel_c_off(void)
 	/* add customer code here */
 }
 
-int __weak check_pcie_reset_on(void)
-{
-	/* add customer code here */
-	return 0;
-}
-
-void __weak check_pcie_reset_off(void)
-{
-	/* add customer code here */
-}
-
 int __weak sys_rst_deassert_on(void)
 {
 	/* add customer code here */

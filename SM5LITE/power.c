@@ -5,10 +5,13 @@
 #include <timer.h>
 #include <power.h>
 #include <common.h>
+#include <upgrade.h>
 #include <board_power.h>
 
 /* in us */
 #define NODE_CHECK_TIMEOUT	4000
+
+static int power_is_on;
 
 static int node_check(struct power_node const *node)
 {
@@ -107,7 +110,11 @@ int power_on(void)
 	if (err) {
 		led_set_frequency(5);
 	} else {
-		led_set_frequency(1);
+		if (get_stage() == RUN_STAGE_LOADER)
+			led_set_frequency(3);
+		else
+			led_set_frequency(1);
+		power_is_on = true;
 	}
 
 	return err;
@@ -115,6 +122,7 @@ int power_on(void)
 
 void power_off(void)
 {
+	power_is_on = false;
 	node_seqoff(board_power_nodes, ARRAY_SIZE(board_power_nodes));
 	led_set_frequency(LED_FREQ_ALWAYS_OFF);
 }
@@ -122,5 +130,10 @@ void power_off(void)
 void power_init(void)
 {
 	led_set_frequency(LED_FREQ_ALWAYS_OFF);
+}
+
+int power_status(void)
+{
+	return power_is_on;
 }
 

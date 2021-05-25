@@ -4,6 +4,7 @@
 #include <pin.h>
 
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
+#define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
 
 #define MCU_SLAVE_ADDR		0x17
 
@@ -11,16 +12,8 @@
 #define I2C1_OA2		0x68
 #define I2C1_OA2_MASK		0x03
 
-#define PCIE_RESET_PORT	PCIEE_RST_MCU_PORT
-#define PCIE_RESET_PIN	PCIEE_RST_MCU_PIN
-#define PCIE_RESET_EXTI	PCIEE_RST_MCU_EXTI
-#define PCIE_RESET_NVIC	NVIC_EXTI4_15_IRQ
-
-#define SYS_RST_PORT	SYS_RST_X_PORT
-#define SYS_RST_PIN	SYS_RST_X_PIN
-
-#define EEPROM_BASE	0x08080000
-#define EEPROM_SIZE	0x00000800
+#define EEPROM_BASE	0x08080c00
+#define EEPROM_SIZE	0x00000c00
 
 #define EEPROM_CELL_SIZE	32
 #define EEPROM_CELL_OFFSET(n)	(EEPROM_CELL_SIZE * n)
@@ -63,5 +56,14 @@ uint8_t get_ddr_type(void);
 char *get_board_type_name();
 void led_init(void);
 void led_set_frequency(unsigned long freq);
+
+int get_board_temp(void);
+int get_soc_temp(void);
+void set_board_temp(int temp);
+void set_soc_temp(int temp);
+
+void root_power_on(void);
+void root_power_off(void);
+void root_power_reboot(void);
 
 #endif

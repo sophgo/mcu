@@ -65,7 +65,6 @@ void sys_rst_assert_off(void)
 
 int check_pcie_reset_on(void)
 {
-	board_init();
 	return 0;
 }
 

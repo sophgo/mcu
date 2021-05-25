@@ -18,18 +18,13 @@
 #include <common.h>
 #include <upgrade.h>
 #include <mcu.h>
-#include <pic.h>
-#include <tca6416a.h>
 #include <project.h>
 #include <power.h>
-#include <se5.h>
-#include <sm5.h>
 #include <loop.h>
-#include <keyboard.h>
 #include <eeprom.h>
 #include <wdt.h>
-#include <pcie.h>
 #include <tmp451.h>
+#include <keyboard.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
 
@@ -45,75 +40,41 @@ int main(void)
 		app_start();
 #endif
 
+	root_power_on();
+
 	led_init();
 
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
 
-	tca6416a_probe();
-	pic_probe();
-
 	power_init();
 	mp5475_init();
 	power_on();
 	chip_init();
-	tmp451_init();
+	tmp451_init(&i2c1_slave_ctx);
 
-	debug("%s %s working at %s mode\n",
+	debug("%s %s\n",
 	      get_board_type_name(),
-	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application",
-	      get_work_mode() == WORK_MODE_SOC ? "soc" : "pcie");
+	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application");
 
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
 		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
 
-	/* auto detect or correct board type
-	 * based on some characteristic on motherboard
-	 */
-	if (get_work_mode() == WORK_MODE_PCIE)
-		set_board_type(SM5MP);
-	else if (pic_available())
-		set_board_type(SM5ME);
-	else {
-		if (tca6416a_available())
-			set_board_type(
-				get_declared_board_type() == SM5ME ?
-				SM5ME : SM5MS);
-		else
-			/* on test boards */
-			set_board_type(SM5MA);
-	}
 
-	/* but chip reset still be asserted */
-	if (get_work_mode() == WORK_MODE_SOC) {
-		if (get_board_type() == SM5ME)
-			se5_init();
-		else
-			sm5_init();
-	}
+	set_board_type(SE5);
 
 	mon_init();
 
 	mcu_init(&i2c1_slave_ctx);
 	eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
-
-	if (tca6416a_available())
-		tca6416a_init(&i2c1_slave_ctx);
-
-	if (pic_available()) {
-		kbd_init(&i2c1_slave_ctx);
-		pic_init(&i2c1_slave_ctx);
-	}
+	kbd_init(&i2c1_slave_ctx);
 
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);
 
-	if (get_work_mode() == WORK_MODE_SOC)
-		chip_enable();
-	else
-		pcie_init();
+	chip_enable();
 
 	/* never return */
 	loop_start();

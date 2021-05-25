@@ -10,7 +10,6 @@
 #include <chip.h>
 #include <eeprom.h>
 #include <power.h>
-#include <se5.h>
 #include <wdt.h>
 
 #define REG_BOARD_TYPE		0x00
@@ -97,11 +96,8 @@ void mcu_process(void)
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
-		if (get_board_type() == SM5ME)
-			se5_power_off_board();
-		else
-			power_off();
 		wdt_reset();
+		root_power_off();
 		break;
 	case CMD_RESET:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
@@ -110,11 +106,8 @@ void mcu_process(void)
 		break;
 	case CMD_REBOOT:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
-		if (get_board_type() == SM5ME)
-			se5_reset_board();
-		else
-			chip_popd_reset();
 		wdt_reset();
+		root_power_reboot();
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(NVIC_I2C1_IRQ);
@@ -223,7 +216,7 @@ static uint8_t mcu_read(void *priv)
 		ret = 1;
 		break;
 	case REG_MODE_FLAG:
-		ret = get_work_mode();
+		ret = WORK_MODE_SOC;
 		break;
 	case REG_CURRENT_LO:
 		ctx->tmp = get_current();

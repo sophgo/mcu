@@ -9,6 +9,7 @@
 #include <common.h>
 #include <loop.h>
 #include <power.h>
+#include <stdbool.h>
 
 static uint32_t uptime;
 static uint32_t reset_times;
@@ -35,6 +36,11 @@ void chip_enable(void)
 {
 	gpio_set(SYS_RST_PORT, SYS_RST_PIN);
 	chip_enabled = true;
+}
+
+int chip_is_enabled(void)
+{
+	return chip_enabled;
 }
 
 void chip_reset(void)

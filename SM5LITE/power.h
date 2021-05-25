@@ -27,5 +27,6 @@ typedef int (*power_off_func)(void);
 void power_init(void);
 int power_on(void);
 void power_off(void);
+int power_status(void);
 
 #endif

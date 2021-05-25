@@ -17,16 +17,13 @@ void pmic_channel_b_off(void);
 int pmic_channel_c_on(void);
 void pmic_channel_c_off(void);
 
-int check_pcie_reset_on(void);
-void check_pcie_reset_off(void);
-
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
 
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
-struct power_node const board_power_nodes[20] = {
+struct power_node const board_power_nodes[22] = {
 
 	{"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, 0,
 	 {(unsigned long)pmic_channel_a_on, (unsigned long)pmic_channel_a_off},
@@ -34,10 +31,6 @@ struct power_node const board_power_nodes[20] = {
 
 	{"VDD-1.8V", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
-	 },
-
-	{"VDD-CORE", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
 	 },
 
 	{"VDD-3.3V", NODE_TYPE_ENABLE, 1000,
@@ -53,7 +46,7 @@ struct power_node const board_power_nodes[20] = {
 	 },
 
 	{"ACK-P08", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)P08_PWR_GOOD_PORT, (unsigned long)P08_PWR_GOOD_PIN},
+	 {(unsigned long)P08_PG_PORT, (unsigned long)P08_PG_PIN},
 	 },
 
 	{"VDD-TPU", NODE_TYPE_ENABLE, 0,
@@ -94,22 +87,34 @@ struct power_node const board_power_nodes[20] = {
 	 {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
 	 },
 
-	{"CHECK-PCIE-RESET", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)check_pcie_reset_on,
-	  (unsigned long)check_pcie_reset_off},
-	 },
-
 	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, 1000,
 	 {(unsigned long)sys_rst_deassert_on,
 	  (unsigned long)sys_rst_deassert_off},
 	 },
 
 	{"ACK-DDR", NODE_TYPE_ENABLE, 29000,
-	 {(unsigned long)DDR_PWR_GOOD_PORT, (unsigned long)DDR_PWR_GOOD_PIN},
+	 {(unsigned long)DDR_PG_PORT, (unsigned long)DDR_PG_PIN},
 	 },
 
 	{"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, 30000,
 	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
+	 },
+
+	{"USB-5V", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)USB_5V_EN_PORT, (unsigned long)USB_5V_EN_PIN},
+	 },
+
+	{"PERIPHERAL-3.3", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)DVDD_3P3V_EN_PORT, (unsigned long)DVDD_3P3V_EN_PIN},
+	 },
+
+	{"ASM3142-3.3V", NODE_TYPE_ENABLE, 10,
+	 {(unsigned long)ASM3142_3P3V_EN_PORT,
+	  (unsigned long)ASM3142_3P3V_EN_PIN},
+	 },
+
+	{"HDMI-1.2V", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)VDD1P2V_EN_PORT, (unsigned long)VDD1P2V_EN_PIN},
 	 },
 
 };
