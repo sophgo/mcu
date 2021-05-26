@@ -15,6 +15,11 @@
 #include <upgrade.h>
 #include <project.h>
 #include <slave.h>
+#include <tca6416a.h>
+#include <pic.h>
+#include <se5.h>
+#include <sm5.h>
+#include <pcie.h>
 
 #include <stdio.h>
 
@@ -34,25 +39,54 @@ int main(void)
 
 	led_init();
 
+	tca6416a_probe();
+	pic_probe();
+
 	power_init();
 	isl91212_init();
 	power_on();
-
-	board_init();
-	set_board_type(SA5);
-
 	chip_init();
+	board_init();
 
 	debug("%s %s working at %s mode\n",
 	      get_board_type_name(),
 	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application",
 	      get_work_mode() == WORK_MODE_SOC ? "soc" : "pcie");
 
+	/* auto detect or correct board type
+	 * based on some characteristic on motherboard
+	 */
+	if (get_work_mode() == WORK_MODE_PCIE)
+		set_board_type(SM5P);
+	else if (pic_available())
+		set_board_type(SE5);
+	else {
+		if (tca6416a_available())
+			set_board_type(
+				get_declared_board_type() == SE5 ?
+				SE5 : SM5S);
+		else
+			/* on test boards */
+			set_board_type(SA5);
+	}
+
+	/* but chip reset still be asserted */
+	if (get_work_mode() == WORK_MODE_SOC) {
+		if (get_board_type() == SE5)
+			se5_init();
+		else
+			sm5_init();
+	}
+
 	mon_init();
 	slave_init();
 
-	chip_enable();
+	if (get_work_mode() == WORK_MODE_SOC)
+		chip_enable();
+	else
+		pcie_init();
 
+	/* never return */
 	loop_start();
 
 	return 0;

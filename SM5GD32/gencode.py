@@ -339,7 +339,7 @@ class Port:
                 continue
             code += '#define {}_PORT\t\tGPIO{}\n'.format(pin.get_code_name(), self.name)
             code += '#define {}_PIN\t\tGPIO_PIN_{}\n'.format(pin.get_code_name(), pin.get_pin())
-            code += '#define {}_EXTI\t\tEXTI{}\n'.format(pin.get_code_name(), pin.get_pin())
+            code += '#define {}_EXTI\t\tEXTI_{}\n'.format(pin.get_code_name(), pin.get_pin())
         return code
 
 class PinList:

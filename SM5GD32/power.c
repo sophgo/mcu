@@ -9,10 +9,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#define gpio_set	gpio_bit_set
-#define gpio_clear	gpio_bit_reset
-#define gpio_get	gpio_input_bit_get
-
 /* in us */
 #define NODE_CHECK_TIMEOUT	4000
 

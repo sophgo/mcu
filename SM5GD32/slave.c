@@ -2,6 +2,9 @@
 #include <eeprom.h>
 #include <wdt.h>
 #include <tmp451.h>
+#include <tca6416a.h>
+#include <pic.h>
+#include <keyboard.h>
 
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
@@ -18,6 +21,14 @@ void slave_init(void)
 	eeprom_init(&i2c2_slave_ctx);
 	wdt_init(&i2c2_slave_ctx);
 	tmp451_init(&i2c2_slave_ctx);
+
+	if (pic_available()) {
+		kbd_init(&i2c2_slave_ctx);
+		pic_init(&i2c2_slave_ctx);
+	}
+
+	if (tca6416a_available())
+		tca6416a_init(&i2c2_slave_ctx);
 
 	i2c_slave_start(&i2c2_slave_ctx);
 	nvic_irq_enable(I2C2_EV_IRQn, 0, 0);
