@@ -1,6 +1,6 @@
-TARGET = SM5MINI
+TARGET = SE5LITE
 # DEBUG = 1
-STANDALONE = 1
+STANDALONE = 0
 
 ifeq ($(strip $(V)), 1)
 	Q =

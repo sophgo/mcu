@@ -62,7 +62,7 @@ int main(void)
 		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
 
 
-	set_board_type(SE5);
+	set_board_type(SE5LITE);
 
 	mon_init();
 
