@@ -131,3 +131,8 @@ void root_power_reboot(void)
 	power_on();
 	chip_enable();
 }
+
+int reset_key_status(void)
+{
+	return !gpio_get(RESET_KEY_PORT, RESET_KEY_PIN);
+}

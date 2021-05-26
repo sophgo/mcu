@@ -39,6 +39,12 @@
 
 #define MCU_EEPROM_DATA_MAX	0x20
 
+enum {
+	MCU_CMD_NOP = 0,
+	MCU_CMD_ABORTBOOT,
+	MCU_CMD_RECOVERY,
+};
+
 struct mcu_ctx {
 	int set_idx;
 	int idx;
@@ -277,5 +283,8 @@ void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
 	loop_add(mcu_process);
 	i2c_slave_register(i2c_slave_ctx, &slave);
+
+	if (reset_key_status())
+		mcu_ctx.gp0 = MCU_CMD_RECOVERY;
 }
 

@@ -1,19 +1,20 @@
 #include <libopencm3/cm3/nvic.h>
 #include <i2c_slave.h>
 #include <tca6416a.h>
-#include <i2c_master.h>
-
-#define TCA6416A_ADDR	0x20
-
-#define TCA6416A_I2C	I2C2
-
-/* in ms */
-#define TCA6416A_SMBTO	(1)
+#include <pin.h>
 
 static struct {
 	int set_idx;
 	int idx;
+	uint8_t port[2];
 } gpioex_ctx;
+
+const struct {
+	int port, pin;
+} tca6416a_vpin2gpio[16] = {
+	[4] = {MCU_LED_PORT, MCU_LED_PIN},
+	[11] = {HEALTHY_LED_PORT, HEALTHY_LED_PIN},
+};
 
 static void tca6416a_i2c_slave_match(void *priv, int dir)
 {
@@ -23,6 +24,9 @@ static void tca6416a_i2c_slave_match(void *priv, int dir)
 
 static void tca6416a_i2c_slave_write(void *priv, uint8_t data)
 {
+	uint16_t vpin;
+	int i;
+
 	if (gpioex_ctx.set_idx) {
 		gpioex_ctx.idx = data & TCA6416A_REG_MASK;
 		gpioex_ctx.set_idx = 0;
@@ -37,13 +41,26 @@ static void tca6416a_i2c_slave_write(void *priv, uint8_t data)
 	case TCA6416A_P0_CFG:
 	case TCA6416A_P1_CFG:
 		/* no effect and donot change pin config */
-		return;
+		break;
 	case TCA6416A_P0_OUT:
+		gpioex_ctx.port[0] = data;
+		break;
 	case TCA6416A_P1_OUT:
-		/* output value is free for user */
+		gpioex_ctx.port[1] = data;
 		break;
 	default:
-		return;
+		break;
+	}
+
+	vpin = gpioex_ctx.port[0] | (gpioex_ctx.port[1] << 8);
+
+	for (i = 0; i < 16; ++i) {
+		if (vpin & (1 << i))
+			gpio_set(tca6416a_vpin2gpio[i].port,
+				 tca6416a_vpin2gpio[i].pin);
+		else
+			gpio_clear(tca6416a_vpin2gpio[i].port,
+				   tca6416a_vpin2gpio[i].pin);
 	}
 
 	gpioex_ctx.idx = (gpioex_ctx.idx + 1) & TCA6416A_REG_MASK;
@@ -51,8 +68,29 @@ static void tca6416a_i2c_slave_write(void *priv, uint8_t data)
 
 static uint8_t tca6416a_i2c_slave_read(void *priv)
 {
+	uint8_t err = 0;
+
+	switch (gpioex_ctx.idx) {
+	case TCA6416A_P0_OUT:
+	case TCA6416A_P0_IN:
+		err = gpioex_ctx.port[0];
+		break;
+	case TCA6416A_P1_OUT:
+	case TCA6416A_P1_IN:
+		err = gpioex_ctx.port[1];
+		break;
+	case TCA6416A_P0_POL:
+	case TCA6416A_P1_POL:
+	case TCA6416A_P0_CFG:
+	case TCA6416A_P1_CFG:
+		err = 0;
+		break;
+	default:
+		break;
+	}
+
 	gpioex_ctx.idx = (gpioex_ctx.idx + 1) % 8;
-	return 0;
+	return err;
 }
 
 static struct i2c_slave_op slave = {

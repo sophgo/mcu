@@ -8,6 +8,7 @@
 #include <i2c_slave.h>
 #include <pin.h>
 #include <tick.h>
+#include <common.h>
 
 #define KEY_PORT_COUNT	256
 /*
@@ -75,7 +76,7 @@ void kbd_set(int port, int key)
 void kbd_isr(void)
 {
 	/* get reset key status, effect low */
-	if (gpio_get(RESET_KEY_PORT, RESET_KEY_PIN)) {
+	if (!reset_key_status()) {
 		/* reset key is not pressed */
 		if (reset_key_pressed > REBOOT_DELAY)
 			kbd_set(REBOOT_KEY_PORT, REBOOT_KEY);
