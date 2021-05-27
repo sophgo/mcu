@@ -178,18 +178,6 @@ static struct i2c_slave_op tmp451_slave = {
 /* remote temperature */
 #define TMP451_RT	(1)
 
-#if 1
-static void tmp451_process(void)
-{
-	/* default temperature */
-	tmp451_ctx.soc = 20 + 5;
-	tmp451_ctx.board = 20;
-
-	set_soc_temp(tmp451_ctx.soc - 5);
-	set_board_temp(tmp451_ctx.board);
-}
-
-#else
 static unsigned long last_time;
 static void tmp451_process(void)
 {
@@ -264,7 +252,6 @@ static void tmp451_process(void)
 
 	last_time = current_time;
 }
-#endif
 
 void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {

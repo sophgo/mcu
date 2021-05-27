@@ -235,6 +235,10 @@ static void se5_process(void)
 
 void se5_init(void)
 {
+	/* reconfig PA6 from cpld err to smbus alert */
+	gpio_init(SMB_ALERT_PORT, GPIO_MODE_IPU,
+		  GPIO_OSPEED_2MHZ, SMB_ALERT_PIN);
+
 	tca6416a_write(TCA6416A_P0_OUT, P0_OUT);
 	tca6416a_write(TCA6416A_P1_OUT, P1_OUT);
 	tca6416a_write(TCA6416A_P0_CFG, P0_CFG);

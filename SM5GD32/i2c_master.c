@@ -3,6 +3,7 @@
 #include <debug.h>
 #include <timer.h>
 #include <stddef.h>
+#include <common.h>
 
 #define I2C_SPEED	(100 * 1000)
 
@@ -169,12 +170,15 @@ static int i2c_write7_v1(uint32_t i2c, int addr, uint8_t *data, size_t n)
 		if (tmp & I2C_SR1_AF) {
 			/* NACK is received */
 			/* clear AF bit */
+			i2c_send_stop(i2c);
 			I2C_SR1(i2c) = tmp & ~I2C_SR1_AF;
 			return -1;
 		}
 
-		if (timer_is_timeout())
+		if (timer_is_timeout()) {
+			i2c_send_stop(i2c);
 			return -1;
+		}
 		tmp = I2C_SR1(i2c);
 	}
 
@@ -217,12 +221,15 @@ static int i2c_read7_v1(uint32_t i2c, int addr, uint8_t *res, size_t n)
 		if (tmp & I2C_SR1_AF) {
 			/* NACK is received */
 			/* clear AF bit */
+			i2c_send_stop(i2c);
 			I2C_SR1(i2c) = tmp & ~I2C_SR1_AF;
 			return -1;
 		}
 
-		if (timer_is_timeout())
+		if (timer_is_timeout()) {
+			i2c_send_stop(i2c);
 			return -1;
+		}
 		tmp = I2C_SR1(i2c);
 	}
 	/* Clearing ADDR condition sequence. */
@@ -284,9 +291,8 @@ out:
 	if (err) {
 		/* wait stop signal done */
 		timer_udelay(10);
-		i2c_disable(i2c);
-		timer_udelay(10);
-		i2c_enable(i2c);
+		i2c_deinit(i2c);
+		i2c_master_init(i2c);
 	}
 
 	return err;

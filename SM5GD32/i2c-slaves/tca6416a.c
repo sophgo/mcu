@@ -5,7 +5,7 @@
 
 #define TCA6416A_ADDR	0x20
 
-#define TCA6416A_I2C	I2C2
+#define TCA6416A_I2C	I2C0
 
 /* in ms */
 #define TCA6416A_SMBTO	(1)
@@ -35,6 +35,7 @@ int tca6416a_write(uint8_t reg, uint8_t val)
 {
 	int err;
 
+retry:
 	if (is_tca6416a_available) {
 		nvic_disable_irq(NVIC_I2C1_IRQ);
 		err = i2c_master_smbus_write_byte(
@@ -44,6 +45,8 @@ int tca6416a_write(uint8_t reg, uint8_t val)
 		dummy_tca6416a_regmap[reg & TCA6416A_REG_MASK] = val;
 		err = 0;
 	}
+	if (err)
+		goto retry;
 
 	return err;
 }
