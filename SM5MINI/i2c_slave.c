@@ -287,7 +287,17 @@ int i2c_slave_start(struct i2c_slave_ctx *ctx)
 	ctx->reg->cr1 |= CR1_PE;
 	/* enable error, address match, rx and tx isr, stop */
 	ctx->reg->cr1 |= CR1_ADDRIE | CR1_RXIE | CR1_TXIE |
-						CR1_STOPIE | CR1_NACKIE;
+		CR1_STOPIE | CR1_NACKIE;
+	return 0;
+}
+
+int i2c_slave_stop(struct i2c_slave_ctx *ctx)
+{
+	ctx->slave = NULL;
+	ctx->reg->cr1 &= ~CR1_PE;
+	/* enable error, address match, rx and tx isr, stop */
+	ctx->reg->cr1 &= ~(CR1_ADDRIE | CR1_RXIE | CR1_TXIE |
+		CR1_STOPIE | CR1_NACKIE);
 	return 0;
 }
 

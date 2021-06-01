@@ -113,3 +113,9 @@ void led_isr(void)
 	else
 		led_off();
 }
+
+int detect_test_mode(void)
+{
+	return	(!!gpio_get(MCU_UART1_TX_PORT, MCU_UART1_TX_PIN) << 0) |
+		(!!gpio_get(MCU_UART1_RX_PORT, MCU_UART1_RX_PIN) << 1);
+}

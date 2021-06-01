@@ -31,7 +31,8 @@
 #include <pcie.h>
 #include <tmp451.h>
 
-struct i2c_slave_ctx i2c1_slave_ctx;
+static struct i2c_slave_ctx i2c1_slave_ctx;
+static struct i2c_slave_ctx i2c2_slave_ctx;
 
 int main(void)
 {
@@ -40,13 +41,33 @@ int main(void)
 
 	debug("\nBITMAIN SOPHONE SM5MINI\n");
 
+#ifndef STANDALONE
 	if (get_stage() == RUN_STAGE_LOADER && check_app() == 0)
 		app_start();
+#endif
 
 	led_init();
 
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
+
+	/* check if i am in test board and if we need enter test mode */
+	if (detect_test_mode() == TEST_MODE_HALT) {
+
+		set_board_type(SM5MA);
+
+		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
+			       I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
+		mcu_test_init(&i2c2_slave_ctx);
+		nvic_enable_irq(NVIC_I2C2_IRQ);
+		i2c_slave_start(&i2c2_slave_ctx);
+
+		while (detect_test_mode() != TEST_MODE_RUN)
+			mcu_process();
+
+		nvic_disable_irq(NVIC_I2C2_IRQ);
+		i2c_slave_stop(&i2c2_slave_ctx);
+	}
 
 	tca6416a_probe();
 	pic_probe();
@@ -122,4 +143,9 @@ int main(void)
 void i2c1_isr(void)
 {
 	i2c_slave_isr(&i2c1_slave_ctx);
+}
+
+void i2c2_isr(void)
+{
+	i2c_slave_isr(&i2c2_slave_ctx);
 }

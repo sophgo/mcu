@@ -1,5 +1,6 @@
 TARGET = SM5MINI
 # DEBUG = 1
+STANDALONE = 1
 
 ifeq ($(strip $(V)), 1)
 	Q =
@@ -40,6 +41,10 @@ CFLAGS = $(CPPFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) \
 
 ifeq ($(strip $(DEBUG)), 1)
 CFLAGS += -DDEBUG
+endif
+
+ifeq ($(strip $(STANDALONE)), 1)
+CFLAGS += -DSTANDALONE
 endif
 
 ASFLAGS = $(CFLAGS) -x assembler-with-cpp -Wa,--no-warn

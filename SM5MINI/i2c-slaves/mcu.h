@@ -13,5 +13,7 @@
 
 void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx);
 void mcu_raise_interrupt(uint8_t interrupts);
+void mcu_test_init(struct i2c_slave_ctx *i2c_slave_ctx);
+void mcu_process(void);
 
 #endif

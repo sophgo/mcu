@@ -283,6 +283,13 @@ static struct i2c_slave_op slave = {
 void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
 	loop_add(mcu_process);
+	slave.addr = 0x17;
+	i2c_slave_register(i2c_slave_ctx, &slave);
+}
+
+void mcu_test_init(struct i2c_slave_ctx *i2c_slave_ctx)
+{
+	slave.addr = 0x38;
 	i2c_slave_register(i2c_slave_ctx, &slave);
 }
 

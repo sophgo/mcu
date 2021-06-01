@@ -38,5 +38,6 @@ int i2c_slave_register(struct i2c_slave_ctx *ctx, struct i2c_slave_op *slave);
 int i2c_slave_start(struct i2c_slave_ctx *ctx);
 int i2c_slave_reset(struct i2c_slave_ctx *ctx);
 void i2c_slave_isr(struct i2c_slave_ctx *ctx);
+int i2c_slave_stop(struct i2c_slave_ctx *ctx);
 
 #endif

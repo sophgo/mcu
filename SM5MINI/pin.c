@@ -18,8 +18,8 @@ void pin_init(void)
 	/* pull-up pull-down */
 	GPIO_PUPDR(GPIOA) =
 	    (GPIO_PUPDR(GPIOA) & ~0xc3ffffff) | (GPIO_PUPD_NONE << (0 * 2)) |
-	    (GPIO_PUPD_NONE << (1 * 2)) | (GPIO_PUPD_NONE << (2 * 2)) |
-	    (GPIO_PUPD_NONE << (3 * 2)) | (GPIO_PUPD_PULLUP << (4 * 2)) |
+	    (GPIO_PUPD_NONE << (1 * 2)) | (GPIO_PUPD_PULLUP << (2 * 2)) |
+	    (GPIO_PUPD_PULLUP << (3 * 2)) | (GPIO_PUPD_PULLUP << (4 * 2)) |
 	    (GPIO_PUPD_NONE << (5 * 2)) | (GPIO_PUPD_NONE << (6 * 2)) |
 	    (GPIO_PUPD_NONE << (7 * 2)) | (GPIO_PUPD_PULLUP << (8 * 2)) |
 	    (GPIO_PUPD_PULLDOWN << (9 * 2)) | (GPIO_PUPD_PULLDOWN << (10 * 2)) |
@@ -27,15 +27,15 @@ void pin_init(void)
 	    | (GPIO_PUPD_PULLDOWN << (15 * 2));
 	/* af, alternative function selection */
 	GPIO_AFRL(GPIOA) =
-	    (GPIO_AFRL(GPIOA) & ~0x0000ff00) | (GPIO_AF4 << (2 * 4)) | (GPIO_AF4
+	    (GPIO_AFRL(GPIOA) & ~0x0000ff00) | (GPIO_AF0 << (2 * 4)) | (GPIO_AF0
 									<< (3 *
 									    4));
 	/* AFRH reset state */
 	/* mode, input, output, alternate function or analog */
 	GPIO_MODER(GPIOA) =
 	    (GPIO_MODER(GPIOA) & ~0xc3ffffff) | (GPIO_MODE_ANALOG << (0 * 2)) |
-	    (GPIO_MODE_ANALOG << (1 * 2)) | (GPIO_MODE_AF << (2 * 2)) |
-	    (GPIO_MODE_AF << (3 * 2)) | (GPIO_MODE_INPUT << (4 * 2)) |
+	    (GPIO_MODE_ANALOG << (1 * 2)) | (GPIO_MODE_INPUT << (2 * 2)) |
+	    (GPIO_MODE_INPUT << (3 * 2)) | (GPIO_MODE_INPUT << (4 * 2)) |
 	    (GPIO_MODE_ANALOG << (5 * 2)) | (GPIO_MODE_INPUT << (6 * 2)) |
 	    (GPIO_MODE_INPUT << (7 * 2)) | (GPIO_MODE_INPUT << (8 * 2)) |
 	    (GPIO_MODE_OUTPUT << (9 * 2)) | (GPIO_MODE_OUTPUT << (10 * 2)) |

@@ -25,6 +25,23 @@
 static unsigned long heap_start;
 static unsigned long heap_end;
 
+static void __attribute__((unused))
+system_usart2_init(void)
+{
+	/* usart 2 */
+	rcc_periph_clock_enable(RCC_USART2);
+
+	usart_set_baudrate(USART2, USART2_BAUDRATE);
+	usart_set_databits(USART2, 8);
+	usart_set_stopbits(USART2, USART_STOPBITS_1);
+	usart_set_parity(USART2, USART_PARITY_NONE);
+	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
+	usart_set_mode(USART2, USART_MODE_TX_RX);
+	usart_disable_overrun_detection(USART2);
+	usart_enable(USART2);
+
+}
+
 void system_init(void)
 {
 	/* we may load this to a place other than default reset address */
@@ -40,9 +57,6 @@ void system_init(void)
 	rcc_periph_clock_enable(RCC_I2C1);
 	rcc_periph_clock_enable(RCC_I2C2);
 
-	/* usart 2 */
-	rcc_periph_clock_enable(RCC_USART2);
-
 	/* for external interrupts */
 	/* enable PCIE RESET PIN interrupt */
 	rcc_periph_clock_enable(RCC_SYSCFG);
@@ -52,17 +66,12 @@ void system_init(void)
 
 	pin_init();
 
+#ifdef DEBUG
+	system_usart2_init();
+#endif
+
 	tick_init();
 	timer_setup();
-
-	usart_set_baudrate(USART2, USART2_BAUDRATE);
-	usart_set_databits(USART2, 8);
-	usart_set_stopbits(USART2, USART_STOPBITS_1);
-	usart_set_parity(USART2, USART_PARITY_NONE);
-	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
-	usart_set_mode(USART2, USART_MODE_TX_RX);
-	usart_disable_overrun_detection(USART2);
-	usart_enable(USART2);
 }
 
 void clock_init(void)

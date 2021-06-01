@@ -11,6 +11,10 @@
 #define I2C1_OA2		0x68
 #define I2C1_OA2_MASK		0x03
 
+#define I2C2_OA1		0x38
+#define I2C2_OA2		0x00
+#define I2C2_OA2_MASK		0x00
+
 #define PCIE_RESET_PORT	PCIEE_RST_MCU_PORT
 #define PCIE_RESET_PIN	PCIEE_RST_MCU_PIN
 #define PCIE_RESET_EXTI	PCIEE_RST_MCU_EXTI
@@ -53,6 +57,11 @@ enum {
 	DDR_TYPE_LPDDR4 = 1,
 };
 
+enum {
+	TEST_MODE_HALT = 1,
+	TEST_MODE_RUN = 2,
+};
+
 void set_board_type(uint8_t type);
 uint8_t get_board_type(void);
 uint8_t get_firmware_version(void);
@@ -63,5 +72,6 @@ uint8_t get_ddr_type(void);
 char *get_board_type_name();
 void led_init(void);
 void led_set_frequency(unsigned long freq);
+int detect_test_mode(void);
 
 #endif
