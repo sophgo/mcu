@@ -107,10 +107,10 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 #if FACTORY_TEST_FLAG
 #else
-    HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOC,
+		      TPU_IIC_ADD0_Pin | TPU_IIC_ADD1_Pin |TPU_IIC_ADD2_Pin,
+		      GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin | SLOT_ID1_Pin, GPIO_PIN_RESET);
 #endif
 	// Core board detect
 	uint8_t data[1];
@@ -145,18 +145,24 @@ void MX_FREERTOS_Init(void) {
 				!= HAL_OK)
 			Error("[initial] I2C read error");
 		Info("[initial] REG[0x00]=0x%02X", *data);
-		int adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
-		while (adValue < 3100) {
-			adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
-		}
-		Info("[initial] VCC=%dmV", adValue);
-		if (adValue > 3100 && *data == 0x01) {
+		if (*data == 0x01) {
+			Info("[initial] Board Type SA5");
+			int adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
+			while (adValue < 3100) {
+				adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
+			}
+			Info("[initial] VCC=%dmV", adValue);
 			tStage = STAGE_POWER;
-            memset(reg, 0xAA, MAX_REG_SIZE);
+			memset(reg, 0xAA, MAX_REG_SIZE);
 			if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
 				Info("[initial] I2C Slave initial failed");
 			Info("QA_PASS_INIT");
-		} else {
+		} else if (*data == 0x0d) {
+			/* sm5 mini sa5 adaptive */
+			Info("[initial] Board Type SM5MA");
+			Info("QA_PASS_INIT");
+		}
+		else {
 			Info("QA_FAIL_INIT");
 			tStage = STAGE_FULLIN;
 		}

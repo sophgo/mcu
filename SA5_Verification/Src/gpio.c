@@ -28,6 +28,29 @@
 /*----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
 
+void core_board_enter_test_mode(void)
+{
+	/* 0b01, enter test mode, 0b10, exit test mode */
+	HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+}
+
+void core_board_exit_test_mode(void)
+{
+	HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+}
+
+void core_board_mcu_reset(void)
+{
+	HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_RESET);
+}
+
+void core_board_mcu_run(void)
+{
+	HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_SET);
+}
+
 /* USER CODE END 1 */
 
 /** Configure pins as 
@@ -48,19 +71,22 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
+  /* sm5mini will check these pins to determin if it should enter test mode */
+  HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+  /* no effect until gpio mode config */
+  core_board_enter_test_mode();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(TPU_IIC_ADD1_GPIO_Port, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_SET);
+  /* hold sm5 mcu nrst down until everything is ok */
+  /* no effect until gpio mode config */
+  core_board_mcu_reset();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|SLOT_ID0_Pin|SLOT_ID1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin|SLOT_ID1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : PCPin PCPin PCPin */
   GPIO_InitStruct.Pin = TPU_IIC_ADD0_Pin|TPU_IIC_ADD1_Pin|TPU_IIC_ADD2_Pin;
@@ -99,6 +125,9 @@ void MX_GPIO_Init(void)
   HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
+  /* sm5mini reset mcu */
+  HAL_Delay(1);
+  HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_SET);
 }
 
 /* USER CODE BEGIN 2 */
