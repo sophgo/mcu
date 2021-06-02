@@ -61,13 +61,19 @@ int main(void)
 	else if (pic_available())
 		set_board_type(SE5);
 	else {
-		if (tca6416a_available())
+		if (tca6416a_available()) {
 			set_board_type(
 				get_declared_board_type() == SE5 ?
 				SE5 : SM5S);
-		else
+		} else {
 			/* on test boards */
 			set_board_type(SA5);
+
+			/* change alert pin from input mode to output mode */
+			gpio_bit_reset(ALERT_PORT, ALERT_PIN);
+			gpio_init(ALERT_PORT, GPIO_MODE_OUT_PP,
+				  GPIO_OSPEED_2MHZ, ALERT_PIN);
+		}
 	}
 
 	/* but chip reset still be asserted */

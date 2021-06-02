@@ -24,4 +24,4 @@ distclean: clean
 	$(Q)rm -rf $(OUTPUT)
 
 burn: FORCE
-	st-flash write $(OUTPUT)/$(TARGET) 0x08000000
+	gd-flash write $(OUTPUT)/$(TARGET) 0x08000000

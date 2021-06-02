@@ -12,6 +12,7 @@
 #include <power.h>
 #include <wdt.h>
 #include <common.h>
+#include <mcu.h>
 
 #include <stdbool.h>
 
@@ -22,6 +23,7 @@
 #define REG_SOC_TEMP		0x04
 #define REG_BOARD_TEMP		0x05
 #define REG_INT_STATUS		0x06
+#define REG_TEST_INTR_EN	0x07
 #define REG_INT_MASK		0x08
 #define REG_SOC_RST_TIMES	0x0a
 #define REG_UPTIME_LO		0x0b
@@ -73,11 +75,15 @@ static struct mcu_ctx mcu_ctx;
 void mcu_raise_interrupt(uint8_t interrupts)
 {
 	mcu_ctx.int_status |= interrupts;
+	if (mcu_ctx.int_status)
+		gpio_set(ALERT_PORT, ALERT_PIN);
 }
 
 void mcu_clear_interrupt(uint8_t interrupts)
 {
 	mcu_ctx.int_status &= ~interrupts;
+	if (mcu_ctx.int_status == 0)
+		gpio_clear(ALERT_PORT, ALERT_PIN);
 }
 
 static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
@@ -214,6 +220,10 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_INT_STATUS:
 		mcu_clear_interrupt(data);
+		break;
+	case REG_TEST_INTR_EN:
+		if (data == 0x5a)
+			mcu_raise_interrupt(MCU_INT_TEST_INTR);
 		break;
 	case REG_GP0:
 		ctx->gp0 = data;
