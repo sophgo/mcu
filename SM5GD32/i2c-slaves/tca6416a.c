@@ -37,10 +37,10 @@ int tca6416a_write(uint8_t reg, uint8_t val)
 
 retry:
 	if (is_tca6416a_available) {
-		nvic_disable_irq(NVIC_I2C1_IRQ);
+		nvic_disable_irq(MCU_SOC_I2C_IRQ);
 		err = i2c_master_smbus_write_byte(
 			TCA6416A_I2C, TCA6416A_ADDR, TCA6416A_SMBTO, reg, val);
-		nvic_enable_irq(NVIC_I2C1_IRQ);
+		nvic_enable_irq(MCU_SOC_I2C_IRQ);
 	} else {
 		dummy_tca6416a_regmap[reg & TCA6416A_REG_MASK] = val;
 		err = 0;
@@ -57,11 +57,11 @@ int tca6416a_read(uint8_t reg)
 	int err;
 
 	if (is_tca6416a_available) {
-		nvic_disable_irq(NVIC_I2C1_IRQ);
+		nvic_disable_irq(MCU_SOC_I2C_IRQ);
 		err = i2c_master_smbus_read_byte(
 			TCA6416A_I2C, TCA6416A_ADDR, TCA6416A_SMBTO,
 			reg, &tmp);
-		nvic_enable_irq(NVIC_I2C1_IRQ);
+		nvic_enable_irq(MCU_SOC_I2C_IRQ);
 	} else {
 		tmp = dummy_tca6416a_regmap[reg & TCA6416A_REG_MASK];
 		err = 0;

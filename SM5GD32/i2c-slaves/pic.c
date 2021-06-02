@@ -33,7 +33,7 @@ int pic_write(uint8_t reg, uint8_t val)
 	int err;
 	int i = 0;
 
-	nvic_disable_irq(NVIC_I2C1_IRQ);
+	nvic_disable_irq(MCU_SOC_I2C_IRQ);
 
 	do {
 		err = i2c_master_smbus_write_byte(
@@ -41,7 +41,7 @@ int pic_write(uint8_t reg, uint8_t val)
 		++i;
 	} while (err && i <= ERROR_RETRY);
 
-	nvic_enable_irq(NVIC_I2C1_IRQ);
+	nvic_enable_irq(MCU_SOC_I2C_IRQ);
 
 	return err ? -1 : 0;
 }
@@ -53,7 +53,7 @@ int pic_read(uint8_t reg)
 	int err;
 	int i = 0;
 
-	nvic_disable_irq(NVIC_I2C1_IRQ);
+	nvic_disable_irq(MCU_SOC_I2C_IRQ);
 
 	do {
 		err = i2c_master_smbus_read_byte(PIC_I2C, PIC_ADDR, PIC_SMBTO,
@@ -61,7 +61,7 @@ int pic_read(uint8_t reg)
 		++i;
 	} while (err && i <= ERROR_RETRY);
 
-	nvic_enable_irq(NVIC_I2C1_IRQ);
+	nvic_enable_irq(MCU_SOC_I2C_IRQ);
 
 	return err ? -1 : tmp;
 }

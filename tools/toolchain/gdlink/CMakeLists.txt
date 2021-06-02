@@ -14,7 +14,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # General project settings
 ###
 
-project(stlink C)
+project(gdlink C)
 set(PROJECT_DESCRIPTION "Open source version of the STMicroelectronics ST-LINK Tools")
 include(GNUInstallDirs) # Define GNU standard installation directories
 
@@ -252,27 +252,27 @@ if (MSVC)
     set(ST-TRACE_SOURCES "${ST-TRACE_SOURCES};src/win32/getopt/getopt.c")
 endif ()
 
-add_executable(st-flash ${ST-FLASH_SOURCES})
-add_executable(st-info ${ST-INFO_SOURCES})
-add_executable(st-util ${ST-UTIL_SOURCES})
-add_executable(st-trace ${ST-TRACE_SOURCES})
+add_executable(gd-flash ${ST-FLASH_SOURCES})
+add_executable(gd-info ${ST-INFO_SOURCES})
+add_executable(gd-util ${ST-UTIL_SOURCES})
+add_executable(gd-trace ${ST-TRACE_SOURCES})
 
 if (WIN32 OR APPLE)
-    target_link_libraries(st-flash ${STLINK_LIB_STATIC} ${SSP_LIB})
-    target_link_libraries(st-info ${STLINK_LIB_STATIC} ${SSP_LIB})
-    target_link_libraries(st-util ${STLINK_LIB_STATIC} ${SSP_LIB})
-    target_link_libraries(st-trace ${STLINK_LIB_STATIC} ${SSP_LIB})
+    target_link_libraries(gd-flash ${STLINK_LIB_STATIC} ${SSP_LIB})
+    target_link_libraries(gd-info ${STLINK_LIB_STATIC} ${SSP_LIB})
+    target_link_libraries(gd-util ${STLINK_LIB_STATIC} ${SSP_LIB})
+    target_link_libraries(gd-trace ${STLINK_LIB_STATIC} ${SSP_LIB})
 else ()
-    target_link_libraries(st-flash ${STLINK_LIB_SHARED} ${SSP_LIB})
-    target_link_libraries(st-info ${STLINK_LIB_SHARED} ${SSP_LIB})
-    target_link_libraries(st-util ${STLINK_LIB_SHARED} ${SSP_LIB})
-    target_link_libraries(st-trace ${STLINK_LIB_SHARED} ${SSP_LIB})
+    target_link_libraries(gd-flash ${STLINK_LIB_SHARED} ${SSP_LIB})
+    target_link_libraries(gd-info ${STLINK_LIB_SHARED} ${SSP_LIB})
+    target_link_libraries(gd-util ${STLINK_LIB_SHARED} ${SSP_LIB})
+    target_link_libraries(gd-trace ${STLINK_LIB_SHARED} ${SSP_LIB})
 endif ()
 
-install(TARGETS st-flash DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(TARGETS st-info DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(TARGETS st-util DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(TARGETS st-trace DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS gd-flash DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS gd-info DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS gd-util DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS gd-trace DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
 ###

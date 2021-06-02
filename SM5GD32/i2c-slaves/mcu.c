@@ -2,6 +2,7 @@
 #include <string.h>
 #include <project.h>
 #include <i2c_slave.h>
+#include <i2c01_slave.h>
 #include <common.h>
 #include <mon.h>
 #include <upgrade.h>
@@ -108,7 +109,7 @@ void mcu_process(void)
 		return;
 
 	i2c_disable(I2C2);
-	nvic_irq_disable(I2C2_EV_IRQn);
+	nvic_irq_disable(MCU_SOC_I2C_IRQ);
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		power_off();
@@ -130,7 +131,7 @@ void mcu_process(void)
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
 	i2c_enable(I2C2);
-	nvic_irq_enable(I2C2_EV_IRQn, 0, 0);
+	nvic_irq_enable(MCU_SOC_I2C_IRQ, 0, 0);
 }
 
 static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)
@@ -386,9 +387,22 @@ static struct i2c_slave_op slave = {
 	.priv = &mcu_ctx,
 };
 
-void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx)
+static struct i2c01_slave_op slave01 = {
+	.addr = 0x38,	/* mcu common slave address */
+	.mask = 0x00,
+	.match = mcu_match,
+	.write = mcu_write,
+	.read = mcu_read,
+	.stop = mcu_stop,
+	.reset = mcu_reset,
+	.priv = &mcu_ctx,
+};
+
+void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx,
+	      struct i2c01_slave_ctx *i2c01_slave_ctx)
 {
 	loop_add(mcu_process);
 	i2c_slave_register(i2c_slave_ctx, &slave);
+	i2c01_slave_register(i2c01_slave_ctx, &slave01);
 }
 

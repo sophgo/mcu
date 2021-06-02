@@ -1,7 +1,7 @@
 TOP = ..
 TARGET = SM5GD32
 DEBUG = 0
-STANDALONE = 0
+STANDALONE = 1
 
 V ?= 1
 
@@ -97,7 +97,7 @@ $(OUTDIR):
 	@mkdir -p $@
 
 burn: $(OUTDIR)/$(TARGET).bin
-	st-flash write $< 0x08000000
+	gd-flash write $< 0x08000000
 
 clean:
 	rm -rf $(OUTDIR)

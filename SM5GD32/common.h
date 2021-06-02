@@ -74,7 +74,8 @@ void set_soc_temp(int temp);
 #define gpio_set	gpio_bit_set
 #define gpio_get	gpio_input_bit_get
 
-#define NVIC_I2C1_IRQ		I2C2_EV_IRQn
+#define MCU_CPLD_I2C_IRQ	I2C0_EV_IRQn
+#define MCU_SOC_I2C_IRQ		I2C2_EV_IRQn
 #define nvic_disable_irq(irq)	nvic_irq_disable(irq)
 #define nvic_enable_irq(irq)	nvic_irq_enable(irq, 0, 0)
 

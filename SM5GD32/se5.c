@@ -114,7 +114,7 @@ static inline int is_smb_alert(void)
 
 void se5_reset_board(void)
 {
-	nvic_disable_irq(NVIC_I2C1_IRQ);
+	nvic_disable_irq(MCU_SOC_I2C_IRQ);
 	power_off();
 	if (pic_available())
 		pic_write(PIC_REG_CTRL, PIC_CMD_REBOOT);
@@ -130,7 +130,7 @@ void se5_power_off_board(void)
 	if (!pic_available())
 		return;
 
-	nvic_disable_irq(NVIC_I2C1_IRQ);
+	nvic_disable_irq(MCU_SOC_I2C_IRQ);
 	power_off();
 	pic_write(PIC_REG_CTRL, PIC_CMD_POWER_OFF);
 	/* wait the end of the world */
