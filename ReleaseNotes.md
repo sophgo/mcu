@@ -159,7 +159,15 @@ Version 52:
 
     1. fixbug: i2c upgrader cannot work
 
+## SM5 GD32 Alternative
+
+Version 0:
+
+    GD32 Alternative full function support for SM5
+    Online upgrade tool should upgrade to v2.0 or later
+
 ## SM5MIN
+
 Version 0:
 
     1. first release
@@ -181,6 +189,10 @@ version 4:
 Version 5:
 
     1. fixbug: i2c upgrader cannot work
+
+Version 6:
+
+    1. Factory test support
 
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
