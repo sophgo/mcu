@@ -95,6 +95,11 @@ function build()
         make clean && make
     popd
 
+    # build libgd first
+    pushd ../libgd
+        make clean && make
+    popd
+
     date=`date '+%Y-%m-%d-%H-%M-%S'`
     set -e
     for proj in $list; do
