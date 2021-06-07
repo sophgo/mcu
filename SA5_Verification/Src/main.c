@@ -120,7 +120,9 @@ int main(void)
 
   /* Call init function for freertos objects (in freertos.c) */
   MX_FREERTOS_Init();
-
+  // exit test mode.let 1684 kernel power up
+  HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
   /* Start scheduler */
   osKernelStart();
   

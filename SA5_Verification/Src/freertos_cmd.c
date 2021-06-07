@@ -28,9 +28,10 @@
 #include "main.h"
 
 /** Declarations **/
-static const char * const mcu_ver = "2.0.5";
+static const char * const mcu_ver = "2.1.0";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
+extern uint8_t board_type;
 extern volatile testStage tStage;
 
 static BaseType_t prvVersionCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
@@ -392,9 +393,14 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	static uint8_t stage, data[2];
 	if (stage == 0) { // write reset pin
 		HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_RESET);
-		osDelay(10);
+		osDelay(100);
+		/* 0b01, enter test mode, 0b10, exit test mode */
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_SET);
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+		osDelay(100);
 		HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_SET);
 		memset(reg, 0xAA, MAX_REG_SIZE);
+		osDelay(100);
 		sprintf(pcWriteBuffer, "[reset] NRST command issued\r\n");
 		stage = 1;
 		return pdTRUE; // indicate that still have more lines to output
@@ -415,46 +421,11 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 			stage = 0;
 			return pdFALSE;
 		}
-		sprintf(pcWriteBuffer, "[reset] Power-up command issued\r\n");
-		osDelay(500);
-		stage = 2;
-		return pdTRUE;
-	} else if (stage == 2) { //verify power up result REG
-		data[0] = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
-				!= HAL_OK) {
-			sprintf(pcWriteBuffer,
-					"[reset] I2C Read Error\r\nQA_FAIL_RST\r\n");
-			stage = 0;
-			return pdFALSE;
-		}
-		osDelay(100);
-		data[1] = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data+1, 1, 100)
-				!= HAL_OK) {
-			sprintf(pcWriteBuffer,
-					"[reset] I2C Read Error\r\nQA_FAIL_RST\r\n");
-			stage = 0;
-			return pdFALSE;
-		}
-		sprintf(pcWriteBuffer, "[reset] REG[0x03]=0x%02X\r\n[reset] REG[0x14]=0x%02X\r\n", data[0],data[1]);
-		stage = 3;
-		return pdTRUE;
-	} else { // verify power up result VCC
-		int adValue = 0;
-		for (int i = 10; i > 0; i--) {
-			HAL_ADC_PollForConversion(&hadc, 10);
-			adValue = (int)AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
-			if (adValue > 3100) {
-				sprintf(pcWriteBuffer, "[reset] VCC=%dmV\r\nQA_PASS_RST\r\n", adValue);
-				stage = 0;
-				return pdFALSE;
-			} else {
-				osDelay(100);
-				continue;
-			}
-		}
-		sprintf(pcWriteBuffer, "[reset] VCC=%dmV\r\nQA_FAIL_RST\r\n", adValue);
+		sprintf(pcWriteBuffer, "[reset] enter test mode stage 1\r\nQA_PASS_RST\r\n");
+		stage = 0;
+		return pdFALSE;
+	}else{
+		sprintf(pcWriteBuffer, "[reset] enter no know test stage %d \r\nQA_FAIL_RST\r\n", stage);
 		stage = 0;
 		return pdFALSE;
 	}
@@ -471,30 +442,29 @@ static BaseType_t prvPowerUpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 					"[powerup] I2C Write Error\r\nQA_FAIL_PWR\r\n");
 			return pdFALSE;
 		}
+		// core_board_exit_test_mode
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
 		sprintf(pcWriteBuffer, "[powerup] command issued\r\n");
 		osDelay(100);
 		stage = 1;
 		return pdTRUE;
-	} else if (stage == 1) { // verify powerup register
-		*data = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)
-				!= HAL_OK) {
-			sprintf(pcWriteBuffer,
-					"[powerup] I2C Read Error\r\nQA_FAIL_PWR\r\n");
-			stage = 0;
-			return pdFALSE;
-		}
-		sprintf(pcWriteBuffer, "[powerup] REG[0x03]=0x%02X\r\n", *data);
-		stage = 2;
-		return pdTRUE;
 	} else { // verify Vcc voltage
+		int get_val = 0;
 		int adValue = 0;
+		int vcc_limit = 3100;
 		for (int i = 10; i > 0; i--) {
 			HAL_ADC_PollForConversion(&hadc, 10);
-			adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
-			if (adValue > 3100) {
-				sprintf(pcWriteBuffer, "[powerup] VCC=%dmV\r\nQA_PASS_PWR\r\n",
-						adValue);
+			get_val = HAL_ADC_GetValue(&hadc);
+			if(0x0d == board_type){
+				adValue = (int) AD_TO_VOLTAGE_MINI(get_val);
+				vcc_limit = 2000;
+			}else{
+				adValue = (int) AD_TO_VOLTAGE(get_val);
+			}
+			if (adValue > vcc_limit) {
+				sprintf(pcWriteBuffer, "[powerup] ADC = %d,VCC=%dmV\r\nQA_PASS_PWR\r\n",
+						get_val, adValue);
 				stage = 0;
 				return pdFALSE;
 			} else {
@@ -502,7 +472,7 @@ static BaseType_t prvPowerUpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 				continue;
 			}
 		}
-		sprintf(pcWriteBuffer, "[powerup] VCC=%dmV\r\nQA_FAIL_PWR\r\n", adValue);
+		sprintf(pcWriteBuffer, "[powerup] ADC = %d,VCC=%dmV\r\nQA_FAIL_PWR\r\n", get_val, adValue);
 		stage = 0;
 		return pdFALSE;
 	}
@@ -998,6 +968,8 @@ static BaseType_t prvI2cMcuCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sa5\r\nQA_PASS_IMCU\r\n",	*data);
 	else if (*data == 0x04)
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sm5\r\nQA_PASS_IMCU\r\n", *data);
+	else if (*data == 0x0d)
+		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sm5mini\r\nQA_PASS_IMCU\r\n", *data);
 	else
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type unknow\r\nQA_FAIL_IMCU\r\n", *data);
 	return pdFALSE;
@@ -1011,7 +983,7 @@ static BaseType_t prvI2c1684Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 		osDelay(500);
 		return pdFALSE;
 	}
-	if(scnt < 15)
+	if(scnt < 60)
 	{
 	    osDelay(1000);
 	    if (tStage == STAGE_KERNEL) { // test all ready passed
@@ -1033,6 +1005,7 @@ static BaseType_t prvI2c1684Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 static BaseType_t prvI2CDbgCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		const char *pcCommandString) {
     uint8_t data[32] = {0};
+    uint16_t i2c3_addr;
     #if 0
 	data[0] = 0x10;
     data[1] = 0x00;
@@ -1046,34 +1019,40 @@ static BaseType_t prvI2CDbgCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	    return pdFALSE;
 	}
 	#endif
-    data[0] = 0x23;
-    if(HAL_I2C_Master_Transmit(&hi2c3, I2C3_SLAVE_ADDR(5), data, 1, 100)!= HAL_OK)
+    for(i2c3_addr = 0x20; i2c3_addr < 0x2f; i2c3_addr++)
+    {
+    	data[0] = 0x23;
+		if(HAL_I2C_Master_Transmit(&hi2c3, i2c3_addr<<1, data, 1, 100)!= HAL_OK)
+		{
+			continue;
+		}
+		data[0] = 0x12;
+		data[1] = 0x00;
+		data[2] = 0x00;
+		data[3] = 0x01;
+		data[4] = 0x50;
+		if(HAL_I2C_Master_Transmit(&hi2c3, i2c3_addr<<1, data, 5, 100)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg transmit failed\r\nQA_FAIL_IDBG\r\n");
+			return pdFALSE;
+		}
+		if(HAL_I2C_Master_Receive(&hi2c3, i2c3_addr<<1, data, 4, 100)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg receive failed\r\nQA_FAIL_IDBG\r\n");
+			return pdFALSE;
+		}
+		if((data[2] == 0x84)&&(data[3] == 0x16))
+		{
+			break;
+		}
+    }
+    if((data[2] == 0x84)&&(data[3] == 0x16))
 	{
-	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg set mode failed\r\nQA_FAIL_IDBG\r\n");
-	    return pdFALSE;
-	}
-	data[0] = 0x12;
-    data[1] = 0x00;
-    data[2] = 0x00;
-    data[3] = 0x01;
-    data[4] = 0x50;
-    if(HAL_I2C_Master_Transmit(&hi2c3, I2C3_SLAVE_ADDR(5), data, 5, 100)!= HAL_OK)
-	{
-	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg transmit failed\r\nQA_FAIL_IDBG\r\n");
-	    return pdFALSE;
-	}
-	if(HAL_I2C_Master_Receive(&hi2c3, I2C3_SLAVE_ADDR(5), data, 4, 100)!= HAL_OK)
-	{
-	    sprintf(pcWriteBuffer, "[i2cdbg] i2cdbg receive failed\r\nQA_FAIL_IDBG\r\n");
-	    return pdFALSE;
-	}
-	if((data[2] == 0x84)&&(data[3] == 0x16))
-	{
-	    sprintf(pcWriteBuffer, "[i2cdbg] reg[0x50010000] = %02x %02x %02x %02x\r\nQA_PASS_IDBG\r\n", data[3],data[2],data[1],data[0]);
+		sprintf(pcWriteBuffer, "[i2cdbg] reg[0x50010000] i2c3_addr 0x%x = %02x %02x %02x %02x\r\nQA_PASS_IDBG\r\n", i2c3_addr,data[3],data[2],data[1],data[0]);
 	}
 	else
 	{
-	    sprintf(pcWriteBuffer, "[i2cdbg] reg[0x50010000] = %02x %02x %02x %02x\r\nQA_FAIL_IDBG\r\n", data[3],data[2],data[1],data[0]);
+		sprintf(pcWriteBuffer, "[i2cdbg] reg[0x50010000] i2c3_addr 0x%x = %02x %02x %02x %02x\r\nQA_FAIL_IDBG\r\n", i2c3_addr,data[3],data[2],data[1],data[0]);
 	}
 	return pdFALSE;
 }
@@ -1146,9 +1125,13 @@ static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
         static uint8_t flag = 0;
         if(0 == flag)
 		{
-			sprintf(pcWriteBuffer, "[gpio] flag = %x, reg3 = 0x%x, reg4 = 0x%x\r\n", flag, reg[0x03], reg[0x04]);
-			if ((reg[0x03] != 3)||(reg[0x04] != 5))
+        	uint8_t expect_val = 1;
+        	if(0xd == board_type){
+        		expect_val = 0;
+        	}
+			if ((reg[0x03] != 3)||(reg[0x04] != expect_val))
 			{
+				sprintf(pcWriteBuffer, "[gpio] gpio orignal status error:%d %d\r\nQA_FAIL_GPIO\r\n",reg[3],reg[4]);
 				return pdFALSE;
 			}
 			flag = 1;
@@ -1156,15 +1139,18 @@ static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		}
         else if(1 == flag)
         {
-			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_RESET);
+        	uint8_t expect_val = 6;
+        	if(0xd == board_type){
+				expect_val = 4;
+			}
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin|SLOT_ID1_Pin, GPIO_PIN_RESET);
 			reg[0x05] = 0x55;
 			for(int i = 10; i > 0; i--)
 			{
 				osDelay(1000);
-				if ((reg[0x03] == 0)&&(reg[0x04] == 2))
+				if ((reg[0x03] == 0)&&(reg[0x04] == expect_val))
 				{
 					flag = 2;
 					break;
@@ -1180,10 +1166,10 @@ static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 				sprintf(pcWriteBuffer, "[gpio] flag = %x, reg3 = 0x%x, reg4 = 0x%x\r\nQA_FAIL_GPIO\r\n", flag, reg[0x03], reg[0x04]);
 			}
 
-			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOB, SLOT_ID1_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin|SLOT_ID1_Pin, GPIO_PIN_SET);
+			flag = 0;
 			return pdFALSE;
         }
     }
@@ -1363,6 +1349,10 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	static uint8_t stage, data[1];
 	HAL_NVIC_DisableIRQ(MCU_CPLD_ERR_EXTI_IRQn);
 	if (stage == 0) { // write err interrupt register
+		if (HAL_GPIO_ReadPin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin) != GPIO_PIN_RESET) {
+			sprintf(pcWriteBuffer, "[err] MCU interrupt orginal status error\r\nQA_FAIL_ERR\r\n");
+			return pdFALSE;
+		}
 		*data = 0x5a;
 		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_INTR_TRIGGER_IIC, 1, data, 1, 100)
 				!= HAL_OK) {
@@ -1375,7 +1365,7 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	} else if (stage == 1) { // try to read pin MCU_ERR_INT
 		for (int i = 10; i > 0; i--) {
 			if (HAL_GPIO_ReadPin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin) == GPIO_PIN_SET) {
-				sprintf(pcWriteBuffer, "[err] MCU interrupt received\r\n");
+				sprintf(pcWriteBuffer, "[err] %d MCU interrupt received\r\n", i);
 				stage = 2;
 				return pdTRUE;
 			} else {
@@ -1391,9 +1381,18 @@ static BaseType_t prvErrCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		*data = 0x80;
 		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_INTR_STATUS_IIC, 1, data, 1, 100)
 				!= HAL_OK)
-			sprintf(pcWriteBuffer, "[err] I2C Write Error\r\nQA_FAIL_ERR\r\n");
-		else
-			sprintf(pcWriteBuffer, "[err] MCU_ERR_INT reset\r\nQA_PASS_ERR\r\n");
+			sprintf(pcWriteBuffer, "[err] clear MCU interrupt register failed\r\nQA_FAIL_ERR\r\n");
+		for (int i = 10; i > 0; i--) {
+			if (HAL_GPIO_ReadPin(MCU_CPLD_ERR_GPIO_Port, MCU_CPLD_ERR_Pin) == GPIO_PIN_RESET) {
+				sprintf(pcWriteBuffer, "[err] %d MCU interrupt status return to normal\r\nQA_PASS_ERR\r\n", i);
+				stage = 0;
+				return pdFALSE;
+			}else {
+				osDelay(50);
+				continue;
+			}
+		}
+		sprintf(pcWriteBuffer, "[err] \r\nQA_FAIL_ERR\r\n");
 		stage = 0;
 		return pdFALSE;
 	}

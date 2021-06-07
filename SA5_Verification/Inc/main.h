@@ -114,7 +114,7 @@ void Notify(const char *fmt, ...);
 #define SLOT_ID1_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 #define AD_TO_VOLTAGE(ADC_DATA)  ((ADC_DATA)*2000/2457)
-
+#define AD_TO_VOLTAGE_MINI(ADC_DATA)  ((ADC_DATA)*4200/4095)
 typedef enum testStage_t {
 	STAGE_IDLE = 0x00,
 	STAGE_FULLIN,

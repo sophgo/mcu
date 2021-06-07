@@ -75,6 +75,7 @@ volatile testStage tStage = STAGE_IDLE;
 volatile uint8_t cmdRunning = 0;
 volatile uint8_t uartBuf[6] = {0};
 uint8_t reg[MAX_REG_SIZE] = { 0xAA };
+uint8_t board_type = 0;
 
 uint8_t ucInputIndex = 0;
 char cInputString[cmdMAX_INPUT_SIZE];
@@ -145,24 +146,18 @@ void MX_FREERTOS_Init(void) {
 				!= HAL_OK)
 			Error("[initial] I2C read error");
 		Info("[initial] REG[0x00]=0x%02X", *data);
-		if (*data == 0x01) {
-			Info("[initial] Board Type SA5");
-			int adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
-			while (adValue < 3100) {
-				adValue = (int) AD_TO_VOLTAGE(HAL_ADC_GetValue(&hadc));
-			}
-			Info("[initial] VCC=%dmV", adValue);
+		board_type = *data;
+		if ((board_type == 0x01)||(board_type == 0x0D)) {
 			tStage = STAGE_POWER;
 			memset(reg, 0xAA, MAX_REG_SIZE);
 			if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
 				Info("[initial] I2C Slave initial failed");
+//			//exit test mode,let 1684 core power up
+//			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
+//			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+			HAL_Delay(200);
 			Info("QA_PASS_INIT");
-		} else if (*data == 0x0d) {
-			/* sm5 mini sa5 adaptive */
-			Info("[initial] Board Type SM5MA");
-			Info("QA_PASS_INIT");
-		}
-		else {
+		} else {
 			Info("QA_FAIL_INIT");
 			tStage = STAGE_FULLIN;
 		}
@@ -170,7 +165,6 @@ void MX_FREERTOS_Init(void) {
 		Info("[initial] Board NOT Found");
 		Info("QA_FAIL_INIT");
 	}
-
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -338,26 +332,23 @@ void runExec(void const * argument)
 {
   /* USER CODE BEGIN runExec */
 	osEvent evt;
-	uint8_t data[2] = { 0 };
+//	uint8_t data[2] = { 0 };
 	/* Infinite loop */
 	for (;;) {
 		evt = osSignalWait(0x00, osWaitForever);
-		switch (HIGH_U16(evt.value.signals)) {
-		case SIGNAL_ERROR:
-			//Notify("[notify] MCU_CPLD_ERR Detected");
-			*data = 0x00;
-			*(data + 1) = 0x00;
-			if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, 0x06, 1, data, 2, 100)
-					!= HAL_OK)
-				Error("[notify] I2C Read Error");
-			Notify("[notify] REG[0x06]=0x%02x\r\n[notify] REG[0x07]=0x%02x",
-					*data, *(data + 1));
-			break;
-		case SIGNAL_KERNEL:
+//		Notify("runexec h16 %d l16 %d\r\n",HIGH_U16(evt.value.signals),LOW_U16(evt.value.signals));
+		if(0!=((HIGH_U16(evt.value.signals))&1)){
+//			*data = 0x00;
+//			*(data + 1) = 0x00;
+//			if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, 0x06, 1, data, 2, 100)
+//					== HAL_OK){
+////				Notify("[notify] REG[0x06]=0x%02x\r\n[notify] REG[0x07]=0x%02x",
+////									*data, *(data + 1));
+//			}
+		}
+		if(0!=((HIGH_U16(evt.value.signals))&2)){
 			if (LOW_U16(evt.value.signals) == 0x01)
 				tStage = STAGE_KERNEL;
-			break;
-
 		}
 	}
   /* USER CODE END runExec */
@@ -433,7 +424,7 @@ void I2CReg_SlaveTxCallback(I2C_HandleTypeDef *hi2c, uint8_t addr) {
 void I2CReg_SlaveRxCallback(I2C_HandleTypeDef *hi2c, uint8_t addr) {
 	switch (addr) {
 	case 0x00:
-		osSignalSet(ExecThreadHandle, FORM_U16(SIGNAL_KERNEL, reg[0x00]));
+		osSignalSet(ExecThreadHandle, FORM_U16(SIGNAL_KERNEL, reg[0]));
 	}
 	//Notify("Slave Rx triggered %x\r\n",reg[0x00]);
 }
