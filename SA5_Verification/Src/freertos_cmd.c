@@ -708,6 +708,18 @@ static BaseType_t prvSetSNCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	    stage = 0;
 	    uint8_t data[32] = {0};
 
+		data[0]=0x43;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[setsn] unlock stage 1 failed\r\nQA_FAIL_SN\r\n");
+			return pdFALSE;
+		}
+		data[0]=0x4b;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[setsn] unlock stage 2 failed\r\nQA_FAIL_SN\r\n");
+			return pdFALSE;
+		}
         data[0] = LOW_U16(MCU_EEPROM_SN_ADDR);
         data[1] = HIGH_U16(MCU_EEPROM_SN_ADDR);
         if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_EEPROM_LADDR_IIC, 1, data, 2, MCU_I2C_TIMEOUT)!= HAL_OK)
@@ -780,6 +792,18 @@ static BaseType_t prvSetMac0Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 	} else {
 		stage = 0;
 		uint8_t data[16] = {0};
+		data[0]=0x43;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[setmac0] unlock stage 1 failed\r\nQA_FAIL_MAC0\r\n");
+			return pdFALSE;
+		}
+		data[0]=0x4b;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[setmac0] unlock stage 2 failed\r\nQA_FAIL_MAC0\r\n");
+			return pdFALSE;
+		}
 		data[0] = LOW_U16(MCU_EEPROM_MAC0_ADDR);
 		data[1] = HIGH_U16(MCU_EEPROM_MAC0_ADDR);
 		for (uint8_t i = 0; i < 6; i++) { // convert string to hex
@@ -865,6 +889,18 @@ static BaseType_t prvSetTypeCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	} else {
 		stage = 0;
 		uint8_t data[16] = {0};
+		data[0]=0x43;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[settype] unlock stage 1 failed\r\nQA_FAIL_TYPE\r\n");
+			return pdFALSE;
+		}
+		data[0]=0x4b;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[settype] unlock stage 2 failed\r\nQA_FAIL_TYPE\r\n");
+			return pdFALSE;
+		}
 		data[0] = LOW_U16(MCU_EEPROM_TYPE_ADDR);
 		data[1] = HIGH_U16(MCU_EEPROM_TYPE_ADDR);
 		char buf[1] = {0};
@@ -931,6 +967,18 @@ static BaseType_t prvSetMac1Command(char *pcWriteBuffer, size_t xWriteBufferLen,
 	} else {
 		stage = 0;
         uint8_t data[16] = {0};
+        data[0]=0x43;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[setmac1] unlock stage 1 failed\r\nQA_FAIL_MAC1\r\n");
+			return pdFALSE;
+		}
+		data[0]=0x4b;
+		if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, 0x60, 1, data, 1, MCU_I2C_TIMEOUT)!= HAL_OK)
+		{
+			sprintf(pcWriteBuffer, "[setmac1] unlock stage 2 failed\r\nQA_FAIL_MAC1\r\n");
+			return pdFALSE;
+		}
         data[0] = LOW_U16(MCU_EEPROM_MAC1_ADDR);
         data[1] = HIGH_U16(MCU_EEPROM_MAC1_ADDR);
         for (uint8_t i = 0; i < 6; i++) { // convert string to hex
@@ -1125,7 +1173,7 @@ static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
         static uint8_t flag = 0;
         if(0 == flag)
 		{
-        	uint8_t expect_val = 1;
+        	uint8_t expect_val = 2;
         	if(0xd == board_type){
         		expect_val = 0;
         	}
@@ -1139,12 +1187,12 @@ static BaseType_t prvGPIOCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		}
         else if(1 == flag)
         {
-        	uint8_t expect_val = 6;
+        	uint8_t expect_val = 5;
         	if(0xd == board_type){
 				expect_val = 4;
 			}
-			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin|TPU_IIC_ADD2_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin|SLOT_ID1_Pin, GPIO_PIN_RESET);
 			reg[0x05] = 0x55;
 			for(int i = 10; i > 0; i--)
