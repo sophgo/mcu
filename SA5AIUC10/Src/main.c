@@ -877,8 +877,8 @@ int main(void)
 		i2c_regs.vender = VENDER_SE5;
 	} else if (!is_tca6416a_available) {
 		/* pcie board or test board */
+		PowerON();
 		if (i2c_regs.vender != VENDER_SA5) {
-			PowerON();
 			if (i2c_regs.mode_flag == 2) {
 				/* on pcie board */
 				/* SA5 --> SA5 */

@@ -159,6 +159,10 @@ Version 52:
 
     1. fixbug: i2c upgrader cannot work
 
+Version 53:
+
+    1. sa5: auto power on when core board powered up, for some customers' private design
+
 ## SM5 GD32 Alternative
 
 Version 0:
