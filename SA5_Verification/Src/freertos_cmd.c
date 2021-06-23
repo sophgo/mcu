@@ -28,7 +28,7 @@
 #include "main.h"
 
 /** Declarations **/
-static const char * const mcu_ver = "2.1.0";
+static const char * const mcu_ver = "2.1.1";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
 extern uint8_t board_type;
@@ -394,9 +394,11 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	if (stage == 0) { // write reset pin
 		HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_RESET);
 		osDelay(100);
-		/* 0b01, enter test mode, 0b10, exit test mode */
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_SET);
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+		if(board_type == 0x0d){
+			/* 0b01, enter test mode, 0b10, exit test mode */
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
+		}
 		osDelay(100);
 		HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_SET);
 		memset(reg, 0xAA, MAX_REG_SIZE);
@@ -442,9 +444,11 @@ static BaseType_t prvPowerUpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 					"[powerup] I2C Write Error\r\nQA_FAIL_PWR\r\n");
 			return pdFALSE;
 		}
-		// core_board_exit_test_mode
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
-		HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+		if(board_type == 0x0d){
+			// core_board_exit_test_mode
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
+		}
 		sprintf(pcWriteBuffer, "[powerup] command issued\r\n");
 		osDelay(100);
 		stage = 1;

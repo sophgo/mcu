@@ -115,24 +115,37 @@ void MX_FREERTOS_Init(void) {
 #endif
 	// Core board detect
 	uint8_t data[1];
-	if ((HAL_GPIO_ReadPin(AIC_FULLIN1_GPIO_Port, AIC_FULLIN1_Pin)
-			== GPIO_PIN_RESET)
-			&& (HAL_GPIO_ReadPin(AIC_FULLIN0_GPIO_Port, AIC_FULLIN0_Pin)
-					== GPIO_PIN_RESET)) {
+	if ((HAL_GPIO_ReadPin(AIC_FULLIN1_GPIO_Port, AIC_FULLIN1_Pin)== GPIO_PIN_RESET)&&
+		(HAL_GPIO_ReadPin(AIC_FULLIN0_GPIO_Port, AIC_FULLIN0_Pin)== GPIO_PIN_RESET)) {
 		HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED);
 		HAL_ADC_Start(&hadc);
 		HAL_Delay(500);
 		data[0] = 0x80;
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data, 1, 100)!= HAL_OK)
-			Error("[initial] set core poweron location error");
-		HAL_Delay(100);
-		data[0] = 0x01;
-		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)!= HAL_OK)
-			Error("[initial] poweron 1684 error");
-		
+		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data, 1, 100)== HAL_OK){
+			HAL_Delay(100);
+			data[0] = 0x01;
+			if(HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)!= HAL_OK){
+				Info("[initial] set core mcu i2c reset register failed");
+			}
+			Info("[initial] set core mcu i2c registers ok");
+		}else{
+			Info("[initial] set core mcu i2c location register failed");
+		}
 		HAL_Delay(100);
 		HAL_ADC_PollForConversion(&hadc, 10);
 		tStage = STAGE_FULLIN;
+//		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_LOCATION_IIC, 1, data, 1, 100)!= HAL_OK)
+//			Error("[initial] set core poweron location error");
+//		HAL_Delay(100);
+//		data[0] = 0x01;
+//		if (HAL_I2C_Mem_Write(&hi2c1, CORE_MCU_ADDR, MCU_RESET_IIC, 1, data, 1, 100)!= HAL_OK)
+//			Error("[initial] poweron 1684 error");
+//
+//		HAL_Delay(100);
+//		HAL_ADC_PollForConversion(&hadc, 10);
+//		tStage = STAGE_FULLIN;
+	}else{
+		Info("[initial] Board NOT Found");
 	}
 
 	HAL_UART_Transmit(&huart1, (uint8_t *) pcWelcomeMessage,
@@ -142,27 +155,40 @@ void MX_FREERTOS_Init(void) {
 	if (tStage == STAGE_FULLIN) {
 		HAL_Delay(200);
 		*data = 0x00;
-		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_TYPE_IIC, 1, data, 1, 100)
-				!= HAL_OK)
-			Error("[initial] I2C read error");
-		Info("[initial] REG[0x00]=0x%02X", *data);
-		board_type = *data;
-		if ((board_type == 0x01)||(board_type == 0x0D)) {
-			tStage = STAGE_POWER;
-			memset(reg, 0xAA, MAX_REG_SIZE);
-			if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
-				Info("[initial] I2C Slave initial failed");
-//			//exit test mode,let 1684 core power up
-//			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
-//			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
-			HAL_Delay(200);
-			Info("QA_PASS_INIT");
-		} else {
-			Info("QA_FAIL_INIT");
-			tStage = STAGE_FULLIN;
+		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_TYPE_IIC, 1, &board_type, 1, 100)== HAL_OK){
+			Info("[initial] core mcu i2c register [%#x]=%#02x", MCU_TYPE_IIC, board_type);
+			if ((board_type == 0x01)||(board_type == 0x0D)) {
+				tStage = STAGE_POWER;
+				memset(reg, 0xAA, MAX_REG_SIZE);
+				if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
+					Info("[initial] I2C Slave initial failed");
+				HAL_Delay(200);
+				Info("QA_PASS_INIT");
+			}
 		}
-	} else if (tStage == STAGE_IDLE) {
-		Info("[initial] Board NOT Found");
+
+//		*data = 0x00;
+//		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_TYPE_IIC, 1, data, 1, 100)
+//				!= HAL_OK)
+//			Error("[initial] I2C read error");
+//		Info("[initial] REG[0x00]=0x%02X", *data);
+//		board_type = *data;
+//		if ((board_type == 0x01)||(board_type == 0x0D)) {
+//			tStage = STAGE_POWER;
+//			memset(reg, 0xAA, MAX_REG_SIZE);
+//			if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
+//				Info("[initial] I2C Slave initial failed");
+//			HAL_Delay(200);
+//			Info("QA_PASS_INIT");
+//		} else {
+//			Info("QA_FAIL_INIT");
+//			tStage = STAGE_FULLIN;
+//		}
+	}else{
+		Info("[initial] core mcu i2c read failed");
+	}
+
+	if(tStage != STAGE_POWER){
 		Info("QA_FAIL_INIT");
 	}
   /* USER CODE END Init */
@@ -342,8 +368,8 @@ void runExec(void const * argument)
 //			*(data + 1) = 0x00;
 //			if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, 0x06, 1, data, 2, 100)
 //					== HAL_OK){
-////				Notify("[notify] REG[0x06]=0x%02x\r\n[notify] REG[0x07]=0x%02x",
-////									*data, *(data + 1));
+//				Notify("[notify] REG[0x06]=0x%02x\r\n[notify] REG[0x07]=0x%02x",
+//									*data, *(data + 1));
 //			}
 		}
 		if(0!=((HIGH_U16(evt.value.signals))&2)){
