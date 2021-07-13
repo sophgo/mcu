@@ -66,12 +66,12 @@ uint8_t get_declared_board_type(void)
 
 static inline void led_on(void)
 {
-	gpio_set(MCU_LED_PORT, MCU_LED_PIN);
+	gpio_clear(POWER_LED_PORT, POWER_LED_PIN);
 }
 
 static inline void led_off(void)
 {
-	gpio_clear(MCU_LED_PORT, MCU_LED_PIN);
+	gpio_set(POWER_LED_PORT, POWER_LED_PIN);
 }
 
 int led_tick_handle;
@@ -109,27 +109,6 @@ void led_isr(void)
 		led_on();
 	else
 		led_off();
-}
-
-void root_power_on(void)
-{
-	gpio_set(POWER_ON_PORT, POWER_ON_PIN);
-	gpio_clear(POWER_LED_PORT, POWER_LED_PIN);
-}
-
-void root_power_off(void)
-{
-	gpio_clear(POWER_ON_PORT, POWER_ON_PIN);
-	gpio_set(POWER_LED_PORT, POWER_LED_PIN);
-}
-
-void root_power_reboot(void)
-{
-	root_power_off();
-	mdelay(1000);
-	root_power_on();
-	power_on();
-	chip_enable();
 }
 
 int reset_key_status(void)

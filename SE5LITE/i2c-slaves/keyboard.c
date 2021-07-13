@@ -67,6 +67,7 @@ static struct i2c_slave_op slave = {
 };
 
 static int reset_key_pressed;
+static int factory_reset_send;
 
 void kbd_set(int port, int key)
 {
@@ -78,17 +79,19 @@ void kbd_isr(void)
 	/* get reset key status, effect low */
 	if (!reset_key_status()) {
 		/* reset key is not pressed */
-		if (reset_key_pressed > REBOOT_DELAY)
+		if (reset_key_pressed > REBOOT_DELAY &&
+		    reset_key_pressed < FACTORY_RESET_DELAY)
 			kbd_set(REBOOT_KEY_PORT, REBOOT_KEY);
 		reset_key_pressed = 0;
+		factory_reset_send = 0;
 		return;
 	}
 
 	++reset_key_pressed;
 
-	if (reset_key_pressed > FACTORY_RESET_DELAY) {
+	if (!factory_reset_send && reset_key_pressed > FACTORY_RESET_DELAY) {
 		kbd_set(FACTORY_RESET_KEY_PORT, FACTORY_RESET_KEY);
-		reset_key_pressed = 0;
+		factory_reset_send = 1;
 	}
 }
 

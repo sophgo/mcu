@@ -138,7 +138,7 @@ void wdt_process(void)
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		mcu_raise_interrupt(MCU_INT_WDT_RST);
 		wdt_reset();	/* reset to initial state */
-		root_power_reboot();
+		chip_popd_reset();
 	}
 }
 

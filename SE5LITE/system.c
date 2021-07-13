@@ -35,6 +35,7 @@ void system_init(void)
 	rcc_periph_clock_enable(RCC_GPIOA);
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_GPIOC);
+	rcc_periph_clock_enable(RCC_GPIOH);
 
 	/* i2c1, i2c2 */
 	rcc_periph_clock_enable(RCC_I2C1);

@@ -61,10 +61,6 @@ int get_board_temp(void);
 int get_soc_temp(void);
 void set_board_temp(int temp);
 void set_soc_temp(int temp);
-
-void root_power_on(void);
-void root_power_off(void);
-void root_power_reboot(void);
 int reset_key_status(void);
 
 #endif

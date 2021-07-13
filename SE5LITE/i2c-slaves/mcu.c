@@ -16,6 +16,8 @@
 #define REG_SW_VER		0x01
 #define REG_HW_VER		0x02
 #define REG_CMD			0x03
+#define REG_TEMP_SOC		0x04
+#define REG_TEMP_BOARD		0x05
 #define REG_INT_STATUS		0x06
 #define REG_INT_MASK		0x08
 #define REG_SOC_RST_TIMES	0x0a
@@ -103,7 +105,7 @@ void mcu_process(void)
 	case CMD_POWER_OFF:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		wdt_reset();
-		root_power_off();
+		power_off();
 		break;
 	case CMD_RESET:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
@@ -113,7 +115,7 @@ void mcu_process(void)
 	case CMD_REBOOT:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
 		wdt_reset();
-		root_power_reboot();
+		chip_popd_reset();
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(NVIC_I2C1_IRQ);
@@ -177,6 +179,20 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	idx_inc(ctx);
 }
 
+static inline uint8_t mcu_temp(int temp)
+{
+	int8_t t;
+
+	if (temp > 127)
+		t = 127;
+	else if (temp < -128)
+		t = -128;
+	else
+		t = temp;
+
+	return *(uint8_t *)&t;
+}
+
 static uint8_t mcu_read(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
@@ -194,6 +210,12 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_CMD:
 		ret = 0;
+		break;
+	case REG_TEMP_SOC:
+		ret = mcu_temp(get_soc_temp());
+		break;
+	case REG_TEMP_BOARD:
+		ret = mcu_temp(get_board_temp());
 		break;
 	case REG_INT_STATUS:
 		ret = ctx->int_status;

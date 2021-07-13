@@ -162,7 +162,7 @@ static struct i2c_slave_op tmp451_slave = {
 
 #define TMP451_COLLECT_INTERVAL	1000
 
-#define I2C			I2C1
+#define I2C			I2C2
 #define SMBTO			1
 #define TMP451_SLAVE_ADDR	(0x4c)
 
@@ -249,6 +249,10 @@ static void tmp451_process(void)
 
 	if (power_status() && soc > critical)
 		power_off();
+	else if (board < 0 || soc < 0)
+		gpio_clear(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
+	else
+		gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
 
 	last_time = current_time;
 }

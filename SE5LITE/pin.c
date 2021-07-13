@@ -113,7 +113,7 @@ void pin_init(void)
 
 	/* port H configuration */
 	/* output data, default output state */
-	GPIO_ODR(GPIOH) = 0;
+	GPIO_ODR(GPIOH) = DVDD_3P3V_EN_PIN;
 	/* output type, push-pull or open-drain */
 	GPIO_OTYPER(GPIOH) = 0;
 	/* output speed, low, medium, high, very high */

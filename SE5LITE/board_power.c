@@ -5,6 +5,9 @@
 #include <common.h>
 #include <stdlib.h>
 
+int pmic_init_on(void);
+void pmic_init_off(void);
+
 int pmic_channel_a_on(void);
 void pmic_channel_a_off(void);
 
@@ -23,7 +26,11 @@ void sys_rst_deassert_off(void);
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
-struct power_node const board_power_nodes[22] = {
+struct power_node const board_power_nodes[23] = {
+
+	{"PMIC-INIT", NODE_TYPE_FUNCTION, 0,
+	 {(unsigned long)pmic_init_on, (unsigned long)pmic_init_off},
+	 },
 
 	{"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, 0,
 	 {(unsigned long)pmic_channel_a_on, (unsigned long)pmic_channel_a_off},
@@ -31,6 +38,10 @@ struct power_node const board_power_nodes[22] = {
 
 	{"VDD-1.8V", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
+	 },
+
+	{"VDD-CORE", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
 	 },
 
 	{"VDD-3.3V", NODE_TYPE_ENABLE, 1000,
@@ -102,10 +113,6 @@ struct power_node const board_power_nodes[22] = {
 
 	{"USB-5V", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)USB_5V_EN_PORT, (unsigned long)USB_5V_EN_PIN},
-	 },
-
-	{"PERIPHERAL-3.3", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)DVDD_3P3V_EN_PORT, (unsigned long)DVDD_3P3V_EN_PIN},
 	 },
 
 	{"ASM3142-3.3V", NODE_TYPE_ENABLE, 10,

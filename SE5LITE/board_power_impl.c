@@ -2,6 +2,19 @@
 #include <chip.h>
 #include <common.h>
 
+int pmic_init_on(void)
+{
+	gpio_set(POWER_ON_PORT, POWER_ON_PIN);
+	gpio_clear(DVDD_3P3V_EN_PORT, DVDD_3P3V_EN_PIN);
+	return mp5475_init();
+}
+
+void pmic_init_off(void)
+{
+	gpio_set(DVDD_3P3V_EN_PORT, DVDD_3P3V_EN_PIN);
+	gpio_clear(POWER_ON_PORT, POWER_ON_PIN);
+}
+
 int pmic_channel_a_on(void)
 {
 	return mp5475_buck_on(0);
@@ -9,6 +22,7 @@ int pmic_channel_a_on(void)
 
 void pmic_channel_a_off(void)
 {
+	mp5475_buck_off(0);
 }
 
 int pmic_channel_d_on(void)
@@ -43,7 +57,7 @@ void pmic_channel_c_off(void)
 
 int sys_rst_deassert_on(void)
 {
-	chip_enable();
+	gpio_set(SYS_RST_PORT, SYS_RST_PIN);
 	return 0;
 }
 
@@ -61,13 +75,4 @@ void sys_rst_assert_off(void)
 {
 	/* reset chip firstly when power off */
 	chip_disable();
-}
-
-int check_pcie_reset_on(void)
-{
-	return 0;
-}
-
-void check_pcie_reset_off(void)
-{
 }

@@ -163,14 +163,22 @@ Version 53:
 
     1. sa5: auto power on when core board powered up, for some customers' private design
 
+## SE5 LITE
+
+Version 0:
+
+    1. Bringup, all functions are supported, except WOL
+    2. Heater control is addded but not tested
+    3. WOL is not supported yet
+
 ## SM5 GD32 Alternative
 
 Version 0:
 
-    GD32 Alternative full function support for SM5
-    Online upgrade tool should upgrade to v2.0 or later
+    1. GD32 Alternative full function support for SM5
+    2. Online upgrade tool should upgrade to v2.0 or later
 
-## SM5MIN
+## SM5 MINI
 
 Version 0:
 

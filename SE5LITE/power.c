@@ -15,6 +15,7 @@ static int power_is_on;
 
 static int node_check(struct power_node const *node)
 {
+#if 0
 	int err = 0;
 	uint32_t port = node->param[0];
 	uint16_t pin = node->param[1];
@@ -30,6 +31,10 @@ static int node_check(struct power_node const *node)
 	timer_stop();
 
 	return err;
+#else
+	timer_mdelay(1);
+	return 0;
+#endif
 }
 
 static int node_on(struct power_node const *node)
@@ -111,9 +116,9 @@ int power_on(void)
 		led_set_frequency(5);
 	} else {
 		if (get_stage() == RUN_STAGE_LOADER)
-			led_set_frequency(3);
-		else
 			led_set_frequency(1);
+		else
+			led_set_frequency(LED_FREQ_ALWAYS_ON);
 		power_is_on = true;
 	}
 

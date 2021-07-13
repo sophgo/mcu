@@ -10,6 +10,7 @@
 #include <loop.h>
 #include <power.h>
 #include <stdbool.h>
+#include <tca6416a.h>
 
 static uint32_t uptime;
 static uint32_t reset_times;
@@ -27,6 +28,7 @@ uint32_t chip_uptime(void)
 
 void chip_disable(void)
 {
+	tca6416a_reset();
 	gpio_clear(SYS_RST_PORT, SYS_RST_PIN);
 	chip_enabled = false;
 	uptime = 0;
@@ -34,6 +36,7 @@ void chip_disable(void)
 
 void chip_enable(void)
 {
+	tca6416a_error_led_on();
 	gpio_set(SYS_RST_PORT, SYS_RST_PIN);
 	chip_enabled = true;
 }
@@ -54,11 +57,13 @@ void chip_reset(void)
 
 void chip_popd_reset(void)
 {
+	chip_disable();
 	power_off();
-	mdelay(50);
-	power_on();
-	uptime = 0;
+
+	mdelay(2000);
 	++reset_times;
+
+	power_on();
 	chip_enable();
 }
 
@@ -66,6 +71,8 @@ static void chip_process(void)
 {
 	if (chip_enabled)
 		++uptime;
+	else
+		uptime = 0;
 }
 
 void chip_init(void)

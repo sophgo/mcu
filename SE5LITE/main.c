@@ -24,6 +24,7 @@
 #include <eeprom.h>
 #include <wdt.h>
 #include <tmp451.h>
+#include <tca6416a.h>
 #include <keyboard.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
@@ -40,18 +41,14 @@ int main(void)
 		app_start();
 #endif
 
-	root_power_on();
-
 	led_init();
 
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
 
 	power_init();
-	mp5475_init();
 	power_on();
 	chip_init();
-	tmp451_init(&i2c1_slave_ctx);
 
 	debug("%s %s\n",
 	      get_board_type_name(),
@@ -61,12 +58,13 @@ int main(void)
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
 		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
 
-
 	set_board_type(SE5LITE);
 
 	mon_init();
 
 	mcu_init(&i2c1_slave_ctx);
+	tca6416a_init(&i2c1_slave_ctx);
+	tmp451_init(&i2c1_slave_ctx);
 	eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
 	kbd_init(&i2c1_slave_ctx);

@@ -4,6 +4,17 @@
 #define __weak __attribute__((weak))
 #endif
 
+int __weak pmic_init_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak pmic_init_off(void)
+{
+	/* add customer code here */
+}
+
 int __weak pmic_channel_a_on(void)
 {
 	/* add customer code here */

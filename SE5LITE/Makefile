@@ -1,5 +1,5 @@
 TARGET = SE5LITE
-# DEBUG = 1
+DEBUG = 0
 STANDALONE = 0
 
 ifeq ($(strip $(V)), 1)

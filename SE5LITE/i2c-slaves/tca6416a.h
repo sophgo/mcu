@@ -15,5 +15,7 @@
 #define TCA6416A_REG_MASK	(TCA6416A_REG_MAX - 1)
 
 int tca6416a_init(struct i2c_slave_ctx *i2c);
+void tca6416a_error_led_on(void);
+void tca6416a_reset(void);
 
 #endif
