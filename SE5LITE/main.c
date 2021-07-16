@@ -26,6 +26,7 @@
 #include <tmp451.h>
 #include <tca6416a.h>
 #include <keyboard.h>
+#include <wol.h>
 
 struct i2c_slave_ctx i2c1_slave_ctx;
 
@@ -60,6 +61,7 @@ int main(void)
 
 	set_board_type(SE5LITE);
 
+	wol_init();
 	mon_init();
 
 	mcu_init(&i2c1_slave_ctx);
