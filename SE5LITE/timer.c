@@ -66,16 +66,6 @@ void tim6_dac_isr(void)
 	timer_clear_flag(TIM6, TIM_SR_UIF);
 }
 
-void timer_mdelay(unsigned long ms)
-{
-	if (ms == 0)
-		return;
-
-	timer_start(ms * 1000);
-	while (!timer_is_timeout())
-		;
-}
-
 void timer_udelay(unsigned long us)
 {
 	if (us == 0)
@@ -84,6 +74,17 @@ void timer_udelay(unsigned long us)
 	timer_start(us);
 	while (!timer_is_timeout())
 		;
+}
+
+void timer_mdelay(unsigned long ms)
+{
+	unsigned long i;
+
+	if (ms == 0)
+		return;
+
+	for (i = 0; i < ms; ++i)
+		timer_udelay(1000);
 }
 
 void timer_test(void)

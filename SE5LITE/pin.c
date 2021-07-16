@@ -94,11 +94,11 @@ void pin_init(void)
 	/* output data, default output state */
 	GPIO_ODR(GPIOC) = HEALTHY_LED_PIN;
 	/* output type, push-pull or open-drain */
-	GPIO_OTYPER(GPIOC) = (GPIO_OTYPE_OD << 14) | (GPIO_OTYPE_OD << 15);
+	GPIO_OTYPER(GPIOC) = (GPIO_OTYPE_OD << 14);
 	/* output speed, low, medium, high, very high */
 	GPIO_OSPEEDR(GPIOC) =
-	    (GPIO_OSPEEDR(GPIOC) & ~0xfc000000) | (GPIO_OSPEED_LOW << (13 * 2))
-	    | (GPIO_OSPEED_LOW << (14 * 2)) | (GPIO_OSPEED_LOW << (15 * 2));
+	    (GPIO_OSPEEDR(GPIOC) & ~0x3c000000) | (GPIO_OSPEED_LOW << (13 * 2))
+	    | (GPIO_OSPEED_LOW << (14 * 2));
 	/* pull-up pull-down */
 	GPIO_PUPDR(GPIOC) =
 	    (GPIO_PUPDR(GPIOC) & ~0xfc000000) | (GPIO_PUPD_NONE << (13 * 2)) |
@@ -109,7 +109,7 @@ void pin_init(void)
 	/* mode, input, output, alternate function or analog */
 	GPIO_MODER(GPIOC) =
 	    (GPIO_MODER(GPIOC) & ~0xfc000000) | (GPIO_MODE_OUTPUT << (13 * 2)) |
-	    (GPIO_MODE_OUTPUT << (14 * 2)) | (GPIO_MODE_OUTPUT << (15 * 2));
+	    (GPIO_MODE_OUTPUT << (14 * 2)) | (GPIO_MODE_INPUT << (15 * 2));
 
 	/* port H configuration */
 	/* output data, default output state */

@@ -26,7 +26,7 @@ void sys_rst_deassert_off(void);
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
-struct power_node const board_power_nodes[23] = {
+struct power_node const board_power_nodes[24] = {
 
 	{"PMIC-INIT", NODE_TYPE_FUNCTION, 0,
 	 {(unsigned long)pmic_init_on, (unsigned long)pmic_init_off},
@@ -42,6 +42,10 @@ struct power_node const board_power_nodes[23] = {
 
 	{"VDD-CORE", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
+	 },
+
+	{"CHECK-VDD-CORE", NODE_TYPE_CHECK, 0,
+	 {(unsigned long)PG_VDDC_PORT, (unsigned long)PG_VDDC_PIN},
 	 },
 
 	{"VDD-3.3V", NODE_TYPE_ENABLE, 1000,
