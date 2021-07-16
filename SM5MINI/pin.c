@@ -8,11 +8,10 @@ void pin_init(void)
 	/* output data, default output state */
 	GPIO_ODR(GPIOA) = 0;
 	/* output type, push-pull or open-drain */
-	GPIO_OTYPER(GPIOA) = (GPIO_OTYPE_OD << 2) | (GPIO_OTYPE_OD << 3);
+	GPIO_OTYPER(GPIOA) = 0;
 	/* output speed, low, medium, high, very high */
 	GPIO_OSPEEDR(GPIOA) =
-	    (GPIO_OSPEEDR(GPIOA) & ~0xc3fc00f0) | (GPIO_OSPEED_HIGH << (2 * 2))
-	    | (GPIO_OSPEED_HIGH << (3 * 2)) | (GPIO_OSPEED_LOW << (9 * 2)) |
+	    (GPIO_OSPEEDR(GPIOA) & ~0xc3fc0000) | (GPIO_OSPEED_LOW << (9 * 2)) |
 	    (GPIO_OSPEED_LOW << (10 * 2)) | (GPIO_OSPEED_LOW << (11 * 2)) |
 	    (GPIO_OSPEED_LOW << (12 * 2)) | (GPIO_OSPEED_LOW << (15 * 2));
 	/* pull-up pull-down */
@@ -26,10 +25,7 @@ void pin_init(void)
 	    (GPIO_PUPD_PULLDOWN << (11 * 2)) | (GPIO_PUPD_PULLDOWN << (12 * 2))
 	    | (GPIO_PUPD_PULLDOWN << (15 * 2));
 	/* af, alternative function selection */
-	GPIO_AFRL(GPIOA) =
-	    (GPIO_AFRL(GPIOA) & ~0x0000ff00) | (GPIO_AF0 << (2 * 4)) | (GPIO_AF0
-									<< (3 *
-									    4));
+	/* AFRL reset state */
 	/* AFRH reset state */
 	/* mode, input, output, alternate function or analog */
 	GPIO_MODER(GPIOA) =
