@@ -11,14 +11,28 @@
 static volatile int is_chip_ready;
 static int pcie_task;
 
+/* practical value, 2048 cycle used 1.2ms */
+#define DEBOUNCE_COUNT	512
+
 void exti4_15_isr(void)
 {
-	if (gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN)) {
+	unsigned int i;
+	unsigned int hi = 0;
+	unsigned int lo = 0;
+
+	for (i = 0; i < DEBOUNCE_COUNT; ++i) {
+		if (gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN))
+			++hi;
+		else
+			++lo;
+	}
+
+	if (hi > lo) {
 		if (is_chip_ready)
 			chip_enable();
 		debug("pcie e-reset raising edge\n");
-	}
-	else {
+	} else {
+		is_chip_ready = false;
 		chip_disable();
 		tick_set_task_interval(pcie_task, 30);
 		wdt_reset();
@@ -39,7 +53,7 @@ static void pcie_process(void)
 
 void pcie_init(void)
 {
-	is_chip_ready = 1;
+	is_chip_ready = true;
 	exti_select_source(PCIE_RESET_EXTI, PCIE_RESET_PORT);
 	exti_set_trigger(PCIE_RESET_EXTI, EXTI_TRIGGER_BOTH);
 	exti_enable_request(PCIE_RESET_EXTI);

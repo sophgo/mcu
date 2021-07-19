@@ -29,7 +29,6 @@
 #include <eeprom.h>
 #include <wdt.h>
 #include <pcie.h>
-#include <tmp451.h>
 
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
@@ -88,7 +87,6 @@ int main(void)
 	mp5475_init();
 	power_on();
 	chip_init();
-	tmp451_init();
 
 	debug("%s %s working at %s mode\n",
 	      get_board_type_name(),
