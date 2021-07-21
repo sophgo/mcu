@@ -61,7 +61,15 @@ static unsigned int bom_ver;
 
 uint16_t get_current(void)
 {
-	return i12v.value;
+	/* step 1: real-voltage = 3.3 * adc / 2^12 /100
+	 *	3.3v: stm32 vcc
+	 *	100: 100 times op-amp
+	 *	2^12: stm32 ADC resolution 12bit
+	 * step 2: current = real-voltage / 0.003
+	 *	0.003: 3mO resistor
+	 * step 3: convert ampere to mili-ampere
+	 */
+	return 11000UL * i12v.value / 4096;
 }
 
 uint8_t get_pcb_version(void)
@@ -103,19 +111,6 @@ static int adc2ver(unsigned short adc)
 	return i;
 }
 
-static uint16_t adc2current(unsigned short adc)
-{
-	/* step 1: real-voltage = 3.3 * adc / 2^12 /100
-	 *	3.3v: stm32 vcc
-	 *	100: 100 times op-amp
-	 *	2^12: stm32 ADC resolution 12bit
-	 * step 2: current = real-voltage / 0.003
-	 *	0.003: 3mO resistor
-	 * step 3: convert ampere to mili-ampere
-	 */
-	return 11000UL * adc / 4096;
-}
-
 static unsigned long current_time;
 static unsigned long last_time;
 
@@ -123,7 +118,7 @@ void mon_process(void)
 {
 	current_time = tick_get();
 	if (current_time - last_time >= ACQUIRE_INTERVAL) {
-		filter_in(&i12v, adc2current(adc_read()));
+		filter_in(&i12v, adc_read());
 		last_time = current_time;
 	}
 }
@@ -156,10 +151,8 @@ void mon_init(void)
 	filter_init(&i12v, adc_read());
 
 	/* donnot get version again */
-	adc_power_off(ADC1);
-	channels[0] = 5;
+	channels[0] = 4;
 	adc_set_regular_sequence(ADC1, 1, channels);
-	adc_power_on(ADC1);
 
 	loop_add(mon_process);
 }
