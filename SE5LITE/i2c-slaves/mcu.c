@@ -94,7 +94,6 @@ static void mcu_match(void *priv, int dir)
 #define CMD_RESET		0x03	// drag reset pin
 #define CMD_REBOOT		0x07	// power off - power on
 #define CMD_UPDATE		0x08
-#define CMD_WOLEN		0x09
 
 void mcu_process(void)
 {
@@ -122,9 +121,6 @@ void mcu_process(void)
 	case CMD_UPDATE:
 		nvic_enable_irq(NVIC_I2C1_IRQ);
 		i2c_upgrade_start();
-		break;
-	case CMD_WOLEN:
-		wol_start_listen();
 		break;
 	default:
 		break;
