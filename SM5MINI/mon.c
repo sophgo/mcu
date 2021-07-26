@@ -91,7 +91,7 @@ static unsigned long adc_read(void)
 
 /* see config.xlsx, sheet adv2ver */
 const static unsigned short version_table[] = {
-	186, 658, 1207, 1759, 2340
+	186, 840, 1678, 2712, 3550
 };
 
 static int adc2ver(unsigned short adc)

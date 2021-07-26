@@ -171,6 +171,11 @@ Version 0:
     2. Heater control is addded but not tested
     3. WOL is not supported yet
 
+Version 1:
+
+    1. WOL support
+    2. power consumption support
+
 ## SM5 GD32 Alternative
 
 Version 0:
@@ -205,6 +210,14 @@ Version 5:
 Version 6:
 
     1. Factory test support
+
+Version 7:
+
+    1. fixbug pcie mode cannot work on server
+
+Version 8:
+
+    1. update version table
 
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
