@@ -48,7 +48,6 @@ int main(void)
 	i2c_master_init(I2C2);
 
 	power_init();
-	power_on();
 	chip_init();
 
 	debug("%s %s\n",
@@ -74,7 +73,7 @@ int main(void)
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);
 
-	chip_enable();
+	chip_power_on_enable();
 
 	/* never return */
 	loop_start();

@@ -11,6 +11,7 @@
 #include <power.h>
 #include <stdbool.h>
 #include <tca6416a.h>
+#include <tmp451.h>
 
 static uint32_t uptime;
 static uint32_t reset_times;
@@ -55,16 +56,34 @@ void chip_reset(void)
 	chip_enable();
 }
 
-void chip_popd_reset(void)
+void chip_power_on_enable(void)
+{
+	int board, soc;
+
+	power_on();
+	/* wait temperature greater than 0 */
+	tmp451_get_temp(&board, &soc);
+
+	while (board < 0)
+		tmp451_get_temp(&board, &soc);
+
+	chip_enable();
+}
+
+void chip_power_off_disable(void)
 {
 	chip_disable();
 	power_off();
+}
+
+void chip_popd_reset(void)
+{
+	chip_power_off_disable();
 
 	mdelay(2000);
 	++reset_times;
 
-	power_on();
-	chip_enable();
+	chip_power_on_enable();
 }
 
 static void chip_process(void)

@@ -66,12 +66,16 @@ uint8_t get_declared_board_type(void)
 
 static inline void led_on(void)
 {
+#ifndef DEBUG
 	gpio_clear(POWER_LED_PORT, POWER_LED_PIN);
+#endif
 }
 
 static inline void led_off(void)
 {
+#ifndef DEBUG
 	gpio_set(POWER_LED_PORT, POWER_LED_PIN);
+#endif
 }
 
 int led_tick_handle;

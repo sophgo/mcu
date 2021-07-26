@@ -110,7 +110,7 @@ void mcu_process(void)
 	case CMD_POWER_OFF:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		wdt_reset();
-		power_off();
+		chip_power_off_disable();
 		break;
 	case CMD_RESET:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);

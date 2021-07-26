@@ -18,8 +18,7 @@ static void wol_process(void)
 	if (last_pmeb_status == 0 || current_pmeb_status == last_pmeb_status)
 		goto noop;
 
-	power_on();
-	chip_enable();
+	chip_power_on_enable();
 noop:
 	last_pmeb_status = current_pmeb_status;
 }

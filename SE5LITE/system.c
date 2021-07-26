@@ -25,6 +25,26 @@
 static unsigned long heap_start;
 static unsigned long heap_end;
 
+static void __attribute__((unused)) usart2_setup(void)
+{
+	/* usart 2 */
+	rcc_periph_clock_enable(RCC_USART2);
+
+	usart_set_baudrate(USART2, USART2_BAUDRATE);
+	usart_set_databits(USART2, 8);
+	usart_set_stopbits(USART2, USART_STOPBITS_1);
+	usart_set_parity(USART2, USART_PARITY_NONE);
+	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
+	usart_set_mode(USART2, USART_MODE_TX_RX);
+	usart_disable_overrun_detection(USART2);
+	usart_enable(USART2);
+
+	/* enable TX only */
+	gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2);
+	gpio_set_output_options(GPIOA, GPIO_OTYPE_PP, GPIO_OSPEED_HIGH, GPIO2);
+	gpio_set_af(GPIOA, GPIO_AF4, GPIO2);
+}
+
 void system_init(void)
 {
 	/* we may load this to a place other than default reset address */
@@ -41,9 +61,6 @@ void system_init(void)
 	rcc_periph_clock_enable(RCC_I2C1);
 	rcc_periph_clock_enable(RCC_I2C2);
 
-	/* usart 2 */
-	rcc_periph_clock_enable(RCC_USART2);
-
 	/* for external interrupts */
 	/* enable PCIE RESET PIN interrupt */
 	rcc_periph_clock_enable(RCC_SYSCFG);
@@ -55,15 +72,9 @@ void system_init(void)
 
 	tick_init();
 	timer_setup();
-
-	usart_set_baudrate(USART2, USART2_BAUDRATE);
-	usart_set_databits(USART2, 8);
-	usart_set_stopbits(USART2, USART_STOPBITS_1);
-	usart_set_parity(USART2, USART_PARITY_NONE);
-	usart_set_flow_control(USART2, USART_FLOWCONTROL_NONE);
-	usart_set_mode(USART2, USART_MODE_TX_RX);
-	usart_disable_overrun_detection(USART2);
-	usart_enable(USART2);
+#ifdef DEBUG
+	usart2_setup();
+#endif
 }
 
 void clock_init(void)
@@ -112,6 +123,9 @@ int puts(const char *s)
 
 	for (i = 0; *s; ++s, ++i)
 		putchar(*s);
+
+	putchar('\r');
+	putchar('\n');
 
 	return i;
 }

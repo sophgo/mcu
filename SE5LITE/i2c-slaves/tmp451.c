@@ -7,6 +7,7 @@
 #include <common.h>
 #include <mon.h>
 #include <stdlib.h>
+#include <debug.h>
 
 #define TMP451_REG_MAX	(23)
 
@@ -179,60 +180,30 @@ static struct i2c_slave_op tmp451_slave = {
 #define TMP451_RT	(1)
 
 static unsigned long last_time;
+
+void tmp451_get_temp(int *board, int *soc)
+{
+	uint8_t tmp;
+
+	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				   TMP451_LT, &tmp);
+	*board = (int)tmp - 64;
+
+	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				   TMP451_RT, &tmp);
+	*soc = (int)tmp - 64;
+
+}
+
 static void tmp451_process(void)
 {
 	unsigned long current_time = tick_get();
-	unsigned char tmp;
 	int soc, board, critical;
-
-	if (last_time == 0) {
-		/* enable tmp451 smbus timeout, set tmp451 working at extended
-		 * mode
-		 */
-		i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-					   TMP451_ALERT, &tmp);
-
-		if ((tmp & TMP451_SMBTO_MASK) == 0) {
-			/* tmp451 has not enabled smbus timeout feature,
-			 * enable it */
-			tmp |= TMP451_SMBTO_MASK;
-			i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR,
-				SMBTO, TMP451_ALERT, tmp);
-		}
-
-		/* enable extended mode */
-		i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-			TMP451_CONFIG_RD_ADDR, &tmp);
-		tmp |= TMP451_RANGE_MASK;
-		i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-			TMP451_CONFIG_WR_ADDR, tmp);
-
-		last_time = current_time;
-
-		/* default temperature */
-		tmp451_ctx.soc = 20 + 5;
-		tmp451_ctx.board = 20;
-
-		set_soc_temp(tmp451_ctx.soc - 5);
-		set_board_temp(tmp451_ctx.board);
-
-		return;
-	}
 
 	if (current_time - last_time < TMP451_COLLECT_INTERVAL)
 		return;
 
-	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-				   TMP451_LT, &tmp);
-
-	board = (int)tmp - 64;
-	soc = board + 5;
-
-	if (chip_is_enabled()) {
-		i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-					   TMP451_RT, &tmp);
-		soc = (int)tmp - 64;
-	}
+	tmp451_get_temp(&board, &soc);
 
 	tmp451_ctx.soc = soc;
 	tmp451_ctx.board = board;
@@ -254,14 +225,42 @@ static void tmp451_process(void)
 	else
 		gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
 
+	debug("board %d, soc %d\n", board, soc);
+
 	last_time = current_time;
 }
 
 void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
+	uint8_t tmp;
+
+	/* enable smbus timeout */
+	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				   TMP451_ALERT, &tmp);
+	tmp |= TMP451_SMBTO_MASK;
+	i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR,
+				    SMBTO, TMP451_ALERT, tmp);
+
+	/* enable extended mode */
+	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				   TMP451_CONFIG_RD_ADDR, &tmp);
+	tmp |= TMP451_RANGE_MASK;
+	i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				    TMP451_CONFIG_WR_ADDR, tmp);
+
+	/* wait untill next conversion, tmp451 default conversion rate is 16, so
+	 * it takes at most 62.5ms till next conversion
+	 */
+	mdelay(65);
+
+	tmp451_get_temp(&tmp451_ctx.board, &tmp451_ctx.soc);
+
+	set_soc_temp(tmp451_ctx.soc);
+	set_board_temp(tmp451_ctx.board);
+
+	last_time = tick_get();
 	software_reset();
 	i2c_slave_register(i2c_slave_ctx, &tmp451_slave);
 	loop_add(tmp451_process);
 }
-
 
