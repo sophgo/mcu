@@ -60,13 +60,16 @@ void chip_power_on_enable(void)
 {
 	int board, soc;
 
-	power_on();
 	/* wait temperature greater than 0 */
 	tmp451_get_temp(&board, &soc);
 
-	while (board < 0)
+	while (board < 0) {
+		gpio_clear(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
+		mdelay(1000);
 		tmp451_get_temp(&board, &soc);
+	}
 
+	power_on();
 	chip_enable();
 }
 
@@ -74,6 +77,7 @@ void chip_power_off_disable(void)
 {
 	chip_disable();
 	power_off();
+	gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
 }
 
 void chip_popd_reset(void)

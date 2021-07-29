@@ -24,6 +24,7 @@ struct tmp451_reg {
 static struct tmp451_ctx {
 	int set_ptr;
 	int soc, board;	/* soc and board temperature */
+	int critical;	/* critical temp */
 	volatile uint8_t *rptr, *wptr;
 	struct tmp451_reg map[TMP451_REG_MAX];
 } tmp451_ctx = {
@@ -181,58 +182,62 @@ static struct i2c_slave_op tmp451_slave = {
 
 static unsigned long last_time;
 
-void tmp451_get_temp(int *board, int *soc)
+static void tmp451_update_temp(void)
 {
 	uint8_t tmp;
 
 	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
 				   TMP451_LT, &tmp);
-	*board = (int)tmp - 64;
+	tmp451_ctx.board = (int)tmp - 64;
 
 	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
 				   TMP451_RT, &tmp);
-	*soc = (int)tmp - 64;
+	tmp451_ctx.soc = (int)tmp - 64;
 
+	set_soc_temp(tmp451_ctx.soc - 5);
+	set_board_temp(tmp451_ctx.board);
+
+	debug("board %d, soc %d\n", get_board_temp(), get_soc_temp());
+}
+
+void tmp451_get_temp(int *board, int *soc)
+{
+	tmp451_update_temp();
+	*board = tmp451_ctx.board;
+	*soc = tmp451_ctx.soc - 5;
 }
 
 static void tmp451_process(void)
 {
 	unsigned long current_time = tick_get();
-	int soc, board, critical;
+	int soc, board;
 
 	if (current_time - last_time < TMP451_COLLECT_INTERVAL)
 		return;
 
+	last_time = current_time;
+
 	tmp451_get_temp(&board, &soc);
 
-	tmp451_ctx.soc = soc;
-	tmp451_ctx.board = board;
+	if (!chip_is_enabled())
+		return;
 
-	soc -= 5;
-
-	set_soc_temp(soc);
-	set_board_temp(board);
-
-	if (get_hardware_version() == 0x12)
-		critical = 120;
-	else
-		critical = 95;
-
-	if (power_status() && soc > critical)
+	if (soc > tmp451_ctx.critical)
 		power_off();
 	else if (board < 0 || soc < 0)
 		gpio_clear(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
 	else
 		gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
-
-	debug("board %d, soc %d\n", board, soc);
-
-	last_time = current_time;
 }
 
 void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
 	uint8_t tmp;
+
+	if (get_hardware_version() == 0x12)
+		tmp451_ctx.critical = 120;
+	else
+		tmp451_ctx.critical = 95;
 
 	/* enable smbus timeout */
 	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
@@ -253,10 +258,7 @@ void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
 	 */
 	mdelay(65);
 
-	tmp451_get_temp(&tmp451_ctx.board, &tmp451_ctx.soc);
-
-	set_soc_temp(tmp451_ctx.soc);
-	set_board_temp(tmp451_ctx.board);
+	tmp451_update_temp();
 
 	last_time = tick_get();
 	software_reset();
