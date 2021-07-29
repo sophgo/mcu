@@ -176,6 +176,9 @@ Version 1:
     1. WOL support
     2. power consumption support
 
+Version 2:
+    1. fixbug, heater not powered on when temperature under zero
+
 ## SM5 GD32 Alternative
 
 Version 0:
