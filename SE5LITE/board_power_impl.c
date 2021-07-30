@@ -1,10 +1,12 @@
 #include <mp5475.h>
 #include <chip.h>
 #include <common.h>
+#include <timer.h>
 
 int pmic_init_on(void)
 {
 	gpio_set(POWER_ON_PORT, POWER_ON_PIN);
+	timer_mdelay(10);
 	gpio_clear(DVDD_3P3V_EN_PORT, DVDD_3P3V_EN_PIN);
 	return mp5475_init();
 }
@@ -75,4 +77,15 @@ void sys_rst_assert_off(void)
 {
 	/* reset chip firstly when power off */
 	chip_disable();
+}
+
+int u5v_on(void)
+{
+	gpio_clear(USB_5V_EN_PORT, USB_5V_EN_PIN);
+	return 0;
+}
+
+void u5v_off(void)
+{
+	gpio_set(USB_5V_EN_PORT, USB_5V_EN_PIN);
 }

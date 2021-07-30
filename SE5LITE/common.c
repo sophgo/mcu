@@ -7,7 +7,7 @@
 #include <power.h>
 #include <chip.h>
 
-#define MCU_SW_VER	2
+#define MCU_SW_VER	3
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;

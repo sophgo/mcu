@@ -63,6 +63,9 @@ int main(void)
 	wol_init();
 	mon_init();
 
+	/* wait reset key high */
+	timer_mdelay(10);
+
 	mcu_init(&i2c1_slave_ctx);
 	tca6416a_init(&i2c1_slave_ctx);
 	tmp451_init(&i2c1_slave_ctx);

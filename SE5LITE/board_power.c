@@ -26,6 +26,9 @@ void sys_rst_deassert_off(void);
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
+int u5v_on(void);
+void u5v_off(void);
+
 struct power_node const board_power_nodes[24] = {
 
 	{"PMIC-INIT", NODE_TYPE_FUNCTION, 0,
@@ -115,8 +118,8 @@ struct power_node const board_power_nodes[24] = {
 	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
 	 },
 
-	{"USB-5V", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)USB_5V_EN_PORT, (unsigned long)USB_5V_EN_PIN},
+	{"USB-5V", NODE_TYPE_FUNCTION, 0,
+	 {(unsigned long)u5v_on, (unsigned long)u5v_off},
 	 },
 
 	{"ASM3142-3.3V", NODE_TYPE_ENABLE, 10,

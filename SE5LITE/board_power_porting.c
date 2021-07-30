@@ -81,4 +81,15 @@ void __weak sys_rst_assert_off(void)
 	/* add customer code here */
 }
 
+int __weak u5v_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak u5v_off(void)
+{
+	/* add customer code here */
+}
+
 /* AUTO GENERATED CODE END */
