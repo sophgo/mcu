@@ -222,6 +222,11 @@ Version 8:
 
     1. update version table
 
+Version 9:
+
+    1. fixbug, current acquire value not accurate enough
+    2. add power consumption read
+
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
 Version 0:

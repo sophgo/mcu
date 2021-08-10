@@ -146,7 +146,7 @@ void mon_init(void)
 	adc_set_resolution(ADC1, 0);
 	adc_set_regular_sequence(ADC1, ARRAY_SIZE(channels), channels);
 	/* set conversion speed to fastest */
-	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_001DOT5);
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_160DOT5);
 	adc_power_on(ADC1);
 
 	pcb_ver = adc2ver(adc_read());
@@ -156,10 +156,8 @@ void mon_init(void)
 	filter_init(&i12v, adc_read());
 
 	/* donnot get version again */
-	adc_power_off(ADC1);
 	channels[0] = 5;
 	adc_set_regular_sequence(ADC1, 1, channels);
-	adc_power_on(ADC1);
 
 	loop_add(mon_process);
 }

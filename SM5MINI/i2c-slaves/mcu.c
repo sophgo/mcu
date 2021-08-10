@@ -30,6 +30,10 @@
 #define REG_PWR_GOOD		0x16
 #define REG_MODE_FLAG		0x17
 
+#define REG_POWER_LO		0x24
+#define REG_POWER_HI		0x25
+#define REG_VOLTAGE_LO		0x26
+#define REG_VOLTAGE_HI		0x27
 #define REG_CURRENT_LO		0x28
 #define REG_CURRENT_HI		0x29
 
@@ -234,6 +238,13 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_MODE_FLAG:
 		ret = get_work_mode();
+		break;
+	case REG_POWER_LO:
+		ctx->tmp = get_current() * 12;
+		ret = ctx->tmp & 0xff;
+		break;
+	case REG_POWER_HI:
+		ret = (ctx->tmp >> 8) & 0xff;
 		break;
 	case REG_CURRENT_LO:
 		ctx->tmp = get_current();

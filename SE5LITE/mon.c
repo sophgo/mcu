@@ -141,7 +141,7 @@ void mon_init(void)
 	adc_set_resolution(ADC1, 0);
 	adc_set_regular_sequence(ADC1, ARRAY_SIZE(channels), channels);
 	/* set conversion speed to fastest */
-	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_001DOT5);
+	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPR_SMP_160DOT5);
 	adc_power_on(ADC1);
 
 	pcb_ver = adc2ver(adc_read());
