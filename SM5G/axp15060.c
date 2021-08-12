@@ -7,9 +7,171 @@
 #define AXP15050_SLAVE_ADDR	0x36
 #define I2C			I2C1
 
-#define AXP15050_ENABLE_REG_DEFAULT_VALUE	0
+struct axp15060_channel_info {
+	uint8_t en_reg, en_shift;
+	uint8_t vol_cfg_reg;
+	int vol_base, vol_step;
+} axp15060_channel_info[] = {
+	[AXP15060_DCDC1] = {
+		.en_reg = 0x10,
+		.en_shift = 0,
+		.vol_cfg_reg = 0x13,
+		.vol_base = 1500,
+		.vol_step = 100,
+	},
 
-static uint8_t axp15060_enable_reg_value = AXP15050_ENABLE_REG_DEFAULT_VALUE;
+	[AXP15060_DCDC2] = {
+		.en_reg = 0x10,
+		.en_shift = 1,
+		.vol_cfg_reg = 0x14,
+		.vol_base = 500,
+		.vol_step = 10,
+	},
+
+	[AXP15060_DCDC3] = {
+		.en_reg = 0x10,
+		.en_shift = 2,
+		.vol_cfg_reg = 0x15,
+		.vol_base = 500,
+		.vol_step = 10,
+	},
+
+	[AXP15060_DCDC4] = {
+		.en_reg = 0x10,
+		.en_shift = 3,
+		.vol_cfg_reg = 0x16,
+		.vol_base = 500,
+		.vol_step = 10,
+	},
+
+	[AXP15060_DCDC5] = {
+		.en_reg = 0x10,
+		.en_shift = 4,
+		.vol_cfg_reg = 0x17,
+		.vol_base = 800,
+		.vol_step = 10,
+	},
+
+	[AXP15060_DCDC6] = {
+		.en_reg = 0x10,
+		.en_shift = 5,
+		.vol_cfg_reg = 0x18,
+		.vol_base = 500,
+		.vol_step = 100,
+	},
+
+	[AXP15060_ALDO1] = {
+		.en_reg = 0x11,
+		.en_shift = 0,
+		.vol_cfg_reg = 0x19,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_ALDO2] = {
+		.en_reg = 0x11,
+		.en_shift = 1,
+		.vol_cfg_reg = 0x20,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_ALDO3] = {
+		.en_reg = 0x11,
+		.en_shift = 2,
+		.vol_cfg_reg = 0x21,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_ALDO4] = {
+		.en_reg = 0x11,
+		.en_shift = 3,
+		.vol_cfg_reg = 0x22,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_ALDO5] = {
+		.en_reg = 0x11,
+		.en_shift = 4,
+		.vol_cfg_reg = 0x23,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_BLDO1] = {
+		.en_reg = 0x11,
+		.en_shift = 5,
+		.vol_cfg_reg = 0x24,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_BLDO2] = {
+		.en_reg = 0x11,
+		.en_shift = 6,
+		.vol_cfg_reg = 0x25,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_BLDO3] = {
+		.en_reg = 0x11,
+		.en_shift = 7,
+		.vol_cfg_reg = 0x26,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_BLDO4] = {
+		.en_reg = 0x12,
+		.en_shift = 0,
+		.vol_cfg_reg = 0x27,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_BLDO5] = {
+		.en_reg = 0x12,
+		.en_shift = 1,
+		.vol_cfg_reg = 0x28,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_CLDO1] = {
+		.en_reg = 0x12,
+		.en_shift = 2,
+		.vol_cfg_reg = 0x29,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_CLDO2] = {
+		.en_reg = 0x12,
+		.en_shift = 3,
+		.vol_cfg_reg = 0x2a,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_CLDO3] = {
+		.en_reg = 0x12,
+		.en_shift = 4,
+		.vol_cfg_reg = 0x2b,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+
+	[AXP15060_CLDO4] = {
+		.en_reg = 0x12,
+		.en_shift = 5,
+		.vol_cfg_reg = 0x2d,
+		.vol_base = 700,
+		.vol_step = 100,
+	},
+};
 
 static inline int axp15060_read_byte(unsigned char cmd)
 {
@@ -29,58 +191,37 @@ static inline int axp15060_write_byte(unsigned char cmd,
 	return 0;
 }
 
-int axp15060_buck_on(unsigned int buck)
+int axp15060_channel_on(unsigned int channel)
 {
-	axp15060_enable_reg_value |= 1 << buck;
-	axp15060_write_byte(0x10, axp15060_enable_reg_value);
+	uint8_t reg, val, shift;
+
+	reg = axp15060_channel_info[channel].en_reg;
+	shift = axp15060_channel_info[channel].en_shift;
+
+	val = axp15060_read_byte(reg);
+	val |= 1 << shift;
+	axp15060_write_byte(reg, val);
 	return 0;
 }
 
-void axp15060_buck_off(unsigned int buck)
+void axp15060_channel_off(unsigned int channel)
 {
-	axp15060_enable_reg_value &= ~(1 << buck);
-	axp15060_write_byte(0x10, axp15060_enable_reg_value);
+	uint8_t reg, val, shift;
+
+	reg = axp15060_channel_info[channel].en_reg;
+	shift = axp15060_channel_info[channel].en_shift;
+
+	val = axp15060_read_byte(reg);
+	val &= ~(1 << shift);
+	axp15060_write_byte(reg, val);
+
 }
 
-void axp15060_ldo_on(unsigned int ldo)
+int axp15060_voltage_config(unsigned int channel, unsigned int voltage)
 {
-	int reg = ldo >= 8 ? 0x12 : 0x11;
-	int shift = ldo - 8;
-	uint8_t tmp;
-
-	tmp = axp15060_read_byte(reg);
-	tmp |= 1 << shift;
-	axp15060_write_byte(reg, tmp);
-}
-
-void axp15060_ldo_off(unsigned int ldo)
-{
-	int reg = ldo >= 8 ? 0x12 : 0x11;
-	int shift = ldo - 8;
-	uint8_t tmp;
-
-	tmp = axp15060_read_byte(reg);
-	tmp &= ~(1 << shift);
-	axp15060_write_byte(reg, tmp);
-}
-
-/* unit is mv */
-const struct {
-	unsigned int base, step;
-} buck_voltage_info[] = {
-	{1500, 100},
-	{500, 10},
-	{500, 10},
-	{500, 10},
-	{800, 10},
-	{500, 100},
-};
-
-int axp15060_voltage_config(unsigned int buck, unsigned int voltage)
-{
-	const int base = buck_voltage_info[buck].base;
-	const int step = buck_voltage_info[buck].step;
-	int reg = 0x13 + buck;
+	int base = axp15060_channel_info[channel].vol_base;
+	int step = axp15060_channel_info[channel].vol_step;
+	int reg = axp15060_channel_info[channel].vol_cfg_reg;
 	int cfg = (voltage - base) / step;
 
 	axp15060_write_byte(reg, cfg);
@@ -89,20 +230,21 @@ int axp15060_voltage_config(unsigned int buck, unsigned int voltage)
 
 int axp15060_init(void)
 {
-	uint8_t tmp;
-
 	/* disable all output */
-	axp15060_write_byte(0x24, axp15060_enable_reg_value);
-	tmp = axp15060_read_byte(0x11);
-	axp15060_write_byte(0x11, tmp & ~3);
-	/* TODO: reset pwron pin to enable mode, not pok mode */
+	axp15060_write_byte(0x10, 0);
+	axp15060_write_byte(0x11, 0);
+	axp15060_write_byte(0x12, 0);
 
-	axp15060_voltage_config(0, 3300);
-	axp15060_voltage_config(1, 800);
-	axp15060_voltage_config(2, 800);
-	axp15060_voltage_config(3, 600);
-	axp15060_voltage_config(4, 1100);
-	axp15060_voltage_config(5, 1800);
+	axp15060_voltage_config(AXP15060_DCDC1, 3300);
+	axp15060_voltage_config(AXP15060_DCDC2, 800);
+	axp15060_voltage_config(AXP15060_DCDC3, 800);
+	axp15060_voltage_config(AXP15060_DCDC4, 600);
+	axp15060_voltage_config(AXP15060_DCDC5, 1100);
+	axp15060_voltage_config(AXP15060_DCDC6, 1800);
+
+	axp15060_voltage_config(AXP15060_ALDO1, 1800);
+	axp15060_voltage_config(AXP15060_ALDO2, 3300);
+
 	return 0;
 }
 

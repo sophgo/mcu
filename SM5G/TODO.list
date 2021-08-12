@@ -1,3 +1,0 @@
-1. i2c master support NACK and timeout
-2. sa5 compatible, cpld i2c slave implementation
-3. sm5 and se5

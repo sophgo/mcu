@@ -20,6 +20,7 @@
 #include <se5.h>
 #include <sm5.h>
 #include <pcie.h>
+#include <shifter.h>
 
 #include <stdio.h>
 
@@ -87,9 +88,10 @@ int main(void)
 	mon_init();
 	slave_init();
 
-	if (get_work_mode() == WORK_MODE_SOC)
+	if (get_work_mode() == WORK_MODE_SOC) {
+		shifter_init();
 		chip_enable();
-	else
+	} else
 		pcie_init();
 
 	/* never return */

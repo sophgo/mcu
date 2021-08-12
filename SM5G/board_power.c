@@ -5,20 +5,20 @@
 #include <common.h>
 #include <stdlib.h>
 
-int pmic_aldo2_on(void);
-void pmic_aldo2_off(void);
+int pmic_aldo_2_on(void);
+void pmic_aldo_2_off(void);
 
-int pmic_channel_6_on(void);
-void pmic_channel_6_off(void);
+int pmic_dcdc_6_on(void);
+void pmic_dcdc_6_off(void);
 
-int pmic_channel_5_on(void);
-void pmic_channel_5_off(void);
+int pmic_dcdc_5_on(void);
+void pmic_dcdc_5_off(void);
 
-int pmic_channel_1234_on(void);
-void pmic_channel_1234_off(void);
+int pmic_dcdc_1234_on(void);
+void pmic_dcdc_1234_off(void);
 
-int pmic_aldo1_on(void);
-void pmic_aldo1_off(void);
+int pmic_aldo_1_on(void);
+void pmic_aldo_1_off(void);
 
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
@@ -29,11 +29,11 @@ void sys_rst_assert_off(void);
 struct power_node const board_power_nodes[18] = {
 
 	{"VDD-3.3V-CLOCK", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)pmic_aldo2_on, (unsigned long)pmic_aldo2_off},
+	 {(unsigned long)pmic_aldo_2_on, (unsigned long)pmic_aldo_2_off},
 	 },
 
 	{"VDD-1.8V", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_channel_6_on, (unsigned long)pmic_channel_6_off},
+	 {(unsigned long)pmic_dcdc_6_on, (unsigned long)pmic_dcdc_6_off},
 	 },
 
 	{"VDD-CORE", NODE_TYPE_ENABLE, 0,
@@ -45,12 +45,11 @@ struct power_node const board_power_nodes[18] = {
 	 },
 
 	{"DDR-VDDQ", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_channel_5_on, (unsigned long)pmic_channel_5_off},
+	 {(unsigned long)pmic_dcdc_5_on, (unsigned long)pmic_dcdc_5_off},
 	 },
 
 	{"VDD-QLP-3.3V-0.8V", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)pmic_channel_1234_on,
-	  (unsigned long)pmic_channel_1234_off},
+	 {(unsigned long)pmic_dcdc_1234_on, (unsigned long)pmic_dcdc_1234_off},
 	 },
 
 	{"ACK-P08", NODE_TYPE_ENABLE, 0,
@@ -88,7 +87,7 @@ struct power_node const board_power_nodes[18] = {
 	 },
 
 	{"VQPS-1.8V", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)pmic_aldo1_on, (unsigned long)pmic_aldo1_off},
+	 {(unsigned long)pmic_aldo_1_on, (unsigned long)pmic_aldo_1_off},
 	 },
 
 	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, 1000,

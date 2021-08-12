@@ -102,6 +102,14 @@ burn: $(OUTDIR)/$(TARGET).bin
 clean:
 	rm -rf $(OUTDIR)
 
+code: gencode.py config.xlsx
+	@echo '[GEN]'
+	$(Q)./gencode.py config.xlsx -e pin.h -y pin
+	$(Q)./gencode.py config.xlsx -s board_power.c -e board_power.h -p board_power_porting.c -y power
+
+cclean:
+	rm -rf pin.c pin.h board_power.c board_power.h
+
 .PHONY: clean burn
 
 include $(wildcard $(DEPS))

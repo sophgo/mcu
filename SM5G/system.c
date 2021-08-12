@@ -47,14 +47,14 @@ static void system_gpio_init(void)
 
 	/* setup output level first */
 	pins = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_9 |
-		GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
+		GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_15;
 	gpio_bit_reset(GPIOA, pins);
 	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOB */
 	gpio_init(GPIOB, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ,
-		  GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_6 |
-		  GPIO_PIN_7 | GPIO_PIN_13 | GPIO_PIN_14);
+		  GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 |
+		  GPIO_PIN_12| GPIO_PIN_13 | GPIO_PIN_14);
 
 	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_15;
 	gpio_bit_reset(GPIOB, pins);
