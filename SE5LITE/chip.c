@@ -12,6 +12,7 @@
 #include <stdbool.h>
 #include <tca6416a.h>
 #include <tmp451.h>
+#include <wol.h>
 
 static uint32_t uptime;
 static uint32_t reset_times;
@@ -60,6 +61,8 @@ void chip_power_on_enable(void)
 {
 	int board, soc;
 
+	wol_stop();
+
 	/* wait temperature greater than 0 */
 	tmp451_get_temp(&board, &soc);
 
@@ -78,6 +81,9 @@ void chip_power_off_disable(void)
 	chip_disable();
 	power_off();
 	gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
+	/* for power down stable */
+	mdelay(10);
+	wol_start();
 }
 
 void chip_popd_reset(void)
