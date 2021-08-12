@@ -28,7 +28,7 @@ int main(void)
 {
 	system_init();
 
-	debug("Hello GD32E50x\n");
+	debug("\nBITMAIN SOPHONE SM5G\n");
 
 #ifndef STANDALONE
 	if (get_stage() == RUN_STAGE_LOADER)

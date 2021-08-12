@@ -245,6 +245,8 @@ int axp15060_init(void)
 	axp15060_voltage_config(AXP15060_ALDO1, 1800);
 	axp15060_voltage_config(AXP15060_ALDO2, 3300);
 
+	gpio_bit_set(AXP_PWRON_PORT, AXP_PWRON_PIN);
+
 	return 0;
 }
 
