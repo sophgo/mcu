@@ -1,7 +1,7 @@
 TARGET = gd32e50x_hd
 DEBUG ?= 0
 
-CROSS_COMPILE ?= arm-none-eabi-
+CROSS_COMPILE := arm-none-eabi-
 
 ifeq ($(strip $(V)), 1)
 	Q =
