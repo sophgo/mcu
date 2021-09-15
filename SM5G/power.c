@@ -16,6 +16,8 @@ static int power_is_on;
 
 static int node_check(struct power_node const *node)
 {
+	return 0;
+
 	int err = 0;
 	uint32_t port = node->param[0];
 	uint16_t pin = node->param[1];

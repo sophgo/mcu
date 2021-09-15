@@ -3,8 +3,9 @@
 #include <debug.h>
 #include <tick.h>
 #include <pin.h>
+#include <common.h>
 
-#define AXP15050_SLAVE_ADDR	0x36
+#define AXP15050_SLAVE_ADDR	0x37
 #define I2C			I2C1
 
 struct axp15060_channel_info {
@@ -244,8 +245,6 @@ int axp15060_init(void)
 
 	axp15060_voltage_config(AXP15060_ALDO1, 1800);
 	axp15060_voltage_config(AXP15060_ALDO2, 3300);
-
-	gpio_bit_set(AXP_PWRON_PORT, AXP_PWRON_PIN);
 
 	return 0;
 }

@@ -88,12 +88,12 @@ uint8_t get_declared_board_type(void)
 	return *(uint8_t*)EEPROM_BOARD_TYPE_ADDR;
 }
 
-static inline void led_on(void)
+void led_on(void)
 {
 	gpio_bit_set(LED_PORT, LED_PIN);
 }
 
-static inline void led_off(void)
+void led_off(void)
 {
 	gpio_bit_reset(LED_PORT, LED_PIN);
 }

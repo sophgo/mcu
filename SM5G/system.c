@@ -56,9 +56,13 @@ static void system_gpio_init(void)
 		  GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 |
 		  GPIO_PIN_12| GPIO_PIN_13 | GPIO_PIN_14);
 
-	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_15;
+	pins = GPIO_PIN_1 | GPIO_PIN_2;
 	gpio_bit_reset(GPIOB, pins);
 	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
+
+	pins = GPIO_PIN_0 | GPIO_PIN_15;
+	gpio_bit_reset(GPIOB, pins);
+	gpio_init(GPIOB, GPIO_MODE_OUT_OD, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOC */
 	gpio_bit_reset(GPIOC, GPIO_PIN_13);
