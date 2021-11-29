@@ -1,7 +1,7 @@
 TOP = ..
 TARGET = SM5G
 DEBUG = 0
-STANDALONE = 1
+STANDALONE = 0
 
 V ?= 1
 

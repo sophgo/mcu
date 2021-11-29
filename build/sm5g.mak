@@ -12,7 +12,7 @@ $(TARGET): FORCE
 	$(Q)cd $(PACK_ROOT) && make distclean && make
 	$(Q)cd $(UTILROOT) && make clean && make && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-amd64
 	$(Q)cd $(UTILROOT) && make clean && make CROSS_COMPILE=$(AARCH64_CROSS_COMPILE) && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-aarch64
-	$(Q)$(PACK) sm5gd32-layout.xml $@ $(E) && mv $@ $(OUTPUT)/
+	$(Q)$(PACK) sm5g-layout.xml $@ $(E) && mv $@ $(OUTPUT)/
 
 clean: FORCE
 	$(Q)cd $(APP_ROOT) && make clean

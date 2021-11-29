@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <firmware>
 	<family>GD32E50</family>
-	<name>SM5G</name>
+	<name>SM5MINI</name>
 	<size>0x10000</size>
 	<efit>
 		<offset>0x6000</offset>
