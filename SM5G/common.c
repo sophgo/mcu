@@ -40,13 +40,13 @@ uint8_t get_ddr_type(void)
 char *get_board_type_name()
 {
 	switch (board_type) {
-	case SE5:
+	case SM5ME:
 		return "SM5-GD32-E";
-	case SM5S:
+	case SM5MS:
 		return "SM5-GD32-S";
-	case SM5P:
+	case SM5MP:
 		return "SM5-GD32-P";
-	case SA5:
+	case SM5MA:
 		return "SM5-GD32-A";
 	};
 	/* U means unknown type */

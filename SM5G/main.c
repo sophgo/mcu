@@ -58,17 +58,17 @@ int main(void)
 	 * based on some characteristic on motherboard
 	 */
 	if (get_work_mode() == WORK_MODE_PCIE)
-		set_board_type(SM5P);
+		set_board_type(SM5MP);
 	else if (pic_available())
-		set_board_type(SE5);
+		set_board_type(SM5ME);
 	else {
 		if (tca6416a_available()) {
 			set_board_type(
-				get_declared_board_type() == SE5 ?
-				SE5 : SM5S);
+				get_declared_board_type() == SM5ME ?
+				SM5ME : SM5MS);
 		} else {
 			/* on test boards */
-			set_board_type(SA5);
+			set_board_type(SM5MA);
 
 			/* change alert pin from input mode to output mode */
 			gpio_bit_reset(ALERT_PORT, ALERT_PIN);

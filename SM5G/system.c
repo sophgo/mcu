@@ -51,6 +51,11 @@ static void system_gpio_init(void)
 	gpio_bit_reset(GPIOA, pins);
 	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
+	/* set pcie rc reset to od, let external pull up do the things */
+	pins = GPIO_PIN_15;
+	gpio_bit_reset(GPIOA, pins);
+	gpio_init(GPIOA, GPIO_MODE_OUT_OD, GPIO_OSPEED_2MHZ, pins);
+
 	/* GPIOB */
 	gpio_init(GPIOB, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ,
 		  GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 |
@@ -60,9 +65,13 @@ static void system_gpio_init(void)
 	gpio_bit_reset(GPIOB, pins);
 	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
-	pins = GPIO_PIN_0 | GPIO_PIN_15;
+	pins = GPIO_PIN_0;
 	gpio_bit_reset(GPIOB, pins);
 	gpio_init(GPIOB, GPIO_MODE_OUT_OD, GPIO_OSPEED_2MHZ, pins);
+
+	pins = GPIO_PIN_15;
+	gpio_bit_set(GPIOB, pins);
+	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOC */
 	gpio_bit_reset(GPIOC, GPIO_PIN_13);
@@ -103,9 +112,7 @@ void system_i2c2_init(void)
 	gpio_afio_port_config(AFIO_PB4_I2C2_CFG, ENABLE);
 	gpio_afio_port_config(AFIO_PA8_I2C2_CFG, ENABLE);
 
-	/* TODO: OD mode for PB4 not working */
-	// gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ, GPIO_PIN_4);
-	gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_4);
+	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ, GPIO_PIN_4);
 	gpio_init(GPIOA, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ, GPIO_PIN_8);
 
 	i2c_deinit(I2C2);
