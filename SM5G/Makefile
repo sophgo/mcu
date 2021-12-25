@@ -3,7 +3,7 @@ TARGET = SM5G
 DEBUG = 0
 STANDALONE = 0
 
-V ?= 1
+V ?= 0
 
 ifeq ($(strip $(V)), 1)
 	Q =
