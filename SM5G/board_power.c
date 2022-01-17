@@ -5,17 +5,14 @@
 #include <common.h>
 #include <stdlib.h>
 
-int pmic_aldo_2_on(void);
-void pmic_aldo_2_off(void);
+int pmic_dcdc_1_on(void);
+void pmic_dcdc_1_off(void);
 
-int pmic_dcdc_6_on(void);
-void pmic_dcdc_6_off(void);
+int pmic_dcdc_46_on(void);
+void pmic_dcdc_46_off(void);
 
-int pmic_dcdc_5_on(void);
-void pmic_dcdc_5_off(void);
-
-int pmic_dcdc_1234_on(void);
-void pmic_dcdc_1234_off(void);
+int pmic_dcdc_235_on(void);
+void pmic_dcdc_235_off(void);
 
 int pmic_aldo_1_on(void);
 void pmic_aldo_1_off(void);
@@ -26,14 +23,14 @@ void sys_rst_deassert_off(void);
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
-struct power_node const board_power_nodes[18] = {
-
-	{"VDD-3.3V-CLOCK", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)pmic_aldo_2_on, (unsigned long)pmic_aldo_2_off},
-	 },
+struct power_node const board_power_nodes[19] = {
 
 	{"VDD-1.8V", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_dcdc_6_on, (unsigned long)pmic_dcdc_6_off},
+	 {(unsigned long)pmic_dcdc_1_on, (unsigned long)pmic_dcdc_1_off},
+	 },
+
+	{"VDD-IO-1.8V", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
 	 },
 
 	{"VDD-CORE", NODE_TYPE_ENABLE, 0,
@@ -45,11 +42,15 @@ struct power_node const board_power_nodes[18] = {
 	 },
 
 	{"DDR-VDDQ", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_dcdc_5_on, (unsigned long)pmic_dcdc_5_off},
+	 {(unsigned long)pmic_dcdc_46_on, (unsigned long)pmic_dcdc_46_off},
 	 },
 
-	{"VDD-QLP-3.3V-0.8V", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)pmic_dcdc_1234_on, (unsigned long)pmic_dcdc_1234_off},
+	{"VDD-IO-3.3V", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDIO33_PORT, (unsigned long)EN_VDDIO33_PIN},
+	 },
+
+	{"VDD-QLP-PHY-PCIE", NODE_TYPE_FUNCTION, 0,
+	 {(unsigned long)pmic_dcdc_235_on, (unsigned long)pmic_dcdc_235_off},
 	 },
 
 	{"ACK-P08", NODE_TYPE_ENABLE, 0,

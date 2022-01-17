@@ -4,46 +4,35 @@
 #define __weak __attribute__((weak))
 #endif
 
-int __weak pmic_aldo_2_on(void)
+int __weak pmic_dcdc_1_on(void)
 {
 	/* add customer code here */
 	return 0;
 }
 
-void __weak pmic_aldo_2_off(void)
+void __weak pmic_dcdc_1_off(void)
 {
 	/* add customer code here */
 }
 
-int __weak pmic_dcdc_6_on(void)
-{
-	/* add customer code here */
-	return 0;
-}
-
-void __weak pmic_dcdc_6_off(void)
-{
-	/* add customer code here */
-}
-
-int __weak pmic_dcdc_5_on(void)
+int __weak pmic_dcdc_46_on(void)
 {
 	/* add customer code here */
 	return 0;
 }
 
-void __weak pmic_dcdc_5_off(void)
+void __weak pmic_dcdc_46_off(void)
 {
 	/* add customer code here */
 }
 
-int __weak pmic_dcdc_1234_on(void)
+int __weak pmic_dcdc_235_on(void)
 {
 	/* add customer code here */
 	return 0;
 }
 
-void __weak pmic_dcdc_1234_off(void)
+void __weak pmic_dcdc_235_off(void)
 {
 	/* add customer code here */
 }

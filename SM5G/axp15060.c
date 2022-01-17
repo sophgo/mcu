@@ -236,24 +236,23 @@ int axp15060_init(void)
 	axp15060_write_byte(0x11, 0);
 	axp15060_write_byte(0x12, 0);
 
+	/* set dcdc4 and dcdc6 to poly-phase mode */
+	axp15060_write_byte(0x1a, 1 << 7);
 	/* set all dcdc to pwm mode */
 	axp15060_write_byte(0x1b, 0x3f);
 
-	axp15060_voltage_config(AXP15060_DCDC1, 3300);
+	axp15060_voltage_config(AXP15060_DCDC1, 1800);
 	axp15060_voltage_config(AXP15060_DCDC2, 860);
-	axp15060_voltage_config(AXP15060_DCDC3, 860);
 
 	/* LPDDR4 and LPDDR4X are supported */
 	if (get_ddr_type() == DDR_TYPE_LPDDR4)
-		axp15060_voltage_config(AXP15060_DCDC4, 1120);
+		axp15060_voltage_config(AXP15060_DCDC3, 1120);
 	else
-		axp15060_voltage_config(AXP15060_DCDC4, 610);
+		axp15060_voltage_config(AXP15060_DCDC3, 610);
 
-	axp15060_voltage_config(AXP15060_DCDC5, 1120);
-	axp15060_voltage_config(AXP15060_DCDC6, 1820);
-
+	axp15060_voltage_config(AXP15060_DCDC4, 1120);
+	axp15060_voltage_config(AXP15060_DCDC5, 860);
 	axp15060_voltage_config(AXP15060_ALDO1, 1800);
-	axp15060_voltage_config(AXP15060_ALDO2, 3300);
 
 	return 0;
 }
