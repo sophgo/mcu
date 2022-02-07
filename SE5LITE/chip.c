@@ -82,7 +82,7 @@ void chip_power_off_disable(void)
 	power_off();
 	gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
 	/* for power down stable */
-	mdelay(10);
+	mdelay(200);
 	wol_start();
 }
 

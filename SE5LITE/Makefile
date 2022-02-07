@@ -112,7 +112,8 @@ burn: $(OUTDIR)/$(TARGET)_LOADER.bin
 	st-flash write $< 0x08000000
 
 clean:
-	rm -rf $(OUTDIR)
+	@echo '[CLEAN]'
+	$(Q)rm -rf $(OUTDIR)
 
 code: gencode.py config.xlsx
 	@echo '[GEN]'

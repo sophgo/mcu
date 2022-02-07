@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <i2c_slave.h>
 #include <i2c_master.h>
 #include <loop.h>
@@ -25,6 +26,7 @@ static struct tmp451_ctx {
 	int set_ptr;
 	int soc, board;	/* soc and board temperature */
 	int critical;	/* critical temp */
+	int overtemp;
 	volatile uint8_t *rptr, *wptr;
 	struct tmp451_reg map[TMP451_REG_MAX];
 } tmp451_ctx = {
@@ -163,6 +165,7 @@ static struct i2c_slave_op tmp451_slave = {
 };
 
 #define TMP451_COLLECT_INTERVAL	1000
+#define TMP451_OVERTEMP_MAX	5
 
 #define I2C			I2C2
 #define SMBTO			1
@@ -219,15 +222,24 @@ static void tmp451_process(void)
 
 	tmp451_get_temp(&board, &soc);
 
-	if (!chip_is_enabled())
+	if (!chip_is_enabled()) {
+		tmp451_ctx.overtemp = 0;
 		return;
+	}
 
-	if (soc > tmp451_ctx.critical)
-		power_off();
-	else if (board < 0 || soc < 0)
-		gpio_clear(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
-	else
-		gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
+	if (soc > tmp451_ctx.critical) {
+		++tmp451_ctx.overtemp;
+		if (tmp451_ctx.overtemp > TMP451_OVERTEMP_MAX) {
+			chip_power_off_disable();
+			tmp451_ctx.overtemp = 0;
+		}
+	} else {
+		tmp451_ctx.overtemp = 0;
+		if (board < 0 || soc < 0)
+			gpio_clear(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
+		else
+			gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
+	}
 }
 
 void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
