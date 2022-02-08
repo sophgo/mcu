@@ -872,9 +872,9 @@ int main(void)
 
 	if (is_tca6416a_available && is_pic_available) {
 		/* SM5 V3 or later motherboard */
+		i2c_regs.vender = VENDER_SE5;
 		se5_gpioex_init();
 		PowerON();
-		i2c_regs.vender = VENDER_SE5;
 	} else if (!is_tca6416a_available) {
 		/* pcie board or test board */
 		PowerON();
