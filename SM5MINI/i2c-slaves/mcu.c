@@ -30,6 +30,7 @@
 #define REG_PWR_GOOD		0x16
 #define REG_MODE_FLAG		0x17
 
+#define REG_TPU_POWER_CONTROL	0x22	/* tpu power control 0: off 1: on */
 #define REG_POWER_LO		0x24
 #define REG_POWER_HI		0x25
 #define REG_VOLTAGE_LO		0x26
@@ -59,6 +60,26 @@ struct mcu_ctx {
 };
 
 static struct mcu_ctx mcu_ctx;
+
+static const char *tpu_powers[] = {
+		"VDD-TPU",
+		"ACK-TPU",
+		"VDD-TPU-MEM",
+		"ACK-TPU_MEM"
+};
+
+static void tpu_power_setup(unsigned char enable)
+{
+	if (enable)
+		power_nodes_on(tpu_powers, ARRAY_SIZE(tpu_powers));
+	else
+		power_nodes_off(tpu_powers, ARRAY_SIZE(tpu_powers));
+}
+
+static int tpu_get_power_status(void)
+{
+	return power_nodes_status(tpu_powers, ARRAY_SIZE(tpu_powers));
+}
 
 void mcu_raise_interrupt(uint8_t interrupts)
 {
@@ -185,6 +206,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_EEPROM_LOCK:
 		eeprom_lock_code(data);
 		break;
+	case REG_TPU_POWER_CONTROL:
+		tpu_power_setup(data);
+		break;
 	default:
 		break;
 	}
@@ -268,6 +292,9 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_EEPROM_LOCK:
 		ret = eeprom_get_lock_status();
+		break;
+	case REG_TPU_POWER_CONTROL:
+		ret = tpu_get_power_status();
 		break;
 	default:
 		ret = 0xff;

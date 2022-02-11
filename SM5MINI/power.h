@@ -17,6 +17,7 @@ enum {
 struct power_node {
 	char *name;
 	int type;
+	int status;
 	unsigned int delay;
 	unsigned long param[2];
 };
@@ -27,5 +28,11 @@ typedef int (*power_off_func)(void);
 void power_init(void);
 int power_on(void);
 void power_off(void);
+int power_node_on(const char *name);
+int power_nodes_on(const char **name, int num);
+void power_node_off(const char *name);
+void power_nodes_off(const char **name, int num);
+int power_node_status(const char *name);
+int power_nodes_status(const char **name, int num);
 
 #endif

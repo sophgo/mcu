@@ -482,7 +482,7 @@ class Node:
         return tmp 
 
     def gen_code(self):
-        code = '{{\"{}\", NODE_TYPE_{}, {},\n'.format(self.name, self.type, self.delay)
+        code = '{{\"{}\", NODE_TYPE_{}, POWER_STATUS_OFF, {},\n'.format(self.name, self.type, self.delay)
 
         code_name = self.get_code_name();
         if self.type == 'ENABLE' or self.type == 'CHECK':
@@ -606,7 +606,7 @@ class Power:
         for node in self.nodes:
             code += node.gen_porting_func_dec() + '\n'
 
-        code += 'struct power_node const board_power_nodes[{}] = {{\n\n'.format(len(self.nodes))
+        code += 'struct power_node board_power_nodes[{}] = {{\n\n'.format(len(self.nodes))
 
         for node in self.nodes:
             code += node.gen_code() + '\n'
@@ -630,7 +630,7 @@ class Power:
         code = '/* AUTO GENERATED CODE */\n\n'
         code = '#ifndef __BOARD_POWER_H__\n'
         code += '#define __BOARD_POWER_H__\n\n'
-        code += 'extern struct power_node const board_power_nodes[{}];\n\n'.format(len(self.nodes))
+        code += 'extern struct power_node board_power_nodes[{}];\n\n'.format(len(self.nodes))
         code += '#endif\n'
         code += '\n/* AUTO GENERATED CODE END */'
         return code
