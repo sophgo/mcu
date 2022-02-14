@@ -122,7 +122,7 @@ struct power_node const board_power_nodes[24] = {
 	 {(unsigned long)u5v_on, (unsigned long)u5v_off},
 	 },
 
-	{"ASM3142-3.3V", NODE_TYPE_ENABLE, 10,
+	{"ASM3142-3.3V", NODE_TYPE_ENABLE, 100,
 	 {(unsigned long)ASM3142_3P3V_EN_PORT,
 	  (unsigned long)ASM3142_3P3V_EN_PIN},
 	 },
