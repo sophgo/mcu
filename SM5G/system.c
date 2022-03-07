@@ -67,7 +67,7 @@ static void system_gpio_init(void)
 
 	pins = GPIO_PIN_0;
 	gpio_bit_reset(GPIOB, pins);
-	gpio_init(GPIOB, GPIO_MODE_OUT_OD, GPIO_OSPEED_2MHZ, pins);
+	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	pins = GPIO_PIN_15;
 	gpio_bit_set(GPIOB, pins);

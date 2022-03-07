@@ -163,6 +163,10 @@ Version 53:
 
     1. sa5: auto power on when core board powered up, for some customers' private design
 
+Version 54:
+
+    1. fixbug: se5 error led may not on during boot
+
 ## SE5 LITE
 
 Version 0:
@@ -178,6 +182,20 @@ Version 1:
 
 Version 2:
     1. fixbug, heater not powered on when temperature under zero
+
+Version 3:
+
+    1. tune power on sequence
+
+Version 4:
+
+    1. fixbug, hardware version adc get wrong value.
+
+Version 5:
+
+    1. fixbug, reboot may fail, system power off but cannot power on
+    2. fixbug, power off may fail, system may perform a reboot instead of power off
+    3. add 100us delay after asm3142 vdd33 on
 
 ## SM5 GD32 Alternative
 
@@ -226,6 +244,16 @@ Version 9:
 
     1. fixbug, current acquire value not accurate enough
     2. add power consumption read
+
+## SM5G
+
+Version 0:
+
+    1. SM5G initial release
+
+Version 1:
+
+    1. SM5G initial release for 1st pcb improvement
 
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
