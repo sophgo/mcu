@@ -78,7 +78,7 @@ int main(void)
 
 	/* but chip reset still be asserted */
 	if (get_work_mode() == WORK_MODE_SOC) {
-		if (get_board_type() == SE5)
+		if (get_board_type() == SM5ME)
 			se5_init();
 		else
 			sm5_init();

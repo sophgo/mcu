@@ -23,7 +23,6 @@ static void open_sa5_i2c_slave(void)
 {
 	i2c01_slave_start(&i2c0_slave_ctx);
 	nvic_irq_enable(MCU_CPLD_I2C_IRQ, 0, 0);
-	nvic_irq_enable(MCU_CPLD_I2C_IRQ, 0, 0);
 }
 
 void slave_init(void)
@@ -51,7 +50,7 @@ void slave_init(void)
 
 	nvic_irq_enable(MCU_SOC_I2C_IRQ, 0, 0);
 
-	if (get_board_type() == SA5)
+	if (get_board_type() == SM5MA)
 		open_sa5_i2c_slave();
 }
 

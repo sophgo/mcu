@@ -255,6 +255,10 @@ Version 1:
 
     1. SM5G initial release for 1st pcb improvement
 
+Version 2:
+
+    1. fixbug, sm5g does not send ack as iic slave
+
 ## SE5 Motherboard V3 or Later (PCB v1.2)
 
 Version 0:
