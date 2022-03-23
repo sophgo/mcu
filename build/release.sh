@@ -1,4 +1,4 @@
-list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro'
+list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1686evb'
 top="$PWD/.."
 
 unset rm
@@ -75,6 +75,10 @@ function version()
         ;;
     sm5g)
         dir="$top/SM5G"
+        key_word='MCU_SW_VER'
+        ;;
+    bm1686evb)
+        dir="$top/BM1686EVB"
         key_word='MCU_SW_VER'
         ;;
     esac
