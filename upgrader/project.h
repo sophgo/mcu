@@ -17,6 +17,7 @@
 #define SM5MA	13
 
 #define SE5LITE	14
+#define SM5SE6M	15
 
 #define SC7PRO	15
 

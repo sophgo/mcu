@@ -5,7 +5,7 @@
 #include <pin.h>
 #include <tick.h>
 
-#define MCU_SW_VER	10
+#define MCU_SW_VER	11
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
@@ -27,6 +27,9 @@ char *get_board_type_name()
 		return "SM5-MINI-P";
 	case SM5MA:
 		return "SM5-MINI-A";
+	case SM5SE6M:
+		return "SE6-CTRL";
+
 	};
 	/* U means unknown type */
 	return "SM5-MINI-U";

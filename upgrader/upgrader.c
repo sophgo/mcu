@@ -272,6 +272,7 @@ void upgrader_init(void)
 	case SM5MS:
 	case SM5MA:
 	case SE5LITE:
+	case SM5SE6M:
 		i2c1_init(0x17, 0x00);
 		break;
 	default:

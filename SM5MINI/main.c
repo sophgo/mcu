@@ -23,12 +23,15 @@
 #include <project.h>
 #include <power.h>
 #include <se5.h>
+#include <se6.h>
 #include <sm5.h>
 #include <loop.h>
 #include <keyboard.h>
-#include <eeprom.h>
+#include <mcu-e2prom.h>
 #include <wdt.h>
 #include <pcie.h>
+#include <at24c128c-e2prom.h>
+
 
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
@@ -53,6 +56,8 @@ int main(void)
 	/* check if i am in test board and if we need enter test mode */
 	if (detect_test_mode() == TEST_MODE_HALT) {
 
+		mcu_set_test_mode(true);
+
 		/* convert MCU_INT from input to output */
 		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
 		gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
@@ -68,8 +73,11 @@ int main(void)
 		nvic_enable_irq(NVIC_I2C2_IRQ);
 		i2c_slave_start(&i2c2_slave_ctx);
 
-		while (detect_test_mode() != TEST_MODE_RUN)
+		while (detect_test_mode() != TEST_MODE_RUN) {
 			mcu_process();
+			if (!mcu_get_test_mode())
+				break;
+		}
 
 		nvic_disable_irq(NVIC_I2C2_IRQ);
 		i2c_slave_stop(&i2c2_slave_ctx);
@@ -106,35 +114,44 @@ int main(void)
 		set_board_type(SM5ME);
 	else {
 		if (tca6416a_available())
-			set_board_type(
-				get_declared_board_type() == SM5ME ?
-				SM5ME : SM5MS);
-		else
-			/* on test boards */
+		set_board_type(
+			get_declared_board_type() == SM5ME ?
+			SM5ME : SM5MS);
+		else if (is_se6ctrl_board()) {
+		/* se6 ctrl*/
+			set_board_type(SM5SE6M);
+		} else if (mcu_get_se6_aiucore()) {
+		/* se6 aiu*/
+			set_board_type(SM5MS);
+		} else {
+		/* on test boards */
 			set_board_type(SM5MA);
+		}
 	}
 
 	/* but chip reset still be asserted */
 	if (get_work_mode() == WORK_MODE_SOC) {
 		if (get_board_type() == SM5ME)
 			se5_init();
-		else
+		else if (get_board_type() == SM5SE6M) {
+			se6_init();
+			at24c128c_init(&i2c1_slave_ctx);
+		} else
 			sm5_init();
 	}
 
 	mon_init();
 
 	mcu_init(&i2c1_slave_ctx);
-	eeprom_init(&i2c1_slave_ctx);
+	mcu_eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
 
 	if (tca6416a_available())
 		tca6416a_init(&i2c1_slave_ctx);
 
-	if (pic_available()) {
-		kbd_init(&i2c1_slave_ctx);
+	kbd_init(&i2c1_slave_ctx);
+	if (pic_available())
 		pic_init(&i2c1_slave_ctx);
-	}
 
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);

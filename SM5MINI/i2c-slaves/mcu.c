@@ -8,11 +8,14 @@
 #include <upgrade.h>
 #include <loop.h>
 #include <chip.h>
+#include <mcu-e2prom.h>
 #include <eeprom.h>
 #include <power.h>
 #include <se5.h>
 #include <wdt.h>
 #include <mcu.h>
+#include <pcie.h>
+#include <at24c128c-e2prom.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -39,11 +42,17 @@
 #define REG_CURRENT_HI		0x29
 
 #define REG_STAGE		0x3c
+#define REG_SE6_BOARD_ID	0x3d	/* 8bit for se6 board id*/
 #define REG_EEPROM_OFFSET_LO	0x3e	/* 16bit eeprom address, low 8bits */
 #define REG_EEPROM_OFFSET_HI	0x3f	/* 16bit eeprom address, high 8bits */
 #define REG_EEPROM_DATA		0x40	/* eeprom data */
 #define REG_EEPROM_LOCK		0x60	/* eeprom write lock */
-#define MCU_REG_MAX		0x64
+#define REG_SE6_BOARD_IP_0	0x61    /* IP address 1th 8 bits */
+#define REG_SE6_BOARD_IP_1	0x62    /* IP address 2th 8 bits */
+#define REG_SE6_BOARD_IP_2	0x63    /* IP address 3th 8 bits */
+#define REG_SE6_BOARD_IP_3	0x64    /* IP address 4th 8 bits */
+
+#define MCU_REG_MAX		0x65
 
 #define MCU_EEPROM_DATA_MAX	0x20
 
@@ -55,8 +64,12 @@ struct mcu_ctx {
 	uint8_t int_status;
 	uint8_t gp0;
 	uint8_t eeprom_offset_l, eeprom_offset_h;
+	int test_mode;
 
 	uint16_t tmp;
+	uint8_t brd_ip[4];  /* for se6 aiub board ip */
+	uint8_t brd_id;	    /* for se6 aiub board id */
+	bool is_se6_aiucore:1;
 };
 
 static struct mcu_ctx mcu_ctx;
@@ -81,6 +94,27 @@ static int tpu_get_power_status(void)
 	return power_nodes_status(tpu_powers, ARRAY_SIZE(tpu_powers));
 }
 
+int mcu_get_test_mode(void)
+{
+	return mcu_ctx.test_mode;
+}
+/*
+ * if is aiu core return ture else false
+ */
+bool mcu_get_se6_aiucore(void)
+{
+	return mcu_ctx.is_se6_aiucore;
+}
+
+void mcu_set_test_mode(int mode)
+{
+	mcu_ctx.test_mode = mode;
+	if (mode) {
+		pcie_init();//open pciee reset
+		mcu_ctx.is_se6_aiucore = true;
+	}
+}
+
 void mcu_raise_interrupt(uint8_t interrupts)
 {
 	mcu_ctx.int_status |= interrupts;
@@ -93,6 +127,11 @@ void mcu_clear_interrupt(uint8_t interrupts)
 	mcu_ctx.int_status &= ~interrupts;
 	if (mcu_ctx.int_status == 0)
 		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
+}
+
+void mcu_set_gp0(uint8_t data)
+{
+	mcu_ctx.gp0 = data;
 }
 
 static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
@@ -113,6 +152,7 @@ static void mcu_match(void *priv, int dir)
 		ctx->set_idx = 1;
 }
 
+#define CMD_POWER_ON		0x01	/* exit test mode for sm5mini */
 #define CMD_POWER_OFF		0x02
 #define CMD_RESET		0x03	// drag reset pin
 #define CMD_REBOOT		0x07	// power off - power on
@@ -126,8 +166,11 @@ void mcu_process(void)
 	i2c_peripheral_disable(I2C1);
 	nvic_disable_irq(NVIC_I2C1_IRQ);
 	switch (mcu_ctx.cmd) {
+	case CMD_POWER_ON:
+		mcu_set_test_mode(false);
+		break;
 	case CMD_POWER_OFF:
-		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
+		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		if (get_board_type() == SM5ME)
 			se5_power_off_board();
 		else
@@ -135,12 +178,12 @@ void mcu_process(void)
 		wdt_reset();
 		break;
 	case CMD_RESET:
-		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
+		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
 		chip_reset();
 		wdt_reset();
 		break;
 	case CMD_REBOOT:
-		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
+		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
 		if (get_board_type() == SM5ME)
 			se5_reset_board();
 		else
@@ -201,13 +244,28 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
-		eeprom_write_byte_protected(eeprom_offset(ctx), data);
+		mcu_eeprom_write_byte_protected(eeprom_offset(ctx), data);
 		break;
 	case REG_EEPROM_LOCK:
 		eeprom_lock_code(data);
 		break;
 	case REG_TPU_POWER_CONTROL:
 		tpu_power_setup(data);
+		break;
+	case REG_SE6_BOARD_ID:
+		ctx->brd_id = data;
+		break;
+	case REG_SE6_BOARD_IP_0:
+		ctx->brd_ip[0] = data;
+		break;
+	case REG_SE6_BOARD_IP_1:
+		ctx->brd_ip[1] = data;
+		break;
+	case REG_SE6_BOARD_IP_2:
+		ctx->brd_ip[2] = data;
+		break;
+	case REG_SE6_BOARD_IP_3:
+		ctx->brd_ip[3] = data;
 		break;
 	default:
 		break;
@@ -288,13 +346,28 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
-		ret = eeprom_read_byte(eeprom_offset(ctx));
+		ret = mcu_eeprom_read_byte(NULL, eeprom_offset(ctx));
 		break;
 	case REG_EEPROM_LOCK:
 		ret = eeprom_get_lock_status();
 		break;
 	case REG_TPU_POWER_CONTROL:
 		ret = tpu_get_power_status();
+		break;
+	case REG_SE6_BOARD_ID:
+		ret = ctx->brd_id;
+		break;
+	case REG_SE6_BOARD_IP_0:
+		ret = ctx->brd_ip[0];
+		break;
+	case REG_SE6_BOARD_IP_1:
+		ret = ctx->brd_ip[1];
+		break;
+	case REG_SE6_BOARD_IP_2:
+		ret = ctx->brd_ip[2];
+		break;
+	case REG_SE6_BOARD_IP_3:
+		ret = ctx->brd_ip[3];
 		break;
 	default:
 		ret = 0xff;
