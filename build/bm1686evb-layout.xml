@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <firmware>
-	<name>SM5MINI</name>
+	<name>EVB</name>
 	<size>0x10000</size>
 	<efit>
 		<offset>0x7000</offset>
@@ -9,7 +9,7 @@
 	<component>
 		<name>application</name>
 		<type>0</type>
-		<file>../SM5MINI/build/SM5MINI_APP.bin</file>
+		<file>../BM1686EVB/build/BM1686EVB_APP.bin</file>
 		<offset>0x8000</offset>
 	</component>
 	<component>
@@ -21,7 +21,7 @@
 	<component>
 		<name>loader</name>
 		<type>1</type>
-		<file>../SM5MINI/build/SM5MINI_LOADER.bin</file>
+		<file>../BM1686EVB/build/BM1686EVB_LOADER.bin</file>
 		<offset>0x0000</offset>
 	</component>
 </firmware>
