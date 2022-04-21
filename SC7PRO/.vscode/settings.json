@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "i2c_master.h": "c",
+        "power.h": "c",
+        "board_power.h": "c"
+    }
+}

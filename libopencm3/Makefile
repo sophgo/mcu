@@ -17,7 +17,7 @@
 ## along with this library.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-TARGETS := stm32/l0
+TARGETS := stm32/l0 stm32/g0
 
 PREFIX		?= arm-none-eabi-
 

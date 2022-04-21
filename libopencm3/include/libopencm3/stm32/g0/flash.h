@@ -178,6 +178,15 @@
 #define FLASH_OPTR_RDP_LEVEL_2		0xCC
 /**@}*/
 
+#define FLASH_PAGE_SIZE_SHIFT 11
+#define FLASH_PAGE_SIZE 1<<FLASH_PAGE_SIZE_SHIFT
+
+#define FLASH_CR_PNG_SHIFT 3
+#define FLASH_CR_PER_SHIFT 1
+#define FLASH_CR_STRT_SHIFT 16
+
+#define FLASH_MEM_ADDR 0x8000000
+
 BEGIN_DECLS
 
 /** Enable instruction cache */
@@ -194,6 +203,10 @@ void flash_lock_progmem(void);
 
 /** Lock Option Byte Access */
 void flash_lock_option_bytes(void);
+
+void flash_program_page(uint32_t addr, void *data);
+
+void flash_clear_error(void);
 
 END_DECLS
 

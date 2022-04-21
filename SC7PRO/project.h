@@ -8,16 +8,10 @@
 #define SM5P	4
 #define SM5S	5
 #define SA6	6
-#define SC5H3	7
+
+#define SC5PLUS	7
 #define SC5H	8
 #define SC5PRO	9
-#define SM5ME	10
-#define SM5MP	11
-#define SM5MS	12
-#define SM5MA	13
-
-#define SE5LITE	14
-
 #define SC7PRO	15
 
 #endif

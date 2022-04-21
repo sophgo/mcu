@@ -134,6 +134,7 @@ struct {
 	{"SC5PRO",	{SC5PRO}},
 	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA}},
 	{"SE5LITE",	{SE5LITE}},
+	{"SC7PRO",  {SC7PRO}},
 };
 
 const char *mcu_family[] = {"STM32L0", "GD32E50"};

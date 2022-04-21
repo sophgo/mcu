@@ -202,5 +202,15 @@ void adc_disable_regulator(uint32_t adc)
 {
 	ADC_CR(adc) &= ~ADC_CR_ADVREGEN;
 }
+/*---------------------------------------------------------------------------*/
+/** @brief ADC Enable Discontinuous Mode for Regular Conversions
+ *
+ * @param[in] adc Unsigned int32. ADC base address (@ref adc_reg_base)
+ */
+
+void adc_enable_discontinuous_mode(uint32_t adc)
+{
+	ADC_CFGR1(adc) |= ADC_CFGR1_DISCEN;
+}
 
 /**@}*/

@@ -310,7 +310,7 @@
 /* --- Function prototypes ------------------------------------------------- */
 
 BEGIN_DECLS
-
+void adc_enable_discontinuous_mode(uint32_t adc);
 void adc_set_clk_source(uint32_t adc, uint32_t source);
 void adc_set_clk_prescale(uint32_t adc, uint32_t prescale);
 
