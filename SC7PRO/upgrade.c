@@ -51,11 +51,13 @@ static void upgrade_start(unsigned int type)
 	/* disable all interrupt */
 	cm_disable_interrupts();
 
+#if 0
 	/* working in thumb mode, we should add 1 to destination */
 	/* thumb instruction pc should be even number */
 	upgrade_entry entry = (upgrade_entry)
 		(efie->offset + MEMMAP_FLASH_START + 1);
 	entry(SC7PRO);
+#endif
 }
 
 void app_start(void)

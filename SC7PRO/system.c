@@ -186,3 +186,22 @@ int uart_puts(const char *s)
 
 	return i;
 }
+
+
+int xmodem_uart_send(int data)
+{
+    usart_send_blocking(UPG_UART, data);
+    return 0;
+}
+
+/* 0xffffffff means infinity */
+int xmodem_uart_recv(unsigned long timeout)
+{
+    unsigned long tick_start = tick_get();
+    do {
+        if (usart_is_recv_ready(UPG_UART)) {
+            return usart_recv(UPG_UART);
+        }
+    } while (tick_get() - tick_start <= timeout || timeout == 0xffffffff);
+    return -1;
+}
