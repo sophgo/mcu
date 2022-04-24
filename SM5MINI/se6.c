@@ -13,8 +13,9 @@
 #include <mcu.h>
 #include <at24c128c-e2prom.h>
 
-#define DDR_TYPE	DDR_TYPE_LPDDR4X
-#define KEY_RD_TIME	(50)
+/*second*/
+#define SE6_POWER_OFF_DELAY	(30)
+#define KEY_RD_TIME		(50)
 
 /* virtual key define */
 #define VIRT_POWER_KEY_PORT	0
@@ -27,7 +28,7 @@
 #define FACTORY_RESET_KEY	(1 << 2)
 
 #define POWER_KEY_TIMER		(2 * 1000)
-#define FACTRST_KEY_TIMER	(10 * 1000)
+#define FACTRST_KEY_TIMER	(30 * 1000)
 
 /*redefine key in se6*/
 #define SE6_PWR_KEY_PORT	MCU_INT_PORT
@@ -36,13 +37,20 @@
 #define SE6_PWR_ON_PORT		MCU_UART1_RX_PORT
 #define SE6_PWR_ON_PIN		MCU_UART1_RX_PIN
 
+#define POWROFF_TIMER_NO_CUSTOMIZED   (0xffff)
 enum {
 	KEY_NONE,
 	KEY_POWER,
 	KEY_FACREST,
 };
 
-static struct pwower_key{
+static struct power_off{
+	uint32_t count;
+	bool	 start;
+	uint16_t timer;
+} se6_pweroff;
+
+static struct power_key{
 	uint16_t press_cnt;
 	uint8_t key_value;
 	bool	key_pressed:1;
@@ -107,7 +115,15 @@ static void se6ctrl_key_detect(void)
 
 }
 
-static void se6ctrl_set_pwron(bool poweron)
+static void se6_wait_pwroff(void)
+{
+	if (se6_pweroff.start == false)
+		return;
+	if (tick_get() - se6_pweroff.count > se6_pweroff.timer * 1000)
+		se6ctrl_set_pwron(false);
+}
+
+void se6ctrl_set_pwron(bool poweron)
 {
 	if (poweron)
 		gpio_set(SE6_PWR_ON_PORT, SE6_PWR_ON_PIN);
@@ -117,12 +133,14 @@ static void se6ctrl_set_pwron(bool poweron)
 
 static void se6ctrl_pwroff_do(void)
 {
+	if (se6_pweroff.start == true)
+		return;
 	kbd_set(VIRT_POWER_KEY_PORT, VIRT_POWER_KEY);
-	mdelay(50);
-	se6ctrl_set_pwron(false);
+	se6_pweroff.count = tick_get();
+	se6_pweroff.start = true;
 }
 
-static void se6ctrl_pwrkey_detect(void)
+void se6ctrl_pwrkey_detect(void)
 {
 	tick_register_task(se6ctrl_key_detect, KEY_RD_TIME);
 }
@@ -137,10 +155,13 @@ static void se6_process(void)
 		se6ctrl_pwroff_do();
 		se6ctrl_set_keyvalue(KEY_NONE);
 	}
+	se6_wait_pwroff();
 }
 
 static void se6ctrl_init_board(void)
 {
+	uint16_t pwr_timer = 0;
+
 	gpio_clear(SE6_PWR_KEY_PORT, SE6_PWR_KEY_PIN);
 	gpio_mode_setup(SE6_PWR_KEY_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,
 			SE6_PWR_KEY_PIN);
@@ -150,6 +171,12 @@ static void se6ctrl_init_board(void)
 			SE6_PWR_ON_PIN);
 
 	se6ctrl_set_pwron(true);
+
+	pwr_timer = at24c128c_get_pwroff_timer();
+	if (pwr_timer == POWROFF_TIMER_NO_CUSTOMIZED)
+		se6_pweroff.timer = SE6_POWER_OFF_DELAY;
+	else
+		se6_pweroff.timer = pwr_timer;
 }
 
 void se6_init(void)

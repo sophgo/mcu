@@ -66,6 +66,15 @@ int at24c128c_write_byte(void *priv, unsigned int offset, uint8_t data)
 	return 0;
 }
 
+uint16_t at24c128c_get_pwroff_timer(void)
+{
+	uint16_t timer;
+
+	timer = at24c128c_read_byte(&at24_eeprom, PWROFF_TIMER_OFFSET_L);
+	timer |= at24c128c_read_byte(&at24_eeprom, PWROFF_TIMER_OFFSET_H) << 8;
+	return timer;
+}
+
 bool is_se6ctrl_board(void)
 {
 	unsigned int ret = 0;

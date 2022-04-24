@@ -12,6 +12,7 @@
 #include <eeprom.h>
 #include <power.h>
 #include <se5.h>
+#include <se6.h>
 #include <wdt.h>
 #include <mcu.h>
 #include <pcie.h>
@@ -98,6 +99,7 @@ int mcu_get_test_mode(void)
 {
 	return mcu_ctx.test_mode;
 }
+
 /*
  * if is aiu core return ture else false
  */
@@ -173,6 +175,8 @@ void mcu_process(void)
 		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		if (get_board_type() == SM5ME)
 			se5_power_off_board();
+		else if (get_board_type() == SM5SE6M)
+			se6ctrl_set_pwron(false);
 		else
 			power_off();
 		wdt_reset();
