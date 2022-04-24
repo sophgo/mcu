@@ -33,7 +33,7 @@ void i2c_upgrade_start(void)
 
 static void upgrade_start(unsigned int type)
 {
-	typedef void (*upgrade_entry)(uint32_t project);
+	// typedef void (*upgrade_entry)(uint32_t project);
 	struct efie *efie = find_efie(type);
 
 	if (efie == NULL)

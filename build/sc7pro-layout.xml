@@ -13,12 +13,6 @@
 		<offset>0x8000</offset>
 	</component>
 	<component>
-		<name>uart-upgrader</name>
-		<type>3</type>
-		<file>../uart-upgrader/build/uart-upgrader.bin</file>
-		<offset>0xd000</offset>
-	</component>
-	<component>
 		<name>loader</name>
 		<type>1</type>
 		<file>../SC7PRO/build/SC7PRO_LOADER.bin</file>
