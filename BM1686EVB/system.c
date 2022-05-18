@@ -160,3 +160,28 @@ void *_sbrk(unsigned long inc)
 	heap_end += inc;
 	return last;
 }
+
+void uart_putc(int c)
+{
+	usart_send_blocking(STD_UART, c);
+}
+
+int uart_getc(void)
+{
+	if (usart_is_recv_ready(STD_UART))
+		return usart_recv(STD_UART);
+	return -1;
+}
+
+int uart_puts(const char *s)
+{
+	int i;
+
+	for (i = 0; s[i]; ++i) {
+		if (s[i] == '\n')
+			usart_send_blocking(STD_UART, '\r');
+		usart_send_blocking(STD_UART, s[i]);
+	}
+
+	return i;
+}

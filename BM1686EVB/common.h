@@ -75,4 +75,6 @@ void led_set_frequency(unsigned long freq);
 int detect_test_mode(void);
 void set_soc_temp(int temp);
 void set_board_temp(int temp);
+int get_board_temp(void);
+int get_soc_temp(void);
 #endif

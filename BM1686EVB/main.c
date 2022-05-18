@@ -29,6 +29,8 @@
 #include <eeprom.h>
 #include <wdt.h>
 #include <pcie.h>
+#include <slt.h>
+#include <console.h>
 
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
@@ -38,7 +40,7 @@ int main(void)
 	clock_init();
 	system_init();
 
-	debug("\nBITMAIN SOPHONE SM5MINI\n");
+	debug("\nBITMAIN SOPHONE BM1684XEVB\n");
 
 #ifndef STANDALONE
 	if (get_stage() == RUN_STAGE_LOADER && check_app() == 0)
@@ -96,7 +98,7 @@ int main(void)
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
 		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
-
+#if 0
 	/* auto detect or correct board type
 	 * based on some characteristic on motherboard
 	 */
@@ -113,7 +115,9 @@ int main(void)
 			/* on test boards */
 			set_board_type(SM5MA);
 	}
-
+#endif
+	set_board_type(EVB);
+#if 0
 	/* but chip reset still be asserted */
 	if (get_work_mode() == WORK_MODE_SOC) {
 		if (get_board_type() == SM5ME)
@@ -121,12 +125,13 @@ int main(void)
 		else
 			sm5_init();
 	}
-
+#endif
 	mon_init();
 
 	mcu_init(&i2c1_slave_ctx);
 	eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
+	slt_init(&i2c1_slave_ctx);
 
 	if (tca6416a_available())
 		tca6416a_init(&i2c1_slave_ctx);
@@ -144,6 +149,7 @@ int main(void)
 	else
 		pcie_init();
 
+	console_add();
 	/* never return */
 	loop_start();
 

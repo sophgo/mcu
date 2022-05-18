@@ -12,5 +12,9 @@
 void system_init(void);
 void clock_init(void);
 int std_read(void);
+void uart_putc(int c);
+int uart_getc(void);
+int uart_puts(const char *s);
+
 
 #endif

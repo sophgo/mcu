@@ -1,5 +1,5 @@
 TARGET = BM1686EVB
-# DEBUG = 1
+DEBUG = 1
 STANDALONE = 1
 
 ifeq ($(strip $(V)), 1)

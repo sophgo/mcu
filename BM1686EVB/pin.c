@@ -37,7 +37,7 @@ void pin_init(void)
 	    (GPIO_MODE_INPUT << (5 * 2)) | (GPIO_MODE_ANALOG << (6 * 2)) |
 	    (GPIO_MODE_INPUT << (7 * 2)) | (GPIO_MODE_OUTPUT << (8 * 2)) |
 	    (GPIO_MODE_OUTPUT << (9 * 2)) | (GPIO_MODE_INPUT << (10 * 2)) |
-	    (GPIO_MODE_OUTPUT << (11 * 2)) | (GPIO_MODE_OUTPUT << (12 * 2)) |
+	    (GPIO_MODE_INPUT << (11 * 2)) | (GPIO_MODE_OUTPUT << (12 * 2)) |
 	    (GPIO_MODE_INPUT << (14 * 2)) | (GPIO_MODE_INPUT << (15 * 2));
 
 	/* port B configuration */
