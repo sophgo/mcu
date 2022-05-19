@@ -5,122 +5,231 @@
 #include <common.h>
 #include <stdlib.h>
 
-int en_pmic_outc_on(void);
-void en_pmic_outc_off(void);
+int pmic_outc_on(void);
+void pmic_outc_off(void);
 
-int en_pmic_outa_on(void);
-void en_pmic_outa_off(void);
+int pmic_outa_outd_on(void);
+void pmic_outa_outd_off(void);
 
-int en_pmic_outb_on(void);
-void en_pmic_outb_off(void);
+int pmic_outb_on(void);
+void pmic_outb_off(void);
 
-int en_pmic_outd_on(void);
-void en_pmic_outd_off(void);
+struct power_node const board_power_nodes[51] = {
 
-struct power_node board_power_nodes[26] = {
-
-	{"PMIC-OUTC", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
-	 {(unsigned long)en_pmic_outc_on, (unsigned long)en_pmic_outc_off},
+	{"PMIC_OUTC", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)pmic_outc_on, (unsigned long)pmic_outc_off},
 	 },
 
-	{"VDDC", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
+	{"EN_VDDC_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDC_B12_PORT, (unsigned long)EN_VDDC_B12_PIN},
 	 },
 
-	{"VDD-3.3V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)EN_VDDIO33_PORT, (unsigned long)EN_VDDIO33_PIN},
+	{"EN_VDDC_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDC_B34_PORT, (unsigned long)EN_VDDC_B34_PIN},
 	 },
 
-	{"VDD-PHY", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)EN_VDD_PHY_PORT, (unsigned long)EN_VDD_PHY_PIN},
+	{"EN_VDDC_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDC_B56_PORT, (unsigned long)EN_VDDC_B56_PIN},
 	 },
 
-	{"VP-0.8V-1", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)P08_PG_1_PORT, (unsigned long)P08_PG_1_PIN},
+	{"EN_VDDC_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDDC_B78_PORT, (unsigned long)EN_VDDC_B78_PIN},
 	 },
 
-	{"VP-0.8V-2", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
-	 {(unsigned long)P08_PG_2_PORT, (unsigned long)P08_PG_2_PIN},
+	{"EN_VDDIO33_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDIO33_B12_PORT,
+	  (unsigned long)EN_VDDIO33_B12_PIN},
 	 },
 
-	{"PG-PCIE-1", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)PCIE_PG_1_PORT, (unsigned long)PCIE_PG_1_PIN},
+	{"EN_VDDIO33_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDIO33_B34_PORT,
+	  (unsigned long)EN_VDDIO33_B34_PIN},
 	 },
 
-	{"PG-PCIE-2", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
-	 {(unsigned long)PCIE_PG_2_PORT, (unsigned long)PCIE_PG_2_PIN},
+	{"EN_VDDIO33_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDIO33_B56_PORT,
+	  (unsigned long)EN_VDDIO33_B56_PIN},
 	 },
 
-	{"VDD-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)EN_VDD_TPU_PORT, (unsigned long)EN_VDD_TPU_PIN},
+	{"EN_VDDIO33_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDDIO33_B78_PORT,
+	  (unsigned long)EN_VDDIO33_B78_PIN},
 	 },
 
-	{"PG-TPU-1", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)TPU_PG_1_PORT, (unsigned long)TPU_PG_1_PIN},
+	{"EN_VDD_PHY_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_PHY_B12_PORT,
+	  (unsigned long)EN_VDD_PHY_B12_PIN},
 	 },
 
-	{"PG-TPU-2", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
-	 {(unsigned long)TPU_PG_2_PORT, (unsigned long)TPU_PG_2_PIN},
+	{"EN_VDD_PHY_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_PHY_B34_PORT,
+	  (unsigned long)EN_VDD_PHY_B34_PIN},
 	 },
 
-	{"PMIC-OUTA", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)en_pmic_outa_on, (unsigned long)en_pmic_outa_off},
+	{"EN_VDD_PHY_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_PHY_B56_PORT,
+	  (unsigned long)EN_VDD_PHY_B56_PIN},
 	 },
 
-	{"PMIC-OUTB", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)en_pmic_outb_on, (unsigned long)en_pmic_outb_off},
+	{"EN_VDD_PHY_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDD_PHY_B78_PORT,
+	  (unsigned long)EN_VDD_PHY_B78_PIN},
 	 },
 
-	{"PG-TPUMEM-1", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 2000,
-	 {(unsigned long)TPUMEM_PG_1_PORT, (unsigned long)TPUMEM_PG_1_PIN},
+	{"P08_PG_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)P08_PG_B12_PORT, (unsigned long)P08_PG_B12_PIN},
 	 },
 
-	{"PG-TPUMEM-2", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
-	 {(unsigned long)TPUMEM_PG_2_PORT, (unsigned long)TPUMEM_PG_2_PIN},
+	{"P08_PG_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)P08_PG_B34_PORT, (unsigned long)P08_PG_B34_PIN},
 	 },
 
-	{"PMIC-OUTD", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)en_pmic_outd_on, (unsigned long)en_pmic_outd_off},
+	{"P08_PG_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)P08_PG_B56_PORT, (unsigned long)P08_PG_B56_PIN},
 	 },
 
-	{"SYS-RST-1", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 2000,
+	{"P08_PG_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)P08_PG_B78_PORT, (unsigned long)P08_PG_B78_PIN},
+	 },
+
+	{"PCIE_PG_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)PCIE_PG_B12_PORT, (unsigned long)PCIE_PG_B12_PIN},
+	 },
+
+	{"PCIE_PG_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)PCIE_PG_B34_PORT, (unsigned long)PCIE_PG_B34_PIN},
+	 },
+
+	{"PCIE_PG_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)PCIE_PG_B56_PORT, (unsigned long)PCIE_PG_B56_PIN},
+	 },
+
+	{"PCIE_PG_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)PCIE_PG_B78_PORT, (unsigned long)PCIE_PG_B78_PIN},
+	 },
+
+	{"EN_VDD_TPU_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_TPU_B12_PORT,
+	  (unsigned long)EN_VDD_TPU_B12_PIN},
+	 },
+
+	{"EN_VDD_TPU_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_TPU_B34_PORT,
+	  (unsigned long)EN_VDD_TPU_B34_PIN},
+	 },
+
+	{"EN_VDD_TPU_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_TPU_B56_PORT,
+	  (unsigned long)EN_VDD_TPU_B56_PIN},
+	 },
+
+	{"EN_VDD_TPU_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)EN_VDD_TPU_B78_PORT,
+	  (unsigned long)EN_VDD_TPU_B78_PIN},
+	 },
+
+	{"TPU_PG_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)TPU_PG_B12_PORT, (unsigned long)TPU_PG_B12_PIN},
+	 },
+
+	{"TPU_PG_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)TPU_PG_B34_PORT, (unsigned long)TPU_PG_B34_PIN},
+	 },
+
+	{"TPU_PG_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)TPU_PG_B56_PORT, (unsigned long)TPU_PG_B56_PIN},
+	 },
+
+	{"TPU_PG_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)TPU_PG_B78_PORT, (unsigned long)TPU_PG_B78_PIN},
+	 },
+
+	{"PMIC_OUTA_OUTD", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)pmic_outa_outd_on, (unsigned long)pmic_outa_outd_off},
+	 },
+
+	{"PMIC_OUTB", NODE_TYPE_FUNCTION, 2000,
+	 {(unsigned long)pmic_outb_on, (unsigned long)pmic_outb_off},
+	 },
+
+	{"TPUMEM_PG_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)TPUMEM_PG_B12_PORT, (unsigned long)TPUMEM_PG_B12_PIN},
+	 },
+
+	{"TPUMEM_PG_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)TPUMEM_PG_B34_PORT, (unsigned long)TPUMEM_PG_B34_PIN},
+	 },
+
+	{"TPUMEM_PG_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)TPUMEM_PG_B56_PORT, (unsigned long)TPUMEM_PG_B56_PIN},
+	 },
+
+	{"TPUMEM_PG_B78", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)TPUMEM_PG_B78_PORT, (unsigned long)TPUMEM_PG_B78_PIN},
+	 },
+
+	{"EN_VQPS18_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VQPS18_B12_PORT, (unsigned long)EN_VQPS18_B12_PIN},
+	 },
+
+	{"EN_VQPS18_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VQPS18_B34_PORT, (unsigned long)EN_VQPS18_B34_PIN},
+	 },
+
+	{"EN_VQPS18_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VQPS18_B56_PORT, (unsigned long)EN_VQPS18_B56_PIN},
+	 },
+
+	{"EN_VQPS18_B78", NODE_TYPE_ENABLE, 2000,
+	 {(unsigned long)EN_VQPS18_B78_PORT, (unsigned long)EN_VQPS18_B78_PIN},
+	 },
+
+	{"B1_SYS_RST_N", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)B1_SYS_RST_N_PORT, (unsigned long)B1_SYS_RST_N_PIN},
 	 },
 
-	{"SYS-RST-2", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
+	{"B2_SYS_RST_N", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)B2_SYS_RST_N_PORT, (unsigned long)B2_SYS_RST_N_PIN},
 	 },
 
-	{"SYS-RST-3", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
+	{"B3_SYS_RST_N", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)B3_SYS_RST_N_PORT, (unsigned long)B3_SYS_RST_N_PIN},
 	 },
 
-	{"SYS-RST-4", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
+	{"B4_SYS_RST_N", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)B4_SYS_RST_N_PORT, (unsigned long)B4_SYS_RST_N_PIN},
 	 },
 
-	{"SYS-RST-5", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
+	{"B5_SYS_RST_N", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)B5_SYS_RST_N_PORT, (unsigned long)B5_SYS_RST_N_PIN},
 	 },
 
-	{"SYS-RST-6", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
+	{"B6_SYS_RST_N", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)B6_SYS_RST_N_PORT, (unsigned long)B6_SYS_RST_N_PIN},
 	 },
 
-	{"SYS-RST-7", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
+	{"B7_SYS_RST_N", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)B7_SYS_RST_N_PORT, (unsigned long)B7_SYS_RST_N_PIN},
 	 },
 
-	{"SYS-RST-8", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
+	{"B8_SYS_RST_N", NODE_TYPE_ENABLE, 30000,
 	 {(unsigned long)B8_SYS_RST_N_PORT, (unsigned long)B8_SYS_RST_N_PIN},
 	 },
 
-	{"PG-DDR-1", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 30000,
-	 {(unsigned long)DDR_PG_1_PORT, (unsigned long)DDR_PG_1_PIN},
+	{"DDR_PG_B12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)DDR_PG_B12_PORT, (unsigned long)DDR_PG_B12_PIN},
 	 },
 
-	{"PG-DDR-1", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 0,
-	 {(unsigned long)DDR_PG_2_PORT, (unsigned long)DDR_PG_2_PIN},
+	{"DDR_PG_B34", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)DDR_PG_B34_PORT, (unsigned long)DDR_PG_B34_PIN},
+	 },
+
+	{"DDR_PG_B56", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)DDR_PG_B56_PORT, (unsigned long)DDR_PG_B56_PIN},
+	 },
+
+	{"DDR_PG_B78", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)DDR_PG_B78_PORT, (unsigned long)DDR_PG_B78_PIN},
 	 },
 
 };

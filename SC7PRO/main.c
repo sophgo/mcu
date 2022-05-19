@@ -1,76 +1,50 @@
-/**
- * @file main.c
- * @author chao.wei
- * @brief application logical start
- */
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/rcc.h>
-#include <stdio.h>
+#include <gd32e50x_gpio.h>
+#include <gd32e50x_misc.h>
+#include <tick.h>
 #include <system.h>
-#include <board_power.h>
-#include <i2c_master.h>
 #include <i2c_slave.h>
 #include <debug.h>
-#include <chip.h>
-#include <mp5475.h>
-#include <isl68224.h>
-#include <tca9554.h>
-#include <pin.h>
 #include <timer.h>
+#include <power.h>
+#include <pin.h>
+#include <common.h>
+#include <chip.h>
 #include <mon.h>
-#include <pca9848.h>
-#include <dbgi2c.h>
-#include <console.h>
 #include <upgrade.h>
-
-struct i2c_slave_ctx i2c3_slave_ctx;
-#define I2C3_OA1	0x60
-#define I2C3_OA2	0x60
-/* mask 3 lsb, aka 0x60, 0x61 ... 0x67 */
-#define I2C3_OA2_MASK	0x03
-
+#include <project.h>
+#include <pca9848.h>
+#include <mp5475.h>
+#include <console.h>
+#include <stdio.h>
+#include <slave.h>
 int main(void)
 {
-	clock_init();
-
-#ifndef STANDALONE
-	if (get_stage() == RUN_STAGE_LOADER) {
-		if (check_app() == 0)
-			app_start();
-	}
-#endif
-
 	system_init();
 
-	i2c_master_init(I2C1);
-	i2c_master_init(I2C2);
-	i2c_master_init(I2C3);
+	debug("\nBITMAIN SOPHONE SM5G\n");
 
-	debug("BITMAIN SOPHONE SC5PRO\n");
-
+#ifndef STANDALONE
+	if (get_stage() == RUN_STAGE_LOADER)
+		if (check_app() == 0)
+			app_start();
+#else
+// #warn stand alone environment
+#endif
 	pca9848_init();
 
 	/* enable power supply of pcie switch */
-	// gpio_set(P0V9_E_EN_PORT, P0V9_E_EN_PIN);
-
+	gpio_set(EN_PCIE_0V8_PORT, EN_PCIE_0V8_PIN);
 	timer_mdelay(1);
 	/* release reset of pcie switch */
-	// gpio_set(MCU_8533_RSTB_PORT, MCU_8533_RSTB_PIN);
+	gpio_set(PCIE_SYS_RST_N_PORT, PCIE_SYS_RST_N_PIN);
 
-	tca9554_init();
 	mp5475_init();
 	board_power_init();
 
 	chip_init();
 	mon_init();
-
-	i2c_slave_init(&i2c3_slave_ctx, (void *)I2C3_BASE,
-		       I2C3_OA1, I2C3_OA2, I2C3_OA2_MASK);
-
-	dbgi2c_init(&i2c3_slave_ctx);
+	slave_init();
 	console_init();
-
-	i2c_slave_start(&i2c3_slave_ctx);
 
 	while (1) {
 		chip_update();
@@ -78,13 +52,6 @@ int main(void)
 		console_poll();
 	}
 
+
 	return 0;
 }
-
-/* i2c3 interrupt handler */
-
-void i2c3_isr(void)
-{
-	i2c_slave_isr(&i2c3_slave_ctx);
-}
-

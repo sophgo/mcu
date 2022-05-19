@@ -1,18 +1,23 @@
-#include <libopencm3/stm32/gpio.h>
-#include <stdio.h>
-#include <i2c_master.h>
-#include <debug.h>
-#include <pin.h>
+#include <gd32e50x_gpio.h>
 #include <timer.h>
-#include <board_power.h>
+#include <power.h>
+#include <debug.h>
 #include <common.h>
-#include <string.h>
+#include <upgrade.h>
+#include <board_power.h>
+
+#include <stdio.h>
+#include <stdbool.h>
 
 /* in us */
-#define NODE_CHECK_TIMEOUT	4000
+#define NODE_CHECK_TIMEOUT	(10 * 1000)
+
+static int power_is_on;
 
 static int node_check(struct power_node const *node)
 {
+	return 0;
+
 	int err = 0;
 	uint32_t port = node->param[0];
 	uint16_t pin = node->param[1];
@@ -30,7 +35,7 @@ static int node_check(struct power_node const *node)
 	return err;
 }
 
-static int node_on(struct power_node *node)
+static int node_on(struct power_node const *node)
 {
 	int err = 0;
 
@@ -48,18 +53,13 @@ static int node_on(struct power_node *node)
 
 	debug("[%c]\n", err ? 'X' : 'O');
 
-	if (err) {
-		node->status = POWER_STATUS_ERR;
-	} else {
-		node->status = POWER_STATUS_ON;
-		if (node->delay)
-			timer_udelay(node->delay);
-	}
+	if (err == 0 && node->delay)
+		timer_udelay(node->delay);
 
 	return err;
 }
 
-static void node_off(struct power_node *node)
+static void node_off(struct power_node const *node)
 {
 	debug("%s\n", node->name);
 
@@ -71,10 +71,9 @@ static void node_off(struct power_node *node)
 		if (func)
 			func();
 	}
-	node->status = POWER_STATUS_OFF;
 }
 
-int node_seqon(struct power_node *node, unsigned int num)
+int node_seqon(struct power_node const *node, unsigned int num)
 {
 	int err, i;
 
@@ -99,7 +98,7 @@ int node_seqon(struct power_node *node, unsigned int num)
 	return err;
 }
 
-void node_seqoff(struct power_node *node, unsigned int num)
+void node_seqoff(struct power_node const *node, unsigned int num)
 {
 	int i;
 
@@ -111,79 +110,36 @@ int power_on(void)
 {
 	int err = node_seqon(board_power_nodes, ARRAY_SIZE(board_power_nodes));
 
+	if (err) {
+		led_set_frequency(5);
+	} else {
+		if (get_stage() == RUN_STAGE_LOADER)
+			led_set_frequency(3);
+		else
+			led_set_frequency(1);
+		power_is_on = true;
+	}
+
 	return err;
 }
 
 void power_off(void)
 {
+	power_is_on = false;
 	node_seqoff(board_power_nodes, ARRAY_SIZE(board_power_nodes));
+	led_set_frequency(LED_FREQ_ALWAYS_OFF);
 }
 
-int power_node_on(const char *name)
+void power_init(void)
 {
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(board_power_nodes); i++) {
-		if (!strcmp((board_power_nodes + i)->name, name))
-			return node_on(board_power_nodes + i);
-	}
-
-	return -1;
+	led_set_frequency(LED_FREQ_ALWAYS_OFF);
 }
 
-int power_nodes_on(const char **name, int num)
+int power_status(void)
 {
-	int i;
-
-	for (i = 0; i < num; i++) {
-		if (power_node_on(name[i]))
-			return -1;
-	}
-
-	return 0;
+	return power_is_on;
 }
 
-void power_node_off(const char *name)
-{
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(board_power_nodes); i++) {
-		if (!strcmp((board_power_nodes + i)->name, name))
-			return node_off(board_power_nodes + i);
-	}
-}
-
-void power_nodes_off(const char **name, int num)
-{
-	int i;
-
-	for (i = 0; i < num; i++)
-		power_node_off(name[i]);
-}
-
-int power_node_status(const char *name)
-{
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(board_power_nodes); i++) {
-		if (!strcmp((board_power_nodes + i)->name, name))
-			return (board_power_nodes + i)->status;
-	}
-
-	return -1;
-}
-
-int power_nodes_status(const char **name, int num)
-{
-	int i;
-
-	for (i = 0; i < num; i++) {
-		if (power_node_status(name[i]) != POWER_STATUS_ON)
-			return POWER_STATUS_OFF;
-	}
-
-	return POWER_STATUS_ON;
-}
 
 int board_power_init(void)
 {

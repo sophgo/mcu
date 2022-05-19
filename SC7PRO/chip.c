@@ -1,21 +1,15 @@
-#include <libopencm3/stm32/gpio.h>
-#include <libopencm3/stm32/exti.h>
-#include <libopencm3/stm32/rcc.h>
-#include <libopencm3/cm3/nvic.h>
-#include <libopencmsis/core_cm3.h>
 #include <pin.h>
 #include <tick.h>
 #include <timer.h>
 #include <debug.h>
 #include <tca9554.h>
 #include <stdio.h>
+#include <common.h>
+
 
 /* wait debug i2c ready */
 #define CHIP_BOOT_TIME	1500
-#define PCIE_RESET_PORT	PCIE_MCU_RST_X_PORT
-#define PCIE_RESET_PIN	PCIE_MCU_RST_X_PIN
-#define PCIE_RESET_EXTI	PCIE_MCU_RST_X_EXTI
-#define PCIE_RESET_NVIC	NVIC_EXTI0_1_IRQ
+
 
 static volatile int is_chip_ready;
 static volatile int is_chip_enabled;
@@ -30,17 +24,17 @@ int chip_is_enabled(void)
 
 void chip_init(void)
 {
-	exti_select_source(PCIE_RESET_EXTI, PCIE_RESET_PORT);
-	exti_set_trigger(PCIE_RESET_EXTI, EXTI_TRIGGER_FALLING);
-	exti_enable_request(PCIE_RESET_EXTI);
+	gpio_exti_source_select(PCIE_RESET_PORT, PCIE_RESET_EXTI);
+	exti_init(PCIE_RESET_EXTI, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
+	exti_flag_clear(PCIE_RESET_EXTI);
+	exti_interrupt_enable(PCIE_RESET_EXTI);
 	is_chip_ready = 1;
 }
 
 void chip_destroy(void)
 {
 	nvic_disable_irq(PCIE_RESET_NVIC);
-	nvic_clear_pending_irq(PCIE_RESET_NVIC);
-	exti_disable_request(PCIE_RESET_EXTI);
+	exti_interrupt_disable(PCIE_RESET_EXTI);
 	exti_reset_request(PCIE_RESET_EXTI);
 	timer_stop();
 	is_chip_ready = 0;
@@ -70,14 +64,17 @@ static inline void sys_rst_enable(void)
 	BN_SYS_RST_ENABLE(7);
 	BN_SYS_RST_ENABLE(8);
 	/* count from 0 when first time enabled */
+	
 	if (!is_chip_enabled)
 		tick64_set(0);
+
 	is_chip_enabled = true;
 }
 
 static inline void sys_rst_disable(void)
 {
 	is_chip_enabled = false;
+
 	BN_SYS_RST_DISABLE(1);
 	BN_SYS_RST_DISABLE(2);
 	BN_SYS_RST_DISABLE(3);

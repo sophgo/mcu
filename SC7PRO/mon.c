@@ -1,3 +1,4 @@
+#include <gd32e50x_usart.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
@@ -19,7 +20,6 @@
 
 // #define FILTER_DISABLE
 
-#define MCU_SW_VER	0
 
 #define BROADCAST_INTERVAL	100
 #define COLLECT_INTERVAL	10
@@ -113,7 +113,7 @@ void mon_init(void)
 
 	pkg.type = SC7PRO;
 	pkg.sw_ver = MCU_SW_VER;
-	pkg.hw_ver = adc_get_hw_ver();
+	pkg.hw_ver = get_hardware_version();
 
 	dbgi2c_pkg.tag = 0xdeadbeef;
 	dbgi2c_pkg.type = pkg.type;
@@ -205,8 +205,8 @@ static void collect(void)
 static inline void mon_putc(int c)
 {
 	if (c == '\n')
-		usart_send_blocking(MON_UART, '\r');
-	usart_send_blocking(MON_UART, c);
+		usart_data_transmit(MON_UART, '\r');
+	usart_data_transmit(MON_UART, c);
 }
 
 int mon_printf(const char *fmt, ...)

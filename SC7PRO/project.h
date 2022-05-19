@@ -12,6 +12,17 @@
 #define SC5PLUS	7
 #define SC5H	8
 #define SC5PRO	9
-#define SC7PRO	15
+#define SM5ME	10
+#define SM5MP	11
+#define SM5MS	12
+#define SM5MA	13
+
+#define SC7PRO 15
+
+/* MCU Family */
+enum {
+	MCU_FAMILY_STM32L0	= 0,
+	MCU_FAMILY_GD32E50,
+};
 
 #endif

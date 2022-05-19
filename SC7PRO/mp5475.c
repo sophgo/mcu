@@ -4,9 +4,10 @@
 #include <tick.h>
 #include <pca9848.h>
 #include <stdio.h>
+#include <gd32e50x_i2c.h>
 
 #define MP5475_SLAVE_ADDR	0x60
-#define I2C			I2C1
+#define I2C			I2C0
 
 
 static inline void mp5475_select(int idx)
@@ -88,7 +89,7 @@ int _mp5475_init(int idx)
 	mp5475_voltage_config(idx, 0, 1100);
 	mp5475_voltage_config(idx, 1, 600);
 	mp5475_voltage_config(idx, 2, 1800);
-	mp5475_voltage_config(idx, 3, 1800);
+	mp5475_voltage_config(idx, 3, 1100);
 	return 0;
 }
 

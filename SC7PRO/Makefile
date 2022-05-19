@@ -1,6 +1,9 @@
+TOP = ..
 TARGET = SC7PRO
 DEBUG = 0
 STANDALONE = 0
+
+V ?= 0
 
 ifeq ($(strip $(V)), 1)
 	Q =
@@ -10,11 +13,12 @@ else
 	E = 1>/dev/null 2>&1
 endif
 
-OPENCM3_DIR = ../libopencm3
-
 OUTDIR = build
 SRCDIR = . ecdc
-INCDIR = . $(OPENCM3_DIR)/include
+INCDIR = . ecdc	\
+	$(TOP)/libgd/GD32E50x_standard_peripheral/Include	\
+	$(TOP)/libgd/CMSIS \
+	$(TOP)/libgd/CMSIS/GD/GD32E50x/Include
 
 C_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
 S_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.s))
@@ -27,17 +31,18 @@ VPATH = $(sort $(dir $(SRCS)))
 OBJS := $(sort $(OBJS))
 DEPS := $(patsubst %.o, %.d, $(OBJS))
 
-LDSCRIPT_APP = $(TARGET)_APP.ld
-LDSCRIPT_LOADER = $(TARGET)_LOADER.ld
+LDSCRIPT = target.ld
 
 OPT_CFLAGS = -g -O2
-ARCH_CFLAGS = -mthumb -mcpu=cortex-m0plus
+ARCH_CFLAGS = -mthumb -mcpu=cortex-m33
 SPEC_CFLAGS = -specs=nano.specs
 
 CPPFLAGS = $(foreach dir, $(INCDIR), -I$(dir))
 CFLAGS = $(CPPFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) \
 	  -std=gnu11 -ffunction-sections -fdata-sections -Wall -Werror \
-	  -DSTM32G0
+	  $(foreach dir, $(INCDIR), -I$(dir))
+
+CFLAGS += -DGD32E50X -DGD32E50X_HD
 
 ifeq ($(strip $(DEBUG)), 1)
 CFLAGS += -DDEBUG
@@ -51,7 +56,7 @@ ASFLAGS = $(CFLAGS) -x assembler-with-cpp -Wa,--no-warn
 
 LDFLAGS = $(SPEC_CFLAGS) $(ARCH_CFLAGS) $(OPT_CFLAGS) -static \
 	   -nostartfiles -Wl,--cref -Wl,--gc-sections \
-	   -L$(OPENCM3_DIR)/lib -lopencm3_stm32g0
+	   -L$(TOP)/libgd/build -lgd32e50x_hd
 
 CROSS_COMPILE = arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
@@ -62,61 +67,44 @@ OBJDUMP = $(CROSS_COMPILE)objdump
 READELF = $(CROSS_COMPILE)readelf
 
 all:$(OUTDIR) \
-	$(OUTDIR)/$(TARGET)_APP.elf \
-	$(OUTDIR)/$(TARGET)_APP.bin \
-	$(OUTDIR)/$(TARGET)_APP.dis \
-	$(OUTDIR)/$(TARGET)_LOADER.elf \
-	$(OUTDIR)/$(TARGET)_LOADER.bin \
-	$(OUTDIR)/$(TARGET)_LOADER.dis
+	$(OUTDIR)/$(TARGET).elf \
+	$(OUTDIR)/$(TARGET).bin \
+	$(OUTDIR)/$(TARGET).dis
 
-$(OUTDIR)/%.bin: $(OUTDIR)/%.elf
+$(OUTDIR)/$(TARGET).bin: $(OUTDIR)/$(TARGET).elf
 	@echo '[CP] $@'
 	$(Q)$(OBJCOPY) -O binary $< $@
 
-$(OUTDIR)/%.dis: $(OUTDIR)/%.elf
+$(OUTDIR)/$(TARGET).dis: $(OUTDIR)/$(TARGET).elf
 	@echo '[DP] $@'
 	$(Q)$(READELF) -e $< > $@
 	$(Q)$(OBJDUMP) -D $< >> $@
 
-$(OUTDIR)/%.elf: $(OUTDIR)/%.ld $(OBJS)
+$(OUTDIR)/$(TARGET).elf: $(LDSCRIPT) $(OBJS)
 	@echo '[LD] $@'
-	$(Q)$(LD) $(OBJS) $(LDFLAGS) -Wl,-Map,$@.map \
+	$(Q)$(LD) $(OBJS) $(LDFLAGS) -Wl,-Map,$(OUTDIR)/$(TARGET).map \
             -T $< -o $@
-
-$(OUTDIR)/$(LDSCRIPT_APP): target.ldi
-	@echo '[XP] $@'
-	$(Q)$(CC) $(CPPFLAGS) \
-	-D'ROM_START=0x08008000' -D'ROM_SIZE=20K' \
-	-D'RAM_START=0x20000000' -D'RAM_SIZE=20K' \
-	-E -xc -P -C $< > $@
-
-$(OUTDIR)/$(LDSCRIPT_LOADER): target.ldi
-	@echo '[XP] $@'
-	$(Q)$(CC) $(CPPFLAGS) \
-	-D'ROM_START=0x08000000' -D'ROM_SIZE=20K' \
-	-D'RAM_START=0x20000000' -D'RAM_SIZE=20K' \
-	-E -xc -P -C $< > $@
 
 $(OUTDIR)/%.o: %.c | $(OUTDIR)
 	@echo '[CC] $@'
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
 
-$(OUTDIR)/%.d: %.c | $(OUTDIR)
-	@echo '[CD] $@'
-	$(Q)$(CC) $(CFLAGS) -MM -MF $@ $<
+$(OUTDIR)/%.o: %.S | $(OUTDIR)
+	@echo '[AS] $@'
+	$(Q)$(CC) $(ASFLAGS) -c $< -o $@
 
 $(OUTDIR):
 	@mkdir -p $@
 
-burn: $(OUTDIR)/$(TARGET)_LOADER.bin
-	st-flash write $< 0x08000000
+burn: $(OUTDIR)/$(TARGET).bin
+	gd-flash write $< 0x08000000
 
 clean:
 	rm -rf $(OUTDIR)
 
 code: gencode.py config.xlsx
 	@echo '[GEN]'
-	$(Q)./gencode.py config.xlsx -s pin.c -e pin.h -y pin
+	$(Q)./gencode.py config.xlsx -e pin.h -y pin
 	$(Q)./gencode.py config.xlsx -s board_power.c -e board_power.h -p board_power_porting.c -y power
 
 cclean:

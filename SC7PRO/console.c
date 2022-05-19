@@ -8,7 +8,6 @@
 #include <common.h>
 #include <mon.h>
 #include <upgrade.h>
-#include <eeprom.h>
 #include <flash.h>
 #include <timer.h>
 
@@ -99,6 +98,8 @@ static void cmd_sn(void *hint, int argc, char const *argv[])
 {
 	int i;
 	uint8_t tmp;
+	uint8_t flash_data[FLASH_PAGE_SIZE] = {0};
+	volatile uint8_t *p_eeprom = (uint8_t *) EEPROM_BASE;
 
 	if (argc > 2)
 		printf("invalid usage\n");
@@ -117,16 +118,23 @@ static void cmd_sn(void *hint, int argc, char const *argv[])
 		printf("\n");
 	}
 	else {
-		/* write sn to eeprom */
-		for (i = 0; i < EEPROM_CELL_SIZE - 1; ++i) {
-			tmp = argv[1][i];
-			if (tmp)
-				eeprom_write_byte(EEPROM_SN_OFFSET + i, tmp);
-			else
-				break;
-		}
-		/* zero terminated */
-		eeprom_write_byte(EEPROM_SN_OFFSET + i, 0);
+			for (i = 0; i < FLASH_PAGE_SIZE; i++){
+				flash_data[i] = p_eeprom[i];
+			}
+
+			/* write sn to eeprom */
+			for (i = 0; i < EEPROM_CELL_SIZE - 1; ++i) {
+				tmp = argv[1][i];
+				
+				if (tmp){
+					flash_data[EEPROM_SN_OFFSET + i] = tmp;
+				}
+				else
+					break;
+			}
+			/* zero terminated */
+			flash_data[EEPROM_SN_OFFSET + i] = 0;
+			flash_program_page(EEPROM_BASE, flash_data, FLASH_PAGE_SIZE);
 	}
 }
 

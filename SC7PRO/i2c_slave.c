@@ -1,6 +1,11 @@
+#include <gd32e50x_i2c.h>
+
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <i2c_slave.h>
+
+#define BAUDRATE	(100 * 1000)
 
 struct i2c_reg {
 	uint32_t cr1;
@@ -176,8 +181,9 @@ void isr_addr_cb(struct i2c_slave_ctx *ctx)
 	ctx->dir = dir;
 	ctx->slave = find_slave(ctx, addr);
 	if (ctx->slave) {
-		if (ctx->slave->match)
+		if (ctx->slave->match) {
 			ctx->slave->match(ctx->slave->priv, addr, dir);
+		}
 		if (dir == I2C_SLAVE_READ && ctx->slave->read) {
 			ctx->reg->cr1 |= CR1_TXIE; /*Set transmit IT*/
 			ctx->reg->txdr = ctx->slave->read(ctx->slave->priv);
@@ -244,10 +250,43 @@ void i2c_slave_isr(struct i2c_slave_ctx *ctx)
 	i2c_intr_restore(ctx, old);
 }
 
+static void timing_init(void *reg)
+{
+	struct i2c_reg *i2c = reg;
+	uint32_t sclh, scll, scldelay, sdadelay;
+
+	sclh = 31;
+	scll = 37;
+	scldelay = 2;
+	sdadelay = 0;
+
+	i2c->timingr = (scldelay << 20) | (sdadelay << 16) |
+		(sclh << 8) | (scll << 0);
+}
+
+static void __attribute__((unused)) peripheral_init(void *reg)
+{
+	uint32_t i2c = (uint32_t)reg;
+
+	/* let i2c2 works at fixed clock rate 8MHz */
+	rcu_i2c2_clock_config(RCU_I2C2SRCSRC_CKIRC8M);
+
+	/* BAUDRATE */
+	i2c_deinit(i2c);
+	i2c_analog_noise_filter_enable(i2c);
+	i2c_digital_noise_filter_config(i2c, FILTER_DISABLE);
+	i2c_stretch_scl_low_enable(i2c);
+
+	timing_init(reg);
+}
+
 int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg,
 		   int oa1, int oa2, int oa2mask)
 {
 	int i;
+
+	/* prepare hardware first */
+	peripheral_init(reg);
 
 	ctx->reg = reg;
 	ctx->isr_irq_mask = 0;

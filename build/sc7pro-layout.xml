@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <firmware>
 	<name>SC7PRO</name>
-	<size>0x10000</size>
+	<size>0x14000</size>
 	<efit>
-		<offset>0x7000</offset>
-		<size>4096</size>
+		<offset>0x8000</offset>
+		<size>8192</size>
 	</efit>
 	<component>
 		<name>application</name>
 		<type>0</type>
-		<file>../SC7PRO/build/SC7PRO_APP.bin</file>
-		<offset>0x8000</offset>
+		<file>../SC7PRO/build/SC7PRO.bin</file>
+		<offset>0xa000</offset>
 	</component>
 	<component>
 		<name>loader</name>
 		<type>1</type>
-		<file>../SC7PRO/build/SC7PRO_LOADER.bin</file>
+		<file>../SC7PRO/build/SC7PRO.bin</file>
 		<offset>0x0000</offset>
 	</component>
 </firmware>

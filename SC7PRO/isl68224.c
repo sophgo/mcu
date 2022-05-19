@@ -3,9 +3,10 @@
 #include <pca9848.h>
 #include <debug.h>
 #include <tick.h>
+#include <gd32e50x_i2c.h>
 
 #define ISL68224_SLAVE_ADDR	0x60
-#define I2C			I2C1
+#define I2C			I2C0
 
 static inline void isl68224_select(int idx)
 {

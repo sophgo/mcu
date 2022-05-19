@@ -338,8 +338,8 @@ class Port:
             if not pin:
                 continue
             code += '#define {}_PORT\t\tGPIO{}\n'.format(pin.get_code_name(), self.name)
-            code += '#define {}_PIN\t\tGPIO{}\n'.format(pin.get_code_name(), pin.get_pin())
-            code += '#define {}_EXTI\t\tEXTI{}\n'.format(pin.get_code_name(), pin.get_pin())
+            code += '#define {}_PIN\t\tGPIO_PIN_{}\n'.format(pin.get_code_name(), pin.get_pin())
+            code += '#define {}_EXTI\t\tEXTI_{}\n'.format(pin.get_code_name(), pin.get_pin())
         return code
 
 class PinList:
@@ -453,14 +453,12 @@ class PinList:
         code = '/* THIS IS AUTO GENERATED CODE */\n\n'
         code += '#ifndef __PIN_H__\n'
         code += '#define __PIN_H__\n\n'
-        code += '#include <libopencm3/stm32/rcc.h>\n'
-        code += '#include <libopencm3/stm32/gpio.h>\n\n'
+        code += '#include <gd32e50x_gpio.h>\n\n'
         for port in self.ports:
             if port:
                 code += port.gen_header() + '\n'
 
-        code += 'void pin_init(void);\n\n'
-        code += '#endif\n'
+        code += '\n#endif\n'
         code += '/* AUTO GENERATED CODE END */'
         return code
 
@@ -482,7 +480,7 @@ class Node:
         return tmp 
 
     def gen_code(self):
-        code = '{{\"{}\", NODE_TYPE_{}, POWER_STATUS_OFF, {},\n'.format(self.name, self.type, self.delay)
+        code = '{{\"{}\", NODE_TYPE_{}, {},\n'.format(self.name, self.type, self.delay)
 
         code_name = self.get_code_name();
         if self.type == 'ENABLE' or self.type == 'CHECK':
@@ -606,7 +604,7 @@ class Power:
         for node in self.nodes:
             code += node.gen_porting_func_dec() + '\n'
 
-        code += 'struct power_node board_power_nodes[{}] = {{\n\n'.format(len(self.nodes))
+        code += 'struct power_node const board_power_nodes[{}] = {{\n\n'.format(len(self.nodes))
 
         for node in self.nodes:
             code += node.gen_code() + '\n'
@@ -630,9 +628,7 @@ class Power:
         code = '/* AUTO GENERATED CODE */\n\n'
         code = '#ifndef __BOARD_POWER_H__\n'
         code += '#define __BOARD_POWER_H__\n\n'
-        code += '#include <power.h>\n'
-        code += 'extern int board_power_init(void);'
-        code += 'extern struct power_node board_power_nodes[{}];\n\n'.format(len(self.nodes))
+        code += 'extern struct power_node const board_power_nodes[{}];\n\n'.format(len(self.nodes))
         code += '#endif\n'
         code += '\n/* AUTO GENERATED CODE END */'
         return code

@@ -1,6 +1,7 @@
 #include <pca9848.h>
 #include <stdio.h>
 #include <common.h>
+#include <gd32e50x_i2c.h>
 
 #define PCA9848_SLAVE_ADDR	0x71
 
@@ -8,8 +9,8 @@ static struct {
 	int i2c;
 	unsigned int mask;
 } ctx[2] = {
+	{.i2c = I2C0, .mask = 0},
 	{.i2c = I2C1, .mask = 0},
-	{.i2c = I2C2, .mask = 0},
 };
 
 void pca9848_init(void)

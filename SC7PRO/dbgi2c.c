@@ -6,10 +6,10 @@
 #include <i2c_slave.h>
 #include <chip.h>
 #include <pca9848.h>
-#include <libopencm3/cm3/nvic.h>
 #include <dbgi2c.h>
 #include <tick.h>
 #include <timer.h>
+#include <common.h>
 
 #define DBGI2C_ADDR_BASE	0x28
 #define DBGI2C_I2C_MASTER	I2C2
@@ -332,6 +332,6 @@ void dbgi2c_init(struct i2c_slave_ctx *i2c)
 	pca9848_set(TCA9548A1, 0xff);
 	i2c_slave_register(i2c, &slave);
 	/* enable interrupt */
-	// nvic_enable_irq(NVIC_I2C3_IRQ);
+	nvic_irq_enable(DEBUG_I2C_IRQ, 0, 0);
 }
 

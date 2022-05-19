@@ -3,9 +3,11 @@
 
 enum {
 	NODE_TYPE_ENABLE,
-	NODE_TYPE_FUNCTION,
 	NODE_TYPE_CHECK,
+	NODE_TYPE_FUNCTION,
+	NODE_TYPE_INVALID,
 };
+
 enum {
 	POWER_STATUS_OFF,
 	POWER_STATUS_ON,
@@ -15,7 +17,6 @@ enum {
 struct power_node {
 	char *name;
 	int type;
-	int status;
 	unsigned int delay;
 	unsigned long param[2];
 };
@@ -26,5 +27,6 @@ typedef int (*power_off_func)(void);
 void power_init(void);
 int power_on(void);
 void power_off(void);
-
+int power_status(void);
+int board_power_init(void);
 #endif
