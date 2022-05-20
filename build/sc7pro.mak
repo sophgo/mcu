@@ -8,7 +8,6 @@ $(TARGET): FORCE
 	$(Q)rm -rf $(OUTPUT)
 	$(Q)mkdir -p $(OUTPUT)
 	$(Q)cd $(APP_ROOT) && make clean && make
-	$(Q)cd $(UART_UPGRADER_ROOT) && make clean && make
 	$(Q)cd $(PACK_ROOT) && make distclean && make
 	$(PACK) sc7pro-layout.xml $@ $(E) && mv $@ $(OUTPUT)/
 
