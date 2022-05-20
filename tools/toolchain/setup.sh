@@ -82,11 +82,6 @@ install_toolchain gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 \
                   gcc-arm-none-eabi-9-2019-q4-major \
                   arm-none-eabi-
 
-# arm atollic
-install_toolchain gcc-atollic-eabi-6-x86_64-linux.tar.bz2 \
-                  gcc-atollic-eabi-6-x86_64-linux \
-                  arm-atollic-eabi-
-
 # aarch64 linux gnu
 install_toolchain gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu.tar.xz \
                   gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu \

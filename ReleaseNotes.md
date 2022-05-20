@@ -110,18 +110,18 @@ Version 40:
 
     1. fixbug, test i2c port read may failed.
 
-Version41:
+Version 41:
 
     1. fixbug hds cannot power-on on v3 motherboard
     2. se5 smbus alert pin config wrong
     3. se5 under temperature control error
     4. remove 90C error led flicker
 
-Version42:
+Version 42:
 
     1. fixbug: tmp451 temperature wrong when under zero
 
-Version44:
+Version 44:
 
     1. fixbug: cannot write eeprom just after upgrade
     2. add data eeprom lock
@@ -244,6 +244,16 @@ Version 9:
 
     1. fixbug, current acquire value not accurate enough
     2. add power consumption read
+
+Version 11:
+
+    1. add board type : SM5SE6M
+    2. se6 ctrl bord auto detect(eeprom detect)
+    3. add bord id/ip
+    4. se6 ctrl  upgrade type
+    5. se6  key  power on/off、fact reset
+    6. aiu reset (pciee reset)
+    7. se6 ctrl eeprom  (NVMEM)  read/write
 
 ## SM5G
 
