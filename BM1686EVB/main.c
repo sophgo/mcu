@@ -85,7 +85,10 @@ int main(void)
 	tca6416a_probe();
 	pic_probe();
 
+	timer_udelay(50*1000);
 	power_init();
+	gpio_set(EN_12V_SYS_PORT, EN_12V_SYS_PIN);
+	timer_udelay(1000);
 	mp5475_init();
 	power_on();
 	chip_init();

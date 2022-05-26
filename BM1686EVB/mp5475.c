@@ -3,7 +3,7 @@
 #include <debug.h>
 #include <tick.h>
 
-#define MP5475_SLAVE_ADDR	0x1E
+#define MP5475_SLAVE_ADDR	0x60
 #define I2C			I2C2
 
 #define MP5475_ENABLE_REG_DEFAULT_VALUE	(1 << 7 | 1 << 5)

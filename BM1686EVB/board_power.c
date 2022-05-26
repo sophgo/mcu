@@ -37,7 +37,7 @@ struct power_node board_power_nodes[17] = {
 	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
 	 },
 
-	{"VDD-CORE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"VDD-CORE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
 	 },
 
@@ -49,7 +49,7 @@ struct power_node board_power_nodes[17] = {
 	 {(unsigned long)pmic_channel_d_on, (unsigned long)pmic_channel_d_off},
 	 },
 
-	{"ACK-P08", NODE_TYPE_CHECK, POWER_STATUS_OFF, 1000,
+	{"ACK-P08", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
 	 {(unsigned long)P08_PWR_GOOD_PORT, (unsigned long)P08_PWR_GOOD_PIN},
 	 },
 
@@ -58,7 +58,7 @@ struct power_node board_power_nodes[17] = {
 	  (unsigned long)EN_VDD_PCIE_VP_PIN},
 	 },
 
-	{"ACK-PCIE", NODE_TYPE_CHECK, POWER_STATUS_OFF, 1000,
+	{"ACK-PCIE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
 	 {(unsigned long)GPIO2_PORT, (unsigned long)GPIO2_PIN},
 	 },
 
@@ -66,7 +66,7 @@ struct power_node board_power_nodes[17] = {
 	 {(unsigned long)EN_VDD_TPU_PORT, (unsigned long)EN_VDD_TPU_PIN},
 	 },
 
-	{"ACK-TPU", NODE_TYPE_CHECK, POWER_STATUS_OFF, 1000,
+	{"ACK-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
 	 {(unsigned long)GPIO3_PORT, (unsigned long)GPIO3_PIN},
 	 },
 
@@ -86,7 +86,7 @@ struct power_node board_power_nodes[17] = {
 	 {(unsigned long)sys_rst_x_on, (unsigned long)sys_rst_x_off},
 	 },
 
-	{"ACK-DDR", NODE_TYPE_CHECK, POWER_STATUS_OFF, 1000,
+	{"ACK-DDR", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
 	 {(unsigned long)DDR_PWR_GOOD_PORT, (unsigned long)DDR_PWR_GOOD_PIN},
 	 },
 

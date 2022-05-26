@@ -143,6 +143,7 @@ void console_poll(void)
 
 void console_add(void)
 {
+	console_init();
 	loop_add(console_poll);
 }
 

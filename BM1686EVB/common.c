@@ -40,17 +40,11 @@ uint8_t get_ddr_type(void)
 char *get_board_type_name()
 {
 	switch (board_type) {
-	case SM5ME:
-		return "SM5-MINI-E";
-	case SM5MS:
-		return "SM5-MINI-S";
-	case SM5MP:
-		return "SM5-MINI-P";
-	case SM5MA:
-		return "SM5-MINI-A";
+	case EVB:
+		return "1684X EVB";
 	};
 	/* U means unknown type */
-	return "SM5-MINI-U";
+	return "1684X-U";
 }
 
 void set_board_type(uint8_t type)
