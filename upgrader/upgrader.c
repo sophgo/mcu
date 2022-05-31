@@ -283,3 +283,40 @@ void upgrader_init(void)
 	}
 }
 
+
+
+#define MMIO32(addr)		(*(volatile uint32_t *)(addr))
+#define USART_ISR(usart_base)		MMIO32((usart_base) + 0x1C)
+#define USART_TDR(usart_base)		MMIO32((usart_base) + 0x28)
+#define USART_TDR_MASK		    (0x1FF << 0)
+#define STD_UART 0x40004400
+void usart_send(uint32_t usart, uint16_t data)
+{
+	/* Send data. */
+	USART_TDR(usart) = (data & USART_TDR_MASK);
+}
+void usart_wait_send_ready(uint32_t usart)
+{
+	/* Wait until the data has been transferred into the shift register. */
+	while ((USART_ISR(usart) & USART_ISR_TXE) == 0);
+}
+void usart_send_blocking(uint32_t usart, uint16_t data)
+{
+	usart_wait_send_ready(usart);
+	usart_send(usart, data);
+}
+int putchar(int c)
+{
+	usart_send_blocking(STD_UART, c);
+	return c;
+}
+
+int puts(const char *s)
+{
+	int i;
+
+	for (i = 0; *s; ++s, ++i)
+		putchar(*s);
+
+	return i;
+}

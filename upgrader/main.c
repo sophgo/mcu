@@ -58,12 +58,16 @@ static inline void led_init(void)
 			MCU_LED_PORT = GPIOC;
 			MCU_LED_PIN = GPIO_PIN_14;
 			break;
+		case EVB:
+			MCU_LED_PORT = GPIOC;
+			MCU_LED_PIN = GPIO_PIN_13;
+			break;
 		default:
 			MCU_LED_PORT = NULL;
 			break;
 	}
 }
-
+extern int puts(const char *s);
 int main(void)
 {
 	flash_init();
@@ -73,7 +77,7 @@ int main(void)
 	SysTick->CTRL |= 1;
 
 	led_init();
-
+	puts("in upgrade\r\n");
 	upgrader_init();
 	while (1) {
 		led_update();
