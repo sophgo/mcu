@@ -75,7 +75,7 @@ int mp5475_init(void)
 	mp5475_voltage_config(0, 1800);
 	mp5475_voltage_config(1, 1100);
 	mp5475_voltage_config(2, 600);
-	mp5475_voltage_config(3, 840);
+	mp5475_voltage_config(3, 810);
 	return 0;
 }
 

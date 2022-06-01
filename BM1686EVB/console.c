@@ -40,6 +40,8 @@ static const char * const cmd_poweron_usage =
 static void cmd_poweron(void *hint, int argc, char const *argv[])
 {
 	power_on();
+
+	uart_puts("BM1684XOK\n");
 }
 
 static const char * const cmd_poweroff_usage =
@@ -50,6 +52,29 @@ static void cmd_poweroff(void *hint, int argc, char const *argv[])
 {
 	power_off();
 	slt_reset();
+
+	uart_puts("BM1684XOK\n");
+}
+
+static const char * const cmd_getmcutype_usage =
+"getmcutype\n";
+
+static void cmd_getmcutype(void *hint, int argc, char const *argv[])
+{
+	uart_puts("BM1684XEVB\n");
+}
+
+static const char * const cmd_query_usage =
+"query\n"
+"	query the result from bm1684x\n";
+
+static void cmd_query(void *hint, int argc, char const *argv[])
+{
+	char result = 0;
+
+	result = get_slt_result();
+
+	uart_putc(result);
 }
 
 struct command {
@@ -64,6 +89,8 @@ static struct command command_list[] = {
 	{"hello", NULL , NULL, cmd_hello},
 	{"poweron", NULL , cmd_poweron_usage, cmd_poweron},
 	{"poweroff", NULL , cmd_poweroff_usage, cmd_poweroff},
+	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
+	{"query", NULL, cmd_query_usage, cmd_query},
 };
 
 void print_usage(struct command *cmd)

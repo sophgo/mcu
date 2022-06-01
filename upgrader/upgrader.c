@@ -93,9 +93,12 @@ static inline int idx_get(struct upgrader_ctx *ctx)
 
 static void upgrader_match(void *priv, int dir)
 {
+	char match[2] = {0xff, 0};
 	struct upgrader_ctx *ctx = priv;
-	if (dir == I2C_SLAVE_WRITE)
+	if (dir == I2C_SLAVE_WRITE){
 		ctx->set_idx = 1;
+		upgrader_log(match);
+	}
 }
 
 static void flush_data(void)
@@ -136,6 +139,7 @@ static void upgrader_write(void *priv, uint8_t data)
 	}
 
 	int idx = idx_get(ctx);
+	upgrader_log((char *)&idx);
 
 	switch (idx) {
 	case REG_CALC_CKSUM:
