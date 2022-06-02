@@ -34,5 +34,6 @@ void power_node_off(const char *name);
 void power_nodes_off(const char **name, int num);
 int power_node_status(const char *name);
 int power_nodes_status(const char **name, int num);
+int cmd_get_node_status();
 
 #endif

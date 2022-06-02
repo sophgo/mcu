@@ -77,6 +77,38 @@ static void cmd_query(void *hint, int argc, char const *argv[])
 	uart_putc(result);
 }
 
+static const char * const cmd_power_usage =
+"power [on|off power_name]\n"
+"	on: enable power\n"
+"	off: disable power\n"
+"	if on or off ommited, get the status of power enable pin\n";
+
+static void cmd_power(void *hint, int argc, char const *argv[])
+{
+	int ret = 0;
+
+	if (argc == 1){
+		cmd_get_node_status();
+	}else if (argc == 3){
+		if (strcmp(argv[1], "on") == 0){
+			ret = power_node_on(argv[2]);
+			uart_puts(argv[2]);
+			if (ret == -1)				
+				uart_puts(" enable failed\n");
+			else
+				uart_puts(" enable success\n");
+		}else if (strcmp(argv[1], "off") == 0){
+			power_node_off(argv[2]);
+		}
+		else
+			uart_puts("invalid command\n");
+			
+
+	}else{
+		uart_puts(cmd_power_usage);
+	}
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -91,6 +123,7 @@ static struct command command_list[] = {
 	{"poweroff", NULL , cmd_poweroff_usage, cmd_poweroff},
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
 	{"query", NULL, cmd_query_usage, cmd_query},
+	{"power", NULL, cmd_power_usage, cmd_power},
 };
 
 void print_usage(struct command *cmd)

@@ -7,7 +7,7 @@
 #include <power.h>
 #include <common.h>
 #include <board_power.h>
-
+#include <system.h>
 /* in us */
 #define NODE_CHECK_TIMEOUT	4000
 
@@ -195,4 +195,19 @@ int power_nodes_status(const char **name, int num)
 	}
 
 	return POWER_STATUS_ON;
+}
+
+int cmd_get_node_status()
+{
+	int i = 0;
+
+	for (i = 0; i < ARRAY_SIZE(board_power_nodes); i++){
+		uart_puts((board_power_nodes + i)->name);
+		if ((board_power_nodes+i)->status == POWER_STATUS_ON)
+			uart_puts(" [O]\n");
+		else
+			uart_puts(" [X]\n");
+	}
+
+	return 0;
 }
