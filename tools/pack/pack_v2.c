@@ -114,6 +114,7 @@ int pack_v2(int argc, char *argv[])
 
 	firmware_name = p->txt;
 
+
 	p = ezxml_child(firmware, "family");
 	if (p)
 		mcu_family_name = p->txt;

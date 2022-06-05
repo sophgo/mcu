@@ -19,6 +19,7 @@
 #define SE5LITE	14
 #define SM5SE6M	15
 
+#define BM1684XEVB 0x20
 #define SC7PRO	15
 
 #endif

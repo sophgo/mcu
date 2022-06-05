@@ -200,7 +200,7 @@ static void tmp451_update_temp(void)
 	set_soc_temp(tmp451_ctx.soc - 5);
 	set_board_temp(tmp451_ctx.board);
 
-	debug("board %d, soc %d\n", get_board_temp(), get_soc_temp());
+	// debug("board %d, soc %d\n", get_board_temp(), get_soc_temp());
 }
 
 void tmp451_get_temp(int *board, int *soc)
@@ -248,7 +248,7 @@ void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
 	uint8_t tmp;
 
-	if (get_hardware_version() == 0x12)///////////////////////////修改临界温度
+	if (get_hardware_version() == 0x12)
 		tmp451_ctx.critical = 120;
 	else
 		tmp451_ctx.critical = 95;

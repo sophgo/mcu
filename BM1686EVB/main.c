@@ -31,6 +31,7 @@
 #include <pcie.h>
 #include <slt.h>
 #include <console.h>
+#include <tmp451.h>
 
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
@@ -92,6 +93,7 @@ int main(void)
 	mp5475_init();
 	power_on();
 	chip_init();
+	
 
 	debug("%s %s working at %s mode\n",
 	      get_board_type_name(),
@@ -119,7 +121,7 @@ int main(void)
 			set_board_type(SM5MA);
 	}
 #endif
-	set_board_type(EVB);
+	set_board_type(BM1684XEVB);
 #if 0
 	/* but chip reset still be asserted */
 	if (get_work_mode() == WORK_MODE_SOC) {
@@ -143,6 +145,8 @@ int main(void)
 		kbd_init(&i2c1_slave_ctx);
 		pic_init(&i2c1_slave_ctx);
 	}
+
+	tmp451_init(&i2c1_slave_ctx);
 
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);

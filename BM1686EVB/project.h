@@ -16,4 +16,6 @@
 #define SM5MP	11
 #define SM5MS	12
 #define SM5MA	13
+
+#define BM1684XEVB 0x20
 #endif

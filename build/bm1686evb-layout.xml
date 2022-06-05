@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <firmware>
-	<name>EVB</name>
+	<name>BM1684XEVB</name>
 	<size>0x10000</size>
 	<efit>
 		<offset>0x7000</offset>

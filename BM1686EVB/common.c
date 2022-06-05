@@ -40,7 +40,7 @@ uint8_t get_ddr_type(void)
 char *get_board_type_name()
 {
 	switch (board_type) {
-	case EVB:
+	case BM1684XEVB:
 		return "1684X EVB";
 	};
 	/* U means unknown type */
