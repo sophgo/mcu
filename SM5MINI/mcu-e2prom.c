@@ -41,7 +41,8 @@ void mcu_eeprom_power_off_reason(int reason)
 
 void mcu_eeprom_write_byte_protected(uint16_t offset, uint8_t data)
 {
-	eeprom_write_byte_protected(&mcu_e2prom, offset, data);
+	if (!eeprom_get_lock_status())
+		eeprom_program_byte(EEPROM_BASE + offset, data);
 }
 
 void mcu_eeprom_init(struct i2c_slave_ctx *i2c)

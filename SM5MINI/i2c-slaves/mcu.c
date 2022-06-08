@@ -100,6 +100,12 @@ int mcu_get_test_mode(void)
 	return mcu_ctx.test_mode;
 }
 
+static void mcu_set_se6_aiucore(void)
+{
+	pcie_init();//open pciee reset
+	mcu_ctx.is_se6_aiucore = true;
+}
+
 /*
  * if is aiu core return ture else false
  */
@@ -111,10 +117,6 @@ bool mcu_get_se6_aiucore(void)
 void mcu_set_test_mode(int mode)
 {
 	mcu_ctx.test_mode = mode;
-	if (mode) {
-		pcie_init();//open pciee reset
-		mcu_ctx.is_se6_aiucore = true;
-	}
 }
 
 void mcu_raise_interrupt(uint8_t interrupts)
@@ -154,11 +156,14 @@ static void mcu_match(void *priv, int dir)
 		ctx->set_idx = 1;
 }
 
-#define CMD_POWER_ON		0x01	/* exit test mode for sm5mini */
-#define CMD_POWER_OFF		0x02
-#define CMD_RESET		0x03	// drag reset pin
-#define CMD_REBOOT		0x07	// power off - power on
-#define CMD_UPDATE		0x08
+#define CMD_POWER_OFF			0x02
+
+#define CMD_RESET				0x03	// drag reset pin
+#define CMD_REBOOT				0x07	// power off - power on
+#define CMD_UPDATE				0x08
+
+#define CMD_SE6_AIU_POWER_ON	0x09	/* exit test mode for sm5mini */
+
 
 void mcu_process(void)
 {
@@ -168,15 +173,14 @@ void mcu_process(void)
 	i2c_peripheral_disable(I2C1);
 	nvic_disable_irq(NVIC_I2C1_IRQ);
 	switch (mcu_ctx.cmd) {
-	case CMD_POWER_ON:
+	case CMD_SE6_AIU_POWER_ON:
 		mcu_set_test_mode(false);
+		mcu_set_se6_aiucore();
 		break;
 	case CMD_POWER_OFF:
 		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		if (get_board_type() == SM5ME)
 			se5_power_off_board();
-		else if (get_board_type() == SM5SE6M)
-			se6ctrl_set_pwron(false);
 		else
 			power_off();
 		wdt_reset();
@@ -190,6 +194,10 @@ void mcu_process(void)
 		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
 		if (get_board_type() == SM5ME)
 			se5_reset_board();
+		if (get_board_type() == SM5SE6M){
+			se6ctrl_clean_restart();
+			chip_popd_reset();
+		}
 		else
 			chip_popd_reset();
 		wdt_reset();

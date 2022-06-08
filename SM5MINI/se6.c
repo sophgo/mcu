@@ -14,21 +14,24 @@
 #include <at24c128c-e2prom.h>
 
 /*second*/
-#define SE6_POWER_OFF_DELAY	(30)
-#define KEY_RD_TIME		(50)
+#define SE6_POWER_OFF_DELAY		(15)
+#define KEY_RD_TIME				(50)
 
 /* virtual key define */
-#define VIRT_POWER_KEY_PORT	0
-#define VIRT_POWER_KEY		(1 << 0)
+#define VIRT_POWER_KEY_PORT		(0)
+#define VIRT_POWER_KEY			(1 << 0)
 
-#define REBOOT_KEY_PORT		0
-#define REBOOT_KEY		(1 << 1)
+#define REBOOT_KEY_PORT			(0)
+#define REBOOT_KEY				(1 << 1)
 
-#define FACTORY_RESET_KEY_PORT	0
-#define FACTORY_RESET_KEY	(1 << 2)
+#define VIRT_RESTART_KEY_PORT			(0)
+#define VIRT_RESTART_KEY				(1 << 2)
 
-#define POWER_KEY_TIMER		(2 * 1000)
-#define FACTRST_KEY_TIMER	(30 * 1000)
+#define POWER_KEY_TIMER			(2 * 1000)
+#define SLEEP_ON_KEY_TIMER		(3 * 1000)
+#define SLEEP_OFF_KEY_TIMER		(1 * 1000)
+#define FACTRST_KEY_TIMER		(30 * 1000)
+#define RESTART_KEY_TIMER		(4 * 1000)
 
 /*redefine key in se6*/
 #define SE6_PWR_KEY_PORT	MCU_INT_PORT
@@ -41,14 +44,17 @@
 enum {
 	KEY_NONE,
 	KEY_POWER,
+	KEY_SLEEP_ON,
+	KEY_SLEEP_OFF,
+	KEY_RESTART,
 	KEY_FACREST,
 };
 
 static struct power_off{
 	uint32_t count;
-	bool	 start;
+	bool	 start:1;
 	uint16_t timer;
-} se6_pweroff;
+} se6_restart;
 
 static struct power_key{
 	uint16_t press_cnt;
@@ -72,14 +78,6 @@ static uint16_t se6ctrl_get_pwrkey(void)
 	return gpio_get(SE6_PWR_KEY_PORT, SE6_PWR_KEY_PIN);
 }
 
-static void se6ctrl_set_recovery(void)
-{
-	mcu_set_gp0(MCU_CMD_RECOVERY);
-	kbd_set(FACTORY_RESET_KEY_PORT, FACTORY_RESET_KEY);
-	chip_reset();
-	wdt_reset();
-}
-
 static void se6ctrl_set_keyvalue(uint16_t key)
 {
 	key_spin_lock();
@@ -100,13 +98,11 @@ static void se6ctrl_key_detect(void)
 
 	/* when release judge key value */
 	if (!se6_pwerkey.key_pressed) {
-		if (se6_pwerkey.press_cnt * KEY_RD_TIME >= POWER_KEY_TIMER)
-			se6ctrl_set_keyvalue(KEY_POWER);
 		se6_pwerkey.press_cnt = 0;
 	} else {
 	/* when pressed judge key value */
-		if (se6_pwerkey.press_cnt * KEY_RD_TIME >= FACTRST_KEY_TIMER) {
-			se6ctrl_set_keyvalue(KEY_FACREST);
+		if (se6_pwerkey.press_cnt * KEY_RD_TIME >= RESTART_KEY_TIMER) {
+			se6ctrl_set_keyvalue(KEY_RESTART);
 			se6_pwerkey.key_pressed = false;
 			se6_pwerkey.key_need_release = true;
 			se6_pwerkey.press_cnt = 0;
@@ -115,12 +111,26 @@ static void se6ctrl_key_detect(void)
 
 }
 
-static void se6_wait_pwroff(void)
+void se6ctrl_clean_restart(void)
 {
-	if (se6_pweroff.start == false)
+	se6_restart.start = false;
+	se6_restart.count = 0;
+}
+
+void se6ctrl_(void)
+{
+//	chip_reset();
+	chip_popd_reset();
+}
+
+static void se6_wait_restart(void)
+{
+	if (se6_restart.start == false)
 		return;
-	if (tick_get() - se6_pweroff.count > se6_pweroff.timer * 1000)
-		se6ctrl_set_pwron(false);
+	if (tick_get() - se6_restart.count > se6_restart.timer * 1000){
+		se6ctrl_();
+		se6ctrl_clean_restart();
+	}
 }
 
 void se6ctrl_set_pwron(bool poweron)
@@ -131,16 +141,16 @@ void se6ctrl_set_pwron(bool poweron)
 		gpio_clear(SE6_PWR_ON_PORT, SE6_PWR_ON_PIN);
 }
 
-static void se6ctrl_pwroff_do(void)
+static void se6ctrl_restart_do(void)
 {
-	if (se6_pweroff.start == true)
+	if (se6_restart.start == true)
 		return;
-	kbd_set(VIRT_POWER_KEY_PORT, VIRT_POWER_KEY);
-	se6_pweroff.count = tick_get();
-	se6_pweroff.start = true;
+	kbd_set(REBOOT_KEY_PORT, REBOOT_KEY);
+	se6_restart.count = tick_get();
+	se6_restart.start = true;
 }
 
-void se6ctrl_pwrkey_detect(void)
+static void se6ctrl_pwrkey_detect(void)
 {
 	tick_register_task(se6ctrl_key_detect, KEY_RD_TIME);
 }
@@ -148,14 +158,12 @@ void se6ctrl_pwrkey_detect(void)
 static void se6_process(void)
 {
 	/* handle the key action */
-	if (se6_pwerkey.key_value == KEY_FACREST) {
-		se6ctrl_set_recovery();
-		se6ctrl_set_keyvalue(KEY_NONE);
-	} else if (se6_pwerkey.key_value == KEY_POWER) {
-		se6ctrl_pwroff_do();
+	if (se6_pwerkey.key_value == KEY_RESTART) {
+		se6ctrl_restart_do();
 		se6ctrl_set_keyvalue(KEY_NONE);
 	}
-	se6_wait_pwroff();
+
+	 se6_wait_restart();
 }
 
 static void se6ctrl_init_board(void)
@@ -174,9 +182,9 @@ static void se6ctrl_init_board(void)
 
 	pwr_timer = at24c128c_get_pwroff_timer();
 	if (pwr_timer == POWROFF_TIMER_NO_CUSTOMIZED)
-		se6_pweroff.timer = SE6_POWER_OFF_DELAY;
+		se6_restart.timer = SE6_POWER_OFF_DELAY;
 	else
-		se6_pweroff.timer = pwr_timer;
+		se6_restart.timer = pwr_timer;
 }
 
 void se6_init(void)
