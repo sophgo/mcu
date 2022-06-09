@@ -118,9 +118,13 @@ int puts(const char *s)
 {
 	int i;
 
-	for (i = 0; *s; ++s, ++i)
+	for (i = 0; *s; ++s, ++i){
 		putchar(*s);
+	}
 
+	putchar('\r');
+	putchar('\n');
+	
 	return i;
 }
 

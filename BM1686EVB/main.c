@@ -42,6 +42,7 @@ int main(void)
 	system_init();
 
 	debug("\nBITMAIN SOPHONE BM1684XEVB\n");
+	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 
 #ifndef STANDALONE
 	if (get_stage() == RUN_STAGE_LOADER && check_app() == 0)
