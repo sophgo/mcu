@@ -280,6 +280,12 @@ static uint8_t mcu_read(void *priv)
 	case REG_CMD:
 		ret = 0;
 		break;
+	case REG_BM1686_TMP:	
+		ret = get_soc_temp();
+		break;
+	case REG_BOARD_TMP:
+		ret = get_ntc_tmp();
+		break;
 	case REG_INT_STATUS1:
 		ret = ctx->int_status[0];
 		break;

@@ -150,6 +150,11 @@ static void adc2tmp(unsigned short adc)
 	ntc_tmp = i - 50;
 }
 
+char get_ntc_tmp()
+{
+	return ntc_tmp;
+}
+
 static unsigned long current_time;
 static unsigned long last_time;
 
