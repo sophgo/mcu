@@ -17,7 +17,7 @@
 #define SM5MS	12
 #define SM5MA	13
 
-#define SC7PRO 15
+#define SC7PRO 0x20
 
 /* MCU Family */
 enum {

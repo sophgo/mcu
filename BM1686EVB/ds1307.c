@@ -154,7 +154,7 @@ void printRawData(const uint8_t *data, const uint8_t size) {
     }
 }
 
-static int write_rtc(time *s_time)
+static int __unused write_rtc(time *s_time)
 {
     uint8_t data[8] = { 0 };
 
@@ -169,7 +169,7 @@ static int read_rtc(time *s_time)
     uint8_t data[8] = { 0};
 
     i2c_transfer7_timeout(iic, SLAVE_ADDRESS, 1, NULL, 0, data, ARRAY_SIZE(data));
-    printRawData(data, ARRAY_SIZE(data));
+    // printRawData(data, ARRAY_SIZE(data));
     decodedata(data, s_time);
     printTime(s_time);
 
@@ -184,7 +184,7 @@ void get_rtc_time(struct rtc_time *rtc_time)
 
     if (current_tick - last_get_rtc_tick >= 2000) {
         read_rtc(&s_time);
-        write_rtc(&s_time);///////////////////////////////////注意后边删掉
+        // write_rtc(&s_time);///////////////////////////////////注意后边删掉
         rtc_time->seconds = s_time.seconds;
         rtc_time->minutes = s_time.minutes;
         rtc_time->hours = s_time.hours;

@@ -4,7 +4,7 @@
 #define SLAVE_ADDRESS 0x68 // the slave address (0xD0 read / 0xD1 write)
 #define TIME_STRUCT_SIZE 0x08
 #define RAM_SIZE 55
-#define iic I2C1
+#define iic I2C2
 
 
 typedef struct {
