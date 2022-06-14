@@ -96,7 +96,6 @@ int main(void)
 	chip_init();
 
 	set_board_type(BM1684XEVB);
-	
 
 	debug("%s %s working at %s mode\n",
 	      get_board_type_name(),
@@ -124,7 +123,7 @@ int main(void)
 			set_board_type(SM5MA);
 	}
 #endif
-	
+
 #if 0
 	/* but chip reset still be asserted */
 	if (get_work_mode() == WORK_MODE_SOC) {

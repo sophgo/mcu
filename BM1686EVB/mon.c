@@ -131,7 +131,7 @@ static uint16_t adc2current(unsigned short adc)
 	 * step 3: convert ampere to mili-ampere
 	 */
 
-	/* 
+	/*
 	 *I_12V = (adc * 3.3) / (4096*100*0.003)
 	 */
 	return 33UL * adc / 12288;
@@ -150,7 +150,7 @@ static void adc2tmp(unsigned short adc)
 	ntc_tmp = i - 50;
 }
 
-char get_ntc_tmp()
+int get_ntc_tmp(void)
 {
 	return ntc_tmp;
 }

@@ -75,14 +75,14 @@ static struct {
 	char *name;
 	int id[16];
 } firmware_table[] = {
-	{"EVB",		{EVB, SC5, -1}},
-	{"SA5",		{SA5, SE5, SM5P, SM5S, -1}},
-	{"SC5PLUS",	{SC5PLUS, -1}},
-	{"SC5H",	{SC5H, -1}},
-	{"SC5PRO",	{SC5PRO, -1}},
-	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA, SM5SE6M, -1} },
-	{"SE5LITE",	{SE5LITE, -1}},
-	{"BM1684XEVB", {BM1684XEVB, BM1684XEVB, -1}},
+	{"EVB",         {EVB, SC5, -1}},
+	{"SA5",         {SA5, SE5, SM5P, SM5S, -1}},
+	{"SC5PLUS",     {SC5PLUS, -1}},
+	{"SC5H",        {SC5H, -1}},
+	{"SC5PRO",      {SC5PRO, -1}},
+	{"SM5MINI",     {SM5ME, SM5MP, SM5MS, SM5MA, SM5SE6M, -1} },
+	{"SE5LITE",     {SE5LITE, -1}},
+	{"BM1684XEVB",  {BM1684XEVB, BM1684XEVB, -1}},
 };
 
 struct fwinfo {

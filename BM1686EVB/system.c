@@ -110,6 +110,8 @@ int std_read(void)
 
 int putchar(int c)
 {
+	if (c == '\n')
+		usart_send_blocking(STD_UART, '\r');
 	usart_send_blocking(STD_UART, c);
 	return c;
 }
@@ -118,13 +120,11 @@ int puts(const char *s)
 {
 	int i;
 
-	for (i = 0; *s; ++s, ++i){
+	for (i = 0; *s; ++s, ++i)
 		putchar(*s);
-	}
 
-	putchar('\r');
 	putchar('\n');
-	
+
 	return i;
 }
 

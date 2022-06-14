@@ -77,7 +77,6 @@ int main(void)
 	SysTick->CTRL |= 1;
 
 	led_init();
-	puts("in upgrade\r\n");
 	upgrader_init();
 	while (1) {
 		led_update();

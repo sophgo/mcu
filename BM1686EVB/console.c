@@ -93,7 +93,8 @@ static void cmd_power(void *hint, int argc, char const *argv[])
 		if (strcmp(argv[1], "on") == 0){
 			ret = power_node_on(argv[2]);
 			uart_puts(argv[2]);
-			if (ret == -1)				
+
+			if (ret == -1)
 				uart_puts(" enable failed\n");
 			else
 				uart_puts(" enable success\n");
@@ -102,8 +103,6 @@ static void cmd_power(void *hint, int argc, char const *argv[])
 		}
 		else
 			uart_puts("invalid command\n");
-			
-
 	}else{
 		uart_puts(cmd_power_usage);
 	}
