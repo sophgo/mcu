@@ -1,3 +1,0 @@
-[submodule "tools/toolchain/stlink"]
-	path = tools/toolchain/stlink
-	url = https://github.com/texane/stlink.git
