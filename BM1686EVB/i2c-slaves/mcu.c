@@ -13,7 +13,6 @@
 #include <se5.h>
 #include <wdt.h>
 #include <mcu.h>
-#include <ds1307.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -92,9 +91,7 @@ struct mcu_ctx {
 	uint16_t tmp;
 };
 
-
 static struct mcu_ctx mcu_ctx;
-static struct rtc_time rtc_time;
 
 static const char *tpu_powers[] = {
 		"VDD-TPU",
@@ -352,30 +349,6 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_TPU_POWER_CONTROL:
 		ret = tpu_get_power_status();
-		break;
-	case RTC_SECONDS:
-		get_rtc_time(&rtc_time);
-		ret = rtc_time.seconds;
-		break;
-	case RTC_MINUTES:
-		get_rtc_time(&rtc_time);
-		ret = rtc_time.minutes;
-		break;
-	case RTC_HOURS:
-		get_rtc_time(&rtc_time);
-		ret = rtc_time.hours;
-		break;
-	case RTC_DATE:
-		get_rtc_time(&rtc_time);
-		ret = rtc_time.date;
-		break;
-	case RTC_MONTH:
-		get_rtc_time(&rtc_time);
-		ret = rtc_time.month;
-		break;
-	case RTC_YEAR:
-		get_rtc_time(&rtc_time);
-		ret = rtc_time.year;
 		break;
 	default:
 		ret = 0xff;

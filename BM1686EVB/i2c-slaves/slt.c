@@ -13,8 +13,6 @@
 #include <se5.h>
 #include <wdt.h>
 #include <mcu.h>
-#include <ds1307.h>
-
 
 #define SLT_REG_LEN 64
 #define SLT_REG_MAX 64
