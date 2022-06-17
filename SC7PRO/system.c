@@ -117,7 +117,7 @@ static void system_gpio_init(void)
 	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_6;
 	gpio_init(GPIOE, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
-	
+
 }
 
 static void system_i2c0_init(void)
@@ -130,7 +130,7 @@ static void system_i2c0_init(void)
 	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ,
 		  GPIO_PIN_6 | GPIO_PIN_7);
 
-	/* magic deinit -- aka rcu reset, if not do this, af pin cannot work */ 
+	/* magic deinit -- aka rcu reset, if not do this, af pin cannot work */
 	i2c_deinit(I2C0);
 
 	i2c_master_init(I2C0);
@@ -214,7 +214,7 @@ void *_sbrk(unsigned long inc)
 /* for console put and get*/
 int usart_is_recv_ready(uint32_t usart_periph)
 {
-	return ((GET_BITS(USART_DATA(usart_periph), 0U, 9U))&USART_STAT0_RBNE);
+	return USART_STAT0(usart_periph) & USART_STAT0_RBNE;
 }
 
 int uart_getc(void)

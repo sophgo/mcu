@@ -47,12 +47,13 @@ struct flash_ctx {
 };
 /* we donnot consider that data need to save in two page*/
 
-int flash_program_small_page(unsigned long addr, void *data, unsigned int len)
+int flash_program_small_page(unsigned long offset, void *data, unsigned int len)
 {
-	static unsigned ereased_start = 0;
-	static unsigned ereased_end = 0;
-	unsigned start = addr;
-	unsigned end = addr + len;
+	static unsigned int ereased_start = 0;
+	static unsigned int ereased_end = 0;
+	unsigned long addr = FLASH_BASE + offset;
+	unsigned int start = addr;
+	unsigned int end = addr + len;
 	int i = 0;
 	uint32_t tmp;
 
