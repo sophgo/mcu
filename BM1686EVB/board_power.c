@@ -5,6 +5,9 @@
 #include <common.h>
 #include <stdlib.h>
 
+int powerchip_init_on(void);
+void powerchip_init_off(void);
+
 int pmic_channel_a_on(void);
 void pmic_channel_a_off(void);
 
@@ -17,16 +20,23 @@ void pmic_channel_b_off(void);
 int pmic_channel_c_on(void);
 void pmic_channel_c_off(void);
 
-int sys_rst_x_on(void);
-void sys_rst_x_off(void);
-
 int check_pcie_reset_on(void);
 void check_pcie_reset_off(void);
 
-struct power_node board_power_nodes[17] = {
+int sys_rst_deassert_on(void);
+void sys_rst_deassert_off(void);
+
+int sys_rst_assert_on(void);
+void sys_rst_assert_off(void);
+
+struct power_node board_power_nodes[19] = {
 
 	{"EN_12V_SYS", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
 	 {(unsigned long)EN_12V_SYS_PORT, (unsigned long)EN_12V_SYS_PIN},
+	 },
+
+	{"POWERCHIP_INIT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
+	 {(unsigned long)powerchip_init_on, (unsigned long)powerchip_init_off},
 	 },
 
 	{"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
@@ -82,17 +92,22 @@ struct power_node board_power_nodes[17] = {
 	 {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
 	 },
 
-	{"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 30000,
-	 {(unsigned long)sys_rst_x_on, (unsigned long)sys_rst_x_off},
-	 },
-
-	{"ACK-DDR", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)DDR_PWR_GOOD_PORT, (unsigned long)DDR_PWR_GOOD_PIN},
-	 },
-
 	{"CHECK-PCIE-RESET", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
 	 {(unsigned long)check_pcie_reset_on,
 	  (unsigned long)check_pcie_reset_off},
+	 },
+
+	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
+	 {(unsigned long)sys_rst_deassert_on,
+	  (unsigned long)sys_rst_deassert_off},
+	 },
+
+	{"ACK-DDR", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 29000,
+	 {(unsigned long)DDR_PWR_GOOD_PORT, (unsigned long)DDR_PWR_GOOD_PIN},
+	 },
+
+	{"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 30000,
+	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
 	 },
 
 };

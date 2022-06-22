@@ -13,6 +13,7 @@
 #include <power.h>
 #include <slt.h>
 #include <loop.h>
+#include <chip.h>
 static struct ecdc_console *console;
 
 static int console_getc(void *console_hint)
@@ -40,8 +41,9 @@ static const char * const cmd_poweron_usage =
 static void cmd_poweron(void *hint, int argc, char const *argv[])
 {
 	power_on();
+	chip_enable();
 
-	uart_puts("BM1684XOK\n");
+	printf("BM1684XOK\n");
 }
 
 static const char * const cmd_poweroff_usage =
@@ -53,7 +55,7 @@ static void cmd_poweroff(void *hint, int argc, char const *argv[])
 	power_off();
 	slt_reset();
 
-	uart_puts("BM1684XOK\n");
+	printf("BM1684XOK\n");
 }
 
 static const char * const cmd_getmcutype_usage =
@@ -61,7 +63,7 @@ static const char * const cmd_getmcutype_usage =
 
 static void cmd_getmcutype(void *hint, int argc, char const *argv[])
 {
-	uart_puts("BM1684XEVB\n");
+	printf("BM1684XEVB\n");
 }
 
 static const char * const cmd_query_usage =
@@ -70,11 +72,7 @@ static const char * const cmd_query_usage =
 
 static void cmd_query(void *hint, int argc, char const *argv[])
 {
-	char result = 0;
-
-	result = get_slt_result();
-
-	uart_putc(result);
+	printf("0x%x\n", get_slt_result());
 }
 
 static const char * const cmd_power_usage =
@@ -92,19 +90,19 @@ static void cmd_power(void *hint, int argc, char const *argv[])
 	}else if (argc == 3){
 		if (strcmp(argv[1], "on") == 0){
 			ret = power_node_on(argv[2]);
-			uart_puts(argv[2]);
+			printf(argv[2]);
 
 			if (ret == -1)
-				uart_puts(" enable failed\n");
+				printf(" enable failed\n");
 			else
-				uart_puts(" enable success\n");
+				printf(" enable success\n");
 		}else if (strcmp(argv[1], "off") == 0){
 			power_node_off(argv[2]);
 		}
 		else
-			uart_puts("invalid command\n");
+			printf("invalid command\n");
 	}else{
-		uart_puts(cmd_power_usage);
+		printf(cmd_power_usage);
 	}
 }
 
@@ -128,7 +126,7 @@ static struct command command_list[] = {
 void print_usage(struct command *cmd)
 {
 	if (cmd->usage)
-		uart_puts(cmd->usage);
+		printf(cmd->usage);
 }
 
 struct command *find_command(const char *name)

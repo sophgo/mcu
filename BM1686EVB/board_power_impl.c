@@ -1,7 +1,7 @@
 #include <mp5475.h>
 #include <chip.h>
 #include <common.h>
-
+#include <mp5475.h>
 int pmic_channel_a_on(void)
 {
 	return mp5475_buck_on(0);
@@ -9,6 +9,7 @@ int pmic_channel_a_on(void)
 
 void pmic_channel_a_off(void)
 {
+	mp5475_buck_off(0);
 }
 
 int pmic_channel_d_on(void)
@@ -71,4 +72,11 @@ int check_pcie_reset_on(void)
 
 void check_pcie_reset_off(void)
 {
+}
+
+int powerchip_init_on(void)
+{
+	mp5475_init();
+
+	return 0;
 }
