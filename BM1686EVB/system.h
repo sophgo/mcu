@@ -3,7 +3,7 @@
 
 #include <libopencm3/stm32/usart.h>
 
-#define DEFAULT_BAUDRATE	921600
+#define DEFAULT_BAUDRATE	115200
 
 #define USART2_BAUDRATE	DEFAULT_BAUDRATE
 
