@@ -20,6 +20,11 @@
 #define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
 #define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
 
+#define PCB_ADC_CHANNEL	0
+#define BOM_ADC_CHANNEL	1
+#define I12V_ADC_CHANNEL	4
+#define NTCTMP_ADC_CHANNEL	6
+
 struct filter {
 	unsigned short data[FILTER_DEPTH];
 	unsigned long total;
@@ -134,7 +139,7 @@ static uint16_t adc2current(unsigned short adc)
 	/*
 	 *I_12V = (adc * 3.3) / (4096*100*0.003)
 	 */
-	return 33UL * adc / 12288;
+	return 33000UL * adc / 12288;
 }
 
 static void adc2tmp(unsigned short adc)
@@ -171,9 +176,11 @@ void mon_init(void)
 {
 	/* 0: PCB version
 	 * 1: BOM version
-	 * 5: 12V current
+	 * 4: 12V current
+	 * 6: ntc monitor
 	 */
-	uint8_t channels[] = {0, 1, 4, 6};
+	uint8_t channels[] = {PCB_ADC_CHANNEL, BOM_ADC_CHANNEL,\
+	I12V_ADC_CHANNEL, NTCTMP_ADC_CHANNEL};
 
 	/* init adc and dma */
 	adc_power_off(ADC1);
@@ -197,7 +204,7 @@ void mon_init(void)
 	adc2tmp(adc_read());
 
 	/* donnot get version again */
-	channels[0] = 5;
+	channels[0] = I12V_ADC_CHANNEL;
 	adc_set_regular_sequence(ADC1, 1, channels);
 
 	loop_add(mon_process);
