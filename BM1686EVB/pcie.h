@@ -3,5 +3,6 @@
 
 void pcie_init(void);
 void pcie_destroy(void);
+void set_chip_states(int state);
 
 #endif

@@ -7,14 +7,14 @@
 #include <chip.h>
 #include <tick.h>
 #include <wdt.h>
-
+#include <rst_key.h>
 static volatile int is_chip_ready;
 static int pcie_task;
 
 /* practical value, 2048 cycle used 1.2ms */
 #define DEBOUNCE_COUNT	512
 
-void exti4_15_isr(void)
+void pcie_reset_isr(void)
 {
 	unsigned int i;
 	unsigned int hi = 0;
@@ -40,6 +40,15 @@ void exti4_15_isr(void)
 	}
 
 	exti_reset_request(PCIE_RESET_EXTI);
+}
+
+void exti4_15_isr(void)
+{
+	if (exti_get_flag_status(PCIE_RESET_EXTI))
+		pcie_reset_isr();
+
+	if (exti_get_flag_status(RESET_KEY_EXTI))
+		rst_key_isr();
 }
 
 static void pcie_process(void)
@@ -74,3 +83,7 @@ void pcie_destroy(void)
 	is_chip_ready = 0;
 }
 
+void set_chip_states(int state)
+{
+	is_chip_ready = state;
+}

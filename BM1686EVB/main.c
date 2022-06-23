@@ -32,7 +32,7 @@
 #include <slt.h>
 #include <console.h>
 #include <tmp451.h>
-
+#include <rst_key.h>
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
@@ -158,6 +158,7 @@ int main(void)
 	else
 		pcie_init();
 
+	rst_key_init();
 	console_add();
 	/* never return */
 	loop_start();
