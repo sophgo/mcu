@@ -33,6 +33,7 @@
 #include <console.h>
 #include <tmp451.h>
 #include <rst_key.h>
+#include <mon_print.h>
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
@@ -53,37 +54,7 @@ int main(void)
 
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
-#if 0
-	/* check if i am in test board and if we need enter test mode */
-	if (detect_test_mode() == TEST_MODE_HALT) {
 
-		/* convert MCU_INT from input to output */
-		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
-		gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
-					GPIO_OSPEED_VERYHIGH, MCU_INT_PIN);
-		gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
-				MCU_INT_PIN);
-
-		set_board_type(SM5MA);
-
-		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
-			       I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
-		mcu_test_init(&i2c2_slave_ctx);
-		nvic_enable_irq(NVIC_I2C2_IRQ);
-		i2c_slave_start(&i2c2_slave_ctx);
-
-		while (detect_test_mode() != TEST_MODE_RUN)
-			mcu_process();
-
-		nvic_disable_irq(NVIC_I2C2_IRQ);
-		i2c_slave_stop(&i2c2_slave_ctx);
-	}
-
-	/* reset MCU_INT */
-	gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
-	gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,
-			MCU_INT_PIN);
-#endif
 	tca6416a_probe();
 	pic_probe();
 
@@ -105,35 +76,9 @@ int main(void)
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
 		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
-#if 0
-	/* auto detect or correct board type
-	 * based on some characteristic on motherboard
-	 */
-	if (get_work_mode() == WORK_MODE_PCIE)
-		set_board_type(SM5MP);
-	else if (pic_available())
-		set_board_type(SM5ME);
-	else {
-		if (tca6416a_available())
-			set_board_type(
-				get_declared_board_type() == SM5ME ?
-				SM5ME : SM5MS);
-		else
-			/* on test boards */
-			set_board_type(SM5MA);
-	}
-#endif
 
-#if 0
-	/* but chip reset still be asserted */
-	if (get_work_mode() == WORK_MODE_SOC) {
-		if (get_board_type() == SM5ME)
-			se5_init();
-		else
-			sm5_init();
-	}
-#endif
 	mon_init();
+	mon_print_init();
 
 	mcu_init(&i2c1_slave_ctx);
 	eeprom_init(&i2c1_slave_ctx);

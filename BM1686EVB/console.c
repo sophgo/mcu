@@ -14,6 +14,7 @@
 #include <slt.h>
 #include <loop.h>
 #include <chip.h>
+#include <mon_print.h>
 static struct ecdc_console *console;
 
 static int console_getc(void *console_hint)
@@ -106,6 +107,27 @@ static void cmd_power(void *hint, int argc, char const *argv[])
 	}
 }
 
+static const char * const cmd_enprint_usage =
+"enprint [second]\n"
+"	second: set time between two pinrt\n"
+"	default value is 1s\n";
+
+static void cmd_enprint(void *hint, int argc, char const *argv[])
+{
+	unsigned long time = 0;
+
+	if (argc == 1){
+		mon_print_fun();
+		enable_mon_print_task(0);
+	}else if (argc == 2){
+		mon_print_fun();
+		time = strtol(argv[1], NULL, 10);
+		enable_mon_print_task(time*1000);
+	}else{
+		printf(cmd_enprint_usage);
+	}
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -121,6 +143,7 @@ static struct command command_list[] = {
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
 	{"query", NULL, cmd_query_usage, cmd_query},
 	{"power", NULL, cmd_power_usage, cmd_power},
+	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},
 };
 
 void print_usage(struct command *cmd)
