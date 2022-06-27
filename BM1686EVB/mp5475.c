@@ -7,6 +7,7 @@
 #define I2C			I2C2
 
 #define MP5475_ENABLE_REG_DEFAULT_VALUE	(1 << 7 | 1 << 5)
+#define MP5475_TMP_REG	0x57
 
 static uint8_t mp5475_enable_reg_value = MP5475_ENABLE_REG_DEFAULT_VALUE;
 
@@ -66,6 +67,11 @@ unsigned long mp5475_output_voltage(unsigned int buck)
 	unsigned int reg = 0x5a + 2 * buck;
 
 	return mp5475_read_byte(reg) * 25;
+}
+
+int mp5475_get_tmp(void)
+{
+	return mp5475_read_byte(MP5475_TMP_REG) - 50;
 }
 
 int mp5475_init(void)

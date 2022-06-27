@@ -4,12 +4,19 @@
 #include <mon.h>
 #include <stdio.h>
 #include <debug.h>
+#include <mp5475.h>
 static int mon_print_handle;
 
 void mon_print_fun(void)
 {
-    printf("local tmp = %d, remote tmp = %d, i12v = %dmA\n",\
+    printf("board tmp = %d(C), soc tmp = %d(C), i12v = %d(mA)\n",\
     get_board_temp(), get_soc_temp(), get_current());
+
+    for (int i = 0; i < 4; i++){
+        printf("buck%c:%lu(mV) ", 'A' + i, mp5475_output_voltage(i));
+    }
+
+    printf("mp5475 tmp = %d(C)\n", mp5475_get_tmp());
 }
 
 void mon_print_init(void)
