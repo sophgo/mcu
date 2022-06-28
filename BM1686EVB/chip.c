@@ -67,3 +67,7 @@ void chip_init(void)
 	tick_register_task(chip_process, 1000);
 }
 
+int chip_is_enabled(void)
+{
+	return chip_enabled;
+}

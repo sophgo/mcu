@@ -222,7 +222,6 @@ static void tmp451_process(void)
 
 	tmp451_get_temp(&board, &soc);
 
-#if 0
 	if (!chip_is_enabled()) {
 		tmp451_ctx.overtemp = 0;
 		return;
@@ -231,17 +230,11 @@ static void tmp451_process(void)
 	if (soc > tmp451_ctx.critical) {
 		++tmp451_ctx.overtemp;
 		if (tmp451_ctx.overtemp > TMP451_OVERTEMP_MAX) {
-			//chip_power_off_disable();//////////////////////////断电
+			chip_disable();
+			power_off();
 			tmp451_ctx.overtemp = 0;
 		}
-	} else {
-		tmp451_ctx.overtemp = 0;
-		if (board < 0 || soc < 0)
-			gpio_clear(THERMAL_OFF_PORT, THERMAL_OFF_PIN);/////////////////什么功能？
-		else
-			gpio_set(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
 	}
-#endif
 }
 
 void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)

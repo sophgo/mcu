@@ -127,19 +127,19 @@ static int adc2ver(unsigned short adc)
 
 static uint16_t adc2current(unsigned short adc)
 {
-	/* step 1: real-voltage = 1.8 * adc / 2^12 /100
-	 *	1.8v: stm32 vcc
+	/* step 1: real-voltage = 3.3 * adc / 2^12 /100
+	 *	3.3v: stm32 vcc
 	 *	100: 100 times op-amp
 	 *	2^12: stm32 ADC resolution 12bit
-	 * step 2: current = real-voltage / 0.003
-	 *	0.003: 3mO resistor
+	 * step 2: current = real-voltage / 0.005
+	 *	0.005: 5mO resistor
 	 * step 3: convert ampere to mili-ampere
 	 */
 
 	/*
-	 *I_12V = (adc * 3.3) / (4096*100*0.003)
+	 *I_12V = (adc * 3.3) / (4096*100*0.005)
 	 */
-	return 33000UL * adc / 12288;
+	return 3300UL * adc / 2048;
 }
 
 static void adc2tmp(unsigned short adc)
