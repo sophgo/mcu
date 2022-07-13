@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -541,18 +541,12 @@ void BM1684_RST(void)
 
 	return ;
 }
-
+static int needpoweron = 0;
 void BM1684_REBOOT(void)
 {
-
-	if (i2c_regs.vender == VENDER_SE5 &&
-	    (is_pic_available || is_tca6416a_available)) {
-		se5_reset_board();
-	} else {
-		PowerDOWN();
-		HAL_Delay(50);
-		PowerON();
-	}
+	PowerDOWN();
+	HAL_Delay(50);
+	needpoweron = 1;
 }
 
 static inline void led_on(void)
@@ -721,45 +715,48 @@ void READ_Temper(void)
 
 	mcu_set_temp(soc, board);
 
-	if (i2c_regs.hw_ver == 0x12) {
-		if (soc > 120) {
-			++powerdown_cnt;
-			if (powerdown_cnt == 3) {
-				eeprom_log_power_off_reason(
-					EEPROM_POWER_OFF_REASON_OVER_HEAT);
-				intr_status_set(OVER_TEMP_POWEROFF);
-				PowerDOWN();
-				powerdown_cnt = 0;
-			}
-		} else if (soc > 110) {
-			++alert_cnt;
-			if (alert_cnt == 3) {
-				intr_status_set(OVER_TEMP_ALERT);
-				alert_cnt = 0;
-			}
-		} else {
-			alert_cnt = 0;
+	if (soc > 120) {
+		++powerdown_cnt;
+		if (powerdown_cnt == 3) {
+			eeprom_log_power_off_reason(
+				EEPROM_POWER_OFF_REASON_OVER_HEAT);
+			intr_status_set(OVER_TEMP_POWEROFF);
+			PowerDOWN();
 			powerdown_cnt = 0;
+			needpoweron = 1;
+		}
+	} else if (soc > 110) {
+		++alert_cnt;
+		if (alert_cnt == 3) {
+			intr_status_set(OVER_TEMP_ALERT);
+			alert_cnt = 0;
 		}
 	} else {
-		if (soc > 95 && board > 85) {//temperature too high, powerdown
-			powerdown_cnt++;
-			if (powerdown_cnt == 3) {
-				eeprom_log_power_off_reason(
-					EEPROM_POWER_OFF_REASON_OVER_HEAT);
-				intr_status_set(OVER_TEMP_POWEROFF);
-				PowerDOWN();
-				powerdown_cnt = 0;
-			}
-		} else if (soc > 85 && board > 80) {//temperature too high alert
-			alert_cnt++;
-			if (alert_cnt ==3) {
-				intr_status_set(OVER_TEMP_ALERT);
-				alert_cnt = 0;
+		alert_cnt = 0;
+		powerdown_cnt = 0;
+	}
+
+	if (needpoweron) {
+		if (i2c_regs.hw_ver == 0x12) {
+			if (soc < 105) {
+				if (i2c_regs.vender == VENDER_SE5 &&
+		    		    (is_pic_available || is_tca6416a_available)) {
+					se5_reset_board();
+				} else {
+					PowerON();
+				}
+				needpoweron = 0;
 			}
 		} else {
-			alert_cnt = 0;
-			powerdown_cnt = 0;
+			if (soc < 90) {
+				if (i2c_regs.vender == VENDER_SE5 &&
+				(is_pic_available || is_tca6416a_available)) {
+					se5_reset_board();
+				} else {
+					PowerON();
+				}
+				needpoweron = 0;
+			}
 		}
 	}
 	se5_heater_ctrl(soc);
@@ -1012,10 +1009,10 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage
   */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -1029,7 +1026,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -1080,7 +1077,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
