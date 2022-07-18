@@ -648,19 +648,22 @@ void SET_HW_Ver(void)
 static uint8_t alert_cnt = 0;
 static uint8_t powerdown_cnt = 0;
 
-#define TMP451_MAIN_I2C_CHECK(op)				\
-	do {							\
-		int err, retry;					\
-		for (retry = 0; retry < 5; ++retry) {		\
-			err = (op);				\
-			if (err == HAL_OK)			\
-				break;				\
-			I2C_ClearBusyFlagErratum(&hi2c2);	\
-		}						\
-		if (err != HAL_OK) {				\
-			LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);	\
-		}						\
-	} while (0)
+#define TMP451_MAIN_I2C_CHECK(op)					\
+	({								\
+		do {							\
+			int err, retry;					\
+			for (retry = 0; retry < 5; ++retry) {		\
+				err = (op);				\
+				if (err == HAL_OK)			\
+					break;				\
+				I2C_ClearBusyFlagErratum(&hi2c2);	\
+			}						\
+			if (err != HAL_OK) {				\
+				LOG_ERROR_CAUSE(ERR_PMIC_I2C_IO);	\
+			}						\
+		} while (0);						\
+		op;						\
+	})
 
 #define TMP451_ALERT		(0x22)
 #define TMP451_SMBTO_MASK	(1 << 7)
@@ -675,6 +678,7 @@ void READ_Temper(void)
 	static uint8_t smbto = 0;
 	int soc, board;
 	uint8_t tmp;
+	int err;
 
 	if (smbto == 0) {
 		/* tmp451 smbus timeout will release sda and scl after 20ms from i2c start */
@@ -704,10 +708,10 @@ void READ_Temper(void)
 	board = (int)tmp - 64;
 	soc = board + 5;
 
-	if (i2c_regs.power_good) {
-		TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &tmp, 1, 1000));
+	err = TMP451_MAIN_I2C_CHECK(HAL_I2C_Mem_Read(&hi2c2,TMP451_SLAVE_ADDR, 0x1,1, &tmp, 1, 1000));
+	if (err == HAL_OK)
 		soc = (int)tmp - 64;
-	}
+
 	tmp451_set_temp(soc, board);
 
 	/* correct soc temperature */
@@ -715,7 +719,7 @@ void READ_Temper(void)
 
 	mcu_set_temp(soc, board);
 
-	if (soc > 120) {
+	if (soc > 120 && !needpoweron) {
 		++powerdown_cnt;
 		if (powerdown_cnt == 3) {
 			eeprom_log_power_off_reason(
@@ -738,7 +742,7 @@ void READ_Temper(void)
 
 	if (needpoweron) {
 		if (i2c_regs.hw_ver == 0x12) {
-			if (soc < 105) {
+			if (soc < 100) {
 				if (i2c_regs.vender == VENDER_SE5 &&
 		    		    (is_pic_available || is_tca6416a_available)) {
 					se5_reset_board();
@@ -748,7 +752,7 @@ void READ_Temper(void)
 				needpoweron = 0;
 			}
 		} else {
-			if (soc < 90) {
+			if (soc < 90 && board < 80) {
 				if (i2c_regs.vender == VENDER_SE5 &&
 				(is_pic_available || is_tca6416a_available)) {
 					se5_reset_board();
