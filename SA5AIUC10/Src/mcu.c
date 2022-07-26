@@ -14,6 +14,7 @@
 #include "string.h"
 #include "se5_gpioex.h"
 #include "soc_eeprom.h"
+#include "mcu.h"
 
 static unsigned short uptime;
 
@@ -177,6 +178,15 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_EEPROM_LOCK:
 		eeprom_lock_code(data);
 		break;
+	case REG_CRITICAL_ACTIONS:
+		i2c_regs.critical_action = data;
+		break;
+	case REG_CTRITICAL_TEMP:
+		i2c_regs.critical_temp = data;
+		break;
+	case REG_REPOWERON_TEMP:
+		i2c_regs.repoweron_temp = data;
+		break;
 	default:
 		break;
 	}
@@ -258,6 +268,15 @@ static uint8_t mcu_read(void *priv)
 	case REG_STAGE:
 		ret = i2c_regs.stage;
 		break;
+	case REG_CRITICAL_ACTIONS:
+		ret = i2c_regs.critical_action;
+		break;
+	case REG_CTRITICAL_TEMP:
+		ret = i2c_regs.critical_temp;
+		break;
+	case REG_REPOWERON_TEMP:
+		ret = i2c_regs.repoweron_temp;
+		break;
 	default:
 		ret = 0xff;
 		break;
@@ -308,7 +327,7 @@ static struct i2c_slave_op slave3 = {
 
 void mcu_init(void)
 {
-	assert(sizeof(I2C_REGS) == 0x64);
+	assert(sizeof(I2C_REGS) == 0x68);
 	mcu1_ctx.map = &mcu_reg;
 	mcu3_ctx.map = &mcu_reg;
 	uptime = 0;
@@ -341,3 +360,11 @@ void mcu_set_temp(int soc, int board)
 	i2c_regs.temp_board = *(uint8_t *)&temp_board;
 }
 
+void set_mcu_default_feature(void)
+{
+
+	i2c_regs.repoweron_temp = 85;
+
+	i2c_regs.critical_temp = 120;
+	i2c_regs.critical_action = CRITICAL_ACTION_POWERDOWN;
+}

@@ -197,7 +197,10 @@ typedef struct I2C_REGS_t
 	volatile uint8_t eeprom_offset_h;
 	volatile uint8_t eeprom_data[MCU_EEPROM_DATA_MAX];
 	volatile uint8_t eeprom_lock;
-	volatile uint8_t reserved3[3];		/* padding to 4 aligned */
+	volatile uint8_t ip[4];
+	volatile uint8_t critical_action;
+	volatile uint8_t critical_temp;
+	volatile uint8_t repoweron_temp;
 }I2C_REGS;
 
 extern I2C_REGS i2c_regs;
@@ -279,6 +282,9 @@ void intr_mask_set(uint8_t mask);
 #define REG_EEPROM_OFFSET_H	0x3f	/* 16bit eeprom address, high 8bits */
 #define REG_EEPROM_DATA		0x40	/* eeprom data */
 #define REG_EEPROM_LOCK		0x60	/* eeprom write lock */
+#define REG_CRITICAL_ACTIONS	0x65
+#define REG_CTRITICAL_TEMP	0x66
+#define REG_REPOWERON_TEMP	0x67
 #define REG_NUMBER		sizeof(I2C_REGS)
 
 #define BIT0   (0x01 << 0)
@@ -340,7 +346,7 @@ void intr_mask_set(uint8_t mask);
 
 #define UPDATE_FLAG_OFFSET (0xbf0)
 
-#define MCU_VERSION	0x37
+#define MCU_VERSION	0x38
 
 #define VENDER_SA5	0x01
 #define VENDER_SC5	0x02

@@ -719,7 +719,7 @@ void READ_Temper(void)
 
 	mcu_set_temp(soc, board);
 
-	if (soc > 120 && !needpoweron) {
+	if (soc > i2c_regs.critical_temp && !needpoweron) {
 		++powerdown_cnt;
 		if (powerdown_cnt == 3) {
 			eeprom_log_power_off_reason(
@@ -727,7 +727,10 @@ void READ_Temper(void)
 			intr_status_set(OVER_TEMP_POWEROFF);
 			PowerDOWN();
 			powerdown_cnt = 0;
-			needpoweron = 1;
+			if (i2c_regs.critical_action == CRITICAL_ACTION_REBOOT)
+				needpoweron = 1;
+			else
+				needpoweron = 0;
 		}
 	} else if (soc > 110) {
 		++alert_cnt;
@@ -742,7 +745,7 @@ void READ_Temper(void)
 
 	if (needpoweron) {
 		if (i2c_regs.hw_ver == 0x12) {
-			if (soc < 100) {
+			if (soc < i2c_regs.repoweron_temp) {
 				if (i2c_regs.vender == VENDER_SE5 &&
 		    		    (is_pic_available || is_tca6416a_available)) {
 					se5_reset_board();
@@ -752,7 +755,7 @@ void READ_Temper(void)
 				needpoweron = 0;
 			}
 		} else {
-			if (soc < 90 && board < 80) {
+			if (soc < i2c_regs.repoweron_temp && board < 80) {
 				if (i2c_regs.vender == VENDER_SE5 &&
 				(is_pic_available || is_tca6416a_available)) {
 					se5_reset_board();
@@ -946,6 +949,7 @@ int main(void)
 	//  HAL_GPIO_WritePin(GPIOB, TPU_I2C_ADD3_Pin, GPIO_PIN_SET);
 	// set PCB & BOM version by voltage value
 	SET_HW_Ver();
+	set_mcu_default_feature();
 
 	/* USER CODE END 2 */
 
