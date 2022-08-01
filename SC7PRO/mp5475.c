@@ -5,14 +5,17 @@
 #include <pca9848.h>
 #include <stdio.h>
 #include <gd32e50x_i2c.h>
+#include <timer.h>
+#include <common.h>
 
 #define MP5475_SLAVE_ADDR	0x60
 #define I2C			I2C0
 
+static uint8_t mp5475_channel[4] = {2, 0, 5, 4};
 
 static inline void mp5475_select(int idx)
 {
-	pca9848_set(PCA9848, 1 << idx);
+	pca9848_set(PCA9848, 1 << mp5475_channel[idx]);
 }
 
 static inline int mp5475_read_byte(int idx, unsigned char cmd)
@@ -22,8 +25,11 @@ static inline int mp5475_read_byte(int idx, unsigned char cmd)
 	mp5475_select(idx);
 
 	while (i2c_master_smbus_read_byte(I2C, MP5475_SLAVE_ADDR,
-					  1, cmd, &tmp));
-		;
+					  1, cmd, &tmp)) {
+		printf("mp5475-%d read 0x%x failed\n", idx, cmd);
+	}
+
+
 	return tmp;
 }
 
@@ -33,8 +39,8 @@ static inline int mp5475_write_byte(int idx, unsigned char cmd,
 	mp5475_select(idx);
 
 	while (i2c_master_smbus_write_byte(I2C, MP5475_SLAVE_ADDR,
-					  1, cmd, data));
-		;
+					  1, cmd, data))
+		printf("mp5474-%d write 0x%x faile\n", idx, cmd);
 	return 0;
 }
 

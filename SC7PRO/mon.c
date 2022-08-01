@@ -204,9 +204,15 @@ static void collect(void)
 
 static inline void mon_putc(int c)
 {
-	if (c == '\n')
+	if (c == '\n') {
 		usart_data_transmit(MON_UART, '\r');
+		while (!usart_flag_get(MON_UART, USART_FLAG_TBE))
+		;
+	}
+
 	usart_data_transmit(MON_UART, c);
+	while (!usart_flag_get(MON_UART, USART_FLAG_TBE))
+		;
 }
 
 int mon_printf(const char *fmt, ...)

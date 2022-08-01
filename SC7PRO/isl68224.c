@@ -8,9 +8,11 @@
 #define ISL68224_SLAVE_ADDR	0x60
 #define I2C			I2C0
 
+static uint8_t isl68224_channel[4] = {1, 3, 6, 7};
+
 static inline void isl68224_select(int idx)
 {
-	pca9848_set(PCA9848, 1 << (idx + 4));
+	pca9848_set(PCA9848, 1 << isl68224_channel[idx]);
 }
 
 static inline int isl68224_read_byte(int idx, unsigned char cmd)
@@ -18,8 +20,8 @@ static inline int isl68224_read_byte(int idx, unsigned char cmd)
 	unsigned char tmp;
 	isl68224_select(idx);
 	while (i2c_master_smbus_read_byte(I2C, ISL68224_SLAVE_ADDR,
-					  1, cmd, &tmp));
-		;
+					  1, cmd, &tmp))
+		printf("68224-%d read %d failed\n", idx, cmd);
 	return tmp;
 }
 
@@ -28,8 +30,8 @@ static inline int isl68224_write_byte(int idx, unsigned char cmd,
 {
 	isl68224_select(idx);
 	while (i2c_master_smbus_write_byte(I2C, ISL68224_SLAVE_ADDR,
-					  1, cmd, data));
-		;
+					  1, cmd, data))
+		printf("68224-%d write %d failed\n", idx, cmd);
 	return 0;
 }
 

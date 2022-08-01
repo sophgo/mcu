@@ -10,6 +10,8 @@
 #include <upgrade.h>
 #include <flash.h>
 #include <timer.h>
+#include <pin.h>
+#include <mp5475.h>
 
 
 static struct ecdc_console *console;
@@ -125,7 +127,7 @@ static void cmd_sn(void *hint, int argc, char const *argv[])
 			/* write sn to eeprom */
 			for (i = 0; i < EEPROM_CELL_SIZE - 1; ++i) {
 				tmp = argv[1][i];
-				
+
 				if (tmp){
 					flash_data[EEPROM_SN_OFFSET + i] = tmp;
 				}
@@ -200,6 +202,76 @@ static void cmd_burn(void *hint, int argc, char const *argv[])
 	}
 }
 
+uint32_t sys_rst_pin_list[9][2] = {
+	{B1_SYS_RST_N_PORT, B1_SYS_RST_N_PIN},
+	{B2_SYS_RST_N_PORT, B2_SYS_RST_N_PIN},
+	{B3_SYS_RST_N_PORT, B3_SYS_RST_N_PIN},
+	{B4_SYS_RST_N_PORT, B4_SYS_RST_N_PIN},
+	{B5_SYS_RST_N_PORT, B5_SYS_RST_N_PIN},
+	{B6_SYS_RST_N_PORT, B6_SYS_RST_N_PIN},
+	{B7_SYS_RST_N_PORT, B7_SYS_RST_N_PIN},
+	{B8_SYS_RST_N_PORT, B8_SYS_RST_N_PIN},
+	{GPIOB, GPIO_PIN_0},
+};
+static void cmd_low(void *hint, int argc, char const *argv[])
+{
+	uint32_t pin = 0;
+	if (argc != 2) {
+		printf("error cmd\n");
+		return;
+	}
+
+	pin = strtol(argv[1], NULL, 0);
+	gpio_clear(sys_rst_pin_list[pin][0], sys_rst_pin_list[pin][1]);
+
+	printf("set chip%lu low\n", pin);
+
+}
+
+static void cmd_high(void *hint, int argc, char const *argv[])
+{
+	uint32_t pin = 0;
+	if (argc != 2) {
+		printf("error cmd\n");
+		return;
+	}
+
+	pin = strtol(argv[1], NULL, 0);
+	gpio_set(sys_rst_pin_list[pin][0], sys_rst_pin_list[pin][1]);
+
+	printf("set chip%lu high\n", pin);
+}
+
+static void cmd_close_pmic(void *hint, int argc, char const *argv[])
+{
+	int port = -1;
+	int bunk = -1;
+	int i = 0;
+
+	if (argc == 2) {
+		port = strtol(argv[1], NULL, 0);
+	} else if (argc == 3) {
+		port = strtol(argv[1], NULL, 0);
+		bunk = strtol(argv[2], NULL, 0);
+	} else {
+		printf("invaild argument\n");
+		return;
+	}
+
+	if (port >= 0 && bunk >= 0) {
+		mp5475_buck_off(port, bunk);
+		printf("close 5475-%d bunk%d\n", port, bunk);
+		return;
+	}
+
+	if (port >= 0 && bunk == -1) {
+		for (i = 0; i < 4; i++) {
+			mp5475_buck_off(port, i);
+		}
+		printf("mp5475-%d close all bunk\n", port);
+		return;
+	}
+}
 
 struct command {
 	const char *name, *alias, *usage;
@@ -217,6 +289,9 @@ static struct command command_list[] = {
 	{"sn", NULL, cmd_sn_usage, cmd_sn},
 	{"download", NULL, cmd_download_usage, cmd_download},
 	{"burn", NULL, cmd_burn_usage, cmd_burn},
+	{"low", NULL, cmd_burn_usage, cmd_low},
+	{"high", NULL, cmd_burn_usage, cmd_high},
+	{"closepmic", NULL, NULL, cmd_close_pmic},
 };
 
 void print_usage(struct command *cmd)

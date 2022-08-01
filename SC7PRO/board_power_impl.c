@@ -2,6 +2,8 @@
 #include <debug.h>
 #include <pin.h>
 #include <common.h>
+#include <chip.h>
+#include <timer.h>
 int b12_vdd_1_8v_on(void)
 {
 	/* add customer code here */
@@ -274,4 +276,29 @@ void  pmic_outb_off(void)
 	b34_vddqlp_off();
 	b56_vddqlp_off();
 	b78_vddqlp_off();
+}
+
+int chip_deassert_n_on(void)
+{
+	sys_rst_disable();
+
+	return 0;
+}
+
+int chip_assert_n_on(void)
+{
+	BN_SYS_RST_ENABLE(1);
+	BN_SYS_RST_ENABLE(2);
+	BN_SYS_RST_ENABLE(3);
+	BN_SYS_RST_ENABLE(4);
+	BN_SYS_RST_ENABLE(5);
+	BN_SYS_RST_ENABLE(6);
+	BN_SYS_RST_ENABLE(7);
+	BN_SYS_RST_ENABLE(8);
+	gpio_set(PCIE_SYS_RST_N_PORT, PCIE_SYS_RST_N_PIN);
+
+	for (int i = 0; i < 90; i++)
+		timer_udelay(1000);
+
+	return 0;
 }

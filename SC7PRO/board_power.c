@@ -14,7 +14,13 @@ void pmic_outa_outd_off(void);
 int pmic_outb_on(void);
 void pmic_outb_off(void);
 
-struct power_node const board_power_nodes[51] = {
+int chip_assert_n_on(void);
+void chip_assert_n_off(void);
+
+int chip_deassert_n_on(void);
+void chip_deassert_n_off(void);
+
+struct power_node const board_power_nodes[45] = {
 
 	{"PMIC_OUTC", NODE_TYPE_FUNCTION, 1000,
 	 {(unsigned long)pmic_outc_on, (unsigned long)pmic_outc_off},
@@ -184,36 +190,13 @@ struct power_node const board_power_nodes[51] = {
 	 {(unsigned long)EN_VQPS18_B78_PORT, (unsigned long)EN_VQPS18_B78_PIN},
 	 },
 
-	{"B1_SYS_RST_N", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)B1_SYS_RST_N_PORT, (unsigned long)B1_SYS_RST_N_PIN},
+	{"CHIP_ASSERT_N", NODE_TYPE_FUNCTION, 0,
+	 {(unsigned long)chip_assert_n_on, (unsigned long)chip_assert_n_off},
 	 },
 
-	{"B2_SYS_RST_N", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)B2_SYS_RST_N_PORT, (unsigned long)B2_SYS_RST_N_PIN},
-	 },
-
-	{"B3_SYS_RST_N", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)B3_SYS_RST_N_PORT, (unsigned long)B3_SYS_RST_N_PIN},
-	 },
-
-	{"B4_SYS_RST_N", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)B4_SYS_RST_N_PORT, (unsigned long)B4_SYS_RST_N_PIN},
-	 },
-
-	{"B5_SYS_RST_N", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)B5_SYS_RST_N_PORT, (unsigned long)B5_SYS_RST_N_PIN},
-	 },
-
-	{"B6_SYS_RST_N", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)B6_SYS_RST_N_PORT, (unsigned long)B6_SYS_RST_N_PIN},
-	 },
-
-	{"B7_SYS_RST_N", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)B7_SYS_RST_N_PORT, (unsigned long)B7_SYS_RST_N_PIN},
-	 },
-
-	{"B8_SYS_RST_N", NODE_TYPE_ENABLE, 30000,
-	 {(unsigned long)B8_SYS_RST_N_PORT, (unsigned long)B8_SYS_RST_N_PIN},
+	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 30000,
+	 {(unsigned long)chip_deassert_n_on,
+	  (unsigned long)chip_deassert_n_off},
 	 },
 
 	{"DDR_PG_B12", NODE_TYPE_ENABLE, 0,

@@ -114,7 +114,7 @@ unsigned long adc_read_pcie_i12v()
 	return (adc_data*6000/4096);
 }
 
-	/* 
+	/*
 	 * I = (adc-value / 2^12) * 3.6A
 	 * I = (adc-value / 2^12) * 3600mA
 	 * p=3.3*I=12*(I/4)

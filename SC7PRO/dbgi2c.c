@@ -11,8 +11,8 @@
 #include <timer.h>
 #include <common.h>
 
-#define DBGI2C_ADDR_BASE	0x28
-#define DBGI2C_I2C_MASTER	I2C2
+#define DBGI2C_ADDR_BASE	0x20
+#define DBGI2C_I2C_MASTER	I2C1
 #define DBGI2C_I2C_TIMEOUT	1
 
 static inline uint8_t dbgi2c_idx2addr(int idx)
@@ -77,7 +77,7 @@ static int __dbgi2c_write(int idx, int addr_width, int data_width,
 
 	err = dbgi2c_i2c_write_byte(idx, dbgi2c_addr_width(addr_width));
 	if (err) {
-		printf("set address width failed\n");
+		printf("%d write set address width failed\n", idx);
 		return err;
 	}
 
@@ -105,7 +105,7 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 
 	err = dbgi2c_i2c_write_byte(idx, dbgi2c_addr_width(addr_width));
 	if (err) {
-		printf("set address width failed\n");
+		printf("%d read set address width failed\n", idx);
 		return err;
 	}
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
@@ -206,7 +206,7 @@ void dbgi2c_test(void)
 static void dbgi2c_collect(void);
 
 /* i2c master operations */
-#define DBGI2C_MCU_INFO_BASE	0x201bf00ULL
+#define DBGI2C_MCU_INFO_BASE	0x101fb000ULL
 void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 {
 	int i;
@@ -225,7 +225,7 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 /* i2c slave operations */
 
 #define DBGI2C_SLAVE_BASE	0x60
-#define DBGI2C_SOC_INFO_BASE	0x201bf80ULL
+#define DBGI2C_SOC_INFO_BASE	0x101fb100ULL
 #define DBGI2C_REG_MASK		(0xff)
 #define CHIP_MAP_SIZE		0x80
 

@@ -9,9 +9,9 @@
 #define false 0
 #define true 1
 
-#define PCIE_RESET_PORT	GPIO_PORT_SOURCE_GPIOC
+#define PCIE_RESET_PORT	PCIE_MCU_RST_X_PORT
 #define PCIE_RESET_PIN	PCIE_MCU_RST_X_PIN
-#define PCIE_RESET_EXTI	GPIO_PIN_SOURCE_2
+#define PCIE_RESET_EXTI	PCIE_MCU_RST_X_EXTI
 #define PCIE_RESET_NVIC	EXTI2_IRQn
 
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))

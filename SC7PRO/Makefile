@@ -1,6 +1,6 @@
 TOP = ..
 TARGET = SC7PRO
-DEBUG = 0
+DEBUG = 1
 STANDALONE = 0
 
 V ?= 0

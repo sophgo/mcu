@@ -76,7 +76,7 @@ static void system_gpio_init(void)
 
 	/* GPIOB OUTPUT PINS*/
 	pins = GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_9 | GPIO_PIN_12 | GPIO_PIN_13\
-		 | GPIO_PIN_14 | GPIO_PIN_15;
+		 | GPIO_PIN_14 | GPIO_PIN_15 | GPIO_PIN_0;
 	gpio_bit_reset(GPIOB, pins);
 	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
@@ -86,7 +86,7 @@ static void system_gpio_init(void)
 
 	/* GPIOB ANALOG */
 	gpio_init(GPIOB, GPIO_MODE_AIN, GPIO_OSPEED_2MHZ,
-		  GPIO_PIN_0 | GPIO_PIN_1);
+		   GPIO_PIN_1);
 
 
 	/* GPIOC OUTPUT PINS*/
@@ -237,8 +237,8 @@ int uart_puts(const char *s)
 
 	for (i = 0; s[i]; ++i) {
 		if (s[i] == '\n')
-			usart_data_transmit(CONSOLE_UART, '\r');
-		usart_data_transmit(CONSOLE_UART, s[i]);
+			uart_putc('\r');
+		uart_putc(s[i]);
 	}
 
 	return i;

@@ -21,7 +21,8 @@ int main(void)
 {
 	system_init();
 
-	debug("\nBITMAIN SOPHONE SM5G\n");
+	debug("\nBITMAIN SOPHONE SC7PRO\n");
+	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 
 #ifndef STANDALONE
 	if (get_stage() == RUN_STAGE_LOADER)
@@ -34,9 +35,9 @@ int main(void)
 
 	/* enable power supply of pcie switch */
 	gpio_set(EN_PCIE_0V8_PORT, EN_PCIE_0V8_PIN);
-	timer_mdelay(1);
-	/* release reset of pcie switch */
-	gpio_set(PCIE_SYS_RST_N_PORT, PCIE_SYS_RST_N_PIN);
+	// timer_mdelay(1);
+	// /* release reset of pcie switch */
+	// gpio_set(PCIE_SYS_RST_N_PORT, PCIE_SYS_RST_N_PIN);
 
 	mp5475_init();
 	board_power_init();
@@ -48,7 +49,8 @@ int main(void)
 
 	while (1) {
 		chip_update();
-		mon_process();
+		if (chip_enable())
+			mon_process();
 		console_poll();
 	}
 
