@@ -9,6 +9,7 @@
 #include <mon.h>
 #include <stdlib.h>
 #include <debug.h>
+#include <mcu.h>
 
 #define TMP451_REG_MAX	(23)
 
@@ -200,7 +201,6 @@ static void tmp451_update_temp(void)
 	set_soc_temp(tmp451_ctx.soc - 5);
 	set_board_temp(tmp451_ctx.board);
 
-	// debug("board %d, soc %d\n", get_board_temp(), get_soc_temp());
 }
 
 void tmp451_get_temp(int *board, int *soc)
@@ -222,17 +222,32 @@ static void tmp451_process(void)
 
 	tmp451_get_temp(&board, &soc);
 
+	if (get_needpoweron_satus() == 1) {
+		if (soc < get_repoweron_temp() && board < 80) {
+			chip_popd_reset_end();
+			clr_needpoweron();
+		}
+	}
+
 	if (!chip_is_enabled()) {
 		tmp451_ctx.overtemp = 0;
 		return;
 	}
 
-	if (soc > tmp451_ctx.critical) {
+	if (soc > get_critical_temp()) {
 		++tmp451_ctx.overtemp;
 		if (tmp451_ctx.overtemp > TMP451_OVERTEMP_MAX) {
 			chip_disable();
 			power_off();
 			tmp451_ctx.overtemp = 0;
+			printf("temp is over, board will");
+			if (get_critical_action() == CRITICAL_ACTION_REBOOT) {
+				set_needpoweron();
+				printf("reboot\n");
+			} else {
+				printf("poweroff\n");
+			}
+
 		}
 	}
 }
@@ -241,10 +256,6 @@ void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
 	uint8_t tmp;
 
-	if (get_hardware_version() == 0x12)
-		tmp451_ctx.critical = 120;
-	else
-		tmp451_ctx.critical = 95;
 
 	/* enable smbus timeout */
 	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,

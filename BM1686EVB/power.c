@@ -63,6 +63,17 @@ static void node_off(struct power_node *node)
 {
 	debug("%s\n", node->name);
 
+	if (!strcmp(node->name, "VDD-1.8V")) {
+		printf("not cler %s\n", node->name);
+		return;
+	}
+
+	if (!strcmp(node->name, "EN_12V_SYS")) {
+		printf("not cler %s\n", node->name);
+		return;
+	}
+
+
 	/* skip check nodes */
 	if (node->type == NODE_TYPE_ENABLE) {
 		gpio_clear(node->param[0], node->param[1]);

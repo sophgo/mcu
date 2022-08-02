@@ -13,6 +13,7 @@
 static uint32_t uptime;
 static uint32_t reset_times;
 static int chip_enabled;
+static int needpoweron;
 
 uint32_t chip_reset_times(void)
 {
@@ -46,10 +47,15 @@ void chip_reset(void)
 	chip_enable();
 }
 
-void chip_popd_reset(void)
+void chip_popd_reset_early(void)
 {
 	power_off();
+	chip_disable();
 	mdelay(50);
+}
+
+void chip_popd_reset_end(void)
+{
 	power_on();
 	uptime = 0;
 	++reset_times;
@@ -70,4 +76,19 @@ void chip_init(void)
 int chip_is_enabled(void)
 {
 	return chip_enabled;
+}
+
+void set_needpoweron(void)
+{
+	needpoweron = 1;
+}
+
+void clr_needpoweron(void)
+{
+	needpoweron = 0;
+}
+
+int get_needpoweron_satus(void)
+{
+	return needpoweron;
 }

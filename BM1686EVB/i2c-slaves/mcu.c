@@ -13,7 +13,7 @@
 #include <se5.h>
 #include <wdt.h>
 #include <mcu.h>
-
+#include <stdio.h>
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
 #define REG_HW_VER		0x02
@@ -75,7 +75,10 @@
 #define REG_EEPROM_OFFSET_HI	0x3f	/* 16bit eeprom address, high 8bits */
 #define REG_EEPROM_DATA		0x40	/* eeprom data */
 #define REG_EEPROM_LOCK		0x60	/* eeprom write lock */
-#define MCU_REG_MAX		0x64
+#define REG_CRITICAL_ACTIONS	0x65
+#define REG_CTRITICAL_TEMP	0x66
+#define REG_REPOWERON_TEMP	0x67
+#define MCU_REG_MAX		0x68
 
 #define MCU_EEPROM_DATA_MAX	0x20
 
@@ -89,6 +92,9 @@ struct mcu_ctx {
 	uint8_t int_mask[2];
 	uint8_t eeprom_offset_l, eeprom_offset_h;
 	uint16_t tmp;
+	uint8_t critical_action;
+	uint8_t	repoweron_temp;
+	uint8_t critical_temp;
 };
 
 static struct mcu_ctx mcu_ctx;
@@ -165,10 +171,7 @@ void mcu_process(void)
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
-		if (get_board_type() == SM5ME)
-			se5_power_off_board();
-		else
-			power_off();
+		power_off();
 		wdt_reset();
 		break;
 	case CMD_RESET:
@@ -178,10 +181,8 @@ void mcu_process(void)
 		break;
 	case CMD_REBOOT:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
-		if (get_board_type() == SM5ME)
-			se5_reset_board();
-		else
-			chip_popd_reset();
+		chip_popd_reset_early();
+		set_needpoweron();
 		wdt_reset();
 		break;
 	case CMD_UPDATE:
@@ -251,6 +252,15 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_TPU_POWER_CONTROL:
 		tpu_power_setup(data);
+		break;
+	case REG_CRITICAL_ACTIONS:
+		ctx->critical_action = data;
+		break;
+	case REG_REPOWERON_TEMP:
+		ctx->repoweron_temp = data;
+		break;
+	case REG_CTRITICAL_TEMP:
+		ctx->critical_temp = data;
 		break;
 	default:
 		break;
@@ -350,6 +360,15 @@ static uint8_t mcu_read(void *priv)
 	case REG_TPU_POWER_CONTROL:
 		ret = tpu_get_power_status();
 		break;
+	case REG_CRITICAL_ACTIONS:
+		ret = ctx->critical_action;
+		break;
+	case REG_REPOWERON_TEMP:
+		ret = ctx->repoweron_temp;
+		break;
+	case REG_CTRITICAL_TEMP:
+		ret = ctx->critical_temp;
+		break;
 	default:
 		ret = 0xff;
 		break;
@@ -384,6 +403,9 @@ static struct i2c_slave_op slave = {
 
 void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
+	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
+	mcu_ctx.critical_temp = 120;
+	mcu_ctx.repoweron_temp = 85;
 	loop_add(mcu_process);
 	slave.addr = 0x17;
 	i2c_slave_register(i2c_slave_ctx, &slave);
@@ -395,3 +417,17 @@ void mcu_test_init(struct i2c_slave_ctx *i2c_slave_ctx)
 	i2c_slave_register(i2c_slave_ctx, &slave);
 }
 
+uint8_t get_critical_action(void)
+{
+	return mcu_ctx.critical_action;
+}
+
+uint8_t get_critical_temp(void)
+{
+	return mcu_ctx.critical_temp;
+}
+
+uint8_t get_repoweron_temp(void)
+{
+	return mcu_ctx.repoweron_temp;
+}

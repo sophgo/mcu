@@ -38,8 +38,10 @@ int mp5475_buck_on(unsigned int buck)
 
 void mp5475_buck_off(unsigned int buck)
 {
+#ifdef CLOSEPMIC
 	mp5475_enable_reg_value &= ~((1 << 5) >> buck);
 	mp5475_write_byte(0x40, mp5475_enable_reg_value);
+#endif
 }
 
 int mp5475_voltage_config(unsigned int buck, unsigned int voltage)

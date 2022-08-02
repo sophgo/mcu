@@ -1,6 +1,7 @@
 TARGET = BM1686EVB
 DEBUG = 1
 STANDALONE = 0
+CLOSEPMIC = 0
 
 ifeq ($(strip $(V)), 1)
 	Q =
@@ -45,6 +46,10 @@ endif
 
 ifeq ($(strip $(STANDALONE)), 1)
 CFLAGS += -DSTANDALONE
+endif
+
+ifeq ($(strip $(CLOSEPMIC)), 1)
+CFLAGS += -DCLOSEPMIC
 endif
 
 ASFLAGS = $(CFLAGS) -x assembler-with-cpp -Wa,--no-warn
