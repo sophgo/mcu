@@ -10,6 +10,7 @@ void chip_destroy(void);
 int chip_is_enabled(void);
 void sys_rst_disable(void);
 int chip_enable(void);
+void sys_rst_enable(void);
 
 #define BN_SYS_RST_ENABLE(n)					\
 	do {							\

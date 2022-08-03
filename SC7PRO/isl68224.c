@@ -8,6 +8,9 @@
 #define ISL68224_SLAVE_ADDR	0x60
 #define I2C			I2C0
 
+#define REG_VOUT_COMMAND	0x21
+#define REG_PAGE	0x0
+
 static uint8_t isl68224_channel[4] = {1, 3, 6, 7};
 
 static inline void isl68224_select(int idx)
@@ -45,6 +48,14 @@ static inline int isl68224_read_word(int idx, unsigned char cmd)
 	return tmp;
 }
 
+static inline int isl68224_write_word(int idx, unsigned char cmd, uint16_t data)
+{
+	isl68224_select(idx);
+	while (i2c_master_smbus_write_word(I2C, ISL68224_SLAVE_ADDR,
+					   1, cmd, data));
+	return 0;
+}
+
 unsigned long isl68224_output_voltage(int idx, int page)
 {
 	unsigned long tmp;
@@ -80,3 +91,10 @@ unsigned long isl68224_output_power(int idx, int page)
 	return tmp * 1000;
 }
 
+int isl68224_set_out_voltage(int idx, int page, int voltage)
+{
+	isl68224_write_byte(idx, REG_PAGE, page);
+	isl68224_write_word(idx, REG_VOUT_COMMAND, (uint16_t)voltage);
+
+	return 0;
+}

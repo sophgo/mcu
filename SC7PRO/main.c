@@ -35,13 +35,13 @@ int main(void)
 
 	/* enable power supply of pcie switch */
 	gpio_set(EN_PCIE_0V8_PORT, EN_PCIE_0V8_PIN);
-	// timer_mdelay(1);
-	// /* release reset of pcie switch */
-	// gpio_set(PCIE_SYS_RST_N_PORT, PCIE_SYS_RST_N_PIN);
 
 	mp5475_init();
 	board_power_init();
-
+#if 0
+	timer_mdelay(30);
+	sys_rst_enable();
+#endif
 	chip_init();
 	mon_init();
 	slave_init();

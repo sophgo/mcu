@@ -12,5 +12,6 @@ enum {
 unsigned long isl68224_output_voltage(int idx, int page);
 unsigned long isl68224_output_current(int idx, int page);
 unsigned long isl68224_output_power(int idx, int page);
+int isl68224_set_out_voltage(int idx, int page, int voltage);
 
 #endif

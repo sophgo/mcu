@@ -40,8 +40,13 @@ void chip_destroy(void)
 	timer_stop();
 	is_chip_ready = 0;
 }
-static inline void sys_rst_enable(void)
+void sys_rst_enable(void)
 {
+	/* PB0 is adc pin in this pcb, next pcb version will change other pin,
+	 * so, now hw version is not work, becasuse this pin is used
+	 * to control pcie switch prst
+	 */
+
 	gpio_set(GPIOB, GPIO_PIN_0);
 	BN_SYS_RST_ENABLE(1);
 	BN_SYS_RST_ENABLE(2);

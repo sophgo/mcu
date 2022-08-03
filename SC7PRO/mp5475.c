@@ -25,10 +25,8 @@ static inline int mp5475_read_byte(int idx, unsigned char cmd)
 	mp5475_select(idx);
 
 	while (i2c_master_smbus_read_byte(I2C, MP5475_SLAVE_ADDR,
-					  1, cmd, &tmp)) {
+					  1, cmd, &tmp))
 		printf("mp5475-%d read 0x%x failed\n", idx, cmd);
-	}
-
 
 	return tmp;
 }

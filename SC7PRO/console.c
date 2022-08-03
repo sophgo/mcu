@@ -12,6 +12,7 @@
 #include <timer.h>
 #include <pin.h>
 #include <mp5475.h>
+#include <isl68224.h>
 
 
 static struct ecdc_console *console;
@@ -273,6 +274,51 @@ static void cmd_close_pmic(void *hint, int argc, char const *argv[])
 	}
 }
 
+static const char * const cmd_setisl68224_usage =
+"isl68224 [idx page voltage]\n"
+"    idx: 0-3, there are 4 isl68224 in sc7pro\n"
+"    page: 0-3\n"
+"    voltage: the value of voltage, unit is mV\n";
+
+static void cmd_setisl68224_vout(void *hint, int argc, char const *argv[])
+{
+	int idx = 0;
+	int page = 0;
+	int voltage = 0;
+
+	if (argc == 4) {
+		idx = strtol(argv[1], NULL, 0);
+		page = strtol(argv[2], NULL, 0);
+		voltage = strtol(argv[3], NULL, 0);
+		isl68224_set_out_voltage(idx, page, voltage);
+	} else {
+		printf("%s", cmd_setisl68224_usage);
+	}
+
+	return;
+}
+
+static const char * const cmd_tpu_usage =
+"tpu [voltage]\n"
+"    voltage: this value will be set in all isl68224,unit is mV\n";
+static void cmd_tpu(void *hint, int argc, char const *argv[])
+{
+	int value;
+	int i;
+
+	if (argc != 2) {
+		printf("%s", cmd_tpu_usage);
+		return;
+	}
+
+	value = strtol(argv[1], NULL, 0);
+	for (i = 0; i < 4; i++) {
+		isl68224_set_out_voltage(i, 0, value);
+	}
+
+	return;
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -292,6 +338,8 @@ static struct command command_list[] = {
 	{"low", NULL, cmd_burn_usage, cmd_low},
 	{"high", NULL, cmd_burn_usage, cmd_high},
 	{"closepmic", NULL, NULL, cmd_close_pmic},
+	{"tpu", NULL, cmd_tpu_usage, cmd_tpu},
+	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
 };
 
 void print_usage(struct command *cmd)

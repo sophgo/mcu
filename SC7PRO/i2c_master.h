@@ -31,4 +31,8 @@ int i2c_master_write_block(int i2c, unsigned char addr,
 int i2c_master_read_block(int i2c, unsigned char addr,
 			  unsigned long timeout,
 			  unsigned char *data, unsigned int len);
+
+int i2c_master_smbus_write_word(int i2c, unsigned char addr,
+				unsigned long timeout,
+				unsigned char cmd, uint16_t data);
 #endif

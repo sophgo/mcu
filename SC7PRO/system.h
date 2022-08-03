@@ -6,10 +6,12 @@
 #define LINK_TO_BM_UART USART0
 #define DEBUG_UART USART1
 
-#define STD_UART	LINK_TO_BM_UART
-#define MON_UART	LINK_TO_BM_UART
-#define UPG_UART	LINK_TO_BM_UART
-#define CONSOLE_UART	LINK_TO_BM_UART
+#define ALL_UART LINK_TO_BM_UART
+
+#define STD_UART	ALL_UART
+#define MON_UART	ALL_UART
+#define UPG_UART	ALL_UART
+#define CONSOLE_UART	ALL_UART
 
 void system_init(void);
 void clock_init(void);
