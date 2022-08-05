@@ -45,7 +45,8 @@ static void upgrade_start(unsigned int type)
 	i2c_master_destroy(I2C1);
 	i2c_master_destroy(I2C2);
 
-	if (get_work_mode() == WORK_MODE_PCIE)
+	if (get_work_mode() == WORK_MODE_PCIE ||
+	    get_work_mode() == WORK_MODE_MIXED)
 		pcie_destroy();
 
 	/* disable all interrupt */

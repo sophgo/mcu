@@ -151,3 +151,7 @@ void eeprom_log_power_off_reason(int reason)
 	eeprom_write_byte(EEPROM_POWER_OFF_REASON_OFFSET, tmp);
 }
 
+int is_mixed_mode(void)
+{
+	return eeprom_read_byte(EEPROM_MIXED_MODE_OFFSET) == 1 ? 1 : 0;
+}

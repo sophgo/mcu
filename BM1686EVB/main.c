@@ -68,10 +68,17 @@ int main(void)
 
 	set_board_type(BM1684XEVB);
 
-	debug("%s %s working at %s mode\n",
+	debug("%s %s working at ",
 	      get_board_type_name(),
-	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application",
-	      get_work_mode() == WORK_MODE_SOC ? "soc" : "pcie");
+	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application");
+	if (get_work_mode() == WORK_MODE_SOC)
+		debug("soc mode\n");
+	else if (get_work_mode() == WORK_MODE_PCIE)
+		debug("pcie mode\n");
+	else if (get_work_mode() == WORK_MODE_MIXED)
+		debug("mix mode\n");
+	else
+		debug("unkown mode\n");
 
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,

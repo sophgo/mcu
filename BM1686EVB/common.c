@@ -4,8 +4,9 @@
 #include <common.h>
 #include <pin.h>
 #include <tick.h>
+#include <eeprom.h>
 
-#define MCU_SW_VER	3
+#define MCU_SW_VER	4
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
@@ -70,6 +71,11 @@ void board_init(void)
 
 	work_mode = gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN) ?
 		WORK_MODE_SOC : WORK_MODE_PCIE;
+
+	if (work_mode == WORK_MODE_PCIE) {
+		if (is_mixed_mode())
+			work_mode = WORK_MODE_MIXED;
+	}
 }
 
 int get_work_mode(void)
