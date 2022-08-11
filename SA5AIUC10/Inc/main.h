@@ -201,6 +201,8 @@ typedef struct I2C_REGS_t
 	volatile uint8_t critical_action;
 	volatile uint8_t critical_temp;
 	volatile uint8_t repoweron_temp;
+	volatile uint8_t pmic_poweroff;
+	volatile uint8_t reserved3[3];
 }I2C_REGS;
 
 extern I2C_REGS i2c_regs;
@@ -285,6 +287,7 @@ void intr_mask_set(uint8_t mask);
 #define REG_CRITICAL_ACTIONS	0x65
 #define REG_CTRITICAL_TEMP	0x66
 #define REG_REPOWERON_TEMP	0x67
+#define REG_PMIC_POWEROFF	0x68
 #define REG_NUMBER		sizeof(I2C_REGS)
 
 #define BIT0   (0x01 << 0)

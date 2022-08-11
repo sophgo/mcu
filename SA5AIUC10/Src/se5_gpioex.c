@@ -5,6 +5,7 @@
 #include <keyboard.h>
 #include <tca6416a.h>
 #include <pic.h>
+#include <mcu.h>
 
 /* port 0 */
 #define ALL_RESET_PORT      0
@@ -239,22 +240,29 @@ int se5_gpioex_init(void)
 
 void se5_reset_board(void)
 {
-	HAL_I2C_DeInit(&hi2c3);
-	PowerDOWN();
-	HAL_Delay(50);
-	if (is_pic_available)
-		pic_write(PIC_REG_CTRL, PIC_CMD_REBOOT);
-	else
-		tca6416a_clr(ALL_RESET_PORT, ALL_RESET_PIN);
-	/* wait the end of the world */
-	__disable_irq();
-	while (1)
-		;
+	if (pmic_need_poweroff()) {
+		HAL_I2C_DeInit(&hi2c3);
+		PowerDOWN();
+		HAL_Delay(50);
+		if (is_pic_available)
+			pic_write(PIC_REG_CTRL, PIC_CMD_REBOOT);
+		else
+			tca6416a_clr(ALL_RESET_PORT, ALL_RESET_PIN);
+		/* wait the end of the world */
+		__disable_irq();
+		while (1)
+			;
+	} else {
+		PowerON();
+	}
+
 }
 
 void se5_power_off_board(void)
 {
 	if (!is_pic_available)
+		return;
+	if (!pmic_need_poweroff())
 		return;
 	HAL_I2C_DeInit(&hi2c3);
 	PowerDOWN();

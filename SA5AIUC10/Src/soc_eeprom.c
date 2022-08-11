@@ -10,6 +10,7 @@
 
 #define EEPROM_SIZE	(EEPROM_BANK_SIZE)
 #define EEPROM_POWER_OFF_REASON_OFFSET		(5 * 32)
+#define EEPROM_MIXED_MODE_OFFSET	(EEPROM_POWER_OFF_REASON_OFFSET + 1)
 
 static struct eeprom_ctx {
 	int set_idx;
@@ -152,3 +153,11 @@ void eeprom_log_power_off_reason(int reason)
 	EEPROM_WriteBytes(EEPROM_POWER_OFF_REASON_OFFSET, &tmp, 1);
 }
 
+int is_mixed_mode(void)
+{
+	uint8_t tmp;
+
+	EEPROM_ReadBytes(EEPROM_MIXED_MODE_OFFSET, &tmp, 1);
+
+	return tmp == 1 ? 1 : 0;
+}

@@ -187,6 +187,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_REPOWERON_TEMP:
 		i2c_regs.repoweron_temp = data;
 		break;
+	case REG_PMIC_POWEROFF:
+		i2c_regs.pmic_poweroff = data;
+		break;
 	default:
 		break;
 	}
@@ -277,6 +280,9 @@ static uint8_t mcu_read(void *priv)
 	case REG_REPOWERON_TEMP:
 		ret = i2c_regs.repoweron_temp;
 		break;
+	case REG_PMIC_POWEROFF:
+		ret = i2c_regs.pmic_poweroff;
+		break;
 	default:
 		ret = 0xff;
 		break;
@@ -327,7 +333,7 @@ static struct i2c_slave_op slave3 = {
 
 void mcu_init(void)
 {
-	assert(sizeof(I2C_REGS) == 0x68);
+	assert(sizeof(I2C_REGS) == 0x6c);
 	mcu1_ctx.map = &mcu_reg;
 	mcu3_ctx.map = &mcu_reg;
 	uptime = 0;
@@ -367,4 +373,9 @@ void set_mcu_default_feature(void)
 
 	i2c_regs.critical_temp = 120;
 	i2c_regs.critical_action = CRITICAL_ACTION_POWERDOWN;
+}
+
+int pmic_need_poweroff(void)
+{
+	return i2c_regs.pmic_poweroff;
 }

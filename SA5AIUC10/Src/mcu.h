@@ -12,7 +12,7 @@ extern void mcu_init(void);
 void mcu_tick_isr();
 void mcu_set_temp(int soc, int board);
 void set_mcu_default_feature(void);
-
+int pmic_need_poweroff(void);
 #define CRITICAL_ACTION_POWERDOWN	2
 #define CRITICAL_ACTION_REBOOT		1
 

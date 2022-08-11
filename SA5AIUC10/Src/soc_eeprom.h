@@ -23,5 +23,5 @@ void eeprom_log_power_off_reason(int reason);
 int eeprom_get_lock_status(void);
 void eeprom_lock_code(uint8_t code);
 void eeprom_write_byte_protected(uint16_t offset, uint8_t data);
-
+int is_mixed_mode(void);
 #endif /* DS1307_H_ */

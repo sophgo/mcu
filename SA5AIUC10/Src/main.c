@@ -213,7 +213,7 @@ static inline int timer_is_timeout(void)
 void poll_pcie_rst(void)
 {
 	__disable_irq();
-	if (i2c_regs.mode_flag == 2) {
+	if (i2c_regs.mode_flag == 2 || i2c_regs.mode_flag == 3) {
 		if (is_chip_ready) {
 			if (GPIO_PIN_SET ==
 			    HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,
@@ -236,6 +236,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	/* we must working on pcie adapter */
 	i2c_regs.vender = VENDER_SM5_P;
 	i2c_regs.mode_flag = 2;
+	if (is_mixed_mode())
+		i2c_regs.mode_flag = 3;
 
 	HAL_GPIO_WritePin(SYS_RST_X_GPIO_Port, SYS_RST_X_Pin, GPIO_PIN_RESET);
 	timer_start(30);
@@ -309,7 +311,7 @@ void PowerON(void)
 		goto poweron_fail;
 	}
 
-	// 1 soc 2 PCIE
+	// 1 soc 2 PCIE 3 mixed mode(pcie+soc)
 	for (i = 0; i <  5; i++) {
 		if (GPIO_PIN_RESET == HAL_GPIO_ReadPin(PCIE_RST_MCU_GPIO_Port,PCIE_RST_MCU_Pin)) {
 			pcie_mode++;
@@ -318,6 +320,9 @@ void PowerON(void)
 
 	if (pcie_mode > 3) {
 		i2c_regs.mode_flag = 2;
+		if (is_mixed_mode()) {
+			i2c_regs.mode_flag = 3;
+		}
 	} else {
 		i2c_regs.mode_flag = 1;
 	}
@@ -458,28 +463,31 @@ int clean_pmic(void)
 	uint32_t tickstart = HAL_GetTick();
 	int err;
 
-	HAL_Delay(5);
+	if (pmic_need_poweroff()) {
+		HAL_Delay(5);
 
-	do {
-		err = HAL_I2C_Mem_Read(&hi2c2, PMIC_ADDR, IO_CHIPNAME, 1, tmp, 1, 10);
-		if (err == HAL_OK)
-			break;
-	} while(HAL_GetTick() - tickstart <= 1000);
+		do {
+			err = HAL_I2C_Mem_Read(&hi2c2, PMIC_ADDR, IO_CHIPNAME, 1, tmp, 1, 10);
+			if (err == HAL_OK)
+				break;
+		} while(HAL_GetTick() - tickstart <= 1000);
 
-	if (err != HAL_OK) {
-		i2c_regs.cause_pwr_down = ERR_PMIC_I2C_IO;
-		return -1;
+		if (err != HAL_OK) {
+			i2c_regs.cause_pwr_down = ERR_PMIC_I2C_IO;
+			return -1;
+		}
+
+		tmp[0] = tmp[1] = 0;
+
+		PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, IO_MODECTRL, 1, tmp, 1, 1000));
+		PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK1_VOUTFBDIV, 1, tmp, 1, 1000));
+		PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK2_VOUTFBDIV, 1, tmp, 1, 1000));
+		PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK3_VOUTFBDIV, 1, tmp, 1, 1000));
+		PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK1_DVS0CFG1, 1, tmp, 2, 1000));
+		PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK2_DVS0CFG1, 1, tmp, 2, 1000));
+		PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK3_DVS0CFG1, 1, tmp, 2, 1000));
 	}
 
-	tmp[0] = tmp[1] = 0;
-
-	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, IO_MODECTRL, 1, tmp, 1, 1000));
-	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK1_VOUTFBDIV, 1, tmp, 1, 1000));
-	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK2_VOUTFBDIV, 1, tmp, 1, 1000));
-	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK3_VOUTFBDIV, 1, tmp, 1, 1000));
-	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK1_DVS0CFG1, 1, tmp, 2, 1000));
-	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK2_DVS0CFG1, 1, tmp, 2, 1000));
-	PMIC_CLEAN_I2C_CHECK(HAL_I2C_Mem_Write(&hi2c2, PMIC_ADDR, BUCK3_DVS0CFG1, 1, tmp, 2, 1000));
 	return 0;
 }
 
@@ -518,12 +526,17 @@ void PowerDOWN(void)
 	HAL_Delay(1);
 	HAL_GPIO_WritePin(GPIOB, EN_VDD_PHY_Pin, GPIO_PIN_RESET);//EN_PHY
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	if (pmic_need_poweroff()) {
+		HAL_GPIO_WritePin(GPIOB, EN_VDDIO33_Pin, GPIO_PIN_RESET);
+		HAL_Delay(1);
+	}
+
 	HAL_GPIO_WritePin(GPIOB, EN0_ISL68127_Pin, GPIO_PIN_RESET);
 	HAL_Delay(1);
-	HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
-	HAL_Delay(1);
+	if (pmic_need_poweroff()) {
+		HAL_GPIO_WritePin(GPIOB, EN_VDDIO18_Pin, GPIO_PIN_RESET);
+		HAL_Delay(1);
+	}
 
 	i2c_slave_reset(&i2c_ctx3);
 
@@ -826,6 +839,7 @@ int main(void)
 		i2c_regs.vender = VENDER_SA5;
 
 	i2c_regs.sw_ver = MCU_VERSION;
+	i2c_regs.pmic_poweroff = 1;
 
 	/* USER CODE END Init */
 
@@ -883,7 +897,7 @@ int main(void)
 		/* pcie board or test board */
 		PowerON();
 		if (i2c_regs.vender != VENDER_SA5) {
-			if (i2c_regs.mode_flag == 2) {
+			if (i2c_regs.mode_flag == 2 || i2c_regs.mode_flag == 3) {
 				/* on pcie board */
 				/* SA5 --> SA5 */
 				/* SE5 --> SM5P */
