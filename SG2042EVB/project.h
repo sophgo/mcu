@@ -17,10 +17,12 @@
 #define SM5MS	12
 #define SM5MA	13
 
-#define SE5LITE	14
+#define SG2042EVB 0x22
 
-#define BM1684XEVB  0x20
-#define SC7PRO      0x21
-#define SG2042EVB   0x80
+/* MCU Family */
+enum {
+	MCU_FAMILY_STM32L0	= 0,
+	MCU_FAMILY_GD32E50,
+};
 
 #endif

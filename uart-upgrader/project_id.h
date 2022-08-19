@@ -15,7 +15,8 @@
 #define PROJ_SM5MP		11
 #define PROJ_SM5MS		12
 #define PROJ_SM5MA		13
-#define PROJ_SC7PRO	    15
+#define PROJ_SC7PRO     15
+#define PROJ_SG2042EVB      0x80
 
 #define PROJ_INVALID		-1
 
