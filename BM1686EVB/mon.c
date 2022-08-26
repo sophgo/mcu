@@ -97,7 +97,7 @@ static unsigned long adc_read(void)
 
 /* see config.xlsx, sheet adv2ver */
 const static unsigned short version_table[] = {
-	199, 534, 945, 1310, 1658, 2048, 2438, 2796, 3148, 3514, 3901
+	372, 745, 1117, 1489, 1862, 2234, 2607, 2979, 3351, 3724, 4096
 };
 
 const static unsigned short tmp_table[] = {
