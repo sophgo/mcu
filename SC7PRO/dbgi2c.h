@@ -17,6 +17,23 @@ struct dbgi2c_info {
 		uint32_t power;
 	} tpu;
 
+	struct {
+		uint32_t voltage;
+		uint32_t current;
+		uint32_t power;
+	}vddc;
+
+	struct {
+		uint32_t voltage;
+		uint32_t current;
+		uint32_t power;
+	}vdd_phy;
+
+	uint32_t i12v_atx;
+	uint32_t i12v_pcie;
+	uint32_t i3v3_pcie;
+
+
 } __attribute__((packed));
 
 

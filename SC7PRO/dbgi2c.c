@@ -10,6 +10,7 @@
 #include <tick.h>
 #include <timer.h>
 #include <common.h>
+#include <system.h>
 
 #define DBGI2C_ADDR_BASE	0x20
 #define DBGI2C_I2C_MASTER	I2C1
@@ -105,19 +106,19 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 
 	err = dbgi2c_i2c_write_byte(idx, dbgi2c_addr_width(addr_width));
 	if (err) {
-		printf("%d read set address width failed\n", idx);
+		dbg_printf("%d read set adr width failed\n", idx);
 		return err;
 	}
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err) {
-		printf("set address failed\n");
+		dbg_printf("%d set addr %xl failed\n", idx, addr);
 		return err;
 	}
 
 	/* get data */
 	err = dbgi2c_i2c_read_block(idx, data, len);
 	if (err)
-		printf("get data failed\n");
+		dbg_printf("get data failed\n");
 
 	return err;
 }

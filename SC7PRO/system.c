@@ -11,6 +11,7 @@
 #include <sys/unistd.h>
 #include <system.h>
 #include <adc.h>
+#include <stdarg.h>
 
 
 static void system_uart_init(void)
@@ -312,4 +313,36 @@ int xmodem_uart_recv(unsigned long timeout)
         }
     } while (tick_get() - tick_start <= timeout || timeout == 0xffffffff);
     return -1;
+}
+
+
+static inline void dbg_putc(int c)
+{
+	if (c == '\n') {
+		usart_data_transmit(DEBUG_UART, '\r');
+		while (!usart_flag_get(DEBUG_UART, USART_FLAG_TBE))
+		;
+	}
+
+	usart_data_transmit(DEBUG_UART, c);
+	while (!usart_flag_get(DEBUG_UART, USART_FLAG_TBE))
+		;
+}
+
+int dbg_printf(const char *fmt, ...)
+{
+	va_list ap;
+	char p[128];
+	int len;
+
+	va_start(ap, fmt);
+	len = vsnprintf(p, sizeof(p), fmt, ap);
+	va_end(ap);
+
+	char *q;
+
+	for (q = p; *q; ++q)
+		dbg_putc(*q);
+
+	return len;
 }

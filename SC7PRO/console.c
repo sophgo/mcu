@@ -319,6 +319,24 @@ static void cmd_tpu(void *hint, int argc, char const *argv[])
 	return;
 }
 
+static void cmd_vddc(void *hint, int argc, char const *argv[])
+{
+	int value;
+	int i;
+
+	if (argc != 2) {
+		printf("%s", cmd_tpu_usage);
+		return;
+	}
+
+	value = strtol(argv[1], NULL, 0);
+	for (i = 0; i < 4; i++) {
+		isl68224_set_out_voltage(i, 1, value);
+	}
+
+	return;
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -339,6 +357,7 @@ static struct command command_list[] = {
 	{"high", NULL, cmd_burn_usage, cmd_high},
 	{"closepmic", NULL, NULL, cmd_close_pmic},
 	{"tpu", NULL, cmd_tpu_usage, cmd_tpu},
+	{"vddc", NULL, NULL, cmd_vddc},
 	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
 };
 

@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <tick.h>
 #include <gd32e50x_i2c.h>
+#include <system.h>
 
 #define ISL68224_SLAVE_ADDR	0x60
 #define I2C			I2C0
@@ -24,7 +25,7 @@ static inline int isl68224_read_byte(int idx, unsigned char cmd)
 	isl68224_select(idx);
 	while (i2c_master_smbus_read_byte(I2C, ISL68224_SLAVE_ADDR,
 					  1, cmd, &tmp))
-		printf("68224-%d read %d failed\n", idx, cmd);
+		dbg_printf("68224-%d read %d failed\n", idx, cmd);
 	return tmp;
 }
 
@@ -34,7 +35,7 @@ static inline int isl68224_write_byte(int idx, unsigned char cmd,
 	isl68224_select(idx);
 	while (i2c_master_smbus_write_byte(I2C, ISL68224_SLAVE_ADDR,
 					  1, cmd, data))
-		printf("68224-%d write %d failed\n", idx, cmd);
+		dbg_printf("68224-%d write %d failed\n", idx, cmd);
 	return 0;
 }
 
@@ -43,8 +44,9 @@ static inline int isl68224_read_word(int idx, unsigned char cmd)
 	uint16_t tmp;
 	isl68224_select(idx);
 	while (i2c_master_smbus_read_word(I2C, ISL68224_SLAVE_ADDR,
-					  1, cmd, &tmp));
-		;
+					  1, cmd, &tmp))
+		dbg_printf("68224-%d write %d failed\n", idx, cmd);
+
 	return tmp;
 }
 

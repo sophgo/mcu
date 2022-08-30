@@ -7,6 +7,7 @@
 #include <gd32e50x_i2c.h>
 #include <timer.h>
 #include <common.h>
+#include <system.h>
 
 #define MP5475_SLAVE_ADDR	0x60
 #define I2C			I2C0
@@ -24,9 +25,9 @@ static inline int mp5475_read_byte(int idx, unsigned char cmd)
 
 	mp5475_select(idx);
 
-	while (i2c_master_smbus_read_byte(I2C, MP5475_SLAVE_ADDR,
+	if (i2c_master_smbus_read_byte(I2C, MP5475_SLAVE_ADDR,
 					  1, cmd, &tmp))
-		printf("mp5475-%d read 0x%x failed\n", idx, cmd);
+		dbg_printf("mp5475-%d read 0x%x failed\n", idx, cmd);
 
 	return tmp;
 }
@@ -36,9 +37,9 @@ static inline int mp5475_write_byte(int idx, unsigned char cmd,
 {
 	mp5475_select(idx);
 
-	while (i2c_master_smbus_write_byte(I2C, MP5475_SLAVE_ADDR,
+	if (i2c_master_smbus_write_byte(I2C, MP5475_SLAVE_ADDR,
 					  1, cmd, data))
-		printf("mp5474-%d write 0x%x faile\n", idx, cmd);
+		dbg_printf("mp5474-%d write 0x%x faile\n", idx, cmd);
 	return 0;
 }
 

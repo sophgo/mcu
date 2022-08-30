@@ -8,7 +8,7 @@ static struct i2c_slave_ctx i2c2_slave_ctx;
 static struct i2c01_slave_ctx i2c0_slave_ctx;
 
 #define I2C2_SLAVE_OA1		0x17
-#define I2C2_SLAVE_OA2		0x68
+#define I2C2_SLAVE_OA2		0x60
 #define I2C2_SLAVE_OA2M		3
 
 #define DUMMY_SLAVE_OA1		0x38

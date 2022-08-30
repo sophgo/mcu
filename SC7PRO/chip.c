@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <common.h>
 #include <chip.h>
+#include <system.h>
 
 /* wait debug i2c ready */
 #define CHIP_BOOT_TIME	1500
@@ -101,7 +102,7 @@ void chip_update(void)
 
 void EXTI2_IRQHandler(void)
 {
-	debug("pcie ep reset falling edge\n");
+	dbg_printf("pcie ep reset falling edge\n");
 	sys_rst_disable();
 	timer_start(30000);
 	is_chip_ready = 0;

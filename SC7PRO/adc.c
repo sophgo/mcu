@@ -16,6 +16,10 @@
 static unsigned int pcb_ver;
 static unsigned int bom_ver;
 
+static unsigned int i12v_atx;
+static unsigned int i12v_pcie;
+static unsigned int i3v3_pcie;
+
 uint8_t get_pcb_version(void)
 {
 	return pcb_ver;
@@ -129,5 +133,24 @@ unsigned long adc_read_pcie_i3v3()
 
 unsigned long adc_read_i12v(void)
 {
-	return adc_read_sys_i12v()+adc_read_pcie_i12v()+adc_read_pcie_i3v3();
+	i12v_atx = adc_read_sys_i12v();
+	i12v_pcie = adc_read_pcie_i12v();
+	i3v3_pcie = adc_read_pcie_i3v3();
+
+	return i12v_atx + i12v_pcie + i3v3_pcie;
+}
+
+unsigned int get_i12v_atx(void)
+{
+	return i12v_atx;
+}
+
+unsigned int get_i12v_pcie(void)
+{
+	return i12v_pcie;
+}
+
+unsigned int get_i3v3_pcie(void)
+{
+	return i3v3_pcie * 4;
 }

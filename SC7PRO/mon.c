@@ -22,7 +22,7 @@
 
 
 #define BROADCAST_INTERVAL	100
-#define COLLECT_INTERVAL	10
+#define COLLECT_INTERVAL	30
 
 #define FILTER_DEPTH_SHIFT	6
 #define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
@@ -193,7 +193,7 @@ static void collect(void)
 	pkg.i12v = filter_in(&i12v, adc_read_i12v());
 
 	if (mon_mode == MON_MODE_VERBOSE) {
-		collect_mp5475();
+		// collect_mp5475();
 		collect_isl68224();
 	} else if (mon_mode == MON_MODE_NORMAL) {
 		collect_tpu();
@@ -328,9 +328,27 @@ static void __maybe_unused broadcast(void)
 	dbgi2c_pkg.tpu.voltage =
 		pkg.isl68224[isl68224_idx].rail[isl68224_rail].voltage;
 	dbgi2c_pkg.tpu.current =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].current;
+		pkg.isl68224[isl68224_idx].rail[isl68224_rail].current / 2;
 	dbgi2c_pkg.tpu.power =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].power;
+		pkg.isl68224[isl68224_idx].rail[isl68224_rail].power / 2;
+
+	dbgi2c_pkg.vddc.voltage =
+		pkg.isl68224[isl68224_idx].rail[1].voltage;
+	dbgi2c_pkg.vddc.current =
+		pkg.isl68224[isl68224_idx].rail[1].current / 2;
+	dbgi2c_pkg.vddc.power =
+		pkg.isl68224[isl68224_idx].rail[1].power / 2;
+
+	dbgi2c_pkg.vdd_phy.voltage =
+		pkg.isl68224[isl68224_idx].rail[2].voltage;
+	dbgi2c_pkg.vdd_phy.current =
+		pkg.isl68224[isl68224_idx].rail[2].current / 2;
+	dbgi2c_pkg.vdd_phy.power =
+		pkg.isl68224[isl68224_idx].rail[2].power / 2;
+
+	dbgi2c_pkg.i12v_atx = get_i12v_atx();
+	dbgi2c_pkg.i12v_pcie = get_i12v_pcie();
+	dbgi2c_pkg.i3v3_pcie = get_i3v3_pcie();
 
 	dbgi2c_broadcast(soc_idx, &dbgi2c_pkg);
 
