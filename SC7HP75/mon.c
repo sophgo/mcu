@@ -104,7 +104,7 @@ void mon_init(void)
 
 	filter_init(&i12v, 0);
 
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < 2; ++i) {
 		for (j = 0; j < 4; ++j) {
 			filter_init(&(mp5475_current[i][j]), 0);
 			filter_init(&(mp5475_voltage[i][j]), 0);
@@ -128,7 +128,7 @@ collect_mp5475(void)
 {
 	int i, j;
 
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < 2; ++i) {
 		for (j = 0; j < 4; ++j) {
 
 			pkg.mp5475[i].buck[j].current =
@@ -147,7 +147,7 @@ collect_isl68224(void)
 {
 	int i, j;
 
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < 2; ++i) {
 		for (j = 0; j < 3; ++j) {
 
 			pkg.isl68224[i].rail[j].current =
@@ -172,7 +172,7 @@ collect_tpu(void)
 
 	j = 0;
 
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < 2; ++i) {
 		pkg.isl68224[i].rail[j].current =
 			filter_in(&(isl68224_current[i][j]),
 				  isl68224_output_current(i, j));
@@ -244,7 +244,7 @@ static void mon_put_normal(void)
 	mon_printf("tpu information\n");
 	mon_printf("%12s %12s %12s\n",
 		   "voltage(mV)", "current(mA)", "power(mW)");
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < 2; ++i) {
 		mon_printf("%12lu %12lu %12lu\n",
 			   pkg.isl68224[i].rail[0].voltage,
 			   pkg.isl68224[i].rail[0].current,
@@ -271,7 +271,7 @@ static void mon_put_verbose(void)
 	mon_printf("12v current(mA): %lu\n", pkg.i12v);
 
 	mon_printf("{\n");
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < 2; ++i) {
 		mon_printf("\tmp5475%d:\n", i);
 		for (j = 0; j < 4; ++j) {
 			mon_printf("\t\tbuck%d ", j);
@@ -283,7 +283,7 @@ static void mon_put_verbose(void)
 	mon_printf("}\n");
 
 	mon_printf("{\n");
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < 2; ++i) {
 		mon_printf("\tisl68224%d:\n", i);
 		for (j = 0; j < 3; ++j) {
 			mon_printf("\t\trail%d ", j);
@@ -352,7 +352,7 @@ static void __maybe_unused broadcast(void)
 
 	dbgi2c_broadcast(soc_idx, &dbgi2c_pkg);
 
-	soc_idx = (soc_idx + 1) & 0x07;
+	soc_idx = (soc_idx + 1) & 0x03;
 }
 
 void mon_set_mode(int mode)

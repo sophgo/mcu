@@ -52,6 +52,7 @@ int main(void)
 		chip_update();
 		if (chip_enable())
 			mon_process();
+
 		console_poll();
 	}
 

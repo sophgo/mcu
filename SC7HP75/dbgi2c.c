@@ -78,13 +78,13 @@ static int __dbgi2c_write(int idx, int addr_width, int data_width,
 
 	err = dbgi2c_i2c_write_byte(idx, dbgi2c_addr_width(addr_width));
 	if (err) {
-		printf("%d write set address width failed\n", idx);
+		dbg_printf("%d write set address width failed\n", idx);
 		return err;
 	}
 
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err)
-		printf("write address or data failed of soc%d\n", idx);
+		dbg_printf("write address or data failed of soc%d\n", idx);
 
 	return err;
 }
@@ -295,7 +295,7 @@ static void dbgi2c_i2c_slave_write(void *priv, uint8_t data)
 static uint8_t dbgi2c_i2c_slave_read(void *priv)
 {
 	uint8_t data = 0;
-	int soc = ctx.soc % 8;
+	int soc = ctx.soc % 4;
 
 	if (chip_is_enabled()) {
 		switch (ctx.idx) {
