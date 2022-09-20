@@ -393,6 +393,8 @@ void PowerON(void)
 	GPIO_InitStruct.Pull = GPIO_PULLUP;
 	HAL_GPIO_Init(PCIE_RST_MCU_GPIO_Port, &GPIO_InitStruct);
 
+	__HAL_GPIO_EXTI_CLEAR_IT(PCIE_RST_MCU_Pin);
+	HAL_NVIC_ClearPendingIRQ(EXTI4_15_IRQn);
 	HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
 	HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
