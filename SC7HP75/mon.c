@@ -67,11 +67,11 @@ static unsigned long last_time_broadcast;
 static unsigned long last_time_collect;
 static int mon_mode = MON_MODE_NORMAL;
 static struct filter i12v;
-static struct filter mp5475_current[4][4];
-static struct filter mp5475_voltage[4][4];
-static struct filter isl68224_current[4][3];
-static struct filter isl68224_voltage[4][3];
-static struct filter isl68224_power[4][3];
+static struct filter mp5475_current[2][4];
+static struct filter mp5475_voltage[2][4];
+static struct filter isl68224_current[2][3];
+static struct filter isl68224_voltage[2][3];
+static struct filter isl68224_power[2][3];
 
 static struct {
 	uint8_t id;
@@ -85,7 +85,7 @@ static struct {
 			uint32_t voltage;
 			uint32_t current;
 		} buck[4];
-	} mp5475[4];
+	} mp5475[2];
 
 	struct {
 		struct {
@@ -93,7 +93,7 @@ static struct {
 			uint32_t current;
 			uint32_t power;
 		} rail[3];
-	} isl68224[4];
+	} isl68224[2];
 } __attribute__((packed)) __attribute__((aligned(4))) pkg;
 
 static struct dbgi2c_info __attribute__((aligned(4))) dbgi2c_pkg;

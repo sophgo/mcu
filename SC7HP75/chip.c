@@ -11,7 +11,6 @@
 /* wait debug i2c ready */
 #define CHIP_BOOT_TIME	1500
 
-
 static volatile int is_chip_ready;
 static volatile int is_chip_enabled;
 static volatile int need_enable_chip;

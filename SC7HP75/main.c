@@ -33,10 +33,6 @@ int main(void)
 // #warn stand alone environment
 #endif
 	pca9848_init();
-
-	/* enable power supply of pcie switch */
-	gpio_set(EN_PCIE_0V8_PORT, EN_PCIE_0V8_PIN);
-
 	mp5475_init();
 	board_power_init();
 #if 0
@@ -48,6 +44,7 @@ int main(void)
 	slave_init();
 	console_init();
 
+	//sys_rst_enable();
 	while (1) {
 		chip_update();
 		if (chip_enable())
@@ -55,7 +52,6 @@ int main(void)
 
 		console_poll();
 	}
-
 
 	return 0;
 }

@@ -5,11 +5,11 @@
 #include <common.h>
 #include <stdlib.h>
 
-int pmic_outc_on(void);
-void pmic_outc_off(void);
+int pmic_outa_on(void);
+void pmic_outa_off(void);
 
-int pmic_outa_outd_on(void);
-void pmic_outa_outd_off(void);
+int pmic_outc_outd_on(void);
+void pmic_outc_outd_off(void);
 
 int pmic_outb_on(void);
 void pmic_outb_off(void);
@@ -22,8 +22,8 @@ void chip_deassert_n_off(void);
 
 struct power_node const board_power_nodes[25] = {
 
-	{"PMIC_OUTC", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_outc_on, (unsigned long)pmic_outc_off},
+	{"PMIC_OUTA", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)pmic_outa_on, (unsigned long)pmic_outa_off},
 	 },
 
 	{"EN_VDDC_B12", NODE_TYPE_ENABLE, 0,
@@ -88,8 +88,8 @@ struct power_node const board_power_nodes[25] = {
 	 {(unsigned long)TPU_PG_B34_PORT, (unsigned long)TPU_PG_B34_PIN},
 	 },
 
-	{"PMIC_OUTA_OUTD", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_outa_outd_on, (unsigned long)pmic_outa_outd_off},
+	{"PMIC_OUTC_OUTD", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)pmic_outc_outd_on, (unsigned long)pmic_outc_outd_off},
 	 },
 
 	{"PMIC_OUTB", NODE_TYPE_FUNCTION, 2000,

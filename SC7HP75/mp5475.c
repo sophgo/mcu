@@ -12,7 +12,7 @@
 #define MP5475_SLAVE_ADDR	0x60
 #define I2C			I2C0
 
-static uint8_t mp5475_channel[4] = {2, 0, 5, 4};
+static uint8_t mp5475_channel[2] = {2, 0};
 
 static inline void mp5475_select(int idx)
 {

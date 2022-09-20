@@ -13,8 +13,10 @@
 #include <system.h>
 
 #define DBGI2C_ADDR_BASE	0x20
-#define DBGI2C_I2C_MASTER	I2C1
+#define DBGI2C_I2C_MASTER	I2C0
 #define DBGI2C_I2C_TIMEOUT	1
+
+static uint8_t dbg_channel[4] = {4, 5, 6, 7};
 
 static inline uint8_t dbgi2c_idx2addr(int idx)
 {
@@ -23,18 +25,21 @@ static inline uint8_t dbgi2c_idx2addr(int idx)
 
 int dbgi2c_i2c_write_byte(int idx, uint8_t data)
 {
-	return i2c_master_write_byte(DBGI2C_I2C_MASTER,  dbgi2c_idx2addr(idx),
+	pca9848_set(PCA9848, 1 << dbg_channel[idx]);
+	return i2c_master_write_byte(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				     DBGI2C_I2C_TIMEOUT, data);
 }
 
 int dbgi2c_i2c_write_block(int idx, uint8_t *data, unsigned int len)
 {
+	pca9848_set(PCA9848, 1 << dbg_channel[idx]);
 	return i2c_master_write_block(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				      DBGI2C_I2C_TIMEOUT, data, len);
 }
 
 int dbgi2c_i2c_read_block(int idx, uint8_t *data, unsigned int len)
 {
+	pca9848_set(PCA9848, 1 << dbg_channel[idx]);
 	return i2c_master_read_block(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				     DBGI2C_I2C_TIMEOUT, data, len);
 }
@@ -66,6 +71,7 @@ static int __dbgi2c_write(int idx, int addr_width, int data_width,
 
 	/* append data width type */
 	msg[0] = dbgi2c_data_width(data_width);
+
 	msg_len = 1;
 
 	/* append address */
@@ -102,7 +108,6 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 	/* append address */
 	for (i = 0; i < addr_width / 8; ++i, ++msg_len)
 		msg[msg_len] = ((uint8_t *)&addr)[i];
-
 
 	err = dbgi2c_i2c_write_byte(idx, dbgi2c_addr_width(addr_width));
 	if (err) {
@@ -248,7 +253,7 @@ static void dbgi2c_collect(void)
 			      &((uint32_t *)dbgi2c_chip_map)[i]);
 	}
 
-	for (i = 0; i < 8; ++i) {
+	for (i = 0; i < 4; ++i) {
 		timer_udelay(100);
 		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(SOC_TEMP), &soc_temp[i]);
 		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(BOARD_TEMP),
@@ -329,8 +334,6 @@ static struct i2c_slave_op slave = {
 
 void dbgi2c_init(struct i2c_slave_ctx *i2c)
 {
-	/* open all soc debug i2c channel */
-	pca9848_set(TCA9548A1, 0xff);
 	i2c_slave_register(i2c, &slave);
 	/* enable interrupt */
 	nvic_irq_enable(DEBUG_I2C_IRQ, 0, 0);

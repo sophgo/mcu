@@ -54,7 +54,7 @@ static unsigned long adc_read(unsigned int channel)
 
 /* see config.xlsx, sheet adv2ver */
 const static unsigned short version_table[] = {
-	199, 534, 945, 1310, 1658, 2048, 2438, 2796, 3148, 3514, 3901
+	23, 819, 1229, 1638, 2048, 2458, 2867, 3277, 3686
 };
 
 static int adc2ver(unsigned short adc)
@@ -128,7 +128,7 @@ unsigned long adc_read_pcie_i3v3()
 {
 	unsigned long adc_data = adc_read(CURRENT_PCIE_3V3_CHANNEL);
 
-	return (adc_data*900/4096);
+	return (adc_data*150/4096);
 }
 
 unsigned long adc_read_i12v(void)
@@ -137,7 +137,7 @@ unsigned long adc_read_i12v(void)
 	i12v_pcie = adc_read_pcie_i12v();
 	i3v3_pcie = adc_read_pcie_i3v3();
 
-	return i12v_atx + i12v_pcie + i3v3_pcie;
+	return i12v_pcie + i3v3_pcie;
 }
 
 unsigned int get_i12v_atx(void)

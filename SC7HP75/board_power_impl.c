@@ -7,53 +7,53 @@
 int b12_vdd_1_8v_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B12, 2);
+	mp5475_buck_on(MP5475B12, 0);
 	return 0;
 }
 
 void b12_vdd_1_8v_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B12, 2);
-}
-
-int b34_vdd_1_8v_on(void)
-{
-	/* add customer code here */
-	mp5475_buck_on(MP5475B34, 2);
-	return 0;
-}
-
-void b34_vdd_1_8v_off(void)
-{
-	/* add customer code here */
-	mp5475_buck_off(MP5475B34, 2);
-}
-
-int b12_vddq_outa_on(void)
-{
-	/* add customer code here */
-	mp5475_buck_on(MP5475B12, 0);
-	return 0;
-}
-
-void b12_vddq_outa_off(void)
-{
-	/* add customer code here */
 	mp5475_buck_off(MP5475B12, 0);
 }
 
-int b34_vddq_outa_on(void)
+int b34_vdd_1_8v_on(void)
 {
 	/* add customer code here */
 	mp5475_buck_on(MP5475B34, 0);
 	return 0;
 }
 
-void b34_vddq_outa_off(void)
+void b34_vdd_1_8v_off(void)
 {
 	/* add customer code here */
 	mp5475_buck_off(MP5475B34, 0);
+}
+
+int b12_vddq_outc_on(void)
+{
+	/* add customer code here */
+	mp5475_buck_on(MP5475B12, 2);
+	return 0;
+}
+
+void b12_vddq_outc_off(void)
+{
+	/* add customer code here */
+	mp5475_buck_off(MP5475B12, 2);
+}
+
+int b34_vddq_outc_on(void)
+{
+	/* add customer code here */
+	mp5475_buck_on(MP5475B34, 2);
+	return 0;
+}
+
+void b34_vddq_outc_off(void)
+{
+	/* add customer code here */
+	mp5475_buck_off(MP5475B34, 2);
 }
 
 int b12_vddq_outd_on(void)
@@ -108,7 +108,7 @@ void b34_vddqlp_off(void)
 	mp5475_buck_off(MP5475B34, 1);
 }
 
-int  pmic_outc_on(void)
+int  pmic_outa_on(void)
 {
 	/* add customer code here */
 	b12_vdd_1_8v_on();
@@ -117,7 +117,7 @@ int  pmic_outc_on(void)
 	return 0;
 }
 
-void  pmic_outc_off(void)
+void  pmic_outa_off(void)
 {
 	/* add customer code here */
 	b12_vdd_1_8v_off();
@@ -125,21 +125,21 @@ void  pmic_outc_off(void)
 
 }
 
-int  pmic_outa_outd_on(void)
+int  pmic_outc_outd_on(void)
 {
 	/* add customer code here */
-	b12_vddq_outa_on();
-	b34_vddq_outa_on();
+	b12_vddq_outc_on();
+	b34_vddq_outc_on();
 	b12_vddq_outd_on();
 	b34_vddq_outd_on();
 	return 0;
 }
 
-void  pmic_outa_outd_off(void)
+void  pmic_outc_outd_off(void)
 {
 	/* add customer code here */
-	b12_vddq_outa_off();
-	b34_vddq_outa_off();
+	b12_vddq_outc_off();
+	b34_vddq_outc_off();
 
 	b12_vddq_outd_off();
 	b34_vddq_outd_off();
@@ -174,8 +174,6 @@ int chip_assert_n_on(void)
 	BN_SYS_RST_ENABLE(2);
 	BN_SYS_RST_ENABLE(3);
 	BN_SYS_RST_ENABLE(4);
-
-	gpio_set(PCIE_SYS_RST_N_PORT, PCIE_SYS_RST_N_PIN);
 
 	for (int i = 0; i < 90; i++)
 		timer_udelay(1000);

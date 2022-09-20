@@ -58,23 +58,10 @@ enum {
 	DDR_TYPE_LPDDR4 = 1,
 };
 
-void set_board_type(uint8_t type);
-uint8_t get_board_type(void);
-uint8_t get_firmware_version(void);
-int get_work_mode(void);
-void board_init(void);
-uint8_t get_declared_board_type(void);
-uint8_t get_ddr_type(void);
-char *get_board_type_name();
 void led_init(void);
 void led_on(void);
 void led_off(void);
 void led_set_frequency(unsigned long freq);
-
-int get_board_temp(void);
-int get_soc_temp(void);
-void set_board_temp(int temp);
-void set_soc_temp(int temp);
 
 /* remap libopencm3 to libgd */
 #define gpio_clear	gpio_bit_reset
