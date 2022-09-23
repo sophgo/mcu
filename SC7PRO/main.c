@@ -23,7 +23,7 @@ int main(void)
 
 	debug("\nBITMAIN SOPHONE SC7PRO\n");
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
-	dbg_printf("bitmain\n");
+	dbg_printf("bitmain %s-%s\n", __DATE__, __TIME__);
 
 #ifndef STANDALONE
 	if (get_stage() == RUN_STAGE_LOADER)

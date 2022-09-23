@@ -10,7 +10,7 @@
 #define CURRENT_PCIE_3V3_CHANNEL ADC_CHANNEL_13
 #define CURRENT_SYS_12V_CHANNEL ADC_CHANNEL_0
 #define CURRENT_PCIE_12V_CHANNEL ADC_CHANNEL_10
-#define PROD_VER_CHANNEL ADC_CHANNEL_8
+#define PROD_VER_CHANNEL ADC_CHANNEL_11
 #define HW_VER_CHANNEL ADC_CHANNEL_9
 
 static unsigned int pcb_ver;
@@ -54,7 +54,7 @@ static unsigned long adc_read(unsigned int channel)
 
 /* see config.xlsx, sheet adv2ver */
 const static unsigned short version_table[] = {
-	199, 534, 945, 1310, 1658, 2048, 2438, 2796, 3148, 3514, 3901
+	0, 372, 793, 1310, 1658, 2048, 2458, 2731, 3121, 3571, 3901
 };
 
 static int adc2ver(unsigned short adc)

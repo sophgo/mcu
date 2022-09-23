@@ -97,11 +97,11 @@ static void system_gpio_init(void)
 	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOC INPUT PINS */
-	pins = GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_15;
-	gpio_init(GPIOC, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
+	pins = GPIO_PIN_2 | GPIO_PIN_15;
+	gpio_init(GPIOC, GPIO_MODE_IPD, GPIO_OSPEED_2MHZ, pins);
 
 	/* ANALOG */
-	gpio_init(GPIOC, GPIO_MODE_AIN, GPIO_OSPEED_2MHZ, GPIO_PIN_0 | GPIO_PIN_3);
+	gpio_init(GPIOC, GPIO_MODE_AIN, GPIO_OSPEED_2MHZ, GPIO_PIN_0 | GPIO_PIN_3 | GPIO_PIN_1);
 
 	/* GPIOD OUTPUT PINS*/
 	pins = GPIO_PIN_ALL;

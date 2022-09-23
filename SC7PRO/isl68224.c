@@ -7,7 +7,7 @@
 #include <system.h>
 
 #define ISL68224_SLAVE_ADDR	0x60
-#define I2C			I2C0
+#define I2C			I2C1
 
 #define REG_VOUT_COMMAND	0x21
 #define REG_PAGE	0x0
