@@ -23,5 +23,6 @@
 #define SC7PRO	0x21
 #define SC7HP75	0x22
 #define SG2042EVB	0x80
+#define SG2042REVB  0x81
 
 #endif

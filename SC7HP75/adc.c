@@ -115,7 +115,7 @@ unsigned long adc_read_pcie_i12v()
 {
 	unsigned long adc_data = adc_read(CURRENT_PCIE_12V_CHANNEL);
 
-	return (adc_data*6000/4096);
+	return (adc_data*6000*2/4096);
 }
 
 	/*
