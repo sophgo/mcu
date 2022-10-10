@@ -5,7 +5,7 @@
 #include <common.h>
 #include <upgrade.h>
 #include <board_power.h>
-
+#include <system.h>
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -141,13 +141,14 @@ int power_status(void)
 
 int board_power_init(void)
 {
-	if (~(GPIO_CTL0(GPIOE) & BIT(14))) {
+	if (GPIO_CTL0(GPIOE) & BIT(14)) {
 		if (!power_is_on) {
+			dbg_printf("start power on\n");
 			return power_on();
 		}
 	}
 
-	if (~(GPIO_CTL0(GPIOC) & BIT(13))) {
+	if (GPIO_CTL0(GPIOC) & BIT(13)) {
 		if (power_is_on) {
 			power_off();
 			return 1;

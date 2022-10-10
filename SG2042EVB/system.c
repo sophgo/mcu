@@ -11,23 +11,25 @@
 #include <sys/unistd.h>
 #include <system.h>
 #include <adc.h>
+#include <pin.h>
+#include <stdarg.h>
 
 static void system_uart_init(void)
 {
 	/* tx push-pull, rx floating */
-	gpio_init(GPIOD, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_5);
-	gpio_init(GPIOD, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, GPIO_PIN_6);
+	gpio_init(MCU_USART1_TX_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, MCU_USART1_TX_PIN);
+	gpio_init(MCU_USART1_RX_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, MCU_USART1_RX_PIN);
 
 	rcu_periph_clock_enable(RCU_USART1);
 	/* uart1 setup for debug messages */
-	usart_deinit(CONSOLE_UART);
-	usart_baudrate_set(CONSOLE_UART, DEFAULT_BAUDRATE);
-	usart_parity_config(CONSOLE_UART, USART_PM_NONE);
-	usart_word_length_set(CONSOLE_UART, USART_WL_8BIT);
-	usart_stop_bit_set(CONSOLE_UART, USART_STB_1BIT);
-	usart_transmit_config(CONSOLE_UART, USART_TRANSMIT_ENABLE);
-	usart_receive_config(CONSOLE_UART, USART_RECEIVE_ENABLE);
-	usart_enable(CONSOLE_UART);
+	usart_deinit(DEBUG_UART);
+	usart_baudrate_set(DEBUG_UART, DEFAULT_BAUDRATE);
+	usart_parity_config(DEBUG_UART, USART_PM_NONE);
+	usart_word_length_set(DEBUG_UART, USART_WL_8BIT);
+	usart_stop_bit_set(DEBUG_UART, USART_STB_1BIT);
+	usart_transmit_config(DEBUG_UART, USART_TRANSMIT_ENABLE);
+	usart_receive_config(DEBUG_UART, USART_RECEIVE_ENABLE);
+	usart_enable(DEBUG_UART);
 }
 
 static void system_gpio_init(void)
@@ -201,7 +203,7 @@ void *_sbrk(unsigned long inc)
 	return last;
 }
 
-/* for console put and get*/
+/* for DEBUG put and get*/
 int usart_is_recv_ready(uint32_t usart_periph)
 {
 	return USART_STAT0(usart_periph) & USART_STAT0_RBNE;
@@ -209,15 +211,15 @@ int usart_is_recv_ready(uint32_t usart_periph)
 
 int uart_getc(void)
 {
-	if (usart_is_recv_ready(CONSOLE_UART))
-		return usart_data_receive(CONSOLE_UART);
+	if (usart_is_recv_ready(DEBUG_UART))
+		return usart_data_receive(DEBUG_UART);
 	return -1;
 }
 
 void uart_putc(uint8_t ch)
 {
-	usart_data_transmit(CONSOLE_UART, ch);
-	while (!usart_flag_get(CONSOLE_UART, USART_FLAG_TBE))
+	usart_data_transmit(DEBUG_UART, ch);
+	while (!usart_flag_get(DEBUG_UART, USART_FLAG_TBE))
 		;
 }
 
@@ -283,4 +285,35 @@ off_t _lseek_r(struct _reent *reent, int fd, off_t offset, int pos)
 _ssize_t _read_r(struct _reent *reent, int fd, void *buf, size_t len)
 {
 	return 0;
+}
+
+static inline void dbg_putc(int c)
+{
+	if (c == '\n') {
+		usart_data_transmit(DEBUG_UART, '\r');
+		while (!usart_flag_get(DEBUG_UART, USART_FLAG_TBE))
+		;
+	}
+
+	usart_data_transmit(DEBUG_UART, c);
+	while (!usart_flag_get(DEBUG_UART, USART_FLAG_TBE))
+		;
+}
+
+int dbg_printf(const char *fmt, ...)
+{
+	va_list ap;
+	char p[128];
+	int len;
+
+	va_start(ap, fmt);
+	len = vsnprintf(p, sizeof(p), fmt, ap);
+	va_end(ap);
+
+	char *q;
+
+	for (q = p; *q; ++q)
+		dbg_putc(*q);
+
+	return len;
 }

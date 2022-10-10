@@ -56,7 +56,7 @@ static unsigned long adc_averge_read(unsigned int channel)
 
 	for (int i = 0; i < adc_read_time; i++) {
 		adc_sum += adc_read(channel);
-		timer_udelay(500);
+		timer_mdelay(5);
 	}
 
 	return (adc_sum / 20);
@@ -64,7 +64,8 @@ static unsigned long adc_averge_read(unsigned int channel)
 
 /* see config.xlsx, sheet adv2ver */
 static unsigned short version_table[] = {
-	267, 739, 1127, 1483, 1852, 2242, 2616, 2971, 3331, 3707
+	50, 201, 364, 502, 645, 789, 921, 1066, 1220, 1414, 1586, 1829, 2053,\
+	2284, 2464, 2608, 2781, 2923, 3088, 3343, 3525, 3707, 3831, 4014
 };
 
 static int adc2ver(unsigned short adc)
@@ -108,100 +109,107 @@ void adc_init(void)
 	pcb_ver = adc2ver(adc_read(PCB_VRE0_CHANNEL));
 }
 
-unsigned long I_DDR_VDD_0V8(void)
+unsigned long adc_read_I_DDR_VDD_0V8(void)
 {
 	unsigned long adc_data = adc_averge_read(I_DDR_VDD_0V8_CHANNEL);
 
-	return (adc_data * 160 / 4096);
+	return (adc_data);
 }
 
-unsigned long I_DDR23_VDDQ_1V2(void)
+unsigned long adc_read_I_DDR01_VDDQ_1V2(void)
+{
+	unsigned long adc_data = adc_averge_read(I_DDR01_VDDQ_1V2_CHANNEL);
+
+	return (adc_data);
+}
+
+unsigned long adc_read_I_DDR23_VDDQ_1V2(void)
 {
 	unsigned long adc_data = adc_averge_read(I_DDR23_VDDQ_1V2_CHANNEL);
 
-	return (adc_data * 2400 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VQPS18(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VQPS18_CHANNEL);
 
-	return (adc_data * 360 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_PLL_0V8(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_PLL_0V8_CHANNEL);
 
-	return (adc_data * 160 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_PCIE_D_0V8(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_PCIE_D_0V8_CHANNEL);
 
-	return (adc_data * 160 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_PCIE_C_0V8(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_PCIE_C_0V8_CHANNEL);
 
-	return (adc_data * 160 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_5V(void)
 {
 	unsigned long adc_data = adc_averge_read(I_5V_CHANNEL);
 
-	return (adc_data * 1000 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_12V(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_12V_CHANNEL);
 
-	return (adc_data * 240 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_RGMII_1V8(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_RGMII_1V8_CHANNEL);
 
-	return (adc_data * 360 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_EMMC_1V8(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_EMMC_1V8_CHANNEL);
 
-	return (adc_data * 360 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_EMMC_3V3(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_EMMC_3V3_CHANNEL);
 
-	return (adc_data * 660 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDDC(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDDC_CHANNEL);
 
-	return (adc_data * 1600 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDD_PCIE_H_1V8(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDD_PCIE_H_1V8_CHANNEL);
 
-	return (adc_data * 360 / 4096);
+	return (adc_data);
 }
 
 unsigned long adc_read_I_VDDIO18(void)
 {
 	unsigned long adc_data = adc_averge_read(I_VDDIO18_CHANNEL);
 
-	return (adc_data * 360 / 4096);
+	return (adc_data);
 }

@@ -17,7 +17,7 @@
 #define SM5MS	12
 #define SM5MA	13
 
-#define SG2042EVB 0x22
+#define SG2042EVB 0x80
 
 /* MCU Family */
 enum {
