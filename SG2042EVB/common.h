@@ -9,6 +9,10 @@
 #define false 0
 #define true 1
 
+#define FLASH_SIZE	(256 * 1024)
+#define FLASH_PAGE_SIZE	(8 * 1024)
+#define FLASH_PAGE_MASK	(FLASH_PAGE_SIZE - 1)
+
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 #define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
 

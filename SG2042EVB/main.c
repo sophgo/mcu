@@ -1,3 +1,4 @@
+#define DEBUG 1
 #include <gd32e50x_gpio.h>
 #include <gd32e50x_misc.h>
 #include <tick.h>
@@ -17,6 +18,7 @@ int main(void)
 	system_init();
 	debug("\nMANGO SG2042EVB\n");
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
+
 	board_power_init();
 	slave_init();
 	console_init();
