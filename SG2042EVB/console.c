@@ -9,8 +9,12 @@
 #include <upgrade.h>
 #include <timer.h>
 #include <pin.h>
+#include <chip.h>
+#include <power.h>
+#include <slt.h>
 
 static struct ecdc_console *console;
+extern int power_is_on;
 
 static int console_getc(void *console_hint)
 {
@@ -28,6 +32,84 @@ static void console_putc(void *console_hint, char c)
 static void cmd_hello(void *hint, int argc, char const *argv[])
 {
 	printf("Hello! MANGO USER 0v0\n");
+}
+
+static const char * const cmd_poweron_usage =
+"poweron\n"
+"    power on the sg2042evb\n";
+
+static void cmd_poweron(void *hint, int argc, char const *argv[])
+{
+	power_on();
+	chip_enable();
+	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
+		power_is_on = false;
+
+	printf("SG2042EVB OK\n");
+}
+
+static const char * const cmd_poweroff_usage =
+"poweroff\n"
+"    power off the sg2042evb\n";
+
+static void cmd_poweroff(void *hint, int argc, char const *argv[])
+{
+	power_off();
+	slt_reset();
+	chip_disable();
+	if (gpio_get(GPIOE, GPIO_PIN_14) == 0)
+		power_is_on = true;
+	timer_mdelay(500);
+
+	printf("SG2042EVB OFF\n");
+}
+
+static const char * const cmd_poweron_rv_usage =
+"poweron\n"
+"    power on the riscv\n";
+
+static void cmd_poweron_rv(void *hint, int argc, char const *argv[])
+{
+	gpio_clear(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
+	power_on();
+	chip_enable();
+	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
+		power_is_on = false;
+
+	printf("PWRON RV OK\n");
+}
+
+static const char * const cmd_poweron_a53_usage =
+"poweron\n"
+"    power on the a53\n";
+
+static void cmd_poweron_a53(void *hint, int argc, char const *argv[])
+{
+	gpio_set(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
+	power_on();
+	chip_enable();
+	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
+		power_is_on = false;
+
+	printf("PWRON A53 OK\n");
+}
+
+static const char * const cmd_getmcutype_usage =
+"getmcutype\n";
+
+static void cmd_getmcutype(void *hint, int argc, char const *argv[])
+{
+	printf("SG2042EVB\n");
+}
+
+static const char * const cmd_query_usage =
+"query\n"
+"	query the result from sg2042evb\n";
+
+static void cmd_query(void *hint, int argc, char const *argv[])
+{
+	uint16_t result = get_slt_result();
+	printf("0x%x\n", result);
 }
 
 static const char * const cmd_upgrade_usage =
@@ -59,6 +141,12 @@ static void cmd_help(void *hint, int argc, char const *argv[]);
 static struct command command_list[] = {
 	{"help", NULL, NULL, cmd_help},
 	{"hello", NULL, NULL, cmd_hello},
+	{"poweron", NULL, cmd_poweron_usage, cmd_poweron},
+	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
+	{"poweron_rv", NULL, cmd_poweron_rv_usage, cmd_poweron_rv},
+	{"poweron_a53", NULL, cmd_poweron_a53_usage,cmd_poweron_a53},
+	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
+	{"query", NULL, cmd_query_usage, cmd_query},
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
 };
 
@@ -98,7 +186,7 @@ static void cmd_help(void *hint, int argc, char const *argv[])
 			printf("\'%s\' not found\n", argv[1]);
 	} else {
 		printf("invalid usage\n");
-		printf("help [command]");
+		printf("help [command]\n");
 	}
 }
 

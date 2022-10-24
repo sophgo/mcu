@@ -52,6 +52,11 @@ char *get_board_type_name()
 	return "SG2042-U";
 }
 
+void set_board_type(uint8_t type)
+{
+	board_type = type;
+}
+
 uint8_t get_board_type(void)
 {
 	return board_type;

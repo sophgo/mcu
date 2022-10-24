@@ -30,7 +30,7 @@ uint8_t get_firmware_version(void);
 int get_work_mode(void);
 void board_init(void);
 uint8_t get_ddr_type(void);
-
+void set_board_type(uint8_t type);
 int get_board_temp(void);
 int get_soc_temp(void);
 void set_board_temp(int temp);

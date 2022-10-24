@@ -32,7 +32,7 @@ uint8_t get_pcb_version(void)
 }
 
 /* channel: ADC_CHANNEL_x */
-static unsigned long adc_read(unsigned int channel)
+unsigned long adc_read(unsigned int channel)
 {
 	adc_regular_channel_config(ADC0, 0, channel, ADC_SAMPLETIME_55POINT5);
 

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <debug.h>
 #include <mcu.h>
+#include <chip.h>
 
 #define TMP451_REG_MAX	(23)
 
@@ -205,6 +206,48 @@ void tmp451_get_temp(int *board, int *soc)
 	tmp451_update_temp();
 	*board = tmp451_ctx.board;
 	*soc = tmp451_ctx.soc - 5;
+}
+
+void tmp451_process(void)
+{
+	unsigned long current_time = tick_get();
+	int soc, board;
+
+	if (current_time - last_time < TMP451_COLLECT_INTERVAL)
+		return;
+
+	last_time = current_time;
+
+	tmp451_get_temp(&board, &soc);
+
+	if (get_needpoweron_satus() == 1) {
+		if (soc < get_repoweron_temp() && board < 80) {
+			chip_popd_reset_end();
+			clr_needpoweron();
+		}
+	}
+
+	if (!chip_is_enabled()) {
+		tmp451_ctx.overtemp = 0;
+		return;
+	}
+
+	if (soc > get_critical_temp()) {
+		++tmp451_ctx.overtemp;
+		if (tmp451_ctx.overtemp > TMP451_OVERTEMP_MAX) {
+			chip_disable();
+			power_off();
+			tmp451_ctx.overtemp = 0;
+			printf("temp is over, board will");
+			if (get_critical_action() == CRITICAL_ACTION_REBOOT) {
+				set_needpoweron();
+				printf("reboot\n");
+			} else {
+				printf("poweroff\n");
+			}
+
+		}
+	}
 }
 
 void tmp451_init(struct i2c01_slave_ctx *i2c_slave_ctx)

@@ -8,11 +8,12 @@
 #include <system.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <timer.h>
 
 /* in us */
 #define NODE_CHECK_TIMEOUT	(10 * 1000)
 
-static int power_is_on;
+int power_is_on;
 
 static int node_check(struct power_node const *node)
 {
@@ -132,6 +133,7 @@ void power_off(void)
 void power_init(void)
 {
 	led_set_frequency(LED_FREQ_ALWAYS_OFF);
+	power_is_on = false;
 }
 
 int power_status(void)
@@ -141,15 +143,15 @@ int power_status(void)
 
 int board_power_init(void)
 {
-	if (GPIO_CTL0(GPIOE) & BIT(14)) {
-		if (!power_is_on) {
-			dbg_printf("start power on\n");
+	if ((gpio_get(GPIOE, GPIO_PIN_14)) == 0) {
+		if (power_is_on == false) {
+			timer_udelay(1000);
 			return power_on();
 		}
 	}
 
-	if (GPIO_CTL0(GPIOC) & BIT(13)) {
-		if (power_is_on) {
+	if (gpio_get(GPIOE, GPIO_PIN_14) == 1) {
+		if (power_is_on == true) {
 			power_off();
 			return 1;
 		}

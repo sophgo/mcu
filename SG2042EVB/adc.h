@@ -3,6 +3,7 @@
 
 int adc_init(void);
 uint8_t get_pcb_version(void);
+unsigned long adc_read(unsigned int channel);
 unsigned long adc_read_I_DDR_VDD_0V8(void);
 unsigned long adc_read_I_DDR01_VDDQ_1V2(void);
 unsigned long adc_read_I_DDR23_VDDQ_1V2(void);

@@ -1,8 +1,12 @@
+#include <gd32e50x_i2c.h>
 #include <mcu.h>
 #include <adc.h>
 #include <stdio.h>
 #include <i2c01_slave.h>
 #include <string.h>
+#include <tick.h>
+#include <timer.h>
+#include <debug.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -31,10 +35,10 @@
 #define POWER_68127_TMP_OVER_REPORT		1<<1
 #define BOARD_TMP_OVER_REPORT			1<<2
 #define BOARD_TMP_OVER_POWEROFF			1<<3
-#define BM1686_TMP_OVER_POWEROFF		1<<4
+#define SG2042_TMP_OVER_POWEROFF		1<<4
 #define SYS_POWER_EXCEPTION_POWEROFF	1<<5
 #define V12_EXCEPTION_POWEROFF			1<<6
-#define BM1686_REBOOT_CMD				1<<7
+#define SG2042_REBOOT_CMD				1<<7
 
 #define WATCH_DOG 						1<<0
 #define TEST_INT						1<<1
@@ -57,6 +61,48 @@
 #define REG_I_VQPS18		0x43
 #define MCU_REG_MAX		0x44
 
+#define COLLECT_INTERVAL	25
+#define FILTER_DEPTH_SHIFT	2
+#define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
+#define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
+
+struct filter {
+	unsigned short data[FILTER_DEPTH];
+	unsigned long total;
+	unsigned long value;
+	int p;
+};
+
+static struct filter adc_averge_tab[16];
+
+static unsigned long filter_init(struct filter *f, unsigned long d)
+{
+	int i;
+
+	f->p = 0;
+	f->total = 0;
+	for (i = 0; i < FILTER_DEPTH; ++i) {
+		f->data[i] = d;
+		f->total += d;
+	}
+	return d;
+}
+
+static unsigned long filter_in(struct filter *f, unsigned long d)
+{
+	f->total -= f->data[f->p];
+	f->total += d;
+	f->data[f->p] = d;
+	f->p = (f->p + 1) & FILTER_DEPTH_MASK;
+	f->value = f->total >> FILTER_DEPTH_SHIFT;
+
+#ifdef FILTER_DISABLE
+	return d;
+#else
+	return f->value;
+#endif
+}
+
 struct mcu_ctx {
 	int set_idx;
 	int idx;
@@ -71,6 +117,7 @@ struct mcu_ctx {
 };
 
 static struct mcu_ctx mcu_ctx;
+static unsigned long last_time_collect;
 
 static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
 {
@@ -148,49 +195,49 @@ static uint8_t mcu_read(void *priv)
 		ret = ctx->int_mask[1];
 		break;
 	case REG_I_5V_ADC:
-		ret = adc_read_I_5V();
+		ret = adc_averge_tab[8].value;
 		break;
 	case REG_I_DDR_VDD_0V8:
-		ret = adc_read_I_DDR_VDD_0V8();
+		ret = adc_averge_tab[0].value;
 		break;
 	case REG_I_DDR01_VDDQ_1V2:
-		ret = adc_read_I_DDR01_VDDQ_1V2();
+		ret = adc_averge_tab[1].value;
 		break;
 	case REG_I_DDR23_VDDQ_1V2:
-		ret = adc_read_I_DDR23_VDDQ_1V2();
+		ret = adc_averge_tab[2].value;
 		break;
 	case REG_I_VDD_12V:
-		ret = adc_read_I_VDD_12V();
+		ret = adc_averge_tab[9].value;
 		break;
 	case REG_I_VDD_EMMC_1V8:
-		ret = adc_read_I_VDD_EMMC_1V8();
+		ret = adc_averge_tab[11].value;
 		break;
 	case REG_I_VDD_EMMC_3V3:
-		ret = adc_read_I_VDD_EMMC_3V3();
+		ret = adc_averge_tab[12].value;
 		break;
 	case REG_I_VDD_PCIE_C_0V8:
-		ret = adc_read_I_VDD_PCIE_C_0V8();
+		ret = adc_averge_tab[7].value;
 		break;
 	case REG_I_VDD_PCIE_D_0V8:
-		ret = adc_read_I_VDD_PCIE_D_0V8();
+		ret = adc_averge_tab[6].value;
 		break;
 	case REG_I_VDD_PCIE_H_1V8:
-		ret = adc_read_I_VDD_PCIE_H_1V8();
+		ret = adc_averge_tab[14].value;
 		break;
 	case REG_I_VDD_PLL_0V8:
-		ret = adc_read_I_VDD_PLL_0V8();
+		ret = adc_averge_tab[5].value;
 		break;
 	case REG_I_VDD_RGMII_1V8:
-		ret = adc_read_I_VDD_RGMII_1V8();
+		ret = adc_averge_tab[10].value;
 		break;
 	case REG_I_VDDC:
-		ret = adc_read_I_VDDC();
+		ret = adc_averge_tab[13].value;
 		break;
 	case REG_I_VDDIO18:
-		ret = adc_read_I_VDDIO18();
+		ret = adc_averge_tab[15].value;
 		break;
 	case REG_I_VQPS18:
-		ret = adc_read_I_VQPS18();
+		ret = adc_averge_tab[4].value;
 		break;
 	default:
 		ret = 0xff;
@@ -226,11 +273,38 @@ static struct i2c01_slave_op slave = {
 
 void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 {
+	int i;
 	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
 	mcu_ctx.critical_temp = 120;
 	mcu_ctx.repoweron_temp = 85;
 	slave.addr = 0x17;
 	i2c01_slave_register(i2c_slave_ctx, &slave);
+
+	for(i = 0; i < 16; ++i) {
+		filter_init(&adc_averge_tab[i], 0);
+	}
+
+	last_time_collect = tick_get();
+}
+
+void mcu_process(void)
+{
+	unsigned long current_time, adc_date;
+	int i;
+
+	current_time = tick_get();
+
+	if (current_time - last_time_collect > COLLECT_INTERVAL) {
+		for (i = 0; i < 16; ++i) {
+			adc_date = adc_read((unsigned long)i);
+			filter_in(&adc_averge_tab[i], adc_date);
+		}
+		last_time_collect = current_time;
+	}
+
+	if (mcu_ctx.cmd == 0)
+		return;
+	
 }
 
 uint8_t get_critical_action(void)
