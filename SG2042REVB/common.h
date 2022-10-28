@@ -9,6 +9,10 @@
 #define false 0
 #define true 1
 
+#define FLASH_SIZE	(256 * 1024)
+#define FLASH_PAGE_SIZE	(8 * 1024)
+#define FLASH_PAGE_MASK	(FLASH_PAGE_SIZE - 1)
+
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 #define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
 
@@ -26,12 +30,12 @@ uint8_t get_firmware_version(void);
 int get_work_mode(void);
 void board_init(void);
 uint8_t get_ddr_type(void);
-
+void set_board_type(uint8_t type);
 int get_board_temp(void);
 int get_soc_temp(void);
 void set_board_temp(int temp);
 void set_soc_temp(int temp);
-
+uint8_t get_board_type(void);
 void led_init(void);
 void led_on(void);
 void led_off(void);

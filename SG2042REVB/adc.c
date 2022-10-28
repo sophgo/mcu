@@ -16,16 +16,29 @@
 #define I_DDR01_VTT_0V6_CHANNEL	ADC_CHANNEL_9
 #define PCB_VRE0_CHANNEL	ADC_CHANNEL_10
 #define BOM_VER0_CHANNEL	ADC_CHANNEL_11
+#define I_VDD_12V_CHANNEL	ADC_CHANNEL_14
+#define I_5V_CHANNEL		ADC_CHANNEL_15
 
 static unsigned int pcb_ver;
+static unsigned int bom_ver;
 
 uint8_t get_pcb_version(void)
 {
 	return pcb_ver;
 }
 
+uint8_t get_bom_version(void)
+{
+	return bom_ver;
+}
+
+uint8_t get_hardware_version(void)
+{
+	return (pcb_ver << 4) | bom_ver;
+}
+
 /* channel: ADC_CHANNEL_x */
-static unsigned long adc_read(unsigned int channel)
+unsigned long adc_read(unsigned int channel)
 {
 	adc_regular_channel_config(ADC0, 0, channel, ADC_SAMPLETIME_55POINT5);
 
@@ -99,6 +112,7 @@ void adc_init(void)
 	timer_udelay(1);
 
 	pcb_ver = adc2ver(adc_read(PCB_VRE0_CHANNEL));
+	bom_ver = adc2ver(adc_read(BOM_VER0_CHANNEL));
 }
 
 unsigned long adc_read_I_DDR_VDD_0V8(void)

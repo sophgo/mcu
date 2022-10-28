@@ -34,6 +34,8 @@ static void system_uart_init(void)
 	gpio_init(GPIOD, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_5);
 	gpio_init(GPIOD, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, GPIO_PIN_6);
 
+	gpio_pin_remap_config(GPIO_USART1_REMAP, ENABLE);
+	
 	rcu_periph_clock_enable(RCU_USART1);
 	/* uart1 setup for debug messages */
 	usart_deinit(DEBUG_UART);
@@ -109,7 +111,7 @@ static void system_gpio_init(void)
 	/* GPIOD INPUT PINS */
 	pins = GPIO_PIN_14 | GPIO_PIN_15;
 	gpio_bit_reset(GPIOD, pins);
-	gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
+	gpio_init(GPIOD, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOE */
 	/* GPIOE OUTPUT PINS*/

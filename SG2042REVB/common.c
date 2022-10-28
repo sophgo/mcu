@@ -7,6 +7,7 @@
 #define MCU_SW_VER	0
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
+static uint8_t board_type;
 static uint8_t work_mode;
 
 static int board_temp, soc_temp;
@@ -39,6 +40,26 @@ uint8_t get_ddr_type(void)
 uint8_t get_firmware_version(void)
 {
 	return MCU_SW_VER;
+}
+
+char *get_board_type_name()
+{
+	switch (board_type) {
+	case SG2042REVB:
+		return "SG2042R EVB";
+	};
+	/* U means unknown type */
+	return "SG2042R-U";
+}
+
+void set_board_type(uint8_t type)
+{
+	board_type = type;
+}
+
+uint8_t get_board_type(void)
+{
+	return board_type;
 }
 
 void board_init(void)

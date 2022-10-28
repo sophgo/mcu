@@ -42,14 +42,14 @@ struct power_node const board_power_nodes[16] = {
 	  (unsigned long)EN_VDD_PLL_0V8_PIN},
 	 },
 
-	{"PG_DDR_VDD_0V8", NODE_TYPE_CHECK, 0,
-	 {(unsigned long)PG_DDR_VDD_0V8_PORT,
-	  (unsigned long)PG_DDR_VDD_0V8_PIN},
-	 },
-
 	{"EN_VDD_PCIE_H_1V8", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)EN_VDD_PCIE_H_1V8_PORT,
 	  (unsigned long)EN_VDD_PCIE_H_1V8_PIN},
+	 },
+
+	{"PG_DDR_VDD_0V8", NODE_TYPE_CHECK, 0,
+	 {(unsigned long)PG_DDR_VDD_0V8_PORT,
+	  (unsigned long)PG_DDR_VDD_0V8_PIN},
 	 },
 
 	{"EN_DDR01_VPP_2V5", NODE_TYPE_ENABLE, 1000,

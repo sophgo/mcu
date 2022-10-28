@@ -12,7 +12,7 @@
 /* in us */
 #define NODE_CHECK_TIMEOUT	(10 * 1000)
 
-static int power_is_on;
+int power_is_on;
 
 static int node_check(struct power_node const *node)
 {
@@ -132,6 +132,7 @@ void power_off(void)
 void power_init(void)
 {
 	led_set_frequency(LED_FREQ_ALWAYS_OFF);
+    power_is_on = false;
 }
 
 int power_status(void)
@@ -141,14 +142,14 @@ int power_status(void)
 
 int board_power_init(void)
 {
-	if (GPIO_CTL0(GPIOD) & BIT(14)) {
-		if (!power_is_on) {
+	if (gpio_get(GPIOC, BIT(13)) == 1) {
+		if (power_is_on == false) {
 			return power_on();
 		}
 	}
 
-	if (~(GPIO_CTL0(GPIOC) & BIT(13))) {
-		if (power_is_on) {
+	if (gpio_get(GPIOC, BIT(13)) == 0) {
+		if (power_is_on == true) {
 			power_off();
 			return 1;
 		}
