@@ -35,7 +35,6 @@ int get_board_temp(void);
 int get_soc_temp(void);
 void set_board_temp(int temp);
 void set_soc_temp(int temp);
-int get_ntc_tmp(void);
 char *get_board_type_name();
 uint8_t get_board_type(void);
 void led_init(void);

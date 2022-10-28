@@ -13,7 +13,7 @@
 #include <console.h>
 #include <stdio.h>
 #include <slave.h>
-#include <tmp451.h>
+#include <nct218.h>
 #include <mcu.h>
 #include <chip.h>
 
@@ -22,17 +22,20 @@ int main(void)
 	system_init();
 	debug("\nMANGO SG2042EVB\n");
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
+	led_init();
 	power_init();
 	board_power_init();
-	slave_init();
-	console_init();
 	chip_init();
+	slave_init();
+	nct218_init();
+	console_init();
 	set_board_type(SG2042EVB);
+	chip_enable();
 	while (1) {
 		board_power_init();
 		console_poll();
 		mcu_process();
-
+		nct218_process();
 	}
 	return 0;
 }

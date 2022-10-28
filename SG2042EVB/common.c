@@ -10,7 +10,7 @@
 static uint8_t board_type;
 static uint8_t work_mode;
 
-static int board_temp, soc_temp, ntc_temp;
+static int board_temp, soc_temp;
 
 int get_board_temp(void)
 {
@@ -60,11 +60,6 @@ void set_board_type(uint8_t type)
 uint8_t get_board_type(void)
 {
 	return board_type;
-}
-
-int get_ntc_tmp(void)
-{
-	return ntc_temp;
 }
 
 void board_init(void)

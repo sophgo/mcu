@@ -102,6 +102,31 @@ static void cmd_getmcutype(void *hint, int argc, char const *argv[])
 	printf("SG2042EVB\n");
 }
 
+static const char * const cmd_temp_usage =
+"temp\n"
+"	temp soc&board\n";
+
+static void cmd_temp(void *hint, int argc, char const *argv[])
+{
+	int boardtemp, soctemp;
+
+	boardtemp = get_board_temp();
+	soctemp = get_soc_temp();
+	if (argc == 1){
+		printf("soc temp = %d\tboard temp = %d\n", soctemp, boardtemp);
+	}else if (argc == 2){
+		if (strcmp(argv[1], "soc") == 0){
+			printf("soc temp = %d\n", soctemp);
+		}else if (strcmp(argv[1], "board") == 0){
+			printf("board temp = %d\n", boardtemp);
+		}
+		else
+			printf("get %s temp failed\n", argv[1]);
+	}else {
+		printf(cmd_temp_usage);
+	}
+}
+
 static const char * const cmd_query_usage =
 "query\n"
 "	query the result from sg2042evb\n";
@@ -146,6 +171,7 @@ static struct command command_list[] = {
 	{"poweron_rv", NULL, cmd_poweron_rv_usage, cmd_poweron_rv},
 	{"poweron_a53", NULL, cmd_poweron_a53_usage,cmd_poweron_a53},
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
+	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"query", NULL, cmd_query_usage, cmd_query},
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
 };

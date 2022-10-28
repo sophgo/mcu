@@ -5,7 +5,6 @@
 #include <i2c_slave.h>
 #include <i2c01_slave.h>
 #include <mcu.h>
-#include <tmp451.h>
 #include <slt.h>
 
 static struct i2c01_slave_ctx i2c0_slave_ctx;

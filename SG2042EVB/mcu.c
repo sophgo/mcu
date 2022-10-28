@@ -44,22 +44,37 @@
 #define TEST_INT						1<<1
 
 #define I_12V_ATX_L		0x28
-#define REG_I_5V_ADC		0x29
-#define REG_I_DDR_VDD_0V8		0x30
-#define REG_I_DDR01_VDDQ_1V2		0x31
-#define REG_I_DDR23_VDDQ_1V2		0x32
-#define REG_I_VDD_12V		0x33
-#define REG_I_VDD_EMMC_1V8		0x34
-#define REG_I_VDD_EMMC_3V3		0x35
-#define REG_I_VDD_PCIE_C_0V8		0x36
-#define REG_I_VDD_PCIE_D_0V8		0x37
-#define REG_I_VDD_PCIE_H_1V8		0x38
-#define REG_I_VDD_PLL_0V8		0x39
-#define REG_I_VDD_RGMII_1V8		0x40
-#define REG_I_VDDC		0x41
-#define REG_I_VDDIO18		0x42
-#define REG_I_VQPS18		0x43
-#define MCU_REG_MAX		0x44
+#define REG_I_5V_ADC_H		0x29
+#define REG_I_5V_ADC_L		0x30
+#define REG_I_DDR_VDD_0V8_H		0x31
+#define REG_I_DDR_VDD_0V8_L		0x32
+#define REG_I_DDR01_VDDQ_1V2_H		0x33
+#define REG_I_DDR01_VDDQ_1V2_L		0x34
+#define REG_I_DDR23_VDDQ_1V2_H		0x35
+#define REG_I_DDR23_VDDQ_1V2_L		0x36
+#define REG_I_VDD_12V_H		0x37
+#define REG_I_VDD_12V_L		0x38
+#define REG_I_VDD_EMMC_1V8_H		0x39
+#define REG_I_VDD_EMMC_1V8_L		0x40
+#define REG_I_VDD_EMMC_3V3_H		0x41
+#define REG_I_VDD_EMMC_3V3_L		0x42
+#define REG_I_VDD_PCIE_C_0V8_H		0x43
+#define REG_I_VDD_PCIE_C_0V8_L		0x44
+#define REG_I_VDD_PCIE_D_0V8_H		0x45
+#define REG_I_VDD_PCIE_D_0V8_L		0x46
+#define REG_I_VDD_PCIE_H_1V8_H		0x47
+#define REG_I_VDD_PCIE_H_1V8_L		0x48
+#define REG_I_VDD_PLL_0V8_H		0x49
+#define REG_I_VDD_PLL_0V8_L		0x50
+#define REG_I_VDD_RGMII_1V8_H		0x51
+#define REG_I_VDD_RGMII_1V8_L		0x52
+#define REG_I_VDDC_H		0x53
+#define REG_I_VDDC_L		0x54
+#define REG_I_VDDIO18_H		0x55
+#define REG_I_VDDIO18_L		0x56
+#define REG_I_VQPS18_H		0x57
+#define REG_I_VQPS18_L		0x58
+#define MCU_REG_MAX		0x59
 
 #define COLLECT_INTERVAL	25
 #define FILTER_DEPTH_SHIFT	2
@@ -180,7 +195,7 @@ static uint8_t mcu_read(void *priv)
 		ret = get_soc_temp();
 		break;
 	case REG_BOARD_TMP:
-		ret = get_ntc_tmp();
+		ret = get_board_temp();
 		break;
 	case REG_INT_STATUS1:
 		ret = ctx->int_status[0];
@@ -194,50 +209,95 @@ static uint8_t mcu_read(void *priv)
 	case REG_INT_MASK2:
 		ret = ctx->int_mask[1];
 		break;
-	case REG_I_5V_ADC:
-		ret = adc_averge_tab[8].value;
+	case REG_I_5V_ADC_H:
+		ret = (adc_averge_tab[8].value >> 8);
 		break;
-	case REG_I_DDR_VDD_0V8:
-		ret = adc_averge_tab[0].value;
+	case REG_I_5V_ADC_L:
+		ret = (adc_averge_tab[8].value & 0xff);
 		break;
-	case REG_I_DDR01_VDDQ_1V2:
-		ret = adc_averge_tab[1].value;
+	case REG_I_DDR_VDD_0V8_H:
+		ret = (adc_averge_tab[0].value >> 8);
 		break;
-	case REG_I_DDR23_VDDQ_1V2:
-		ret = adc_averge_tab[2].value;
+	case REG_I_DDR_VDD_0V8_L:
+		ret = (adc_averge_tab[0].value & 0xff);
 		break;
-	case REG_I_VDD_12V:
-		ret = adc_averge_tab[9].value;
+	case REG_I_DDR01_VDDQ_1V2_H:
+		ret = (adc_averge_tab[1].value >> 8);
 		break;
-	case REG_I_VDD_EMMC_1V8:
-		ret = adc_averge_tab[11].value;
+	case REG_I_DDR01_VDDQ_1V2_L:
+		ret = (adc_averge_tab[1].value & 0xff);
 		break;
-	case REG_I_VDD_EMMC_3V3:
-		ret = adc_averge_tab[12].value;
+	case REG_I_DDR23_VDDQ_1V2_H:
+		ret = (adc_averge_tab[2].value >> 8);
 		break;
-	case REG_I_VDD_PCIE_C_0V8:
-		ret = adc_averge_tab[7].value;
+	case REG_I_DDR23_VDDQ_1V2_L:
+		ret = (adc_averge_tab[2].value & 0xff);
 		break;
-	case REG_I_VDD_PCIE_D_0V8:
-		ret = adc_averge_tab[6].value;
+	case REG_I_VDD_12V_H:
+		ret = (adc_averge_tab[9].value >> 8);
 		break;
-	case REG_I_VDD_PCIE_H_1V8:
-		ret = adc_averge_tab[14].value;
+	case REG_I_VDD_12V_L:
+		ret = (adc_averge_tab[9].value & 0xff);
 		break;
-	case REG_I_VDD_PLL_0V8:
-		ret = adc_averge_tab[5].value;
+	case REG_I_VDD_EMMC_1V8_H:
+		ret = (adc_averge_tab[11].value >> 8);
 		break;
-	case REG_I_VDD_RGMII_1V8:
-		ret = adc_averge_tab[10].value;
+	case REG_I_VDD_EMMC_1V8_L:
+		ret = (adc_averge_tab[11].value & 0xff);
 		break;
-	case REG_I_VDDC:
-		ret = adc_averge_tab[13].value;
+	case REG_I_VDD_EMMC_3V3_H:
+		ret = (adc_averge_tab[12].value >> 8);
 		break;
-	case REG_I_VDDIO18:
-		ret = adc_averge_tab[15].value;
+	case REG_I_VDD_EMMC_3V3_L:
+		ret = (adc_averge_tab[12].value & 0xff);
 		break;
-	case REG_I_VQPS18:
-		ret = adc_averge_tab[4].value;
+	case REG_I_VDD_PCIE_C_0V8_H:
+		ret = (adc_averge_tab[7].value >> 8);
+		break;
+	case REG_I_VDD_PCIE_C_0V8_L:
+		ret = (adc_averge_tab[7].value & 0xff);
+		break;
+	case REG_I_VDD_PCIE_D_0V8_H:
+		ret = (adc_averge_tab[6].value >> 8);
+		break;
+	case REG_I_VDD_PCIE_D_0V8_L:
+		ret = (adc_averge_tab[6].value & 0xff);
+		break;
+	case REG_I_VDD_PCIE_H_1V8_H:
+		ret = (adc_averge_tab[14].value >> 8);
+		break;
+	case REG_I_VDD_PCIE_H_1V8_L:
+		ret = (adc_averge_tab[14].value & 0xff);
+		break;
+	case REG_I_VDD_PLL_0V8_H:
+		ret = (adc_averge_tab[5].value >> 8);
+		break;
+	case REG_I_VDD_PLL_0V8_L:
+		ret = (adc_averge_tab[5].value & 0xff);
+		break;
+	case REG_I_VDD_RGMII_1V8_H:
+		ret = (adc_averge_tab[10].value >> 8);
+		break;
+	case REG_I_VDD_RGMII_1V8_L:
+		ret = (adc_averge_tab[10].value & 0xff);
+		break;
+	case REG_I_VDDC_H:
+		ret = (adc_averge_tab[13].value >> 8);
+		break;
+	case REG_I_VDDC_L:
+		ret = (adc_averge_tab[13].value & 0xff);
+		break;
+	case REG_I_VDDIO18_H:
+		ret = (adc_averge_tab[15].value >> 8);
+		break;
+	case REG_I_VDDIO18_L:
+		ret = (adc_averge_tab[15].value & 0xff);
+		break;
+	case REG_I_VQPS18_H:
+		ret = (adc_averge_tab[4].value >> 8);
+		break;
+	case REG_I_VQPS18_L:
+		ret = (adc_averge_tab[4].value & 0xff);
 		break;
 	default:
 		ret = 0xff;
