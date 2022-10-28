@@ -11,10 +11,12 @@
 #include <pin.h>
 #include <chip.h>
 #include <power.h>
+#include <mcu.h>
 #include <slt.h>
 
 static struct ecdc_console *console;
 extern int power_is_on;
+extern int is_print_enabled;
 
 static int console_getc(void *console_hint)
 {
@@ -95,7 +97,8 @@ static void cmd_poweron_a53(void *hint, int argc, char const *argv[])
 }
 
 static const char * const cmd_getmcutype_usage =
-"getmcutype\n";
+"getmcutype\n"
+"    get mcu's type\n";
 
 static void cmd_getmcutype(void *hint, int argc, char const *argv[])
 {
@@ -104,7 +107,7 @@ static void cmd_getmcutype(void *hint, int argc, char const *argv[])
 
 static const char * const cmd_temp_usage =
 "temp\n"
-"	temp soc&board\n";
+"    temp soc&board\n";
 
 static void cmd_temp(void *hint, int argc, char const *argv[])
 {
@@ -113,12 +116,12 @@ static void cmd_temp(void *hint, int argc, char const *argv[])
 	boardtemp = get_board_temp();
 	soctemp = get_soc_temp();
 	if (argc == 1){
-		printf("soc temp = %d\tboard temp = %d\n", soctemp, boardtemp);
+		printf("soc temp = %d(C)\tboard temp = %d(C)\n", soctemp, boardtemp);
 	}else if (argc == 2){
 		if (strcmp(argv[1], "soc") == 0){
-			printf("soc temp = %d\n", soctemp);
+			printf("soc temp = %d(C)\n", soctemp);
 		}else if (strcmp(argv[1], "board") == 0){
-			printf("board temp = %d\n", boardtemp);
+			printf("board temp = %d(C)\n", boardtemp);
 		}
 		else
 			printf("get %s temp failed\n", argv[1]);
@@ -129,12 +132,42 @@ static void cmd_temp(void *hint, int argc, char const *argv[])
 
 static const char * const cmd_query_usage =
 "query\n"
-"	query the result from sg2042evb\n";
+"    query the result from sg2042evb\n";
 
 static void cmd_query(void *hint, int argc, char const *argv[])
 {
 	uint16_t result = get_slt_result();
 	printf("0x%x\n", result);
+}
+
+static const char * const cmd_current_usage =
+"current\n"
+"    output current one time\n";
+
+static void cmd_current(void *hint, int argc, char const *argv[])
+{
+	current_print_func();
+}
+
+static const char * const cmd_enprint_usage =
+"enprint\n"
+"    enprint 0/1; 1:output current every second\n";
+
+static void cmd_enprint(void *hint, int argc, char const *argv[])
+{
+	if (argc == 1){
+		is_print_enabled = 1;
+	}else if (argc == 2){
+		if (strcmp(argv[1], "1") == 0){
+			is_print_enabled = 1;
+		}else if (strcmp(argv[1], "0") == 0){
+			is_print_enabled = 0;
+		}
+		else
+			printf("set enprint 0&1\n");
+	}else {
+		printf(cmd_enprint_usage);
+	}
 }
 
 static const char * const cmd_upgrade_usage =
@@ -169,10 +202,12 @@ static struct command command_list[] = {
 	{"poweron", NULL, cmd_poweron_usage, cmd_poweron},
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
 	{"poweron_rv", NULL, cmd_poweron_rv_usage, cmd_poweron_rv},
-	{"poweron_a53", NULL, cmd_poweron_a53_usage,cmd_poweron_a53},
+	{"poweron_a53", NULL, cmd_poweron_a53_usage, cmd_poweron_a53},
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"query", NULL, cmd_query_usage, cmd_query},
+	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},
+	{"current", NULL, cmd_current_usage, cmd_current},
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
 };
 
