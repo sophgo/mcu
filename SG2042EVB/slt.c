@@ -80,7 +80,7 @@ void slt_reset(void)
 	memset(&slt_ctx, 0, sizeof(struct slt_ctx));
 }
 
-uint16_t get_slt_result(void)
+uint16_t get_slt_result(int num)
 {
-	return (slt_ctx.reg[1] << 8) | slt_ctx.reg[0];
+	return (slt_ctx.reg[num + 1] << 8) | slt_ctx.reg[num];
 }

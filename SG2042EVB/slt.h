@@ -4,5 +4,5 @@
 
 void slt_init(struct i2c01_slave_ctx *i2c_slave_ctx);
 void slt_reset(void);
-uint16_t get_slt_result(void);
+uint16_t get_slt_result(int num);
 #endif

@@ -132,12 +132,28 @@ static void cmd_temp(void *hint, int argc, char const *argv[])
 
 static const char * const cmd_query_usage =
 "query\n"
-"    query the result from sg2042evb\n";
+"    query slt reg result\n"
+"    query (reg_num)\n";
 
 static void cmd_query(void *hint, int argc, char const *argv[])
 {
-	uint16_t result = get_slt_result();
-	printf("0x%x\n", result);
+	int reg = 0;
+	if (argc == 1){
+		for (reg = 0; reg < 6; reg += 2){
+			uint16_t result = get_slt_result(reg);
+			printf("reg%d&reg%d = 0x%04x\n", (reg + 1), reg, result);
+		}
+	}else if (argc == 2){
+		reg = atoi(argv[1]);
+		if (reg >= 64 || reg < 0){
+			printf("reg%d inexist\n",reg);
+		}else {
+			uint16_t result = get_slt_result(reg);
+			printf("reg%d&reg%d = 0x%04x\n", (reg + 1), reg, result);
+		}
+	}
+	else
+		printf(cmd_query_usage);
 }
 
 static const char * const cmd_current_usage =
