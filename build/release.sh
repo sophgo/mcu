@@ -1,5 +1,4 @@
-list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1686evb sc7pro
-	 sg2042evb sc7hp75 sg2042revb'
+list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1686evb sc7pro sc7hp75 sg2042evb sg2042revb wolfclaw'
 top="$PWD/.."
 
 unset rm
@@ -96,6 +95,10 @@ function version()
         ;;
     sg2042revb)
         dir="$top/SG2042REVB"
+        key_word='MCU_SW_VER'
+        ;;
+    wolfclaw)
+        dir="$top/WOLFCLAW"
         key_word='MCU_SW_VER'
         ;;
     esac

@@ -25,4 +25,6 @@
 #define SG2042EVB	0x80
 #define SG2042REVB  0x81
 
+#define WOLFCLAW	0xa0
+
 #endif

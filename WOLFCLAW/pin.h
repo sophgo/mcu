@@ -1,0 +1,109 @@
+#ifndef __PIN_H__
+#define __PIN_H__
+
+#include <gd32e50x_gpio.h>
+
+/* port A definition */
+#define USART1_TX_PORT		GPIOA
+#define USART1_TX_PIN		GPIO_PIN_2
+#define USART1_TX_EXTI		EXTI_2
+#define USART1_RX_PORT		GPIOA
+#define USART1_RX_PIN		GPIO_PIN_3
+#define USART1_RX_EXTI		EXTI_3
+
+#define KEY_PORT		GPIOA
+#define KEY_PIN		GPIO_PIN_8
+#define KEY_EXTI		EXTI_8
+
+#define USBDM_PORT		GPIOA
+#define USBDM_PIN		GPIO_PIN_11
+#define USBDM_EXTI		EXTI_11
+#define USBDP_PORT		GPIOA
+#define USBDP_PIN		GPIO_PIN_12
+#define USBDP_EXTI		EXTI_12
+
+#define SWDIO_PORT		GPIOA
+#define SWDIO_PIN		GPIO_PIN_13
+#define SWDIO_EXTI		EXTI_13
+#define SWCLK_PORT		GPIOA
+#define SWCLK_PIN		GPIO_PIN_14
+#define SWCLK_EXTI		EXTI_14
+
+/* port B definition */
+#define MCU_I2C0_SCL_PORT		GPIOB
+#define MCU_I2C0_SCL_PIN		GPIO_PIN_6
+#define MCU_I2C0_SCL_EXTI		EXTI_6
+#define MCU_I2C0_SDA_PORT		GPIOB
+#define MCU_I2C0_SDA_PIN		GPIO_PIN_7
+#define MCU_I2C0_SDA_EXTI		EXTI_7
+
+#define MCU_I2C1_SCL_PORT		GPIOB
+#define MCU_I2C1_SCL_PIN		GPIO_PIN_10
+#define MCU_I2C1_SCL_EXTI		EXTI_10
+#define MCU_I2C1_SDA_PORT		GPIOB
+#define MCU_I2C1_SDA_PIN		GPIO_PIN_11
+#define MCU_I2C1_SDA_EXTI		EXTI_11
+
+#define LED_4_1_PORT		GPIOB
+#define LED_4_1_PIN		GPIO_PIN_12
+#define LED_4_1_EXTI		EXTI_12
+#define LED_4_0_PORT		GPIOB
+#define LED_4_0_PIN		GPIO_PIN_13
+#define LED_4_0_EXTI		EXTI_13
+#define LED_3_1_PORT		GPIOB
+#define LED_3_1_PIN		GPIO_PIN_14
+#define LED_3_1_EXTI		EXTI_14
+#define LED_3_0_PORT		GPIOB
+#define LED_3_0_PIN		GPIO_PIN_15
+#define LED_3_0_EXTI		EXTI_15
+
+
+/* port C definition */
+#define SDIO_D0_PORT		GPIOC
+#define SDIO_D0_PIN		GPIO_PIN_8
+#define SDIO_D0_EXTI		EXTI_8
+#define SDIO_D1_PORT		GPIOC
+#define SDIO_D1_PIN		GPIO_PIN_9
+#define SDIO_D1_EXTI		EXTI_9
+#define SDIO_D2_PORT		GPIOC
+#define SDIO_D2_PIN		GPIO_PIN_10
+#define SDIO_D2_EXTI		EXTI_10
+#define SDIO_D3_PORT		GPIOC
+#define SDIO_D3_PIN		GPIO_PIN_11
+#define SDIO_D3_EXTI		EXTI_11
+
+#define SDIO_CLK_PORT		GPIOC
+#define SDIO_CLK_PIN		GPIO_PIN_12
+#define SDIO_CLK_EXTI		EXTI_12
+
+/* port D definition */
+#define SDIO_CMD_PORT		GPIOD
+#define SDIO_CMD_PIN		GPIO_PIN_2
+#define SDIO_CMD_EXTI		EXTI_2
+
+/* check sd whether insert*/
+#define SDIO_CD_X_PORT		GPIOD
+#define SDIO_CD_X_PIN		GPIO_PIN_4
+#define SDIO_CD_X_EXTI		EXTI_4
+
+#define USART2_TX_PORT		GPIOD
+#define USART2_TX_PIN		GPIO_PIN_8
+#define USART2_TX_EXTI		EXTI_8
+#define USART2_RX_PORT		GPIOD
+#define USART2_RX_PIN		GPIO_PIN_9
+#define USART2_RX_EXTI		EXTI_9
+
+#define LED_2_1_PORT		GPIOD
+#define LED_2_1_PIN		GPIO_PIN_10
+#define LED_2_1_EXTI		EXTI_10
+#define LED_2_0_PORT		GPIOD
+#define LED_2_0_PIN		GPIO_PIN_11
+#define LED_2_0_EXTI		EXTI_11
+#define LED_1_1_PORT		GPIOD
+#define LED_1_1_PIN		GPIO_PIN_12
+#define LED_1_1_EXTI		EXTI_12
+#define LED_1_0_PORT		GPIOD
+#define LED_1_0_PIN		GPIO_PIN_13
+#define LED_1_0_EXTI		EXTI_13
+
+#endif /* PIN_H */
