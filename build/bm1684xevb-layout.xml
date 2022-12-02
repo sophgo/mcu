@@ -9,7 +9,7 @@
 	<component>
 		<name>application</name>
 		<type>0</type>
-		<file>../BM1686EVB/build/BM1686EVB_APP.bin</file>
+		<file>../BM1684xEVB/build/BM1684xEVB_APP.bin</file>
 		<offset>0x8000</offset>
 	</component>
 	<component>
@@ -21,7 +21,7 @@
 	<component>
 		<name>loader</name>
 		<type>1</type>
-		<file>../BM1686EVB/build/BM1686EVB_LOADER.bin</file>
+		<file>../BM1684xEVB/build/BM1684xEVB_LOADER.bin</file>
 		<offset>0x0000</offset>
 	</component>
 </firmware>

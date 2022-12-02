@@ -1,4 +1,4 @@
-APP_ROOT = $(TOP)/BM1686EVB
+APP_ROOT = $(TOP)/BM1684xEVB
 UPGRADER_ROOT = $(TOP)/upgrader
 TOOLS = $(TOP)/tools
 PACK_ROOT = $(TOOLS)/pack
@@ -14,7 +14,7 @@ $(TARGET): FORCE
 	$(Q)cd $(PACK_ROOT) && make distclean && make
 	$(Q)cd $(UTILROOT) && make clean && make && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-amd64
 	$(Q)cd $(UTILROOT) && make clean && make CROSS_COMPILE=$(AARCH64_CROSS_COMPILE) && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-aarch64
-	$(Q)$(PACK) bm1686evb-layout.xml $@ $(E) && mv $@ $(OUTPUT)/
+	$(Q)$(PACK) bm1684xevb-layout.xml $@ $(E) && mv $@ $(OUTPUT)/
 
 clean: FORCE
 	$(Q)cd $(APP_ROOT) && make clean
