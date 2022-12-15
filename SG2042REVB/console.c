@@ -82,6 +82,31 @@ static void cmd_current(void *hint, int argc, char const *argv[])
 	current_print_func();
 }
 
+static const char * const cmd_temp_usage =
+"temp\n"
+"    temp soc&board\n";
+
+static void cmd_temp(void *hint, int argc, char const *argv[])
+{
+	int boardtemp, soctemp;
+
+	boardtemp = get_board_temp();
+	soctemp = get_soc_temp();
+	if (argc == 1){
+		printf("soc temp = %d(C)\tboard temp = %d(C)\n", soctemp, boardtemp);
+	}else if (argc == 2){
+		if (strcmp(argv[1], "soc") == 0){
+			printf("soc temp = %d(C)\n", soctemp);
+		}else if (strcmp(argv[1], "board") == 0){
+			printf("board temp = %d(C)\n", boardtemp);
+		}
+		else
+			printf("get %s temp failed\n", argv[1]);
+	}else {
+		printf(cmd_temp_usage);
+	}
+}
+
 static const char * const cmd_enprint_usage =
 "enprint\n"
 "    enprint 0/1; 1:output current every second\n";
@@ -135,6 +160,7 @@ static struct command command_list[] = {
 	{"poweron", NULL, cmd_poweron_usage, cmd_poweron},
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
+	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},
 	{"current", NULL, cmd_current_usage, cmd_current},
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
