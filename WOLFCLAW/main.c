@@ -23,11 +23,14 @@ void card_info_get(void);
 
 int main(void)
 {
-	sd_error_enum sd_error;
-	uint16_t i = 5;
+	// sd_error_enum sd_error;
+	// uint16_t i = 5;
 	FATFS SDC_FS;
 	FRESULT f_ret;
-	int isl68224_addr = 0x60;
+	int isl68224_addr = 0x50;
+	uint32_t file_0V90_addr = 0x8020000;
+	//uint32_t file_0V94_addr = 0x8024000;
+	int err;
 
 	system_init();
 	led_flash(2);
@@ -36,24 +39,78 @@ int main(void)
 	debug("\nHello WOLFCLAW User\n");
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	led_set_frequency(1);
-	i2c_master_init(I2C1);
 
-	nvic_config();
-	/* initialize the card */
-	do{
-		sd_error = sd_io_init();
-	}while((SD_OK != sd_error) && (--i));
+	// nvic_config();
+	// /* initialize the card */
+	// while(gpio_get(SDIO_CD_X_PORT, SDIO_CD_X_PIN)){
+	// 	printf("please insert sdcard\n");
+	// }
+	
+	// timer_mdelay(100);
 
-	if(i){
-		printf("\r\n Card init success!\r\n");
-		led_2_0_on();
-	}else{
-		printf("\r\n Card init failed!\r\n");
-		/* turn off LED2*/
-		led_2_1_on();
-		while (1){
-			;
+	// do{
+	// 	sd_error = sd_io_init();
+	// 	printf("waiting init sdcard,sd_err=%d\n", sd_error);
+	// }while((SD_OK != sd_error) && (--i));
+
+	// if(i){
+	// 	printf("\r\n Card init success!\r\n");
+	// 	led_2_0_on();
+	// }else{
+	// 	printf("\r\n Card init failed!\r\n");
+	// 	/* turn off LED2*/
+	// 	led_2_1_on();
+	// 	while (1){
+	// 		console_poll();
+	// 	}
+	// }
+
+	printf("68224 availiable nvm slots: %u\r\n", isl68224_get_nvm_slot_num(I2C1, isl68224_addr));
+	isl68224_get_device_id(I2C1, isl68224_addr);
+	isl68224_get_reversion_id(I2C1, isl68224_addr);
+
+	while (1){
+		if(gpio_get(GPIOA, GPIO_PIN_8) == 0){
+			timer_mdelay(1000);
+			if(gpio_get(GPIOA, GPIO_PIN_8) != 0){
+				printf("error press\n");
+			}else {
+					led_4_0_on();
+					isl68224_get_reversion_id(I2C1, isl68224_addr);
+					err = isl68224_program_from_mcuflash(I2C1, isl68224_addr, file_0V90_addr);
+					if (err){
+						led_2_0_on();
+					}else {
+						timer_mdelay(2000);
+						led_4_1_on();
+					}
+
+				// timer_mdelay(4000);
+				// if(gpio_get(GPIOA, GPIO_PIN_8) != 0){
+				// 	printf("burn 0.90V\n");
+				// 	led_4_0_on();
+				// 	isl68224_get_reversion_id(I2C1, isl68224_addr);
+				// 	err = isl68224_program_from_mcuflash(I2C1, isl68224_addr, file_0V90_addr);
+				// 	if (err){
+				// 		led_2_0_on();
+				// 		printf("program failed\n");
+				// 	}
+				// }else {
+				// 	printf("burn 0.94V\n");
+				// 	led_4_0_on();
+				// 	isl68224_get_reversion_id(I2C1, isl68224_addr);
+				// 	err = isl68224_program_from_mcuflash(I2C1, isl68224_addr, file_0V94_addr);
+				// 	if (err){
+				// 		led_2_0_on();
+				// 		printf("program failed\n");
+				// 	}
+				// }
+				while(gpio_get(GPIOA, GPIO_PIN_8) == 0) {
+					;
+				}
+			}
 		}
+	 	console_poll();
 	}
 
 	f_ret = f_mount(&SDC_FS, "0:", 1);
@@ -100,20 +157,24 @@ sd_error_enum sd_io_init(void)
 	}
 	status = sd_cardstatus_get(&cardstate);
 	if(cardstate & 0x02000000){
-		dbg_printf("\r\n the card is locked!");
+		printf("\r\n the card is locked!");
 		while (1){
 		}
 	}
 	if((SD_OK == status) && (!(cardstate & 0x02000000))){
 		/* set bus mode */
+		printf("[1]\n");
 		status = sd_bus_mode_config(SDIO_BUSMODE_4BIT);
-//		status = sd_bus_mode_config( SDIO_BUSMODE_1BIT );
+		// status = sd_bus_mode_config( SDIO_BUSMODE_1BIT );
+		printf("[2]\n");
 	}
 	if(SD_OK == status){
 		/* set data transfer mode */
-//		status = sd_transfer_mode_config( SD_DMA_MODE );
+		printf("[3]\n");
+		// status = sd_transfer_mode_config( SD_DMA_MODE );
 		status = sd_transfer_mode_config( SD_POLLING_MODE );
 	}
+	printf("status= %u\n", status);
 	return status;
 }
 

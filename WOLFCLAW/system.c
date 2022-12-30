@@ -67,13 +67,13 @@ static void system_gpio_init(void)
 
 	/* GPIOD */
 	/* GPIOD INPUT PINS */
-	pins = GPIO_PIN_2 | GPIO_PIN_8;
+	pins = GPIO_PIN_4 | GPIO_PIN_8;
 	gpio_init(GPIOD, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOD OUTPUT PINS*/
 	pins = GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13;
 	gpio_bit_reset(GPIOD, pins);
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
+	gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 }
 

@@ -38,6 +38,7 @@ OF SUCH DAMAGE.
 #include "gd32e50x_sdio.h"
 #include "gd32e50x_dma.h"
 #include <stddef.h>
+#include <stdio.h>
 
 /* card status of R1 definitions */
 #define SD_R1_OUT_OF_RANGE                  BIT(31)                   /* command's argument was out of the allowed range */
@@ -113,6 +114,7 @@ OF SUCH DAMAGE.
 uint32_t sd_scr[2] = {0,0};                                           /* content of SCR register */
 
 static sdio_card_type_enum cardtype = SDIO_STD_CAPACITY_SD_CARD_V1_1; /* SD card type */
+//static sdio_card_type_enum cardtype = SDIO_HIGH_CAPACITY_SD_CARD; /* SD card type */
 static uint32_t sd_csd[4] = {0,0,0,0};                                /* content of CSD register */
 static uint32_t sd_cid[4] = {0,0,0,0};                                /* content of CID register */
 static uint16_t sd_rca = 0;                                           /* RCA of SD card */
@@ -2281,6 +2283,12 @@ static sd_error_enum sd_scr_get(uint16_t rca, uint32_t *pscr)
             ++idx_scr;
         }
     }
+    // while(sdio_flag_get(SDIO_FLAG_DTCRCERR | SDIO_FLAG_DTTMOUT | SDIO_FLAG_RXORE | SDIO_FLAG_DTBLKEND | SDIO_FLAG_STBITE)){
+    //     if(RESET != sdio_flag_get(SDIO_FLAG_RXDTVAL)){
+    //         *(temp_scr + idx_scr) = sdio_data_read();
+    //         ++idx_scr;
+    //     }
+    // }
 
     /* check whether some error occurs */
     if(RESET != sdio_flag_get(SDIO_FLAG_DTCRCERR)){
@@ -2352,9 +2360,7 @@ static uint32_t sd_datablocksize_get(uint16_t bytesnumber)
 static void gpio_config(void)
 {
     /* configure the PB.8, PB.9, PC.6, PC.7, PC.8, PC.9, PC.10, PC.11, PC.12 and PD.2 */
-    gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_8 | GPIO_PIN_9);
-    gpio_init(GPIOC, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | 
-                                                         GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12);
+    gpio_init(GPIOC, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12);
     gpio_init(GPIOD, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_2);  
 }
 
@@ -2366,7 +2372,6 @@ static void gpio_config(void)
 */
 static void rcu_config(void)
 {
-    rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_GPIOC);
     rcu_periph_clock_enable(RCU_GPIOD);
     rcu_periph_clock_enable(RCU_AF);

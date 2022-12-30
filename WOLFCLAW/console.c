@@ -40,6 +40,69 @@ static void cmd_getmcutype(void *hint, int argc, char const *argv[])
 	printf("Wolfclaw\n");
 }
 
+static const char * const cmd_led_usage =
+"led\n"
+"    led [led_num] [led_status]\n"
+"    control led on/off\n";
+
+static void cmd_led(void *hint, int argc, char const *argv[])
+{
+	int led_num;
+
+	if (argc != 3){
+		printf("%s", cmd_led_usage);
+		return;
+	}
+
+	led_num = strtol(argv[1], NULL, 0);
+	switch (led_num)
+	{
+	case 1:
+		if(strcmp("on", argv[2]) == 0){
+			led_1_0_on();
+			printf("turn on led 1\n");
+		}else if(strcmp("off", argv[2]) == 0){
+			led_1_1_on();
+			printf("turn off led 1\n");
+		}else
+			printf("error input status\n");
+		break;
+	case 2:
+		if(strcmp("on", argv[2]) == 0){
+			led_2_0_on();
+			printf("turn on led 2\n");
+		}else if(strcmp("off", argv[2]) == 0){
+			led_2_1_on();
+			printf("turn off led 2\n");
+		}else
+			printf("error input status\n");
+		break;
+	case 3:
+		if(strcmp("on", argv[2]) == 0){
+			led_3_0_on();
+			printf("turn on led 3\n");
+		}else if(strcmp("off", argv[2]) == 0){
+			led_3_1_on();
+			printf("turn off led 3\n");
+		}else
+			printf("error input status\n");
+		break;
+
+	case 4:
+		if(strcmp("on", argv[2]) == 0){
+			led_4_0_on();
+			printf("turn on led 4\n");
+		}else if(strcmp("off", argv[2]) == 0){
+			led_4_1_on();
+			printf("turn off led 4\n");
+		}else
+			printf("error input status\n");
+		break;
+	default:
+		break;
+	}
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -51,6 +114,7 @@ static struct command command_list[] = {
 	{"help", NULL, NULL, cmd_help},
 	{"hello", NULL, NULL, cmd_hello},
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
+	{"led", NULL, cmd_led_usage, cmd_led},
 };
 
 void print_usage(struct command *cmd)

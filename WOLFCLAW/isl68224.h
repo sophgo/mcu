@@ -6,5 +6,5 @@ unsigned int isl68224_get_nvm_slot_num(int i2c, int addr);
 unsigned int isl68224_get_device_id(int i2c, int addr);
 unsigned int isl68224_get_reversion_id(int i2c, int addr);
 int isl68224_program(int i2c, int addr, char *name);
-
+int isl68224_program_from_mcuflash(int i2c, int slave_addr, uint32_t file_addr);
 #endif

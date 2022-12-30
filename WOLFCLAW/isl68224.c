@@ -259,3 +259,105 @@ free_buf:
 
 	return 0;
 }
+
+int isl68224_program_from_mcuflash(int i2c, int slave_addr, uint32_t file_addr)
+{
+	int i, j;
+	int err;
+	int tag, nb, cmd, pa, crc;
+	uint8_t line_buf[64];
+	int line_size;
+	uint32_t info_fsize = 15000;
+	uint8_t data_buf[32];
+	uint8_t write_buf[32];
+	int data_size;
+
+	for (i = 0; i < info_fsize; ++i) {
+		for (line_size = 0; i < info_fsize; ++i) {
+			if (line_size > sizeof(line_buf)) {
+				debug("\r\nhex string too long\r\n");
+				goto free_buf;
+			}
+
+			if ((*(volatile uint8_t *)(uint32_t)(file_addr + i)) == '\n')
+				break;
+			else if (isxdigit((*(volatile uint8_t *)(uint32_t)(file_addr + i))))
+				line_buf[line_size++] = (*(volatile uint8_t *)(uint32_t)(file_addr + i));
+		}
+
+		/* empty line */
+		if (line_size == 0)
+			continue;
+
+#if 0
+		debug("L: ");
+		for (int i = 0; i < line_size; ++i)
+			debug("%c", line_buf[i]);
+		debug("\n");
+#endif
+
+		if (line_size % 2) {
+			debug("\r\nwrong hex number per line\r\n");
+			goto free_buf;
+		}
+
+		/* convert hex string to binary */
+		for (j = 0; j < line_size; j += 2) {
+			data_buf[j / 2] = hex2bin(line_buf[j]) << 4 |
+				hex2bin(line_buf[j + 1]);
+		}
+		data_size = line_size / 2;
+
+		if (data_size < 2) {
+			debug("\r\nwrong format: line too short\r\n");
+			goto free_buf;
+		}
+
+		tag = data_buf[0];
+		nb = data_buf[1];
+
+		if (nb + 2 != data_size) {
+			debug("\r\nwrong format: invalid byte count, nb+2=%d, size=%d\r\n", nb+2, data_size);
+			goto free_buf;
+		}
+
+		if (tag != 0)
+			/* skip lines that shouldnot burn into device */
+			continue;
+
+		if (nb < 3) {
+			debug("\r\nwrong format: invalid byte count\r\n");
+			goto free_buf;
+		}
+
+		pa = data_buf[2];
+		cmd = data_buf[3];
+
+		/* ignore, we donnot use PEC */
+		crc = data_buf[data_size - 1];
+
+		debug("%02X", tag);
+		debug("%02X", nb);
+		debug("%02X", pa);
+		debug("%02X", cmd);
+
+		for (int i = 0; i < nb - 3; ++i) {
+			debug("%02X", data_buf[4 + i]);
+			write_buf[i] = data_buf[4 + i];
+		}
+
+		debug("%02X", crc);
+		debug("\r\n");
+
+		err = i2c_smbus_write_i2c_block_data(i2c, slave_addr, cmd, nb - 3, write_buf);
+		if(err) {
+			debug("i2c timeout\r\n");
+			goto free_buf;
+		}
+	}
+
+free_buf:
+	;
+
+	return err;
+}
