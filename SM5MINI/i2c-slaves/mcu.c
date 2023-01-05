@@ -18,6 +18,8 @@
 #include <pcie.h>
 #include <at24c128c-e2prom.h>
 
+#define EXT_LED_MAX		8
+
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
 #define REG_HW_VER		0x02
@@ -41,6 +43,8 @@
 #define REG_VOLTAGE_HI		0x27
 #define REG_CURRENT_LO		0x28
 #define REG_CURRENT_HI		0x29
+
+#define REG_LED_CTRL		0x30
 
 #define REG_STAGE		0x3c
 #define REG_SE6_BOARD_ID	0x3d	/* 8bit for se6 board id*/
@@ -131,6 +135,54 @@ void mcu_clear_interrupt(uint8_t interrupts)
 	mcu_ctx.int_status &= ~interrupts;
 	if (mcu_ctx.int_status == 0)
 		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
+}
+
+static struct {
+	int num;
+	struct {
+		int port, pin;
+	} pins[EXT_LED_MAX];
+} ext_led;
+
+int register_ext_led(int port, int pin)
+{
+	if (ext_led.num >= ARRAY_SIZE(ext_led.pins))
+		return -1;
+
+	ext_led.pins[ext_led.num].port = port;
+	ext_led.pins[ext_led.num].pin = pin;
+
+	gpio_clear(port, pin);
+	gpio_mode_setup(port, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN, pin);
+
+	++ext_led.num;
+
+	return 0;
+}
+
+static void set_ext_led_status(uint8_t data)
+{
+	int i;
+
+	for (i = 0; i < ext_led.num; ++i) {
+		if (data & (1 << i))
+			gpio_set(ext_led.pins[i].port, ext_led.pins[i].pin);
+		else
+			gpio_clear(ext_led.pins[i].port, ext_led.pins[i].pin);
+	}
+}
+
+static uint8_t get_ext_led_status(void)
+{
+	int tmp, i;
+	uint8_t status = 0xff;
+
+	for (i = 0; i < ext_led.num; ++i) {
+		tmp = gpio_get(ext_led.pins[i].port, ext_led.pins[i].pin);
+		status &= ~((tmp ? 0 : 1) << i);
+	}
+
+	return status;
 }
 
 void mcu_set_gp0(uint8_t data)
@@ -248,6 +300,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_GP0:
 		ctx->gp0 = data;
 		break;
+	case REG_LED_CTRL:
+		set_ext_led_status(data);
+		break;
 	case REG_EEPROM_OFFSET_LO:
 		ctx->eeprom_offset_l = data;
 		break;
@@ -346,6 +401,9 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_CURRENT_HI:
 		ret = (ctx->tmp >> 8) & 0xff;
+		break;
+	case REG_LED_CTRL:
+		ret = get_ext_led_status();
 		break;
 	case REG_STAGE:
 		ret = get_stage();

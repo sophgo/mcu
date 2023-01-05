@@ -25,5 +25,6 @@ int mcu_get_test_mode(void);
 void mcu_set_test_mode(int mode);
 void mcu_set_gp0(uint8_t data);
 bool mcu_get_se6_aiucore(void);
+int register_ext_led(int port, int pin);
 
 #endif

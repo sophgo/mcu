@@ -3,6 +3,7 @@
 #include <tca6416a.h>
 #include <tick.h>
 #include <loop.h>
+#include <mcu.h>
 
 /* count in ms */
 #define SM5_POWER_OFF_DELAY	5000
@@ -118,6 +119,9 @@ void sm5_init(void)
 	tca6416a_write(TCA6416A_P1_CFG, P1_CFG);
 	tca6416a_write(TCA6416A_P0_POL, P0_POL);
 	tca6416a_write(TCA6416A_P1_POL, P1_POL);
+
+	register_ext_led(MCU_UART1_TX_PORT, MCU_UART1_TX_PIN);
+	register_ext_led(MCU_UART1_RX_PORT, MCU_UART1_RX_PIN);
 
 	loop_add(sm5_process);
 }
