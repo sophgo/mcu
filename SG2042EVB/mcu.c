@@ -7,6 +7,7 @@
 #include <tick.h>
 #include <timer.h>
 #include <debug.h>
+#include <chip.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -74,7 +75,10 @@
 #define REG_I_VDDIO18_L		0x56
 #define REG_I_VQPS18_H		0x57
 #define REG_I_VQPS18_L		0x58
-#define MCU_REG_MAX		0x59
+#define REG_CRITICAL_ACTIONS		0x65
+#define REG_CTRITICAL_TEMP		0x66
+#define REG_REPOWERON_TEMP		0x67
+#define MCU_REG_MAX		0x68
 
 #define COLLECT_INTERVAL	25
 #define OUTPUT_CURRENT_INTERVAL	1000
@@ -169,6 +173,15 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_CMD:
 		ctx->cmd_tmp = data;
 		break;
+	case REG_CRITICAL_ACTIONS:
+		ctx->critical_action = data;
+		break;
+	case REG_REPOWERON_TEMP:
+		ctx->repoweron_temp = data;
+		break;
+	case REG_CTRITICAL_TEMP:
+		ctx->critical_temp = data;
+		break;
 	default:
 		break;
 	}
@@ -211,6 +224,16 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_INT_MASK2:
 		ret = ctx->int_mask[1];
+		break;
+	case REG_SOC_RST_TIMES:
+		ret = chip_reset_times() & 0xff;
+		break;
+	case REG_UPTIME_LO:
+		ctx->tmp = chip_uptime();
+		ret = ctx->tmp & 0xff;
+		break;
+	case REG_UPTIME_HI:
+		ret = (ctx->tmp >> 8) & 0xff;
 		break;
 	case REG_I_5V_H:
 		ret = (adc_averge_tab[8].value >> 8);
@@ -302,6 +325,15 @@ static uint8_t mcu_read(void *priv)
 	case REG_I_VQPS18_L:
 		ret = (adc_averge_tab[4].value & 0xff);
 		break;
+	case REG_CRITICAL_ACTIONS:
+		ret = ctx->critical_action;
+		break;
+	case REG_CTRITICAL_TEMP:
+		ret = ctx->critical_temp;
+		break;
+	case REG_REPOWERON_TEMP:
+		ret = ctx->repoweron_temp;
+		break;
 	default:
 		ret = 0xff;
 		break;
@@ -378,37 +410,37 @@ void mcu_process(void)
 
 void current_print_func(void)
 {
-	int I_5V = adc_averge_tab[8].value * 1000 / 4096;
-	int I_DDR_VDD_0V8 = adc_averge_tab[0].value * 160 / 4096;
-	int I_DDR01_VDDQ_1V2 = adc_averge_tab[1].value * 2400 / 4096;
-	int I_DDR23_VDDQ_1V2 = adc_averge_tab[2].value * 2400 / 4096;
-	int I_VDD_12V = adc_averge_tab[9].value * 2400 / 4096;
-	int I_VDD_EMMC_1V8 = adc_averge_tab[11].value * 360 / 4096;
-	int I_VDD_EMMC_3V3 = adc_averge_tab[12].value * 660 / 4096;
-	int I_VDD_PCIE_C_0V8 = adc_averge_tab[7].value * 160 / 4096;
-	int I_VDD_PCIE_D_0V8 = adc_averge_tab[6].value * 160 / 4096;
-	int I_VDD_PCIE_H_1V8 = adc_averge_tab[14].value * 360 / 4096;
-	int I_VDD_PLL_0V8 = adc_averge_tab[5].value * 160 / 4096;
-	int I_VDD_RGMII_1V8 = adc_averge_tab[10].value * 360 / 4096;
-	int I_VDDC = adc_averge_tab[13].value * 1600 / 4096;
-	int I_VDDIO18 = adc_averge_tab[15].value * 360 / 4096;
-	int I_VQPS18 = adc_averge_tab[4].value * 360 / 4096;
-
-	printf("I_5V = %d(A)\n", I_5V);
-	printf("I_DDR_VDD_0V8 = %d(A)\n", I_DDR_VDD_0V8);
-	printf("I_DDR01_VDDQ_1V2 = %d(A)\n", I_DDR01_VDDQ_1V2);
-	printf("I_DDR23_VDDQ_1V2 = %d(A)\n", I_DDR23_VDDQ_1V2);
-	printf("I_VDD_12V = %d(A)\n", I_VDD_12V);
-	printf("I_VDD_EMMC_1V8 = %d(A)\n", I_VDD_EMMC_1V8);
-	printf("I_VDD_EMMC_3V3 = %d(A)\n", I_VDD_EMMC_3V3);
-	printf("I_VDD_PCIE_C_0V8 = %d(A)\n", I_VDD_PCIE_C_0V8);
-	printf("I_VDD_PCIE_D_0V8 = %d(A)\n", I_VDD_PCIE_D_0V8);
-	printf("I_VDD_PCIE_H_1V8 = %d(A)\n", I_VDD_PCIE_H_1V8);
-	printf("I_VDD_PLL_0V8 = %d(A)\n", I_VDD_PLL_0V8);
-	printf("I_VDD_RGMII_1V8 = %d(A)\n", I_VDD_RGMII_1V8);
-	printf("I_VDDC = %d(A)\n", I_VDDC);
-	printf("I_VDDIO18 = %d(A)\n", I_VDDIO18);
-	printf("I_VQPS18 = %d(A)\n", I_VQPS18);
+	int V_5V = adc_averge_tab[8].value * 3300 / 4096;
+	int V_DDR_VDD_0V8 = adc_averge_tab[0].value * 3300 / 4096;
+	int V_DDR01_VDDQ_1V2 = adc_averge_tab[1].value * 3300 / 4096;
+	int V_DDR23_VDDQ_1V2 = adc_averge_tab[2].value * 3300 / 4096;
+	int V_VDD_12V = adc_averge_tab[9].value * 3300 / 4096;
+	int V_VDD_EMMC_1V8 = adc_averge_tab[11].value * 3300 / 4096;
+	int V_VDD_EMMC_3V3 = adc_averge_tab[12].value * 3300 / 4096;
+	int V_VDD_PCIE_C_0V8 = adc_averge_tab[7].value * 3300 / 4096;
+	int V_VDD_PCIE_D_0V8 = adc_averge_tab[6].value * 3300 / 4096;
+	int V_VDD_PCIE_H_1V8 = adc_averge_tab[14].value * 3300 / 4096;
+	int V_VDD_PLL_0V8 = adc_averge_tab[5].value * 3300 / 4096;
+	int V_VDD_RGMII_1V8 = adc_averge_tab[10].value * 3300 / 4096;
+	int V_VDDC = adc_averge_tab[13].value * 3300 / 4096;
+	int V_VDDIO18 = adc_averge_tab[15].value * 3300 / 4096;
+	int V_VQPS18 = adc_averge_tab[4].value * 3300 / 4096;
+	printf("V_5V = %d(mV)\n", V_5V);
+	printf("V_DDR_VDD_0V8 = %d(mV)\n", V_DDR_VDD_0V8);
+	printf("V_DDR01_VDDQ_1V2 = %d(mV)\n", V_DDR01_VDDQ_1V2);
+	printf("V_DDR23_VDDQ_1V2 = %d(mV)\n", V_DDR23_VDDQ_1V2);
+	printf("V_VDD_12V = %d(mV)\n", V_VDD_12V);
+	printf("V_VDD_EMMC_1V8 = %d(mV)\n", V_VDD_EMMC_1V8);
+	printf("V_VDD_EMMC_3V3 = %d(A)\n", V_VDD_EMMC_3V3);
+	printf("V_VDD_PCIE_C_0V8 = %d(mV)\n", V_VDD_PCIE_C_0V8);
+	printf("V_VDD_PCIE_D_0V8 = %d(mV)\n", V_VDD_PCIE_D_0V8);
+	printf("V_VDD_PCIE_H_1V8 = %d(mV)\n", V_VDD_PCIE_H_1V8);
+	printf("V_VDD_PLL_0V8 = %d(mV)\n", V_VDD_PLL_0V8);
+	printf("V_VDD_RGMII_1V8 = %d(mV)\n", V_VDD_RGMII_1V8);
+	printf("V_VDDC = %d(mV)\n", V_VDDC);
+	printf("V_VDDIO18 = %d(mV)\n", V_VDDIO18);
+	printf("V_VQPS18 = %d(mV)\n", V_VQPS18);
+	printf("temp:soc:%d Cel board:%d Cel\n", get_soc_temp(), get_board_temp());
 }
 
 uint8_t get_critical_action(void)

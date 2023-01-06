@@ -66,6 +66,101 @@ static void software_reset(void)
 	nct218_ctx.rptr = nct218_ctx.wptr = &(nct218_ctx.map[0].value);
 }
 
+static void nct218_match(void *priv, int dir)
+{
+	if (dir == I2C_SLAVE_WRITE)
+		nct218_ctx.set_ptr = 1;
+}
+
+static void nct218_write(void *priv, uint8_t data)
+{
+	if (nct218_ctx.set_ptr) {
+		nct218_ctx.set_ptr = 0;
+		switch (data){
+		case 0:
+			nct218_ctx.rptr = &(nct218_ctx.map[0].value);
+			nct218_ctx.wptr = NULL;
+			return;
+		case 1:
+			nct218_ctx.rptr = &(nct218_ctx.map[1].value);
+			nct218_ctx.wptr = NULL;
+			return;
+		}
+
+		struct nct218_reg *p;
+		for (p = nct218_ctx.map; p != nct218_ctx.map + NCT218_REG_MAX;
+		     ++p) {
+			if (p->rptr == data) {
+				nct218_ctx.rptr = &p->value;
+				if (p->rptr == p->wptr)
+					nct218_ctx.wptr = nct218_ctx.rptr;
+				return;
+			}
+			if (p->wptr == data) {
+				nct218_ctx.rptr = NULL;
+				nct218_ctx.wptr = &p->value;
+				return;
+			}
+		}
+		nct218_ctx.rptr = NULL;
+		nct218_ctx.wptr = NULL;
+		return;
+	}
+	if (nct218_ctx.wptr) {
+		*(nct218_ctx.wptr) = data;
+		return;
+	}
+	// error handling
+}
+
+static uint8_t real_temp_to_reg(int temp)
+{
+	int is_ex_mode = nct218_ctx.map[3].value & (1 << 2);
+	uint8_t reg;
+
+	if (is_ex_mode) {
+		if (temp < -64)
+			temp = -64;
+		else if (temp > 191)
+			temp = 191;
+
+		reg = temp + 64;
+	} else {
+		if (temp < 0)
+			reg = 0;
+		else if (temp > 127)
+			reg = 127;
+		else
+			reg = temp;
+	}
+	return reg;
+}
+
+static uint8_t nct218_read(void *priv)
+{
+	volatile uint8_t * volatile rptr = nct218_ctx.rptr;
+
+	if (rptr == &(nct218_ctx.map[0].value)) {
+		/* board */
+		return real_temp_to_reg(nct218_ctx.board);
+	} else if (rptr == &(nct218_ctx.map[1].value)) {
+		/* soc */
+		return real_temp_to_reg(nct218_ctx.soc);
+	} else if (rptr) {
+		return *(nct218_ctx.rptr);
+	}
+
+	// error handling
+	return 0;
+}
+
+static struct i2c01_slave_op nct218_slave = {
+	.addr = 0x6b,	/* nct218 common slave address */
+	.match = nct218_match,
+	.write = nct218_write,
+	.read = nct218_read,
+};
+
 #define NCT218_COLLECT_INTERVAL	2000
 #define NCT218_OVERTEMP_MAX	5
 
@@ -152,7 +247,7 @@ void nct218_process(void)
 	}
 }
 
-void nct218_init(void)
+void nct218_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 {
 	uint8_t tmp;
 
@@ -178,5 +273,6 @@ void nct218_init(void)
 
 	last_time = tick_get();
 	software_reset();
+	i2c01_slave_register(i2c_slave_ctx, &nct218_slave);
 }
 

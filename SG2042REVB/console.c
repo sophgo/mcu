@@ -12,10 +12,15 @@
 #include <power.h>
 #include <mcu.h>
 #include <chip.h>
+#include <slt.h>
 
 static struct ecdc_console *console;
 extern int power_is_on;
 extern int is_print_enabled;
+
+uint32_t sys_rst_pin_list[1][2] = {
+	{SYS_RST_X_H_PORT, SYS_RST_X_H_PIN},
+};
 
 static int console_getc(void *console_hint)
 {
@@ -92,19 +97,45 @@ static void cmd_temp(void *hint, int argc, char const *argv[])
 
 	boardtemp = get_board_temp();
 	soctemp = get_soc_temp();
-	if (argc == 1){
+	if (argc == 1) {
 		printf("soc temp = %d(C)\tboard temp = %d(C)\n", soctemp, boardtemp);
-	}else if (argc == 2){
+	} else if (argc == 2) {
 		if (strcmp(argv[1], "soc") == 0){
 			printf("soc temp = %d(C)\n", soctemp);
-		}else if (strcmp(argv[1], "board") == 0){
+		} else if (strcmp(argv[1], "board") == 0){
 			printf("board temp = %d(C)\n", boardtemp);
 		}
 		else
 			printf("get %s temp failed\n", argv[1]);
-	}else {
+	} else {
 		printf(cmd_temp_usage);
 	}
+}
+
+static const char * const cmd_query_usage =
+"query\n"
+"    query slt reg result\n"
+"    query (reg_num)\n";
+
+static void cmd_query(void *hint, int argc, char const *argv[])
+{
+	int reg = 0;
+	if (argc == 1) {
+		for (reg = 0; reg < 6; reg += 2){
+			uint16_t result = get_slt_result(reg);
+			printf("reg%d&reg%d = 0x%04x\n", (reg + 1), reg, result);
+		}
+	} else if (argc == 2) {
+		reg = atoi(argv[1]);
+		if (reg >= 64 || reg < 0) {
+			printf("reg%d inexist\n",reg);
+		} else {
+			uint16_t result = get_slt_result(reg);
+			printf("reg%d&reg%d = 0x%04x\n", (reg + 1), reg, result);
+		}
+	}
+	else
+		printf(cmd_query_usage);
 }
 
 static const char * const cmd_enprint_usage =
@@ -113,18 +144,40 @@ static const char * const cmd_enprint_usage =
 
 static void cmd_enprint(void *hint, int argc, char const *argv[])
 {
-	if (argc == 1){
+	if (argc == 1) {
 		is_print_enabled = 1;
-	}else if (argc == 2){
-		if (strcmp(argv[1], "1") == 0){
+	}else if (argc == 2) {
+		if (strcmp(argv[1], "1") == 0) {
 			is_print_enabled = 1;
-		}else if (strcmp(argv[1], "0") == 0){
+		} else if (strcmp(argv[1], "0") == 0) {
 			is_print_enabled = 0;
 		}
 		else
 			printf("set enprint 0&1\n");
 	}else {
 		printf(cmd_enprint_usage);
+	}
+}
+
+static const char * const cmd_sysrst_usage =
+"sysrst\n"
+"    sysrst 0/1\n"
+"    1: pull up sysrst pin\n"
+"    0: pull down sysrst pin\n";
+
+static void cmd_sysrst(void *hint, int argc, char const *argv[])
+{
+	if (argc != 2)
+		printf(cmd_sysrst_usage);
+	else {
+		if (strcmp(argv[1], "0") == 0) {
+			gpio_clear(sys_rst_pin_list[0][0], sys_rst_pin_list[0][1]);
+			printf("chip down\n");
+		} else if (strcmp(argv[1], "1") == 0) {
+			gpio_set(sys_rst_pin_list[0][0], sys_rst_pin_list[0][1]);
+			printf("chip up\n");
+		} else
+			printf("sysret 0&1\n");
 	}
 }
 
@@ -143,10 +196,6 @@ static void cmd_upgrade(void *hint, int argc, char const *argv[])
 	uart_upgrade_start();
 }
 
-uint32_t sys_rst_pin_list[1][2] = {
-	{SYS_RST_X_H_PORT, SYS_RST_X_H_PIN},
-};
-
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -161,8 +210,10 @@ static struct command command_list[] = {
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
+	{"query", NULL, cmd_query_usage, cmd_query},
 	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},
 	{"current", NULL, cmd_current_usage, cmd_current},
+	{"sysrst", NULL, cmd_sysrst_usage, cmd_sysrst},
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
 };
 

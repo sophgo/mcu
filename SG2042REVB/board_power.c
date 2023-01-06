@@ -5,7 +5,7 @@
 #include <common.h>
 #include <stdlib.h>
 
-struct power_node const board_power_nodes[16] = {
+struct power_node const board_power_nodes[17] = {
 
 	{"EN_VDD_3V3", NODE_TYPE_ENABLE, 10000,
 	 {(unsigned long)EN_VDD_3V3_PORT, (unsigned long)EN_VDD_3V3_PIN},
@@ -78,6 +78,10 @@ struct power_node const board_power_nodes[16] = {
 
 	{"SYS_RST_X_H", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)SYS_RST_X_H_PORT, (unsigned long)SYS_RST_X_H_PIN},
+	 },
+
+	{"PWR_BUTTON_H", NODE_TYPE_ENABLE, 1000,
+	 {(unsigned long)PWR_BUTTON_H_PORT, (unsigned long)PWR_BUTTON_H_PIN},
 	 },
 
 };

@@ -291,7 +291,7 @@ static uint8_t mcu_read(void *priv)
 		ret = get_soc_temp();
 		break;
 	case REG_BOARD_TMP:
-		ret = get_ntc_tmp();
+		ret = get_board_temp();
 		break;
 	case REG_INT_STATUS1:
 		ret = ctx->int_status[0];

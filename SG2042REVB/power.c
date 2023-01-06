@@ -140,15 +140,15 @@ int power_status(void)
 	return power_is_on;
 }
 
-int board_power_init(void)
+int board_power_control(void)
 {
-	if (gpio_get(GPIOC, BIT(13)) == 1) {
+	if (gpio_get(POWER_STATUS_PORT, POWER_STATUS_PIN) == 1) {
 		if (power_is_on == false) {
 			return power_on();
 		}
 	}
 
-	if (gpio_get(GPIOC, BIT(13)) == 0) {
+	if (gpio_get(POWER_STATUS_PORT, POWER_STATUS_PIN) == 0) {
 		if (power_is_on == true) {
 			power_off();
 			return 1;

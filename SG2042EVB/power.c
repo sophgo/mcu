@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <timer.h>
+#include <chip.h>
 
 /* in us */
 #define NODE_CHECK_TIMEOUT	(10 * 1000)
@@ -117,6 +118,7 @@ int power_on(void)
 		led_set_frequency(5);
 	} else {
 		led_set_frequency(1);
+		chip_enable();
 		power_is_on = true;
 	}
 
@@ -141,16 +143,16 @@ int power_status(void)
 	return power_is_on;
 }
 
-int board_power_init(void)
+int board_power_control(void)
 {
-	if ((gpio_get(GPIOE, GPIO_PIN_14)) == 0) {
+	if ((gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN)) == 0) {
 		if (power_is_on == false) {
 			timer_udelay(1000);
 			return power_on();
 		}
 	}
 
-	if (gpio_get(GPIOE, GPIO_PIN_14) == 1) {
+	if (gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 1) {
 		if (power_is_on == true) {
 			power_off();
 			return 1;

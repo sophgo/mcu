@@ -24,15 +24,13 @@ int main(void)
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	led_init();
 	power_init();
-	board_power_init();
+	board_power_control();
 	chip_init();
 	slave_init();
-	nct218_init();
 	console_init();
 	set_board_type(SG2042EVB);
-	chip_enable();
 	while (1) {
-		board_power_init();
+		board_power_control();
 		console_poll();
 		mcu_process();
 		nct218_process();

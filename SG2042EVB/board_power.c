@@ -5,7 +5,13 @@
 #include <common.h>
 #include <stdlib.h>
 
-struct power_node const board_power_nodes[20] = {
+int sys_rst_assert_on(void);
+void sys_rst_assert_off(void);
+
+int sys_rst_deassert_on(void);
+void sys_rst_deassert_off(void);
+
+struct power_node const board_power_nodes[21] = {
 
 	{"EN_VDD_3V3", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)EN_VDD_3V3_PORT, (unsigned long)EN_VDD_3V3_PIN},
@@ -96,8 +102,13 @@ struct power_node const board_power_nodes[20] = {
 	 {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
 	 },
 
-	{"SYS_RST_X_H", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)SYS_RST_X_H_PORT, (unsigned long)SYS_RST_X_H_PIN},
+	{"SYS_RST_ASSERT", NODE_TYPE_FUNCTION, 30000,
+	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
+	 },
+
+	{"SYS_RST_DEASSERT", NODE_TYPE_FUNCTION, 30000,
+	 {(unsigned long)sys_rst_deassert_on,
+	  (unsigned long)sys_rst_deassert_off},
 	 },
 
 };

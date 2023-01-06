@@ -333,25 +333,26 @@ void mcu_process(void)
 
 void current_print_func(void)
 {
-	int I_DDR_VDD_0V8 = adc_averge_tab[0].value * 160 / 4096;
-	int I_DDR01_VDDQ_1V2 = adc_averge_tab[1].value * 240 / 4096;
-	int I_VDD_EMMC_1V8 = adc_averge_tab[2].value * 360 / 4096;
-	int I_VDD_EMMC_3V3 = adc_averge_tab[3].value * 660 / 4096;
-	int I_VDD_PLL_0V8 = adc_averge_tab[7].value * 160 / 4096;
-	int I_DDR01_VPP_2V5 = adc_averge_tab[8].value * 500 / 4096;
-	int I_DDR01_VTT_0V6 = adc_averge_tab[9].value * 120 / 4096;
-	int I_VDD_12V = adc_averge_tab[14].value * 2400 / 4096;
-	int I_5V = adc_averge_tab[15].value * 1000 / 4096;
+	int V_DDR_VDD_0V8 = adc_averge_tab[0].value * 3300 / 4096;
+	int V_DDR01_VDDQ_1V2 = adc_averge_tab[1].value * 3300 / 4096;
+	int V_VDD_EMMC_1V8 = adc_averge_tab[2].value * 3300 / 4096;
+	int V_VDD_EMMC_3V3 = adc_averge_tab[3].value * 3300 / 4096;
+	int V_VDD_PLL_0V8 = adc_averge_tab[7].value * 3300 / 4096;
+	int V_DDR01_VPP_2V5 = adc_averge_tab[8].value * 3300 / 4096;
+	int V_DDR01_VTT_0V6 = adc_averge_tab[9].value * 3300 / 4096;
+	int V_VDD_12V = adc_averge_tab[14].value * 3300 / 4096;
+	int V_5V = adc_averge_tab[15].value * 3300 / 4096;
 
-	printf("I_DDR_VDD_0V8 = %d(A)\n", I_DDR_VDD_0V8);
-	printf("I_DDR01_VDDQ_1V2 = %d(A)\n", I_DDR01_VDDQ_1V2);
-	printf("I_VDD_EMMC_1V8 = %d(A)\n", I_VDD_EMMC_1V8);
-	printf("I_VDD_EMMC_3V3 = %d(A)\n", I_VDD_EMMC_3V3);
-	printf("I_VDD_PLL_0V8 = %d(A)\n", I_VDD_PLL_0V8);
-	printf("I_DDR01_VPP_2V5 = %d(A)\n", I_DDR01_VPP_2V5);
-	printf("I_DDR01_VTT_0V6 = %d(A)\n", I_DDR01_VTT_0V6);
-	printf("I_VDD_12V = %d(A)\n", I_VDD_12V);
-	printf("I_5V = %d(A)\n", I_5V);
+	printf("V_DDR_VDD_0V8 = %d(mV)\n", V_DDR_VDD_0V8);
+	printf("V_DDR01_VDDQ_1V2 = %d(mV)\n", V_DDR01_VDDQ_1V2);
+	printf("V_VDD_EMMC_1V8 = %d(mV)\n", V_VDD_EMMC_1V8);
+	printf("V_VDD_EMMC_3V3 = %d(mV)\n", V_VDD_EMMC_3V3);
+	printf("V_VDD_PLL_0V8 = %d(mV)\n", V_VDD_PLL_0V8);
+	printf("V_DDR01_VPP_2V5 = %d(mV)\n", V_DDR01_VPP_2V5);
+	printf("V_DDR01_VTT_0V6 = %d(mV)\n", V_DDR01_VTT_0V6);
+	printf("V_VDD_12V = %d(mV)\n", V_VDD_12V);
+	printf("V_5V = %d(mV)\n", V_5V);
+	printf("temp:soc:%d Cel board:%d Cel\n", get_soc_temp(), get_board_temp());
 }
 
 uint8_t get_critical_action(void)
