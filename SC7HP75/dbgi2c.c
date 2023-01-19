@@ -194,7 +194,7 @@ void dbgi2c_test(void)
 	uint32_t value = 0;
 	int err = 0;
 
-	for (i = 0; i < 8; ++i) {
+	for (i = 0; i < SOC_NUM; ++i) {
 		if (!chip_is_enabled()) {
 			printf("chip slot %d not enabled\n", i);
 			continue;
@@ -253,7 +253,7 @@ static void dbgi2c_collect(void)
 			      &((uint32_t *)dbgi2c_chip_map)[i]);
 	}
 
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < SOC_NUM; ++i) {
 		timer_udelay(100);
 		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(SOC_TEMP), &soc_temp[i]);
 		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(BOARD_TEMP),
@@ -300,7 +300,7 @@ static void dbgi2c_i2c_slave_write(void *priv, uint8_t data)
 static uint8_t dbgi2c_i2c_slave_read(void *priv)
 {
 	uint8_t data = 0;
-	int soc = ctx.soc % 4;
+	int soc = ctx.soc % SOC_NUM;
 
 	if (chip_is_enabled()) {
 		switch (ctx.idx) {

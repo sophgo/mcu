@@ -309,7 +309,7 @@ void mon_put_text(void)
 static void __maybe_unused broadcast(void)
 {
 	int isl68224_idx, isl68224_rail;
-
+	int n;
 	static int soc_idx;
 
 	/* broadcast to one soc per-timer */
@@ -320,6 +320,8 @@ static void __maybe_unused broadcast(void)
 		return;
 	}
 
+	n = (SOC_NUM % 2) && (soc_idx == SOC_NUM - 1) ? 1 : 2;
+
 	isl68224_rail = 0;
 	isl68224_idx = soc_idx / 2;
 
@@ -328,23 +330,23 @@ static void __maybe_unused broadcast(void)
 	dbgi2c_pkg.tpu.voltage =
 		pkg.isl68224[isl68224_idx].rail[isl68224_rail].voltage;
 	dbgi2c_pkg.tpu.current =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].current / 2;
+		pkg.isl68224[isl68224_idx].rail[isl68224_rail].current / n;
 	dbgi2c_pkg.tpu.power =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].power / 2;
+		pkg.isl68224[isl68224_idx].rail[isl68224_rail].power / n;
 
 	dbgi2c_pkg.vddc.voltage =
 		pkg.isl68224[isl68224_idx].rail[1].voltage;
 	dbgi2c_pkg.vddc.current =
-		pkg.isl68224[isl68224_idx].rail[1].current / 2;
+		pkg.isl68224[isl68224_idx].rail[1].current / n;
 	dbgi2c_pkg.vddc.power =
-		pkg.isl68224[isl68224_idx].rail[1].power / 2;
+		pkg.isl68224[isl68224_idx].rail[1].power / n;
 
 	dbgi2c_pkg.vdd_phy.voltage =
 		pkg.isl68224[isl68224_idx].rail[2].voltage;
 	dbgi2c_pkg.vdd_phy.current =
-		pkg.isl68224[isl68224_idx].rail[2].current / 2;
+		pkg.isl68224[isl68224_idx].rail[2].current / n;
 	dbgi2c_pkg.vdd_phy.power =
-		pkg.isl68224[isl68224_idx].rail[2].power / 2;
+		pkg.isl68224[isl68224_idx].rail[2].power / n;
 
 	dbgi2c_pkg.i12v_atx = get_i12v_atx();
 	dbgi2c_pkg.i12v_pcie = get_i12v_pcie();
@@ -352,7 +354,7 @@ static void __maybe_unused broadcast(void)
 
 	dbgi2c_broadcast(soc_idx, &dbgi2c_pkg);
 
-	soc_idx = (soc_idx + 1) & 0x03;
+	soc_idx = (soc_idx + 1) % SOC_NUM;
 }
 
 void mon_set_mode(int mode)

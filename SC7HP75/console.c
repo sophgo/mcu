@@ -333,6 +333,38 @@ static void cmd_vddc(void *hint, int argc, char const *argv[])
 	return;
 }
 
+static const char * const cmd_tpupower_usage =
+"tpupower [0/1]\n"
+"    0:tpu powerdown 1:tpu powerup\n";
+
+static void cmd_tpupower(void *hint, int argc, char const *argv[])
+{
+	int value;
+
+	if (argc != 2) {
+		printf("%s", cmd_tpupower_usage);
+		return;
+	}
+
+	value = strtol(argv[1], NULL, 0);
+	if (value == 0){
+		gpio_clear(TPU_PG_B12_PORT, TPU_PG_B12_PIN);
+		gpio_clear(TPU_PG_B34_PORT, TPU_PG_B34_PIN);
+		timer_mdelay(1);
+		gpio_clear(EN_VDD_TPU_B12_PORT, EN_VDD_TPU_B12_PIN);
+		gpio_clear(EN_VDD_TPU_B34_PORT, EN_VDD_TPU_B34_PIN);
+	}else if(value == 1){
+		gpio_set(EN_VDD_TPU_B12_PORT, EN_VDD_TPU_B12_PIN);
+		gpio_set(EN_VDD_TPU_B34_PORT, EN_VDD_TPU_B34_PIN);
+		timer_mdelay(1);
+		gpio_set(TPU_PG_B12_PORT, TPU_PG_B12_PIN);
+		gpio_set(TPU_PG_B34_PORT, TPU_PG_B34_PIN);
+	}else{
+		;
+	}
+	return;
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -355,6 +387,7 @@ static struct command command_list[] = {
 	{"tpu", NULL, cmd_tpu_usage, cmd_tpu},
 	{"vddc", NULL, NULL, cmd_vddc},
 	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
+	{"tpupower", NULL, cmd_tpupower_usage, cmd_tpupower},
 };
 
 void print_usage(struct command *cmd)

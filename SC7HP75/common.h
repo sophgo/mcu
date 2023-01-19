@@ -5,6 +5,7 @@
 #include <gd32e50x.h>
 
 #define MCU_SW_VER	0
+#define SOC_NUM	3
 
 #define false 0
 #define true 1
