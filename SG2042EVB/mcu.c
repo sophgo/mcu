@@ -8,6 +8,9 @@
 #include <timer.h>
 #include <debug.h>
 #include <chip.h>
+#include <common.h>
+#include <power.h>
+#include <upgrade.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -382,6 +385,12 @@ void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 	last_time_collect = last_time_output = tick_get();
 }
 
+#define CMD_POWER_OFF		0x02
+#define CMD_RESET		0x03	// drag reset pin
+#define CMD_REBOOT		0x07	// power off - power on
+#define CMD_UPDATE		0x08
+extern int power_is_on;
+
 void mcu_process(void)
 {
 	unsigned long current_time, adc_date;
@@ -403,8 +412,36 @@ void mcu_process(void)
 			last_time_output = current_time;
 		}
 	}
+
 	if (mcu_ctx.cmd == 0)
 		return;
+	i2c_disable(I2C1);
+	nvic_disable_irq(I2C1_EV_IRQn);
+	switch (mcu_ctx.cmd) {
+	case CMD_POWER_OFF:
+		power_off();
+		if (gpio_get(GPIOE, GPIO_PIN_14) == 0)
+			power_is_on = true;
+		timer_mdelay(500);
+		break;
+	case CMD_RESET:
+		chip_reset();
+		break;
+	case CMD_REBOOT:
+		chip_popd_reset_early();
+		set_needpoweron();
+		break;
+	case CMD_UPDATE:
+		nvic_enable_irq(I2C1_EV_IRQn);
+		i2c_upgrade_start();
+		break;
+	default:
+		break;
+	}
+	mcu_ctx.cmd = 0;
+	mcu_ctx.cmd_tmp = 0;
+	i2c_enable(I2C1);
+	nvic_enable_irq(I2C1_EV_IRQn);
 
 }
 
@@ -431,7 +468,7 @@ void current_print_func(void)
 	printf("V_DDR23_VDDQ_1V2 = %d(mV)\n", V_DDR23_VDDQ_1V2);
 	printf("V_VDD_12V = %d(mV)\n", V_VDD_12V);
 	printf("V_VDD_EMMC_1V8 = %d(mV)\n", V_VDD_EMMC_1V8);
-	printf("V_VDD_EMMC_3V3 = %d(A)\n", V_VDD_EMMC_3V3);
+	printf("V_VDD_EMMC_3V3 = %d(mV)\n", V_VDD_EMMC_3V3);
 	printf("V_VDD_PCIE_C_0V8 = %d(mV)\n", V_VDD_PCIE_C_0V8);
 	printf("V_VDD_PCIE_D_0V8 = %d(mV)\n", V_VDD_PCIE_D_0V8);
 	printf("V_VDD_PCIE_H_1V8 = %d(mV)\n", V_VDD_PCIE_H_1V8);

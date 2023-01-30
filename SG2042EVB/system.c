@@ -81,7 +81,7 @@ static void system_gpio_init(void)
 	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOC INPUT PINS */
-	pins = GPIO_PIN_6 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12
+	pins = GPIO_PIN_6 | GPIO_PIN_10 | GPIO_PIN_11
 		 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
 	gpio_init(GPIOC, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 

@@ -43,11 +43,10 @@ static const char * const cmd_poweron_usage =
 static void cmd_poweron(void *hint, int argc, char const *argv[])
 {
 	power_on();
-	chip_enable();
 	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
 		power_is_on = false;
 
-	printf("SG2042EVB OK\n");
+	printf("SG2042EVB POWER ON\n");
 }
 
 static const char * const cmd_poweroff_usage =
@@ -57,17 +56,31 @@ static const char * const cmd_poweroff_usage =
 static void cmd_poweroff(void *hint, int argc, char const *argv[])
 {
 	power_off();
-	slt_reset();
-	chip_disable();
 	if (gpio_get(GPIOE, GPIO_PIN_14) == 0)
 		power_is_on = true;
 	timer_mdelay(500);
 
-	printf("SG2042EVB OFF\n");
+	printf("SG2042EVB POWER OFF\n");
+}
+
+static const char * const cmd_reboot_usage =
+"reboot\n"
+"    reboot the sg2042evb\n";
+
+static void cmd_reboot(void *hint, int argc, char const *argv[])
+{
+	power_off();
+	timer_mdelay(500);
+	power_on();
+	chip_enable();
+	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
+		power_is_on = false;
+
+	printf("SG2042EVB REBOOT\n");
 }
 
 static const char * const cmd_poweron_rv_usage =
-"poweron\n"
+"poweron_rv\n"
 "    power on the riscv\n";
 
 static void cmd_poweron_rv(void *hint, int argc, char const *argv[])
@@ -82,7 +95,7 @@ static void cmd_poweron_rv(void *hint, int argc, char const *argv[])
 }
 
 static const char * const cmd_poweron_a53_usage =
-"poweron\n"
+"poweron_a53\n"
 "    power on the a53\n";
 
 static void cmd_poweron_a53(void *hint, int argc, char const *argv[])
@@ -96,13 +109,14 @@ static void cmd_poweron_a53(void *hint, int argc, char const *argv[])
 	printf("PWRON A53 OK\n");
 }
 
-static const char * const cmd_getmcutype_usage =
-"getmcutype\n"
-"    get mcu's type\n";
+static const char * const cmd_info_usage =
+"info\n"
+"    get information about board and mcu\n";
 
-static void cmd_getmcutype(void *hint, int argc, char const *argv[])
+static void cmd_info(void *hint, int argc, char const *argv[])
 {
-	printf("SG2042EVB\n");
+	printf("Board type: SG2042\n");
+	printf("PCB type: SG2042_EVB_V1_1\nMCU_SW_VER: %d\n", MCU_SW_VER);
 }
 
 static const char * const cmd_temp_usage =
@@ -217,9 +231,10 @@ static struct command command_list[] = {
 	{"hello", NULL, NULL, cmd_hello},
 	{"poweron", NULL, cmd_poweron_usage, cmd_poweron},
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
+	{"reboot", NULL, cmd_reboot_usage, cmd_reboot},
 	{"poweron_rv", NULL, cmd_poweron_rv_usage, cmd_poweron_rv},
 	{"poweron_a53", NULL, cmd_poweron_a53_usage, cmd_poweron_a53},
-	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
+	{"info", NULL, cmd_info_usage, cmd_info},
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"query", NULL, cmd_query_usage, cmd_query},
 	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},

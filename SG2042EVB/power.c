@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <timer.h>
 #include <chip.h>
+#include <slt.h>
 
 /* in us */
 #define NODE_CHECK_TIMEOUT	(10 * 1000)
@@ -127,6 +128,8 @@ int power_on(void)
 
 void power_off(void)
 {
+	slt_reset();
+	chip_disable();
 	power_is_on = false;
 	node_seqoff(board_power_nodes, ARRAY_SIZE(board_power_nodes));
 	led_set_frequency(LED_FREQ_ALWAYS_OFF);
