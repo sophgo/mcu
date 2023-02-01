@@ -10,6 +10,51 @@
 
 static unsigned int pcb_ver;
 static unsigned int bom_ver;
+static unsigned long current;
+
+#define COLLECT_INTERVAL	30
+
+#define FILTER_DEPTH_SHIFT	6
+#define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
+#define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
+
+struct filter {
+	unsigned short data[FILTER_DEPTH];
+	unsigned long total;
+	unsigned long value;
+	int p;
+};
+
+static unsigned long filter_init(struct filter *f, unsigned long d)
+{
+	int i;
+
+	f->p = 0;
+	f->total = 0;
+	for (i = 0; i < FILTER_DEPTH; ++i) {
+		f->data[i] = d;
+		f->total += d;
+	}
+	return d;
+}
+
+static unsigned long filter_in(struct filter *f, unsigned long d)
+{
+	f->total -= f->data[f->p];
+	f->total += d;
+	f->data[f->p] = d;
+	f->p = (f->p + 1) & FILTER_DEPTH_MASK;
+	f->value = f->total >> FILTER_DEPTH_SHIFT;
+
+#ifdef FILTER_DISABLE
+	return d;
+#else
+	return f->value;
+#endif
+}
+
+static unsigned long last_time_collect;
+static struct filter i12v;
 
 uint8_t get_pcb_version(void)
 {
@@ -24,6 +69,11 @@ uint8_t get_bom_version(void)
 uint8_t get_hardware_version(void)
 {
 	return (pcb_ver << 4) | bom_ver;
+}
+
+unsigned long get_current(void)
+{
+	return current;
 }
 
 /* channel: ADC_CHANNEL_x */
@@ -43,6 +93,13 @@ static unsigned long adc_read(unsigned int channel)
 	return adc_regular_data_read(ADC0);
 }
 
+unsigned long adc_read_i12v()
+{
+	unsigned long adc_data = adc_read(ADC_CHANNEL_4);
+
+	return (adc_data*11000/4096);
+}
+
 /* see config.xlsx, sheet adv2ver */
 const static unsigned short version_table[] = {
 	186, 658, 1207, 1759, 2340
@@ -55,6 +112,25 @@ static int adc2ver(unsigned short adc)
 		if (adc < version_table[i])
 			return i;
 	return i;
+}
+
+static void collect(void)
+{
+	/* get 12v current from adc */
+	current = filter_in(&i12v, adc_read_i12v());
+
+}
+
+void mon_progress(void)
+{
+	unsigned long current_time;
+
+	current_time = tick_get();
+
+	if (current_time - last_time_collect > COLLECT_INTERVAL) {
+		collect();
+		last_time_collect = current_time;
+	}
 }
 
 void mon_init(void)
@@ -91,5 +167,8 @@ void mon_init(void)
 
 	pcb_ver = adc2ver(adc_read(ADC_CHANNEL_0));
 	bom_ver = adc2ver(adc_read(ADC_CHANNEL_1));
-}
 
+	filter_init(&i12v, 0);
+	last_time_collect = tick_get();
+	loop_add(mon_progress);
+}

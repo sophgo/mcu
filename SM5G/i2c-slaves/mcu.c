@@ -35,6 +35,11 @@
 #define REG_MODE_FLAG		0x17
 #define REG_MCU_FAMILY		0x18
 
+#define REG_POWER_LO		0x24
+#define REG_POWER_HI		0x25
+#define REG_CURRENT_LO		0x28
+#define REG_CURRENT_HI		0x29
+
 #define REG_STAGE		0x3c
 #define REG_EEPROM_OFFSET_LO	0x3e	/* 16bit eeprom address, low 8bits */
 #define REG_EEPROM_OFFSET_HI	0x3f	/* 16bit eeprom address, high 8bits */
@@ -328,6 +333,20 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_MCU_FAMILY:
 		ret = MCU_FAMILY_GD32E50;
+		break;
+	case REG_POWER_LO:
+		ctx->tmp = get_current() * 12;
+		ret = ctx->tmp & 0xff;
+		break;
+	case REG_POWER_HI:
+		ret = (ctx->tmp >> 8) & 0xff;
+		break;
+	case REG_CURRENT_LO:
+		ctx->tmp = get_current();
+		ret = ctx->tmp & 0xff;
+		break;
+	case REG_CURRENT_HI:
+		ret = (ctx->tmp >> 8) & 0xff;
 		break;
 	case REG_STAGE:
 		ret = get_stage();
