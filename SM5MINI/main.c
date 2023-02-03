@@ -35,7 +35,7 @@
 
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
-
+extern uint8_t eeprom_model;
 int main(void)
 {
 	clock_init();
@@ -135,7 +135,10 @@ int main(void)
 			se5_init();
 		else if (get_board_type() == SM5SE6M) {
 			se6_init();
-			at24c128c_init(&i2c1_slave_ctx);
+			if (eeprom_model == EEPROM_IS_AT24C01D)
+				at24c01d_init(&i2c1_slave_ctx);
+			else
+				at24c128c_init(&i2c1_slave_ctx);
 		} else
 			sm5_init();
 	}

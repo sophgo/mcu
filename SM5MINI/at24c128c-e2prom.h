@@ -9,15 +9,19 @@
  *offset:0x42 --power off timer	2 bytes
  *
  */
-#define AT24C128C_EEPROM_SIZE   (256)
+#define AT24_EEPROM_SIZE   (256)
 #define AT24C128C_PAGE_SIZE	(64)
+#define AT24C01D_PAGE_SIZE  (8)
+
+#define EEPROM_IS_AT24C128C 0
+#define EEPROM_IS_AT24C01D 1
 
 #define PWROFF_TIMER_OFFSET_H	(0x42)
 #define PWROFF_TIMER_OFFSET_L	(0x43)
 
 bool is_se6ctrl_board(void);
 void at24c128c_init(struct i2c_slave_ctx *i2c);
-uint16_t at24c128c_get_pwroff_timer(void);
-int at24c128c_read_byte(void *priv, unsigned int offset);
+void at24c01d_init(struct i2c_slave_ctx *i2c);
+uint16_t at24_get_pwroff_timer(void);
 
 #endif
