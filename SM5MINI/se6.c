@@ -40,8 +40,6 @@
 #define SE6_PWR_ON_PORT		MCU_UART1_RX_PORT
 #define SE6_PWR_ON_PIN		MCU_UART1_RX_PIN
 
-uint8_t eeprom_model;
-
 #define POWROFF_TIMER_NO_CUSTOMIZED   (0xffff)
 enum {
 	KEY_NONE,
@@ -130,8 +128,7 @@ static void se6_wait_restart(void)
 	if (se6_restart.start == false)
 		return;
 	if (tick_get() - se6_restart.count > se6_restart.timer * 1000){
-		if (eeprom_model == EEPROM_IS_AT24C128C)
-			se6ctrl_();
+		se6ctrl_();
 		se6ctrl_clean_restart();
 	}
 }
@@ -148,8 +145,7 @@ static void se6ctrl_restart_do(void)
 {
 	if (se6_restart.start == true)
 		return;
-	if (eeprom_model == EEPROM_IS_AT24C128C)
-		kbd_set(REBOOT_KEY_PORT, REBOOT_KEY);
+	kbd_set(REBOOT_KEY_PORT, REBOOT_KEY);
 	se6_restart.count = tick_get();
 	se6_restart.start = true;
 }

@@ -23,7 +23,7 @@ static struct i2c_slave_op at24_slave = {
 
 static struct eeprom_ctx at24_eeprom;
 
-static inline int __at24c128c_read_ack(uint8_t offset, uint8_t *value)
+static inline int __at24c_read_ack(uint8_t offset, uint8_t *value)
 {
 	return (i2c_master_smbus_read_byte(I2C2, AT24_SLAVE_ADDR,
 					  1, offset, value));
@@ -120,17 +120,23 @@ uint16_t at24_get_pwroff_timer(void)
 bool is_se6ctrl_board(void)
 {
 	int ret = 0;
+	int times = 0;
 	unsigned char val;
 
-	ret = __at24c128c_read_ack(0x00, &val);
+	ret = __at24c_read_ack(0x00, &val);
 	if (ret != 0)
 		return false;
 
 	ret = at24c01d_write_byte(&at24_eeprom, 0x68, 0x5a);
+	/* eeprom write cycle time is 5ms*/
+	mdelay(5);
+	do {
+		mdelay(1);
+		times++;
+	} while ((__at24c_read_ack(0x00, &val) < 0) && (times < 10));
+	val = at24c01d_read_byte(&at24_eeprom, 0x68);
 
-	ret = at24c01d_read_byte(&at24_eeprom, 0x68);
-
-	if (ret == 0x5a)
+	if (val == 0x5a)
 		eeprom_model = EEPROM_IS_AT24C01D;
 	else
 		eeprom_model = EEPROM_IS_AT24C128C;
