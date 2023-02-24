@@ -11,6 +11,7 @@
 /* in us */
 #define NODE_CHECK_TIMEOUT	4000
 
+#if 0
 static int node_check(struct power_node const *node)
 {
 	int err = 0;
@@ -29,6 +30,13 @@ static int node_check(struct power_node const *node)
 
 	return err;
 }
+#else
+/* workaround, on some boards TPU power good may cannot be detected by MCU */
+static int node_check(struct power_node const *node)
+{
+	return 0;
+}
+#endif
 
 static int node_on(struct power_node *node)
 {
