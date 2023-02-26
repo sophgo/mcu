@@ -8,6 +8,7 @@
 #include <common.h>
 #include <upgrade.h>
 #include <timer.h>
+#include <adc.h>
 #include <pin.h>
 #include <chip.h>
 #include <power.h>
@@ -116,7 +117,9 @@ static const char * const cmd_info_usage =
 static void cmd_info(void *hint, int argc, char const *argv[])
 {
 	printf("Board type: SG2042\n");
-	printf("PCB type: SG2042_EVB_V1_1\nMCU_SW_VER: %d\n", MCU_SW_VER);
+	printf("PCB Version: %d\n", get_pcb_version());
+	printf("PCB type: SG2042_EVB_V1_1\n");
+	printf("MCU_SW_VER: %d\n", MCU_SW_VER);
 }
 
 static const char * const cmd_temp_usage =

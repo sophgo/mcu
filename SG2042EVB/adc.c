@@ -65,7 +65,7 @@ static unsigned long adc_averge_read(unsigned int channel)
 /* see config.xlsx, sheet adv2ver */
 static unsigned short version_table[] = {
 	50, 201, 364, 502, 645, 789, 921, 1066, 1220, 1414, 1586, 1829, 2053,\
-	2284, 2464, 2608, 2781, 2923, 3088, 3343, 3525, 3707, 3831, 4014
+	2284, 2464, 2608, 2781, 2923, 3088, 3343
 };
 
 static int adc2ver(unsigned short adc)
@@ -75,7 +75,8 @@ static int adc2ver(unsigned short adc)
 	for (i = 0; i < ARRAY_SIZE(version_table); ++i)
 		if (adc < version_table[i])
 			return i;
-	return i;
+
+	return 0;
 }
 
 void adc_init(void)
