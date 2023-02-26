@@ -4,7 +4,8 @@
 #include <i2c_master.h>
 
 enum {
-	PCA9848 = 0,
+	PCA9848_1 = 0,
+	PCA9848_2,
 	TCA9548A1,
 	TCA9548A_MAX,
 };

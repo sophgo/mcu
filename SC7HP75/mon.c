@@ -67,11 +67,11 @@ static unsigned long last_time_broadcast;
 static unsigned long last_time_collect;
 static int mon_mode = MON_MODE_NORMAL;
 static struct filter i12v;
-static struct filter mp5475_current[2][4];
-static struct filter mp5475_voltage[2][4];
-static struct filter isl68224_current[2][3];
-static struct filter isl68224_voltage[2][3];
-static struct filter isl68224_power[2][3];
+static struct filter mp5475_current[SOC_NUM][4];
+static struct filter mp5475_voltage[SOC_NUM][4];
+static struct filter isl68224_current[SOC_NUM][3];
+static struct filter isl68224_voltage[SOC_NUM][3];
+static struct filter isl68224_power[SOC_NUM][3];
 
 static struct {
 	uint8_t id;
@@ -85,15 +85,15 @@ static struct {
 			uint32_t voltage;
 			uint32_t current;
 		} buck[4];
-	} mp5475[2];
+	} mp5475[SOC_NUM];
 
 	struct {
 		struct {
 			uint32_t voltage;
 			uint32_t current;
 			uint32_t power;
-		} rail[3];
-	} isl68224[2];
+		} rail[2];
+	} isl68224[SOC_NUM];
 } __attribute__((packed)) __attribute__((aligned(4))) pkg;
 
 static struct dbgi2c_info __attribute__((aligned(4))) dbgi2c_pkg;
@@ -104,7 +104,7 @@ void mon_init(void)
 
 	filter_init(&i12v, 0);
 
-	for (i = 0; i < 2; ++i) {
+	for (i = 0; i < SOC_NUM; ++i) {
 		for (j = 0; j < 4; ++j) {
 			filter_init(&(mp5475_current[i][j]), 0);
 			filter_init(&(mp5475_voltage[i][j]), 0);
@@ -128,7 +128,7 @@ collect_mp5475(void)
 {
 	int i, j;
 
-	for (i = 0; i < 2; ++i) {
+	for (i = 0; i < SOC_NUM; ++i) {
 		for (j = 0; j < 4; ++j) {
 
 			pkg.mp5475[i].buck[j].current =
@@ -147,8 +147,8 @@ collect_isl68224(void)
 {
 	int i, j;
 
-	for (i = 0; i < 2; ++i) {
-		for (j = 0; j < 3; ++j) {
+	for (i = 0; i < SOC_NUM; ++i) {
+		for (j = 0; j < 2; ++j) {
 
 			pkg.isl68224[i].rail[j].current =
 				filter_in(&(isl68224_current[i][j]),
@@ -172,7 +172,7 @@ collect_tpu(void)
 
 	j = 0;
 
-	for (i = 0; i < 2; ++i) {
+	for (i = 0; i < SOC_NUM; ++i) {
 		pkg.isl68224[i].rail[j].current =
 			filter_in(&(isl68224_current[i][j]),
 				  isl68224_output_current(i, j));
@@ -271,7 +271,7 @@ static void mon_put_verbose(void)
 	mon_printf("12v current(mA): %lu\n", pkg.i12v);
 
 	mon_printf("{\n");
-	for (i = 0; i < 2; ++i) {
+	for (i = 0; i < SOC_NUM; ++i) {
 		mon_printf("\tmp5475%d:\n", i);
 		for (j = 0; j < 4; ++j) {
 			mon_printf("\t\tbuck%d ", j);
@@ -283,9 +283,9 @@ static void mon_put_verbose(void)
 	mon_printf("}\n");
 
 	mon_printf("{\n");
-	for (i = 0; i < 2; ++i) {
+	for (i = 0; i < SOC_NUM; ++i) {
 		mon_printf("\tisl68224%d:\n", i);
-		for (j = 0; j < 3; ++j) {
+		for (j = 0; j < 2; ++j) {
 			mon_printf("\t\trail%d ", j);
 			mon_printf("%lu (mV) %lu (mA) %lu (mW)\n",
 			       pkg.isl68224[i].rail[j].voltage,
@@ -309,7 +309,6 @@ void mon_put_text(void)
 static void __maybe_unused broadcast(void)
 {
 	int isl68224_idx, isl68224_rail;
-	int n;
 	static int soc_idx;
 
 	/* broadcast to one soc per-timer */
@@ -320,35 +319,25 @@ static void __maybe_unused broadcast(void)
 		return;
 	}
 
-	n = (SOC_NUM % 2) && (soc_idx == SOC_NUM - 1) ? 1 : 2;
-
 	isl68224_rail = 0;
-	isl68224_idx = soc_idx / 2;
+	isl68224_idx = soc_idx;
 
 	dbgi2c_pkg.id = pkg.id;
 	dbgi2c_pkg.i12v = pkg.i12v;
 	dbgi2c_pkg.tpu.voltage =
 		pkg.isl68224[isl68224_idx].rail[isl68224_rail].voltage;
 	dbgi2c_pkg.tpu.current =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].current / n;
+		pkg.isl68224[isl68224_idx].rail[isl68224_rail].current;
 	dbgi2c_pkg.tpu.power =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].power / n;
+		pkg.isl68224[isl68224_idx].rail[isl68224_rail].power;
 
 	dbgi2c_pkg.vddc.voltage =
 		pkg.isl68224[isl68224_idx].rail[1].voltage;
 	dbgi2c_pkg.vddc.current =
-		pkg.isl68224[isl68224_idx].rail[1].current / n;
+		pkg.isl68224[isl68224_idx].rail[1].current;
 	dbgi2c_pkg.vddc.power =
-		pkg.isl68224[isl68224_idx].rail[1].power / n;
+		pkg.isl68224[isl68224_idx].rail[1].power;
 
-	dbgi2c_pkg.vdd_phy.voltage =
-		pkg.isl68224[isl68224_idx].rail[2].voltage;
-	dbgi2c_pkg.vdd_phy.current =
-		pkg.isl68224[isl68224_idx].rail[2].current / n;
-	dbgi2c_pkg.vdd_phy.power =
-		pkg.isl68224[isl68224_idx].rail[2].power / n;
-
-	dbgi2c_pkg.i12v_atx = get_i12v_atx();
 	dbgi2c_pkg.i12v_pcie = get_i12v_pcie();
 	dbgi2c_pkg.i3v3_pcie = get_i3v3_pcie();
 

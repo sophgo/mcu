@@ -12,11 +12,11 @@
 #define REG_VOUT_COMMAND	0x21
 #define REG_PAGE	0x0
 
-static uint8_t isl68224_channel[2] = {1, 3};
+static uint8_t isl68224_channel[3] = {1, 5, 3};
 
 static inline void isl68224_select(int idx)
 {
-	pca9848_set(PCA9848, 1 << isl68224_channel[idx]);
+	pca9848_set(PCA9848_1, 1 << isl68224_channel[idx]);
 }
 
 static inline int isl68224_read_byte(int idx, unsigned char cmd)

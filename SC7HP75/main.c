@@ -22,7 +22,7 @@ int main(void)
 	system_init();
 
 	debug("\nBITMAIN SOPHONE SC7HP75\n");
-	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
+	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	dbg_printf("bitmain\n");
 
 #ifndef STANDALONE

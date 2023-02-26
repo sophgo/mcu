@@ -4,161 +4,235 @@
 #include <common.h>
 #include <chip.h>
 #include <timer.h>
-int b12_vdd_1_8v_on(void)
+
+/* PMIC OUTA */
+int b1_vdd_1_8v_outa_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B12, 0);
+	mp5475_buck_on(MP5475B1, 0);
 	return 0;
 }
 
-void b12_vdd_1_8v_off(void)
+void b1_vdd_1_8v_outa_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B12, 0);
+	mp5475_buck_off(MP5475B1, 0);
 }
 
-int b34_vdd_1_8v_on(void)
+int b2_vdd_1_8v_outa_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B34, 0);
+	mp5475_buck_on(MP5475B2, 0);
 	return 0;
 }
 
-void b34_vdd_1_8v_off(void)
+void b2_vdd_1_8v_outa_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B34, 0);
+	mp5475_buck_off(MP5475B2, 0);
 }
 
-int b12_vddq_outc_on(void)
+int b3_vdd_1_8v_outa_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B12, 2);
+	mp5475_buck_on(MP5475B3, 0);
 	return 0;
 }
 
-void b12_vddq_outc_off(void)
+void b3_vdd_1_8v_outa_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B12, 2);
+	mp5475_buck_off(MP5475B3, 0);
 }
 
-int b34_vddq_outc_on(void)
+/* PMIC OUTC */
+int b1_ddr_vddq_outc_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B34, 2);
+	mp5475_buck_on(MP5475B1, 2);
 	return 0;
 }
 
-void b34_vddq_outc_off(void)
+void b1_ddr_vddq_outc_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B34, 2);
+	mp5475_buck_off(MP5475B1, 2);
 }
 
-int b12_vddq_outd_on(void)
+int b2_ddr_vddq_outc_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B12, 3);
+	mp5475_buck_on(MP5475B2, 2);
 	return 0;
 }
 
-void b12_vddq_outd_off(void)
+void b2_ddr_vddq_outc_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B12, 3);
+	mp5475_buck_off(MP5475B2, 2);
 }
 
-int b34_vddq_outd_on(void)
+int b3_ddr_vddq_outc_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B34, 3);
+	mp5475_buck_on(MP5475B3, 2);
 	return 0;
 }
 
-void b34_vddq_outd_off(void)
+void b3_ddr_vddq_outc_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B34, 3);
+	mp5475_buck_off(MP5475B3, 2);
 }
 
-int b12_vddqlp_on(void)
+/* PMIC OUTD */
+int b1_vdd_phy_outd_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B12, 1);
+	mp5475_buck_on(MP5475B1, 3);
 	return 0;
 }
 
-void b12_vddqlp_off(void)
+void b1_vdd_phy_outd_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B12, 1);
+	mp5475_buck_off(MP5475B1, 3);
 }
 
-int b34_vddqlp_on(void)
+int b2_vdd_phy_outd_on(void)
 {
 	/* add customer code here */
-	mp5475_buck_on(MP5475B34, 1);
+	mp5475_buck_on(MP5475B2, 3);
 	return 0;
 }
 
-void b34_vddqlp_off(void)
+void b2_vdd_phy_outd_off(void)
 {
 	/* add customer code here */
-	mp5475_buck_off(MP5475B34, 1);
+	mp5475_buck_off(MP5475B2, 3);
 }
 
-int  pmic_outa_on(void)
+int b3_vdd_phy_outd_on(void)
 {
 	/* add customer code here */
-	b12_vdd_1_8v_on();
-	b34_vdd_1_8v_on();
+	mp5475_buck_on(MP5475B3, 3);
+	return 0;
+}
+
+void b3_vdd_phy_outd_off(void)
+{
+	/* add customer code here */
+	mp5475_buck_off(MP5475B3, 3);
+}
+
+/* PMIC OUTB */
+int b1_ddr_vddqlp_outb_on(void)
+{
+	/* add customer code here */
+	mp5475_buck_on(MP5475B1, 1);
+	return 0;
+}
+
+void b1_ddr_vddqlp_outb_off(void)
+{
+	/* add customer code here */
+	mp5475_buck_off(MP5475B1, 1);
+}
+
+int b2_ddr_vddqlp_outb_on(void)
+{
+	/* add customer code here */
+	mp5475_buck_on(MP5475B2, 1);
+	return 0;
+}
+
+void b2_ddr_vddqlp_outb_off(void)
+{
+	/* add customer code here */
+	mp5475_buck_off(MP5475B2, 1);
+}
+
+int b3_ddr_vddqlp_outb_on(void)
+{
+	/* add customer code here */
+	mp5475_buck_on(MP5475B3, 1);
+	return 0;
+}
+
+void b3_ddr_vddqlp_outb_off(void)
+{
+	/* add customer code here */
+	mp5475_buck_off(MP5475B3, 1);
+}
+
+int pmic_outa_on(void)
+{
+	/* add customer code here */
+	b1_vdd_1_8v_outa_on();
+	b2_vdd_1_8v_outa_on();
+	b3_vdd_1_8v_outa_on();
 
 	return 0;
 }
 
-void  pmic_outa_off(void)
+void pmic_outa_off(void)
 {
 	/* add customer code here */
-	b12_vdd_1_8v_off();
-	b34_vdd_1_8v_off();
+	b1_vdd_1_8v_outa_off();
+	b2_vdd_1_8v_outa_off();
+	b3_vdd_1_8v_outa_off();
 
 }
 
-int  pmic_outc_outd_on(void)
+int pmic_outd_on(void)
 {
 	/* add customer code here */
-	b12_vddq_outc_on();
-	b34_vddq_outc_on();
-	b12_vddq_outd_on();
-	b34_vddq_outd_on();
+	b1_vdd_phy_outd_on();
+	b2_vdd_phy_outd_on();
+	b3_vdd_phy_outd_on();
 	return 0;
 }
 
-void  pmic_outc_outd_off(void)
+void pmic_outd_off(void)
 {
 	/* add customer code here */
-	b12_vddq_outc_off();
-	b34_vddq_outc_off();
+	b1_vdd_phy_outd_off();
+	b2_vdd_phy_outd_off();
+	b3_vdd_phy_outd_off();
+}
 
-	b12_vddq_outd_off();
-	b34_vddq_outd_off();
+int pmic_outc_on(void)
+{
+	/* add customer code here */
+	b1_ddr_vddq_outc_on();
+	b2_ddr_vddq_outc_on();
+	b3_ddr_vddq_outc_on();
+	return 0;
+}
 
+void pmic_outc_off(void)
+{
+	/* add customer code here */
+	b1_ddr_vddq_outc_off();
+	b2_ddr_vddq_outc_off();
+	b3_ddr_vddq_outc_off();
 }
 
 int  pmic_outb_on(void)
 {
 	/* add customer code here */
-	b12_vddqlp_on();
-	b34_vddqlp_on();
+	b1_ddr_vddqlp_outb_on();
+	b2_ddr_vddqlp_outb_on();
+	b3_ddr_vddqlp_outb_on();
 	return 0;
 }
 
 void  pmic_outb_off(void)
 {
 	/* add customer code here */
-	b12_vddqlp_off();
-	b34_vddqlp_off();
+	b1_ddr_vddqlp_outb_off();
+	b2_ddr_vddqlp_outb_off();
+	b3_ddr_vddqlp_outb_off();
 }
 
 int chip_deassert_n_on(void)
@@ -173,7 +247,6 @@ int chip_assert_n_on(void)
 	BN_SYS_RST_ENABLE(1);
 	BN_SYS_RST_ENABLE(2);
 	BN_SYS_RST_ENABLE(3);
-	BN_SYS_RST_ENABLE(4);
 
 	for (int i = 0; i < 90; i++)
 		timer_udelay(1000);

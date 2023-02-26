@@ -61,22 +61,27 @@ static void system_gpio_init(void)
 	gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
 
 	/* GPIOA */
+	/* GPIOA OUTPUT PINS*/
+	pins = GPIO_PIN_4 | GPIO_PIN_7 | GPIO_PIN_11;
+	gpio_bit_reset(GPIOA, pins);
+	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
+
 	/* GPIOA INPUT PINS */
-	gpio_init(GPIOA, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ,
-		  GPIO_PIN_13 | GPIO_PIN_14);
+	pins = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14\
+		 | GPIO_PIN_15;
+	gpio_init(GPIOA, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOA ANALOG*/
 	gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_2MHZ, GPIO_PIN_0);
 
 	/* GPIOB */
 	/* GPIOB OUTPUT PINS*/
-	pins = GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_9 | GPIO_PIN_12 | GPIO_PIN_13\
-		 | GPIO_PIN_14 | GPIO_PIN_15;
+	pins = GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14;
 	gpio_bit_reset(GPIOB, pins);
 	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOB INPUT PINS*/
-	gpio_init(GPIOB, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, GPIO_PIN_8);
+	gpio_init(GPIOB, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, GPIO_PIN_2 | GPIO_PIN_8 | GPIO_PIN_9);
 
 	/* GPIOB ANALOG */
 	gpio_init(GPIOB, GPIO_MODE_AIN, GPIO_OSPEED_2MHZ,
@@ -84,12 +89,12 @@ static void system_gpio_init(void)
 
 	/* GPIOC */
 	/* GPIOC OUTPUT PINS*/
-	pins = GPIO_PIN_10 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14;
+	pins = GPIO_PIN_5 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14;
 	gpio_bit_reset(GPIOC, pins);
 	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOC INPUT PINS */
-	pins = GPIO_PIN_2 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8;
+	pins = GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_7 | GPIO_PIN_8;
 	gpio_init(GPIOC, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 	/* ANALOG */
@@ -97,19 +102,20 @@ static void system_gpio_init(void)
 
 	/* GPIOD */
 	/* GPIOD OUTPUT PINS*/
-	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5\
-		 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9;
+	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4\
+		 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9\
+		 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
 	gpio_bit_reset(GPIOD, pins);
 	gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOE */
 	/* GPIOE OUTPUT PINS*/
-	pins = GPIO_PIN_5 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
+	pins = GPIO_PIN_5 | GPIO_PIN_14 | GPIO_PIN_15;
 	gpio_bit_reset(GPIOE, pins);
 	gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOE INPUT PINS*/
-	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_6;
+	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7;
 	gpio_init(GPIOE, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 }
@@ -128,6 +134,18 @@ static void system_i2c0_init(void)
 	i2c_deinit(I2C0);
 
 	i2c_master_init(I2C0);
+}
+
+static void system_i2c1_init(void)
+{
+	rcu_periph_clock_enable(RCU_I2C1);
+
+	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ,
+		  GPIO_PIN_10 | GPIO_PIN_11);
+
+	i2c_deinit(I2C1);
+
+	i2c_master_init(I2C1);
 }
 
 void system_i2c2_init(void)
@@ -165,6 +183,7 @@ void system_init(void)
 	system_gpio_init();
 	system_uart_init();
 	system_i2c0_init();
+	system_i2c1_init();
 	system_i2c2_init();
 	system_timer_init();
 	system_adc_init();

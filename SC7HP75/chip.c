@@ -50,7 +50,6 @@ void sys_rst_enable(void)
 	BN_SYS_RST_ENABLE(1);
 	BN_SYS_RST_ENABLE(2);
 	BN_SYS_RST_ENABLE(3);
-	BN_SYS_RST_ENABLE(4);
 
 	/* count from 0 when first time enabled */
 
@@ -66,7 +65,6 @@ void sys_rst_disable(void)
 	BN_SYS_RST_DISABLE(1);
 	BN_SYS_RST_DISABLE(2);
 	BN_SYS_RST_DISABLE(3);
-	BN_SYS_RST_DISABLE(4);
 
 }
 

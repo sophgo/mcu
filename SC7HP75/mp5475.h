@@ -2,8 +2,9 @@
 #define __MP5475_H__
 
 enum {
-	MP5475B12 = 0,
-	MP5475B34,
+	MP5475B1 = 0,
+	MP5475B2,
+	MP5475B3,
 	MP5475MAX,
 };
 

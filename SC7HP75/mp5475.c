@@ -12,11 +12,11 @@
 #define MP5475_SLAVE_ADDR	0x60
 #define I2C			I2C0
 
-static uint8_t mp5475_channel[2] = {2, 0};
+static uint8_t mp5475_channel[3] = {2, 4, 0};
 
 static inline void mp5475_select(int idx)
 {
-	pca9848_set(PCA9848, 1 << mp5475_channel[idx]);
+	pca9848_set(PCA9848_1, 1 << mp5475_channel[idx]);
 }
 
 static inline int mp5475_read_byte(int idx, unsigned char cmd)
@@ -94,7 +94,7 @@ int _mp5475_init(int idx)
 	mp5475_voltage_config(idx, 0, 1800);
 	mp5475_voltage_config(idx, 1, 600);
 	mp5475_voltage_config(idx, 2, 1100);
-	mp5475_voltage_config(idx, 3, 1100);
+	mp5475_voltage_config(idx, 3, 850);
 	return 0;
 }
 

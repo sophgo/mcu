@@ -15,13 +15,24 @@ void __weak pmic_outa_off(void)
 	/* add customer code here */
 }
 
-int __weak pmic_outc_outd_on(void)
+int __weak pmic_outd_on(void)
 {
 	/* add customer code here */
 	return 0;
 }
 
-void __weak pmic_outc_outd_off(void)
+void __weak pmic_outd_off(void)
+{
+	/* add customer code here */
+}
+
+int __weak pmic_outc_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak pmic_outc_off(void)
 {
 	/* add customer code here */
 }

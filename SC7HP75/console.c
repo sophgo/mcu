@@ -203,11 +203,10 @@ static void cmd_burn(void *hint, int argc, char const *argv[])
 	}
 }
 
-uint32_t sys_rst_pin_list[5][2] = {
+uint32_t sys_rst_pin_list[4][2] = {
 	{B1_SYS_RST_N_PORT, B1_SYS_RST_N_PIN},
 	{B2_SYS_RST_N_PORT, B2_SYS_RST_N_PIN},
 	{B3_SYS_RST_N_PORT, B3_SYS_RST_N_PIN},
-	{B4_SYS_RST_N_PORT, B4_SYS_RST_N_PIN},
 	{GPIOB, GPIO_PIN_0},
 };
 static void cmd_low(void *hint, int argc, char const *argv[])
@@ -262,7 +261,7 @@ static void cmd_close_pmic(void *hint, int argc, char const *argv[])
 	}
 
 	if (port >= 0 && bunk == -1) {
-		for (i = 0; i < 2; i++) {
+		for (i = 0; i < 3; i++) {
 			mp5475_buck_off(port, i);
 		}
 		printf("mp5475-%d close all bunk\n", port);
@@ -308,7 +307,7 @@ static void cmd_tpu(void *hint, int argc, char const *argv[])
 	}
 
 	value = strtol(argv[1], NULL, 0);
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < 3; i++) {
 		isl68224_set_out_voltage(i, 0, value);
 	}
 
@@ -326,7 +325,7 @@ static void cmd_vddc(void *hint, int argc, char const *argv[])
 	}
 
 	value = strtol(argv[1], NULL, 0);
-	for (i = 0; i < 2; i++) {
+	for (i = 0; i < 3; i++) {
 		isl68224_set_out_voltage(i, 1, value);
 	}
 
@@ -348,17 +347,21 @@ static void cmd_tpupower(void *hint, int argc, char const *argv[])
 
 	value = strtol(argv[1], NULL, 0);
 	if (value == 0){
-		gpio_clear(TPU_PG_B12_PORT, TPU_PG_B12_PIN);
-		gpio_clear(TPU_PG_B34_PORT, TPU_PG_B34_PIN);
+		gpio_clear(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
+		gpio_clear(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
+		gpio_clear(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
 		timer_mdelay(1);
-		gpio_clear(EN_VDD_TPU_B12_PORT, EN_VDD_TPU_B12_PIN);
-		gpio_clear(EN_VDD_TPU_B34_PORT, EN_VDD_TPU_B34_PIN);
+		gpio_clear(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
+		gpio_clear(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
+		gpio_clear(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
 	}else if(value == 1){
-		gpio_set(EN_VDD_TPU_B12_PORT, EN_VDD_TPU_B12_PIN);
-		gpio_set(EN_VDD_TPU_B34_PORT, EN_VDD_TPU_B34_PIN);
+		gpio_set(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
+		gpio_set(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
+		gpio_set(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
 		timer_mdelay(1);
-		gpio_set(TPU_PG_B12_PORT, TPU_PG_B12_PIN);
-		gpio_set(TPU_PG_B34_PORT, TPU_PG_B34_PIN);
+		gpio_set(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
+		gpio_set(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
+		gpio_set(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
 	}else{
 		;
 	}
