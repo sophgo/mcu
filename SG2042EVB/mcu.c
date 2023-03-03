@@ -10,6 +10,7 @@
 #include <chip.h>
 #include <common.h>
 #include <power.h>
+#include <project.h>
 #include <upgrade.h>
 
 #define REG_BOARD_TYPE		0x00
@@ -34,6 +35,8 @@
 #define RTC_DATE		0x11
 #define RTC_MONTH		0x12
 #define RTC_YEAR		0x13
+
+#define REG_MCU_FAMILY		0x18
 
 #define SG2042_TMP_OVER_REPORT			1<<0
 #define POWER_68127_TMP_OVER_REPORT		1<<1
@@ -81,7 +84,17 @@
 #define REG_CRITICAL_ACTIONS		0x65
 #define REG_CTRITICAL_TEMP		0x66
 #define REG_REPOWERON_TEMP		0x67
-#define MCU_REG_MAX		0x68
+
+#define REG_FLASH_CMD		0x63
+#define REG_FLASH_OFFSET	0x7c
+#define REG_FLASH_DATA		0x80
+#define REG_FLASH_FLUSH		0xff
+
+#define FLASH_CMD_UNLOCK	0x02
+#define FLASH_CMD_LOCK		0x03
+#define FLASH_CMD_ERASE		0x04
+
+#define MCU_REG_MAX		0x100
 
 #define COLLECT_INTERVAL	25
 #define OUTPUT_CURRENT_INTERVAL	1000
@@ -137,6 +150,10 @@ struct mcu_ctx {
 	uint8_t critical_action;
 	uint8_t	repoweron_temp;
 	uint8_t critical_temp;
+	uint8_t poweroff_reason;
+	uint8_t __attribute__((aligned(4))) flash_offset[4];
+	uint8_t __attribute__((aligned(4))) flash_data[128];
+	int flash_flush;
 };
 
 int is_print_enabled;
@@ -152,6 +169,61 @@ static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
 static inline void idx_inc(struct mcu_ctx *ctx)
 {
 	ctx->idx = (ctx->idx + 1) % MCU_REG_MAX;
+}
+
+static inline uint32_t flash_byte2u32(void *byte)
+{
+	uint8_t *p;
+
+	p = byte;
+	/* big endian */
+	return p[3] | (p[2] << 8) | (p[1] << 16) | (p[0] << 24);
+}
+
+static inline uint32_t flash_offset(struct mcu_ctx *ctx)
+{
+	return flash_byte2u32(ctx->flash_offset) + (ctx->idx - REG_FLASH_DATA);
+}
+
+static void flash_flush_data(struct mcu_ctx *ctx)
+{
+	uint32_t addr = FLASH_BASE + (flash_byte2u32(ctx->flash_offset) & ~(128 - 1));
+	uint32_t tmp;
+	int i;
+
+	for (i = 0; i < 128 / 4; ++i) {
+		tmp = ((uint32_t *)ctx->flash_data)[i];
+
+		if (tmp != 0xffffffff)
+			fmc_word_program(addr + i * 4, tmp);
+	}
+}
+
+static void flash_exec_cmd(struct mcu_ctx *ctx, int cmd)
+{
+	uint32_t offset;
+
+	switch (cmd) {
+	case FLASH_CMD_UNLOCK:
+		fmc_unlock();
+		break;
+	case FLASH_CMD_LOCK:
+		fmc_lock();
+		break;
+	case FLASH_CMD_ERASE:
+		offset = flash_byte2u32(ctx->flash_offset);
+		/* not page aligned */
+		if (offset & FLASH_PAGE_MASK)
+			break;
+
+		/* overflow */
+		if (offset >= FLASH_SIZE)
+			break;
+
+		fmc_page_erase(FLASH_BASE + offset);
+		break;
+	}
+	fmc_flag_clear(FMC_FLAG_END);
 }
 
 static void mcu_match(void *priv, int dir)
@@ -185,11 +257,36 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_CTRITICAL_TEMP:
 		ctx->critical_temp = data;
 		break;
+	case REG_FLASH_CMD:
+		flash_exec_cmd(ctx, data);
+		break;
+	case REG_FLASH_OFFSET + 0:
+		ctx->flash_offset[0] = data;
+		break;
+	case REG_FLASH_OFFSET + 1:
+		ctx->flash_offset[1] = data;
+		break;
+	case REG_FLASH_OFFSET + 2:
+		ctx->flash_offset[2] = data;
+		break;
+	case REG_FLASH_OFFSET + 3:
+		ctx->flash_offset[3] = data;
+		break;
+	case REG_FLASH_DATA ... REG_FLASH_FLUSH:
+		ctx->flash_data[ctx->idx - REG_FLASH_DATA] = data;
+		if (ctx->idx == REG_FLASH_FLUSH)
+			ctx->flash_flush = true;
+		break;
 	default:
 		break;
 	}
 
 	idx_inc(ctx);
+}
+
+static inline uint8_t flash_read_byte(struct mcu_ctx *ctx)
+{
+	return *(uint8_t *)(FLASH_BASE + flash_offset(ctx));
 }
 
 static uint8_t mcu_read(void *priv)
@@ -237,6 +334,11 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_UPTIME_HI:
 		ret = (ctx->tmp >> 8) & 0xff;
+		break;
+	case REG_POWEROFF_REASON:
+		ret = ctx->poweroff_reason;
+	case REG_MCU_FAMILY:
+		ret = MCU_FAMILY_GD32E50;
 		break;
 	case REG_I_5V_H:
 		ret = (adc_averge_tab[8].value >> 8);
@@ -337,6 +439,21 @@ static uint8_t mcu_read(void *priv)
 	case REG_REPOWERON_TEMP:
 		ret = ctx->repoweron_temp;
 		break;
+	case REG_FLASH_OFFSET + 0:
+		ret = ctx->flash_offset[0];
+		break;
+	case REG_FLASH_OFFSET + 1:
+		ret = ctx->flash_offset[1];
+		break;
+	case REG_FLASH_OFFSET + 2:
+		ret = ctx->flash_offset[2];
+		break;
+	case REG_FLASH_OFFSET + 3:
+		ret = ctx->flash_offset[3];
+		break;
+	case REG_FLASH_DATA ... REG_FLASH_FLUSH:
+		ret = flash_read_byte(ctx);
+		break;
 	default:
 		ret = 0xff;
 		break;
@@ -350,6 +467,11 @@ static void mcu_stop(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
 	ctx->cmd = ctx->cmd_tmp;
+
+	if (ctx->flash_flush) {
+		flash_flush_data(ctx);
+		ctx->flash_flush = false;
+	}
 }
 
 static void mcu_reset(void *priv)
@@ -375,6 +497,7 @@ void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
 	mcu_ctx.critical_temp = 120;
 	mcu_ctx.repoweron_temp = 85;
+	mcu_ctx.poweroff_reason = 0;
 	slave.addr = 0x17;
 	i2c01_slave_register(i2c_slave_ctx, &slave);
 
@@ -415,24 +538,27 @@ void mcu_process(void)
 
 	if (mcu_ctx.cmd == 0)
 		return;
-	i2c_disable(I2C1);
-	nvic_disable_irq(I2C1_EV_IRQn);
+	i2c_disable(I2C0);
+	nvic_disable_irq(I2C0_EV_IRQn);
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		power_off();
 		if (gpio_get(GPIOE, GPIO_PIN_14) == 0)
 			power_is_on = true;
 		timer_mdelay(500);
+		mcu_ctx.poweroff_reason = POWER_OFF_REASON_POWER_OFF;
 		break;
 	case CMD_RESET:
 		chip_reset();
+		mcu_ctx.poweroff_reason = POWER_OFF_REASON_RESET;
 		break;
 	case CMD_REBOOT:
 		chip_popd_reset_early();
 		set_needpoweron();
+		mcu_ctx.poweroff_reason = POWER_OFF_REASON_REBOOT;
 		break;
 	case CMD_UPDATE:
-		nvic_enable_irq(I2C1_EV_IRQn);
+		nvic_enable_irq(I2C0_EV_IRQn);
 		i2c_upgrade_start();
 		break;
 	default:
@@ -441,7 +567,7 @@ void mcu_process(void)
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
 	i2c_enable(I2C1);
-	nvic_enable_irq(I2C1_EV_IRQn);
+	nvic_enable_irq(I2C0_EV_IRQn);
 
 }
 

@@ -10,6 +10,7 @@ endif
 
 
 AARCH64_CROSS_COMPILE = aarch64-linux-gnu-
+RISCV64_CROSS_COMPILE = riscv64-unknown-linux-gnu-
 
 ifeq ($(strip $(V)), 1)
 	Q =

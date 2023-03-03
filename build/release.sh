@@ -160,6 +160,9 @@ function build_util()
         # build aarch64 util
         make clean && make CROSS_COMPILE=aarch64-linux-gnu-
         cp mcu-util $top/build/release/mcu-util-aarch64
+        # build riscv64 util
+        make clean && make CROSS_COMPILE=riscv64-unknown-linux-gnu-
+        cp mcu-util $top/build/release/mcu-util-riscv64
     popd
 }
 

@@ -67,6 +67,7 @@ static struct {
 	{"SC5H",	{SC5H, -1}},
 	{"SC5PRO",	{SC5PRO, -1}},
 	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA, -1}},
+	{"SG2042",	{SG2042EVB, -1}},
 };
 
 static const char *mcu_family_table[] = {"STM32L0", "GD32E50"};
