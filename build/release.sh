@@ -59,6 +59,10 @@ function version()
         dir="$top/LF1704_BM1684_SE5.X"
         key_word='SW_VERSION'
         ;;
+    se6v2pic16)
+        dir="$top/LF1704_BM1684_SE6V2.X"
+        key_word='SW_VERSION'
+        ;;
     sm5mini)
         dir="$top/SM5MINI"
         key_word='MCU_SW_VER'
