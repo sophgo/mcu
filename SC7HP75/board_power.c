@@ -62,7 +62,7 @@ struct power_node const board_power_nodes[33] = {
 	 },
 
 	{"P08_PG_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)P08_PG_B1_PORT, (unsigned long)P08_PG_B1_PIN},
+	 {(unsigned long)P08_PG_B2_PORT, (unsigned long)P08_PG_B2_PIN},
 	 },
 
 	{"P08_PG_B3", NODE_TYPE_ENABLE, 2000,
