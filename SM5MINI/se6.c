@@ -73,9 +73,21 @@ static inline void key_spin_unlock(void)
 	__enable_irq();
 }
 
-static uint16_t se6ctrl_get_pwrkey(void)
+static int se6ctrl_get_pwrkey_value(void)
 {
-	return gpio_get(SE6_PWR_KEY_PORT, SE6_PWR_KEY_PIN);
+	if (!gpio_get(SE6_PWR_KEY_PORT, SE6_PWR_KEY_PIN))
+		return 0;
+	return 1;
+}
+
+static int se6ctrl_is_pwrkey_pressed(void)
+{
+	static int key_release_value;
+
+	key_release_value = (get_eeprom_type() == AT24C128C ? 0 : 1);
+	if (se6ctrl_get_pwrkey_value() == key_release_value)
+		return 0;
+	return 1;
 }
 
 static void se6ctrl_set_keyvalue(uint16_t key)
@@ -88,10 +100,10 @@ static void se6ctrl_set_keyvalue(uint16_t key)
 
 static void se6ctrl_key_detect(void)
 {
-	if (!se6_pwerkey.key_need_release && (se6ctrl_get_pwrkey() != 0)) {
+	if ((!se6_pwerkey.key_need_release) && se6ctrl_is_pwrkey_pressed()) {
 		se6_pwerkey.key_pressed = true;
 		se6_pwerkey.press_cnt++;
-	} else if (se6ctrl_get_pwrkey() == 0) {
+	} else if (!se6ctrl_is_pwrkey_pressed()) {
 		se6_pwerkey.key_pressed = false;
 		se6_pwerkey.key_need_release = false;
 	}

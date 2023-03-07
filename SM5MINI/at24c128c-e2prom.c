@@ -100,13 +100,18 @@ int at24c128c_write_byte(void *priv, unsigned int offset, uint8_t data)
 	return 0;
 }
 
-uint8_t eeprom_model;
+static uint8_t eeprom_model;
+
+uint8_t get_eeprom_type(void)
+{
+	return eeprom_model;
+}
 
 uint16_t at24_get_pwroff_timer(void)
 {
 	uint16_t timer;
 
-	if (eeprom_model == EEPROM_IS_AT24C01D) {
+	if (eeprom_model == AT24C01D) {
 		timer = at24c01d_read_byte(&at24_eeprom, PWROFF_TIMER_OFFSET_L);
 		timer |= at24c01d_read_byte(&at24_eeprom, PWROFF_TIMER_OFFSET_H) << 8;
 	} else {
@@ -137,9 +142,9 @@ bool is_se6ctrl_board(void)
 	val = at24c01d_read_byte(&at24_eeprom, 0x68);
 
 	if (val == 0x5a)
-		eeprom_model = EEPROM_IS_AT24C01D;
+		eeprom_model = AT24C01D;
 	else
-		eeprom_model = EEPROM_IS_AT24C128C;
+		eeprom_model = AT24C128C;
 	return true;
 }
 

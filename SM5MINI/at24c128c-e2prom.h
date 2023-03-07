@@ -13,12 +13,13 @@
 #define AT24C128C_PAGE_SIZE	(64)
 #define AT24C01D_PAGE_SIZE  (8)
 
-#define EEPROM_IS_AT24C128C 0
-#define EEPROM_IS_AT24C01D 1
+#define AT24C128C 0
+#define AT24C01D 1
 
 #define PWROFF_TIMER_OFFSET_H	(0x42)
 #define PWROFF_TIMER_OFFSET_L	(0x43)
 
+uint8_t get_eeprom_type(void);
 bool is_se6ctrl_board(void);
 void at24c128c_init(struct i2c_slave_ctx *i2c);
 void at24c01d_init(struct i2c_slave_ctx *i2c);
