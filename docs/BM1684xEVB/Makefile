@@ -7,7 +7,7 @@ LANG := zh
 
 ifeq ($(LANG), zh)
 	SOURCEDIR     = .
-	pdf_name      = BM1684xEVB_MCU使用手册.pdf
+	pdf_name      = BM1684xEVB_MCU使用手册$(shell grep -o 'V[0-9][0-9]*\.[0-9][0-9]*' release.rst | tail -n 1).pdf
 else
 	echo unsupported language!
 	exit 1

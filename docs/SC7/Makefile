@@ -7,7 +7,7 @@ LANG := zh
 
 ifeq ($(LANG), zh)
 	SOURCEDIR     = .
-	pdf_name      = SC7系列使用手册.pdf
+	pdf_name      = SC7系列适配手册$(shell grep -o 'V[0-9][0-9]*\.[0-9][0-9]*' release.rst | tail -n 1).pdf
 else
 	echo unsupported language!
 	exit 1
