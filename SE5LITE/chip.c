@@ -13,6 +13,9 @@
 #include <tca6416a.h>
 #include <tmp451.h>
 #include <wol.h>
+#include <timer.h>
+
+#define BOOT_TEMP_LIMIT_LOW	3
 
 static uint32_t uptime;
 static uint32_t reset_times;
@@ -68,10 +71,12 @@ void chip_power_on_enable(void)
 	/* wait temperature greater than 0 */
 	tmp451_get_temp(&board, &soc);
 
-	while (board < 0) {
+	while (board < BOOT_TEMP_LIMIT_LOW) {
 		gpio_clear(THERMAL_OFF_PORT, THERMAL_OFF_PIN);
 		mdelay(1000);
 		tmp451_get_temp(&board, &soc);
+		if (board >= BOOT_TEMP_LIMIT_LOW)
+			timer_delay(90);
 	}
 
 	power_on();

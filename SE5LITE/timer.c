@@ -87,6 +87,17 @@ void timer_mdelay(unsigned long ms)
 		timer_udelay(1000);
 }
 
+void timer_delay(unsigned long s)
+{
+	unsigned long i;
+
+	if (s == 0)
+		return;
+
+	for (i = 0; i < s; ++i)
+		timer_mdelay(1000);
+}
+
 void timer_test(void)
 {
 #if 0
