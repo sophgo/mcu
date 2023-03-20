@@ -3,6 +3,7 @@
 #include <adc.h>
 #include <stdio.h>
 #include <i2c01_slave.h>
+#include <slave.h>
 #include <string.h>
 #include <tick.h>
 #include <timer.h>
@@ -538,12 +539,13 @@ void mcu_process(void)
 
 	if (mcu_ctx.cmd == 0)
 		return;
+
 	i2c_disable(I2C0);
 	nvic_disable_irq(I2C0_EV_IRQn);
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		power_off();
-		if (gpio_get(GPIOE, GPIO_PIN_14) == 0)
+		if (gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 0)
 			power_is_on = true;
 		timer_mdelay(500);
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_POWER_OFF;
@@ -554,6 +556,8 @@ void mcu_process(void)
 		break;
 	case CMD_REBOOT:
 		chip_popd_reset_early();
+		if (gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 0)
+			power_is_on = true;
 		set_needpoweron();
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_REBOOT;
 		break;
@@ -566,9 +570,8 @@ void mcu_process(void)
 	}
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
-	i2c_enable(I2C1);
-	nvic_enable_irq(I2C0_EV_IRQn);
-
+	i2c_enable(I2C0);
+	slave_init();
 }
 
 void current_print_func(void)

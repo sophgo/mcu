@@ -4,7 +4,7 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	2
+#define MCU_SW_VER	3
 
 #define false 0
 #define true 1
@@ -27,10 +27,8 @@ enum {
 };
 
 uint8_t get_firmware_version(void);
-int get_work_mode(void);
 void board_init(void);
 uint8_t get_ddr_type(void);
-void set_board_type(uint8_t type);
 int get_board_temp(void);
 int get_soc_temp(void);
 void set_board_temp(int temp);

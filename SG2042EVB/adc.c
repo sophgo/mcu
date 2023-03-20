@@ -31,6 +31,11 @@ uint8_t get_pcb_version(void)
 	return pcb_ver;
 }
 
+void set_pcb_version(uint8_t version)
+{
+	pcb_ver = version;
+}
+
 /* channel: ADC_CHANNEL_x */
 unsigned long adc_read(unsigned int channel)
 {

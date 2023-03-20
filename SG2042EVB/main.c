@@ -28,7 +28,7 @@ int main(void)
 	chip_init();
 	slave_init();
 	console_init();
-	set_board_type(SG2042EVB);
+	board_init();
 	while (1) {
 		board_power_control();
 		console_poll();

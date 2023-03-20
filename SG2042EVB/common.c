@@ -3,11 +3,11 @@
 #include <common.h>
 #include <pin.h>
 #include <tick.h>
+#include <adc.h>
 
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
-static uint8_t work_mode;
 
 static int board_temp, soc_temp;
 
@@ -51,7 +51,7 @@ char *get_board_type_name()
 	return "SG2042-U";
 }
 
-void set_board_type(uint8_t type)
+static void set_board_type(uint8_t type)
 {
 	board_type = type;
 }
@@ -63,15 +63,11 @@ uint8_t get_board_type(void)
 
 void board_init(void)
 {
-	/* donot probe twice */
-	if (work_mode)
-		return;
-	work_mode = 1;
-}
-
-int get_work_mode(void)
-{
-	return work_mode;
+	if (get_pcb_version() == 9) {
+		set_board_type(MILKV_PIONEER);
+		set_pcb_version(0);
+	} else
+		set_board_type(SG2042EVB);
 }
 
 void led_on(void)
