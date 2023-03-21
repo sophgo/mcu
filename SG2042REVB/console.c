@@ -13,6 +13,7 @@
 #include <mcu.h>
 #include <chip.h>
 #include <slt.h>
+#include <i2c_master.h>
 
 static struct ecdc_console *console;
 extern int power_is_on;
@@ -138,6 +139,65 @@ static void cmd_query(void *hint, int argc, char const *argv[])
 		printf(cmd_query_usage);
 }
 
+static const char * const cmd_i2cget_usage =
+"i2cget\n"
+"    I2C2: i2cget <device_addr> <reg_addr> <data_num:1/2>\n";
+
+static void cmd_i2cget(void *hint, int argc, char const *argv[])
+{
+	uint8_t device_addr;
+	uint8_t reg_addr;
+	int ret;
+	uint8_t tmp1;
+	uint16_t tmp2;
+
+	tmp1 = tmp2 = 0;
+
+	if (argc == 4) {
+		device_addr = atoi(argv[1]);
+		reg_addr = atoi(argv[2]);
+		printf("addr = 0x%02x 0x%02x\n", device_addr, reg_addr);
+		if (strcmp(argv[3], "1") == 0) {
+			ret = i2c2_master_smbus_read_byte(I2C2, device_addr, 1, (unsigned char)reg_addr, &tmp1);
+			if (ret != 0)
+				return;
+			printf("info = 0x%02x\n", tmp1);
+		} else {
+			ret = i2c2_master_smbus_read_word(I2C2, device_addr, 1, (unsigned char)reg_addr, &tmp2);
+			if (ret != 0)
+				return;
+			printf("info = 0x%04x\n", tmp2);
+		}
+	}else {
+		printf(cmd_i2cget_usage);
+	}
+}
+
+static const char * const cmd_i2cset_usage =
+"i2cset\n"
+"    I2C2: i2cset <device_addr> <reg_addr> <1 byte data>\n";
+
+static void cmd_i2cset(void *hint, int argc, char const *argv[])
+{
+	uint8_t device_addr;
+	uint8_t reg_addr;
+	uint8_t tmp1;
+	int ret;
+
+	tmp1 = 0;
+
+	if (argc == 4) {
+		device_addr = atoi(argv[1]);
+		reg_addr = atoi(argv[2]);
+		tmp1 = atoi(argv[3]);
+		ret = i2c2_master_smbus_write_byte(I2C2, device_addr, 1, (unsigned char)reg_addr, tmp1);
+		if (ret != 0)
+			return;
+		printf("addr = 0x%02x 0x%02x\n", device_addr, reg_addr);
+	} else
+		printf(cmd_i2cget_usage);
+}
+
 static const char * const cmd_enprint_usage =
 "enprint\n"
 "    enprint 0/1; 1:output current every second\n";
@@ -211,6 +271,8 @@ static struct command command_list[] = {
 	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"query", NULL, cmd_query_usage, cmd_query},
+	{"i2cget", NULL, cmd_i2cget_usage, cmd_i2cget},
+	{"i2cset", NULL, cmd_i2cset_usage, cmd_i2cset},
 	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},
 	{"current", NULL, cmd_current_usage, cmd_current},
 	{"sysrst", NULL, cmd_sysrst_usage, cmd_sysrst},

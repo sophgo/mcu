@@ -147,7 +147,7 @@ void system_i2c2_init(void)
 	gpio_init(GPIOA, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ, GPIO_PIN_8);
 
 	i2c_deinit(I2C2);
-	i2c_master_init(I2C2);
+	i2c2_master_init(I2C2);
 }
 
 static void system_timer_init(void)

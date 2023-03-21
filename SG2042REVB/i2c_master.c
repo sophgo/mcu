@@ -21,6 +21,30 @@ int i2c_master_init(int i2c)
 	return 0;
 }
 
+int i2c2_master_init(int i2c)
+{
+	/* reset I2C*/
+	i2c_deinit(i2c);
+	/* disable PE*/
+	i2c_disable(i2c);
+	/* disable analog noise filter */
+	i2c_analog_noise_filter_disable(i2c);
+	i2c_digital_noise_filter_config(i2c, 0);
+	/* config master clock */
+	rcu_i2c2_clock_config(RCU_I2C2SRCSRC_CKIRC8M);
+	i2c_timing_config(i2c, 0x3, 0x2, 0x1);
+	i2c_master_clock_config(i2c, 0x0a, 0x0a);
+
+	/* stretch SCL low when data is not ready */
+	i2c_stretch_scl_low_enable(i2c);
+	/* disable 10bit addt*/
+	i2c_address10_disable(i2c);
+
+	i2c_enable(i2c);
+
+	return 0;
+}
+
 int i2c_master_destroy(int i2c)
 {
 	i2c_disable(i2c);
@@ -89,20 +113,55 @@ int i2c_master_smbus_read_word(int i2c, unsigned char addr,
 				     &cmd, 1, (uint8_t *)data, 2);
 }
 
+int i2c2_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
+			   uint8_t *w, size_t wn,
+			   uint8_t *r, size_t rn);
+
+int i2c2_master_smbus_write_byte(int i2c, unsigned char addr,
+				unsigned long timeout,
+				unsigned char cmd, unsigned char data)
+{
+	unsigned char tmp[2];
+
+	tmp[0] = cmd;
+	tmp[1] = data;
+	return i2c2_transfer7_timeout(i2c, addr, timeout, tmp, 2, NULL, 0);
+}
+
+int i2c2_master_smbus_read_byte(int i2c, unsigned char addr,
+			       unsigned long timeout,
+			       unsigned char cmd, unsigned char *data)
+{
+	return i2c2_transfer7_timeout(i2c, addr, timeout, &cmd, 1, data, 1);
+}
+
+int i2c2_master_smbus_read_word(int i2c, unsigned char addr,
+			       unsigned long timeout,
+			       unsigned char cmd, uint16_t *data)
+{
+	return i2c2_transfer7_timeout(i2c, addr, timeout,
+				     &cmd, 1, (uint8_t *)data, 2);
+}
+
 /*
  * i2c transfer implementation, from libopencm3 i2c_common_v1.c, stm32f10x
  * compatible
  */
 
 /* register definition */
+/* I2Cx(x= 0,1)*/
 #define I2C_CR1		I2C_CTL0
 #define I2C_CR2		I2C_CTL1
 #define I2C_DR		I2C_DATA
 
 #define I2C_SR1		I2C_STAT0
 #define I2C_SR2		I2C_STAT1
+/* I2Cx(x= 2)*/
+#define I2C2_CR1		I2C2_CTL0
+#define I2C2_CR2		I2C2_CTL1
 
 /* field definition */
+/* I2Cx(x= 0,1)*/
 #define I2C_CR1_START	I2C_CTL0_START
 #define I2C_CR1_STOP	I2C_CTL0_STOP
 #define I2C_CR1_ACK	I2C_CTL0_ACKEN
@@ -115,6 +174,7 @@ int i2c_master_smbus_read_word(int i2c, unsigned char addr,
 
 #define I2C_SR2_BUSY	I2C_STAT1_I2CBSY
 #define I2C_SR2_MSL	I2C_STAT1_MASTER
+/* I2Cx(x= 2)*/
 
 #define I2C_WRITE	0
 #define I2C_READ	1
@@ -309,6 +369,82 @@ out:
 	}
 
 	return err;
+}
+
+int i2c2_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
+			   uint8_t *w, size_t wn,
+			   uint8_t *r, size_t rn)
+{
+	uint8_t slave_addr;
+	
+	slave_addr = addr << 1;
+	timer_start(timeout * 1000);
+
+	/*  waiting for busy is unnecessary. read the RM */
+	if (wn) {
+		i2c2_master_addressing(i2c, slave_addr, I2C2_MASTER_TRANSMIT);
+		i2c_transfer_byte_number_config(i2c, wn);
+		if (rn) {
+			i2c_automatic_end_disable(i2c);
+		} else {
+			i2c_automatic_end_enable(i2c);
+		}
+		i2c_start_on_bus(i2c);
+		while (wn--) {
+			int wait = true;
+			while (wait) {
+				if (i2c2_flag_get(i2c, I2C2_FLAG_TI)) {
+					wait = false;
+				}
+				if (timer_is_timeout())
+					goto i2c_timeout;
+				while (i2c2_flag_get(i2c, I2C2_FLAG_NACK))
+					if (timer_is_timeout())
+						goto i2c_timeout;
+			}
+			i2c_data_transmit(i2c, *w++);
+		}
+		/* not entirely sure this is really necessary.
+		 * RM implies it will stall until it can write out the later bits
+		 */
+		if (rn) {
+			while (!i2c2_flag_get(i2c, I2C2_FLAG_TC))
+				if (timer_is_timeout())
+					goto i2c_timeout;
+		}
+	}
+
+	if (rn) {
+		/* Setting transfer properties */
+		i2c2_master_addressing(i2c, slave_addr, I2C2_MASTER_RECEIVE);
+		i2c_transfer_byte_number_config(i2c, rn);
+		/* start transfer */
+		i2c_start_on_bus(i2c);
+		/* important to do it afterwards to do a proper repeated start! */
+		i2c_automatic_end_enable(i2c);
+		for (size_t i = 0; i < rn; i++) {
+			while (i2c2_flag_get(i2c, I2C2_FLAG_RBNE) == 0)
+				if (timer_is_timeout())
+					goto i2c_timeout;
+			r[i] = i2c_data_receive(i2c);
+		}
+	}
+
+	/* wait stop condition */
+	while (i2c2_flag_get(i2c, I2C2_FLAG_I2CBSY))
+		if (timer_is_timeout())
+			goto i2c_timeout;
+	timer_stop();
+
+	return 0;
+i2c_timeout:
+	timer_stop();
+
+	/* wait stop signal done */
+	timer_udelay(10);
+	i2c2_master_init(i2c);
+
+	return -1;
 }
 
 int i2c_master_write_byte(int i2c, unsigned char addr,
