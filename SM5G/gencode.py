@@ -115,6 +115,13 @@ class Pin:
     def get_af(self):
         if type(self.data['af']) is int:
             return "GPIO_AF{}".format(self.data['af'])
+        elif type(self.data['af']) is str:
+            try:
+                return "GPIO_AF{}".format(int(self.data['af']))
+            except:
+                error('{} Invalid AF, AF should be a number\n'.format(self.data['pin name']))
+                raise Exception()
+                return None
         else:
             return None
 
