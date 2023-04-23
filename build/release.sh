@@ -1,5 +1,5 @@
 
-list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1684xevb sc7pro sc7hp75 sg2042evb sg2042revb wolfclaw'
+list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1684xevb sc7pro sc7hp75 sg2042evb sg2042revb wolfclaw sg2042x4'
 
 top="$PWD/.."
 
@@ -101,6 +101,10 @@ function version()
         ;;
     sg2042revb)
         dir="$top/SG2042REVB"
+        key_word='MCU_SW_VER'
+        ;;
+    sg2042x4)
+        dir="$top/SG2042X4"
         key_word='MCU_SW_VER'
         ;;
     wolfclaw)

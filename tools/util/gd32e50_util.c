@@ -20,11 +20,9 @@
 
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof((array)[0]))
 
-#define FLASH_SIZE		(64 * 1024)
-#define PROGRAM_LIMIT		(FLASH_SIZE - 128)
+#define FILE_SIZE_64KB		0
+#define FILE_SIZE_80KB		1
 
-#define APP_START		(32 * 1024)
-#define EFIT_START		(24 * 1024)
 #define FWINFO_START(size)	((size) - 128)
 
 #define EFIE_TYPE_APP		0
@@ -48,6 +46,18 @@
 #define ROUND_UP(x, align)	(((x) + ((align) - 1)) / (align) * (align))
 #define ROUND_DOWN(x, align)	((x) / (align) * (align))
 
+static int file_type;
+
+static struct {
+	uint32_t	flash_size;
+	uint32_t	elif_start;
+	uint32_t	app_start;
+	uint32_t	program_limit;
+} file_info[] = {
+	{(64 * 1024), (24 * 1024), (32 * 1024), (64 * 1024 - 128)},
+	{(80 * 1024), (32 * 1024), (40 * 1024), (80 * 1024 - 128)},
+};
+
 struct efie {
 	uint32_t	offset;
 	uint32_t	length;
@@ -60,14 +70,16 @@ struct efie {
 static struct {
 	char *name;
 	int id[16];
+	int filesize;
 } firmware_table[] = {
-	{"EVB",		{EVB, SC5, -1}},
-	{"SA5",		{SA5, SE5, SM5P, SM5S, -1}},
-	{"SC5PLUS",	{SC5PLUS, -1}},
-	{"SC5H",	{SC5H, -1}},
-	{"SC5PRO",	{SC5PRO, -1}},
-	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA, -1}},
-	{"SG2042",	{SG2042EVB, -1}},
+	{"EVB",		{EVB, SC5, -1},	FILE_SIZE_64KB},
+	{"SA5",		{SA5, SE5, SM5P, SM5S, -1},	FILE_SIZE_64KB},
+	{"SC5PLUS",	{SC5PLUS, -1},	FILE_SIZE_64KB},
+	{"SC5H",	{SC5H, -1},	FILE_SIZE_64KB},
+	{"SC5PRO",	{SC5PRO, -1},	FILE_SIZE_64KB},
+	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA, -1},	FILE_SIZE_64KB},
+	{"SG2042EVB",	{SG2042EVB, -1},	FILE_SIZE_64KB},
+	{"SG2042X4",	{SG2042X4, -1},	FILE_SIZE_80KB},
 };
 
 static const char *mcu_family_table[] = {"STM32L0", "GD32E50"};
@@ -600,6 +612,7 @@ static int check_firmware(int i2c, const char *file)
 	err = -EINVAL;
 	for (j = 0; firmware_table[i].id[j] >= 0; ++j) {
 		if (firmware_table[i].id[j] == board_type) {
+			file_type = firmware_table[i].filesize;
 			err = 0;
 			break;
 		}
@@ -679,7 +692,7 @@ static int mcu_upgrade(int i2c, const char *file)
 		goto free_file;
 	}
 
-	efie = (void *)((__u8 *)data + EFIT_START);
+	efie = (void *)((__u8 *)data + file_info[file_type].elif_start);
 	for (i = 0; i < 32; ++i) {
 		if (efie->type == EFIE_TYPE_APP)
 			break;
@@ -692,7 +705,7 @@ static int mcu_upgrade(int i2c, const char *file)
 		goto free_file;
 	}
 
-	if (efie->offset != APP_START) {
+	if (efie->offset !=  file_info[file_type].app_start) {
 		fprintf(stderr, "delcared offset and real offset not match\n");
 		err = -EINVAL;
 		goto free_file;
@@ -709,15 +722,15 @@ static int mcu_upgrade(int i2c, const char *file)
 		goto free_file;
 	}
 
-	err = flash_erase(i2c, APP_START,
+	err = flash_erase(i2c, file_info[file_type].app_start,
 			  ROUND_UP(efie->length, FLASH_PAGE_SIZE));
 	if (err) {
 		fprintf(stderr, "erase flash failed\n");
 		goto free_file;
 	}
 
-	err = flash_write(i2c, (__u8 *)data + APP_START,
-			  APP_START, efie->length);
+	err = flash_write(i2c, (__u8 *)data + file_info[file_type].app_start,
+			  file_info[file_type].app_start, efie->length);
 
 	if (err) {
 		fprintf(stderr, "program flash failed\n");
