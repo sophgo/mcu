@@ -137,7 +137,11 @@ struct {
 	{"SC7PRO",  {SC7PRO}},
 	{"BM1684XEVB", {BM1684XEVB}},
 	{"SG2042EVB", {SG2042EVB}},
+	{"SG2042REVB", {SG2042REVB}},
 	{"SG2042X4", {SG2042X4}},
+	{"SC7HP75",  {SC7HP75}},
+	{"WOLFCLAW", {WOLFCLAW}},
+	{"SM7MINI", {SM7M}},
 };
 
 const char *mcu_family[] = {"STM32L0", "GD32E50"};

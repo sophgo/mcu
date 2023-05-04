@@ -23,6 +23,9 @@
 #define BM1684XEVB  0x20
 #define SC7PRO  0x21
 #define SC7HP75    0x22
+
+#define SM7M    0x30
+
 #define SG2042EVB   0x80
 #define SG2042REVB  0x81
 /* 0x82 use for mango Pisces */

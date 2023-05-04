@@ -83,6 +83,7 @@ static struct {
 	{"SM5MINI",     {SM5ME, SM5MP, SM5MS, SM5MA, SM5SE6M, -1} },
 	{"SE5LITE",     {SE5LITE, -1}},
 	{"BM1684XEVB",  {BM1684XEVB, BM1684XEVB, -1}},
+	{"SM7MINI",		{SM7M, -1}},
 };
 
 struct fwinfo {
@@ -650,10 +651,13 @@ static int mcu_upgrade_full(char *file)
 	if (load_file(&img, file))
 		return 0;
 
+/* workaround:support for upgrading to defferent board type*/
+#if 0
 	if (is_invalid(img.buf, img.size)) {
 		err = -1;
 		goto unload;
 	}
+#endif
 
 	if (enter_upgrader()) {
 		err = -1;
