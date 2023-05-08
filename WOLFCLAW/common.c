@@ -4,37 +4,54 @@
 #include <tick.h>
 #include <timer.h>
 
-#define MCU_SW_VER	0
+static uint8_t default_device;
+static uint8_t default_addr;
+static char *default_filename;
 
-static uint8_t device_type;
-static uint8_t work_mode;
-
-uint8_t get_firmware_version(void)
+void set_default_device(uint8_t type)
 {
-	return MCU_SW_VER;
+	default_device = type;
 }
 
-void set_device_type(uint8_t type)
+uint8_t get_default_device(void)
 {
-	device_type = type;
+	return default_device;
 }
 
-uint8_t get_device_type(void)
+void set_default_addr(uint8_t addr)
 {
-	return device_type;
+	default_addr = addr;
 }
 
-void device_init(void)
+uint8_t get_default_addr(void)
 {
-	/* donot probe twice */
-	if (work_mode)
-		return;
-	work_mode = 1;
+	return default_addr;
 }
 
-int get_work_mode(void)
+void set_default_file_name(char* name)
 {
-	return work_mode;
+	default_filename = name;
+}
+
+char *get_default_filename()
+{
+	return default_filename;
+}
+
+FlagStatus is_key_pressed()
+{
+	if (gpio_get(KEY_PORT, KEY_PIN) == RESET)
+		return SET;
+	else
+		return RESET;
+}
+
+FlagStatus is_sdcard_inserted()
+{
+	if (gpio_get(SDIO_CD_X_PORT, SDIO_CD_X_PIN) == RESET)
+		return SET;
+	else
+		return RESET;
 }
 
 void led_1_0_on(void)

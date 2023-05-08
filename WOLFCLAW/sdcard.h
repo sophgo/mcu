@@ -4,11 +4,10 @@
 
     \version 2020-09-04, V1.0.0, demo for GD32E50x
     \version 2021-03-31, V1.1.0, demo for GD32E50x
-    \version 2022-07-12, V1.2.0, demo for GD32E50x
 */
 
 /*
-    Copyright (c) 2022, GigaDevice Semiconductor Inc.
+    Copyright (c) 2021, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:

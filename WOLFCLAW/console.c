@@ -8,10 +8,18 @@
 #include <common.h>
 #include <timer.h>
 #include <pin.h>
+#include <isl68224.h>
 
 static struct ecdc_console *console;
-extern int power_is_on;
-extern int is_print_enabled;
+
+static struct I2C_DEVICE
+{
+	int num;
+	char* name;
+} slaves_info[] = {
+	{0, "ISL68224"},
+	{1, "ISL68127"},
+};
 
 static int console_getc(void *console_hint)
 {
@@ -31,13 +39,28 @@ static void cmd_hello(void *hint, int argc, char const *argv[])
 	printf("Hello! Wolfclaw User!\n");
 }
 
-static const char * const cmd_getmcutype_usage =
-"getmcutype\n"
-"    get mcu's type\n";
+static const char * const cmd_mcu_info_usage =
+"mcuinfo\n"
+"    get mcu's info\n";
 
-static void cmd_getmcutype(void *hint, int argc, char const *argv[])
+static void cmd_mcu_info(void *hint, int argc, char const *argv[])
 {
-	printf("Wolfclaw\n");
+	printf("Board type: WOLFCALW\n");
+	printf("MCU_SW_VERSION: %d\n", MCU_SW_VER);
+	printf("Default i2c device name: %s\n", slaves_info[get_default_device()].name);
+	printf("Default i2c device address: 0x%02x\n", get_default_addr());
+	printf("Default filename: %s\n", get_default_filename());
+}
+
+static const char * const cmd_device_info_usage =
+"deviceinfo\n"
+"    get device's info\n";
+
+static void cmd_device_info(void *hint, int argc, char const *argv[])
+{
+	isl68224_get_nvm_slot_num();
+	isl68224_get_device_id();
+	isl68224_get_reversion_id();
 }
 
 static const char * const cmd_led_usage =
@@ -103,6 +126,103 @@ static void cmd_led(void *hint, int argc, char const *argv[])
 	}
 }
 
+static const char * const cmd_default_addr_usage =
+"addr\n"
+"    addr <the address>\n"
+"    set the address as default address\n";
+
+static void cmd_default_addr(void *hint, int argc, char const *argv[])
+{
+	uint8_t addr;
+
+	if (argc != 2){
+		printf("%s", cmd_default_addr_usage);
+		return;
+	}
+	addr = strtol(argv[1], NULL, 0);
+	set_default_addr(addr);
+	printf("default addr = 0x%02x\n", addr);
+}
+
+static const char * const cmd_default_device_usage =
+"device\n"
+"    device {ISL68224} 'or' {ISL68127}\n"
+"    set the device as default device\n";
+
+static void cmd_default_device(void *hint, int argc, char const *argv[])
+{
+	if (argc != 2){
+		printf("%s", cmd_default_device_usage);
+		return;
+	}
+
+	if (strcasecmp("ISL68224", argv[1]) == 0)
+		set_default_device(ISL68224);
+	else if (strcasecmp("ISL68127", argv[1]) == 0)
+		set_default_device(ISL68127);
+	else
+		printf("%s", cmd_default_device_usage);
+}
+
+static const char * const cmd_filename_usage =
+"filename\n"
+"    filename <0:otherfilename.hex>\n"
+"    set otherfilename as default filename\n"
+"    default filename = '0:firmware.hex' at first\n";
+
+static void cmd_filename(void *hint, int argc, char const *argv[])
+{
+	int ret;
+
+	if (argc != 2) {
+		printf("%s", cmd_filename_usage);
+		return;
+	}
+
+	ret = strncmp("0:", argv[1], 2);
+	if (ret != 0) {
+		printf("%s", cmd_filename_usage);
+		return;
+	}
+
+	set_default_file_name((char* )argv[1]);
+	printf("default filename = '%s'\n", argv[1]);
+}
+
+static const char * const cmd_burn_usage =
+"burn\n"
+"    burn from sd card\n";
+
+static void cmd_burn(void *hint, int argc, char const *argv[])
+{
+	if (argc != 1)
+		printf("%s", cmd_burn_usage);
+	else {
+		led_4_0_on();
+		printf("burn %s to device\n", get_default_filename());
+		isl68224_program(get_default_filename());
+		led_4_1_on();
+	}
+}
+
+static const char * const cmd_flash_burn_usage =
+"flashburn\n"
+"    flashburn <file address in flash>\n"
+"    burn from flash\n";
+
+static void cmd_flash_burn(void *hint, int argc, char const *argv[])
+{
+	uint32_t file_addr;
+	if (argc != 2)
+		printf("%s", cmd_flash_burn_usage);
+	else {
+		led_4_0_on();
+		file_addr = strtol(argv[1], NULL, 0);
+		isl68224_program_from_mcuflash(file_addr);
+		led_4_1_on();
+	}
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -113,8 +233,14 @@ static void cmd_help(void *hint, int argc, char const *argv[]);
 static struct command command_list[] = {
 	{"help", NULL, NULL, cmd_help},
 	{"hello", NULL, NULL, cmd_hello},
-	{"getmcutype", NULL, cmd_getmcutype_usage, cmd_getmcutype},
+	{"mcuinfo", NULL, cmd_mcu_info_usage, cmd_mcu_info},
+	{"deviceinfo", NULL, cmd_device_info_usage, cmd_device_info},
 	{"led", NULL, cmd_led_usage, cmd_led},
+	{"addr", NULL, cmd_default_addr_usage, cmd_default_addr},
+	{"device", NULL, cmd_default_device_usage, cmd_default_device},
+	{"filename", NULL, cmd_filename_usage, cmd_filename},
+	{"burn", NULL, cmd_burn_usage, cmd_burn},
+	{"flashburn", NULL, cmd_flash_burn_usage, cmd_flash_burn},
 };
 
 void print_usage(struct command *cmd)

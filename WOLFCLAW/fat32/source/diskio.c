@@ -47,7 +47,6 @@ DSTATUS disk_status (
 
 	switch (pdrv) {
 	case DEV_SD :
-		debug("\r\npdrv:%u\r\n",pdrv);
 		result = SD_disk_status();
 
 		// translate the reslut code here
@@ -83,7 +82,22 @@ DSTATUS disk_initialize (
 	return STA_NOINIT;
 }
 
+static UINT sd_disk_read(BYTE *buff, DWORD sector, UINT count)
+{
 
+	int err;
+	UINT i;
+
+	for (i = 0; i < count; ++i) {
+		err = sd_block_read((void *)(((uint8_t *)buff) + i * SD_BLK_SIZE), (sector + i) * SD_BLK_SIZE, SD_BLK_SIZE);
+		if (err != SD_OK) {
+			debug("error\n");
+			return -1;
+		}
+	}
+	return count;
+
+}
 
 /*-----------------------------------------------------------------------*/
 /* Read Sector(s)                                                        */
@@ -97,14 +111,13 @@ DRESULT disk_read (
 )
 {
 	DRESULT res;
-	int result;
-	uint32_t *preadbuf = (uint32_t *)buff;
+	UINT result;
 
 	switch (pdrv) {
 	case DEV_SD :
 		// translate the arguments here
 
-		result = sd_multiblocks_read(preadbuf, sector, SD_BLK_SIZE, count);
+		result = sd_disk_read(buff, sector, count);
 
 		// translate the reslut code here
 		if (result == count)

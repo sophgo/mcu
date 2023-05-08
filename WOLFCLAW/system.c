@@ -19,9 +19,9 @@ static void system_uart_init(void)
 	gpio_init(USART1_TX_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, USART1_TX_PIN);
 	gpio_init(USART1_RX_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, USART1_RX_PIN);
 
+	rcu_periph_clock_enable(RCU_USART1);
 	gpio_pin_remap_config(GPIO_USART1_REMAP, DISABLE);
 
-	rcu_periph_clock_enable(RCU_USART1);
 	/* uart1 setup for debug messages */
 	usart_deinit(DEBUG_UART);
 	usart_baudrate_set(DEBUG_UART, DEFAULT_BAUDRATE);

@@ -4,11 +4,10 @@
 
     \version 2020-09-04, V1.0.0, demo for GD32E50x
     \version 2021-03-31, V1.1.0, demo for GD32E50x
-    \version 2022-07-12, V1.2.0, demo for GD32E50x
 */
 
 /*
-    Copyright (c) 2022, GigaDevice Semiconductor Inc.
+    Copyright (c) 2021, GigaDevice Semiconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -114,7 +113,6 @@ OF SUCH DAMAGE.
 uint32_t sd_scr[2] = {0,0};                                           /* content of SCR register */
 
 static sdio_card_type_enum cardtype = SDIO_STD_CAPACITY_SD_CARD_V1_1; /* SD card type */
-//static sdio_card_type_enum cardtype = SDIO_HIGH_CAPACITY_SD_CARD; /* SD card type */
 static uint32_t sd_csd[4] = {0,0,0,0};                                /* content of CSD register */
 static uint32_t sd_cid[4] = {0,0,0,0};                                /* content of CID register */
 static uint16_t sd_rca = 0;                                           /* RCA of SD card */
@@ -570,6 +568,7 @@ sd_error_enum sd_block_read(uint32_t *preadbuffer, uint32_t readaddr, uint16_t b
 */
 sd_error_enum sd_multiblocks_read(uint32_t *preadbuffer, uint32_t readaddr, uint16_t blocksize, uint32_t blocksnumber)
 {
+	printf("%s\n", __func__);
     /* initialize the variables */
     sd_error_enum status = SD_OK;
     uint32_t count = 0, align = 0, datablksize = SDIO_DATABLOCKSIZE_1BYTE, *ptempbuff = preadbuffer;
@@ -1611,7 +1610,7 @@ uint32_t sd_card_capacity_get(void)
         /* capacity = BLOCKNR*BLOCK_LEN, BLOCKNR = (C_SIZE+1)*MULT, MULT = 2^(C_SIZE_MULT+2), BLOCK_LEN = 2^READ_BL_LEN */
         capacity = (devicesize + 1)*(1 << (devicesize_mult + 2));
         capacity *= (1 << readblklen);
-        
+
         /* change the unit of capacity to KByte */
         capacity /= 1024;
     }else if(SDIO_HIGH_CAPACITY_SD_CARD == cardtype){
@@ -1639,7 +1638,7 @@ sd_error_enum sd_card_information_get(sd_card_info_struct *pcardinfo)
 {
     sd_error_enum status = SD_OK;
     uint8_t tempbyte = 0;
-    
+
     if(NULL == pcardinfo){
         status = SD_PARAMETER_INVALID;
         return status;
@@ -2283,12 +2282,6 @@ static sd_error_enum sd_scr_get(uint16_t rca, uint32_t *pscr)
             ++idx_scr;
         }
     }
-    // while(sdio_flag_get(SDIO_FLAG_DTCRCERR | SDIO_FLAG_DTTMOUT | SDIO_FLAG_RXORE | SDIO_FLAG_DTBLKEND | SDIO_FLAG_STBITE)){
-    //     if(RESET != sdio_flag_get(SDIO_FLAG_RXDTVAL)){
-    //         *(temp_scr + idx_scr) = sdio_data_read();
-    //         ++idx_scr;
-    //     }
-    // }
 
     /* check whether some error occurs */
     if(RESET != sdio_flag_get(SDIO_FLAG_DTCRCERR)){
@@ -2361,7 +2354,7 @@ static void gpio_config(void)
 {
     /* configure the PB.8, PB.9, PC.6, PC.7, PC.8, PC.9, PC.10, PC.11, PC.12 and PD.2 */
     gpio_init(GPIOC, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12);
-    gpio_init(GPIOD, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_2);  
+    gpio_init(GPIOD, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_2);
 }
 
 /*!
@@ -2372,6 +2365,7 @@ static void gpio_config(void)
 */
 static void rcu_config(void)
 {
+    rcu_periph_clock_enable(RCU_GPIOB);
     rcu_periph_clock_enable(RCU_GPIOC);
     rcu_periph_clock_enable(RCU_GPIOD);
     rcu_periph_clock_enable(RCU_AF);
@@ -2406,7 +2400,7 @@ static void dma_transfer_config(uint32_t *srcbuf, uint32_t bufsize)
     dma_struct.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
     dma_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
     dma_struct.periph_width = DMA_PERIPHERAL_WIDTH_32BIT;
-    dma_struct.memory_width = DMA_MEMORY_WIDTH_32BIT; 
+    dma_struct.memory_width = DMA_MEMORY_WIDTH_32BIT;
     dma_struct.priority = DMA_PRIORITY_ULTRA_HIGH;
     dma_init(DMA1, DMA_CH3, &dma_struct);
 
@@ -2440,7 +2434,7 @@ static void dma_receive_config(uint32_t *dstbuf, uint32_t bufsize)
     dma_struct.periph_inc = DMA_PERIPH_INCREASE_DISABLE;
     dma_struct.memory_inc = DMA_MEMORY_INCREASE_ENABLE;
     dma_struct.periph_width = DMA_PERIPHERAL_WIDTH_32BIT;
-    dma_struct.memory_width = DMA_MEMORY_WIDTH_32BIT; 
+    dma_struct.memory_width = DMA_MEMORY_WIDTH_32BIT;
     dma_struct.priority = DMA_PRIORITY_ULTRA_HIGH;
     dma_init(DMA1, DMA_CH3, &dma_struct);
 

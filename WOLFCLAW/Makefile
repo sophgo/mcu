@@ -2,6 +2,8 @@ TOP = ..
 TARGET = WOLFCLAW
 DEBUG = 1
 STANDALONE = 0
+ROOT = ../WOLFCLAW
+GDLIB_ROOT = ../libgd
 
 V ?= 0
 
@@ -14,9 +16,14 @@ else
 endif
 
 OUTDIR = build
-SRCDIR = . ecdc fat32/source
+SRCDIR = . ecdc fat32/source \
+	$(TOP)/libgd/GD32E50x_usbd_library/device/Source	\
+	$(TOP)/libgd/GD32E50x_usbd_library/usbd/Source
+
 INCDIR = . ecdc fat32/include \
-	$(TOP)/libgd/GD32E50x_standard_peripheral/Include	\
+	$(TOP)/libgd/GD32E50x_usbd_library/device/Include \
+	$(TOP)/libgd/GD32E50x_usbd_library/usbd/Include \
+	$(TOP)/libgd/GD32E50x_standard_peripheral/Include \
 	$(TOP)/libgd/CMSIS \
 	$(TOP)/libgd/CMSIS/GD/GD32E50x/Include
 
@@ -66,10 +73,20 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 READELF = $(CROSS_COMPILE)readelf
 
-all:$(OUTDIR) \
+all:COMPILE_GDLIB \
+	$(OUTDIR) \
 	$(OUTDIR)/$(TARGET).elf \
 	$(OUTDIR)/$(TARGET).bin \
-	$(OUTDIR)/$(TARGET).dis
+	$(OUTDIR)/$(TARGET).dis \
+	RECOMPILE_GDLIB
+
+COMPILE_GDLIB:
+	$(Q) cd $(GDLIB_ROOT) && make clean && make RC_CLOCK=-D__SYSTEM_CLOCK_180M_PLL_IRC8M
+	$(Q) cd $(ROOT)
+
+RECOMPILE_GDLIB:
+	$(Q) cd $(GDLIB_ROOT) && make clean && make
+	$(Q) cd $(ROOT)
 
 $(OUTDIR)/$(TARGET).bin: $(OUTDIR)/$(TARGET).elf
 	@echo '[CP] $@'
