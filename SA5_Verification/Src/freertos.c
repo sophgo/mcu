@@ -157,7 +157,7 @@ void MX_FREERTOS_Init(void) {
 		*data = 0x00;
 		if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_TYPE_IIC, 1, &board_type, 1, 100)== HAL_OK){
 			Info("[initial] core mcu i2c register [%#x]=%#02x", MCU_TYPE_IIC, board_type);
-			if ((board_type == 0x01)||(board_type == 0x0D)) {
+			if ((board_type == 0x01)||(board_type == 0x0D)||(board_type == 0x30)) {
 				tStage = STAGE_POWER;
 				memset(reg, 0xAA, MAX_REG_SIZE);
 				if (I2CReg_SlaveInit(&hi2c2, reg, MAX_REG_SIZE) != HAL_OK)
@@ -408,7 +408,8 @@ void UARTStr_RxCpltCallback(uint8_t size) {
 }
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == MCU_CPLD_ERR_Pin) {
-		osSignalSet(ExecThreadHandle, FORM_U16(SIGNAL_ERROR, 0x00));
+		if (ExecThreadHandle != 0)
+			osSignalSet(ExecThreadHandle, FORM_U16(SIGNAL_ERROR, 0x00));
 		//Notify("[notify] MCU_CPLD_ERR Detected");
 	}
 //		Debug("full in detected");

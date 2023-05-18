@@ -71,20 +71,6 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  /* sm5mini will check these pins to determin if it should enter test mode */
-  HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
-  /* no effect until gpio mode config */
-  core_board_enter_test_mode();
-
-  /*Configure GPIO pin Output Level */
-  /* hold sm5 mcu nrst down until everything is ok */
-  /* no effect until gpio mode config */
-  core_board_mcu_reset();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOB, SLOT_ID0_Pin|SLOT_ID1_Pin, GPIO_PIN_SET);
 
@@ -98,7 +84,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pins : PAPin PAPin */
   GPIO_InitStruct.Pin = MCU_NRST_Pin|STATUS_LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -124,6 +110,20 @@ void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
   HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+
+    /*Configure GPIO pin Output Level */
+  /* sm5mini will check these pins to determin if it should enter test mode */
+  HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD2_Pin, GPIO_PIN_RESET);
+  /* no effect until gpio mode config */
+  core_board_enter_test_mode();
+
+  /*Configure GPIO pin Output Level */
+  /* hold sm5 mcu nrst down until everything is ok */
+  /* no effect until gpio mode config */
+  core_board_mcu_reset();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
 
   /* sm5mini reset mcu */
   HAL_Delay(1);

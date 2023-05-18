@@ -24,11 +24,11 @@
 #include "i2c.h"
 #include "usart.h"
 #include "adc.h"
-
+#include "project.h"
 #include "main.h"
 
 /** Declarations **/
-static const char * const mcu_ver = "2.1.1";
+static const char * const mcu_ver = "2.1.2";
 extern const uint8_t VERSION;
 extern uint8_t reg[32];
 extern uint8_t board_type;
@@ -394,7 +394,7 @@ static BaseType_t prvResetCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	if (stage == 0) { // write reset pin
 		HAL_GPIO_WritePin(MCU_NRST_GPIO_Port, MCU_NRST_Pin, GPIO_PIN_RESET);
 		osDelay(100);
-		if(board_type == 0x0d){
+		if (board_type == SM5MINI || board_type == SM7MINI) {
 			/* 0b01, enter test mode, 0b10, exit test mode */
 			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_SET);
 			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_RESET);
@@ -444,7 +444,7 @@ static BaseType_t prvPowerUpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 					"[powerup] I2C Write Error\r\nQA_FAIL_PWR\r\n");
 			return pdFALSE;
 		}
-		if(board_type == 0x0d){
+		if(board_type == SM5MINI || board_type == SM7MINI){
 			// core_board_exit_test_mode
 			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD0_Pin, GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(GPIOC, TPU_IIC_ADD1_Pin, GPIO_PIN_SET);
@@ -460,7 +460,7 @@ static BaseType_t prvPowerUpCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 		for (int i = 10; i > 0; i--) {
 			HAL_ADC_PollForConversion(&hadc, 10);
 			get_val = HAL_ADC_GetValue(&hadc);
-			if(0x0d == board_type){
+			if(board_type == SM5MINI || board_type == SM7MINI){
 				adValue = (int) AD_TO_VOLTAGE_MINI(get_val);
 				vcc_limit = 2000;
 			}else{
@@ -1016,12 +1016,14 @@ static BaseType_t prvI2cMcuCommand(char *pcWriteBuffer, size_t xWriteBufferLen,
 	uint8_t data[1] = {0};
 	if (HAL_I2C_Mem_Read(&hi2c1, CORE_MCU_ADDR, MCU_TYPE_IIC, 1, data, 1, 100) != HAL_OK)
 		sprintf(pcWriteBuffer, "[i2cmcu] I2C Read Error\r\nQA_FAIL_IMCU\r\n");
-	else if (*data == 0x01)
+	else if (*data == SA5)
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sa5\r\nQA_PASS_IMCU\r\n",	*data);
-	else if (*data == 0x04)
+	else if (*data == SM5)
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sm5\r\nQA_PASS_IMCU\r\n", *data);
-	else if (*data == 0x0d)
+	else if (*data == SM5MINI)
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sm5mini\r\nQA_PASS_IMCU\r\n", *data);
+	else if (*data == SM7MINI)
+		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type sm7mini\r\nQA_PASS_IMCU\r\n", *data);
 	else
 		sprintf(pcWriteBuffer, "[i2cmcu] REG[0x01]=0x%02X\r\nboard type unknow\r\nQA_FAIL_IMCU\r\n", *data);
 	return pdFALSE;
@@ -1475,9 +1477,9 @@ static BaseType_t prvI2CStateCommand(char *pcWriteBuffer, size_t xWriteBufferLen
 
 
 static uint8_t isHexChar(char data) {
-	if (data < '0') return pdFALSE;
-	if (data > '9' && data < 'A') return pdFALSE;
-	if (data > 'F' && data < 'a') return pdFALSE;
-	if (data > 'f') return pdFALSE;
+	// if (data < '0') return pdFALSE;
+	// if (data > '9' && data < 'A') return pdFALSE;
+	// if (data > 'F' && data < 'a') return pdFALSE;
+	// if (data > 'f') return pdFALSE;
 	return pdTRUE;
 }
