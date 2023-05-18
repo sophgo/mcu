@@ -83,7 +83,8 @@ static struct {
 	{"SM5MINI",     {SM5ME, SM5MP, SM5MS, SM5MA, SM5SE6M, -1} },
 	{"SE5LITE",     {SE5LITE, -1}},
 	{"BM1684XEVB",  {BM1684XEVB, BM1684XEVB, -1}},
-	{"SM7MINI",		{SM7M, -1}},
+	{"SM7MINI",     {SM7M, -1}},
+	{"SM7MQY",      {SM7MQY, -1}},
 };
 
 struct fwinfo {

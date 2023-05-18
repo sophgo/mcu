@@ -60,6 +60,7 @@ static inline void led_init(void)
 			break;
 		case BM1684XEVB:
 		case SM7M:
+		case SM7MQY:
 			MCU_LED_PORT = GPIOC;
 			MCU_LED_PIN = GPIO_PIN_13;
 			break;

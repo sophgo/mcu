@@ -20,11 +20,13 @@
 #define SE5LITE	14
 #define SM5SE6M	15
 
-#define BM1684XEVB  0x20
-#define SC7PRO  0x21
-#define SC7HP75    0x22
+#define BM1684XEVB	0x20
+#define SC7PRO	0x21
+#define SC7HP75	0x22
 
-#define SM7M    0x30
+#define SM7M	0x30
+#define SM7SE6M	0x31
+#define SM7MQY	0x32
 
 #define SG2042EVB   0x80
 #define SG2042REVB  0x81
