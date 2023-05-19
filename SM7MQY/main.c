@@ -86,6 +86,7 @@ int main(void)
 				break;
 		}
 
+		set_board_type(SM7MQY);
 		nvic_disable_irq(NVIC_I2C3_IRQ);
 		i2c_slave_stop(&i2c3_slave_ctx);
 	}
@@ -105,10 +106,8 @@ int main(void)
 	power_on();
 	chip_init();
 
-	if (is_se6ctrl_board())
+	if (get_board_type() != SM7MQY)
 		set_board_type(SM7SE6M);
-	else
-		set_board_type(SM7MQY);
 
 	debug("%s %s working at ",
 	      get_board_type_name(),
