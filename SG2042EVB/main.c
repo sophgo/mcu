@@ -14,8 +14,8 @@
 #include <stdio.h>
 #include <slave.h>
 #include <nct218.h>
-#include <mcu.h>
 #include <chip.h>
+#include <loop.h>
 
 int main(void)
 {
@@ -24,16 +24,16 @@ int main(void)
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	led_init();
 	power_init();
-	board_power_control();
+
+	/* distinguish SG2042X8 and Milkv */
+	board_init();
 	chip_init();
 	slave_init();
-	console_init();
-	board_init();
-	while (1) {
-		board_power_control();
-		console_poll();
-		mcu_process();
-		nct218_process();
-	}
+	nct218_init();
+	console_add();
+
+	/* never return */
+	loop_start();
+
 	return 0;
 }

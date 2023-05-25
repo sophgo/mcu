@@ -25,8 +25,8 @@ typedef int (*power_on_func)(void);
 typedef int (*power_off_func)(void);
 
 void power_init(void);
-int power_on(void);
+void power_on(void);
 void power_off(void);
 int power_status(void);
-int board_power_control(void);
+
 #endif

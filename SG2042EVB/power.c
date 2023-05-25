@@ -10,7 +10,9 @@
 #include <stdbool.h>
 #include <timer.h>
 #include <chip.h>
-#include <slt.h>
+#include <i2c-slaves/slt.h>
+#include <loop.h>
+#include <board_power_impl.h>
 
 /* in us */
 #define NODE_CHECK_TIMEOUT	(10 * 1000)
@@ -111,19 +113,19 @@ void node_seqoff(struct power_node const *node, unsigned int num)
 		node_off(node + i);
 }
 
-int power_on(void)
+void power_on(void)
 {
 	int err = node_seqon(board_power_nodes, ARRAY_SIZE(board_power_nodes));
 
 	if (err) {
 		led_set_frequency(5);
+		debug("power on failed node: %d\n", err);
 	} else {
 		led_set_frequency(1);
+		led_control(1, ON);
 		chip_enable();
 		power_is_on = true;
 	}
-
-	return err;
 }
 
 void power_off(void)
@@ -133,34 +135,17 @@ void power_off(void)
 	power_is_on = false;
 	node_seqoff(board_power_nodes, ARRAY_SIZE(board_power_nodes));
 	led_set_frequency(LED_FREQ_ALWAYS_OFF);
+	led_control(1, OFF);
 }
 
 void power_init(void)
 {
 	led_set_frequency(LED_FREQ_ALWAYS_OFF);
 	power_is_on = false;
+	loop_add(board_power_control);
 }
 
 int power_status(void)
 {
 	return power_is_on;
-}
-
-int board_power_control(void)
-{
-	if ((gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN)) == 0) {
-		if (power_is_on == false) {
-			timer_udelay(1000);
-			return power_on();
-		}
-	}
-
-	if (gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 1) {
-		if (power_is_on == true) {
-			power_off();
-			return 1;
-		}
-	}
-
-	return 0;
 }

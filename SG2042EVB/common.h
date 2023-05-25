@@ -4,10 +4,13 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	3
+#define MCU_SW_VER	4
 
 #define false 0
 #define true 1
+
+#define OFF	0
+#define ON	1
 
 #define FLASH_SIZE	(256 * 1024)
 #define FLASH_PAGE_SIZE	(8 * 1024)
@@ -36,6 +39,7 @@ void set_soc_temp(int temp);
 char *get_board_type_name();
 uint8_t get_board_type(void);
 void led_init(void);
+void led_control(int led, int status);
 void led_on(void);
 void led_off(void);
 void led_set_frequency(unsigned long freq);

@@ -2,6 +2,7 @@
 #include <mcu.h>
 #include <adc.h>
 #include <stdio.h>
+#include <i2c_slave.h>
 #include <i2c01_slave.h>
 #include <slave.h>
 #include <string.h>
@@ -13,6 +14,8 @@
 #include <power.h>
 #include <project.h>
 #include <upgrade.h>
+#include <loop.h>
+#include <board_power_impl.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -492,12 +495,23 @@ static struct i2c01_slave_op slave = {
 	.priv = &mcu_ctx,
 };
 
-void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
+static struct i2c_slave_op slave2 = {
+	.addr = 0x17,	/* mcu common slave address */
+	.mask = 0x00,
+	.match = mcu_match,
+	.write = mcu_write,
+	.read = mcu_read,
+	.stop = mcu_stop,
+	.reset = mcu_reset,
+	.priv = &mcu_ctx,
+};
+
+void mcu_x8_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 {
 	int i;
-	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
-	mcu_ctx.critical_temp = 120;
-	mcu_ctx.repoweron_temp = 85;
+	mcu_ctx.critical_action = CRITICAL_ACTION_REBOOT;
+	mcu_ctx.critical_temp = 80;
+	mcu_ctx.repoweron_temp = 55;
 	mcu_ctx.poweroff_reason = 0;
 	slave.addr = 0x17;
 	i2c01_slave_register(i2c_slave_ctx, &slave);
@@ -507,6 +521,25 @@ void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 	}
 
 	last_time_collect = last_time_output = tick_get();
+	loop_add(mcu_process);
+}
+
+void mcu_milkv_init(struct i2c_slave_ctx *i2c_slave_ctx)
+{
+	int i;
+	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
+	mcu_ctx.critical_temp = 80;
+	mcu_ctx.repoweron_temp = 55;
+	mcu_ctx.poweroff_reason = 0;
+	slave.addr = 0x17;
+	i2c_slave_register(i2c_slave_ctx, &slave2);
+
+	for(i = 0; i < 16; ++i) {
+		filter_init(&adc_averge_tab[i], 0);
+	}
+
+	last_time_collect = last_time_output = tick_get();
+	loop_add(mcu_process);
 }
 
 #define CMD_POWER_OFF		0x02
@@ -541,12 +574,15 @@ void mcu_process(void)
 		return;
 
 	i2c_disable(I2C0);
+	i2c_disable(I2C2);
 	nvic_disable_irq(I2C0_EV_IRQn);
+	nvic_disable_irq(I2C2_EV_IRQn);
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		power_off();
-		if (gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 0)
-			power_is_on = true;
+		if (get_board_type() == SG2042EVB)
+			if (is_evb_power_key_on() == true)
+				power_is_on = true;
 		timer_mdelay(500);
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_POWER_OFF;
 		break;
@@ -556,13 +592,15 @@ void mcu_process(void)
 		break;
 	case CMD_REBOOT:
 		chip_popd_reset_early();
-		if (gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 0)
-			power_is_on = true;
+		if (get_board_type() == SG2042EVB)
+			if (is_evb_power_key_on() == true)
+				power_is_on = true;
 		set_needpoweron();
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_REBOOT;
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(I2C0_EV_IRQn);
+		nvic_enable_irq(I2C2_EV_IRQn);
 		i2c_upgrade_start();
 		break;
 	default:
@@ -571,6 +609,7 @@ void mcu_process(void)
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
 	i2c_enable(I2C0);
+	i2c_enable(I2C2);
 	slave_init();
 }
 

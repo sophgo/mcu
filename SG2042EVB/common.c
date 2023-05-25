@@ -6,10 +6,19 @@
 #include <adc.h>
 
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
+#define LED_MAX		4
 
 static uint8_t board_type;
 
 static int board_temp, soc_temp;
+static struct
+{
+	int num, port, pin;
+}leds[LED_MAX] = {
+	{1, LED1_PORT, LED1_PIN},
+	{2, LED2_PORT, LED2_PIN},
+};
+
 
 int get_board_temp(void)
 {
@@ -45,7 +54,9 @@ char *get_board_type_name()
 {
 	switch (board_type) {
 	case SG2042EVB:
-		return "SG2042 EVB";
+		return "SG2042 X8 EVB";
+	case MILKV_PIONEER:
+		return "MILKV PIONEER";
 	};
 	/* U means unknown type */
 	return "SG2042-U";
@@ -63,11 +74,26 @@ uint8_t get_board_type(void)
 
 void board_init(void)
 {
-	if (get_pcb_version() == 9) {
+	if (get_pcb_version() >= 9) {
 		set_board_type(MILKV_PIONEER);
-		set_pcb_version(0);
+		set_pcb_version(get_pcb_version() - 9);
 	} else
 		set_board_type(SG2042EVB);
+}
+
+void led_control(int n, int status)
+{
+	if (status == ON) {
+		for (int i = 0; i < LED_MAX; i++) {
+			if (leds[i].num == n)
+				gpio_set(leds[i].port, leds[i].pin);
+		}
+	} else if (status == OFF) {
+		for (int i = 0; i < LED_MAX; i++) {
+			if (leds[i].num == n)
+				gpio_clear(leds[i].port, leds[i].pin);
+		}
+	}
 }
 
 void led_on(void)

@@ -12,8 +12,11 @@
 #include <pin.h>
 #include <chip.h>
 #include <power.h>
-#include <mcu.h>
-#include <slt.h>
+#include <i2c-slaves/mcu.h>
+#include <i2c-slaves/slt.h>
+#include <loop.h>
+#include <board_power_impl.h>
+#include <project.h>
 
 static struct ecdc_console *console;
 extern int power_is_on;
@@ -43,11 +46,15 @@ static const char * const cmd_poweron_usage =
 
 static void cmd_poweron(void *hint, int argc, char const *argv[])
 {
-	power_on();
-	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
-		power_is_on = false;
-
-	printf("SG2042EVB POWER ON\n");
+	if (get_board_type() == SG2042EVB) {
+		power_on();
+		if (is_evb_power_key_on() == true)
+			power_is_on = false;
+		printf("SG2042EVB POWER ON\n");
+	} else {
+		milkv_poweron();
+		printf("MILKV-PIONEER POWER ON\n");
+	}
 }
 
 static const char * const cmd_poweroff_usage =
@@ -56,12 +63,22 @@ static const char * const cmd_poweroff_usage =
 
 static void cmd_poweroff(void *hint, int argc, char const *argv[])
 {
-	power_off();
-	if (gpio_get(GPIOE, GPIO_PIN_14) == 0)
-		power_is_on = true;
-	timer_mdelay(500);
+	if (get_board_type() == SG2042EVB) {
+		power_off();
+		if (is_evb_power_key_on() == true)
+			power_is_on = true;
+		timer_mdelay(500);
+		printf("SG2042EVB POWER OFF\n");
+	} else {
+		milkv_poweroff();
+		printf("MILKV-PIONEER POWER OFF\n");
+	}
+}
 
-	printf("SG2042EVB POWER OFF\n");
+static void cmd_warm_poweroff(void *hint, int argc, char const *argv[])
+{
+	milkv_warm_poweroff();
+	printf("Warm power off only for milk-v pioneer\n");
 }
 
 static const char * const cmd_reboot_usage =
@@ -74,10 +91,18 @@ static void cmd_reboot(void *hint, int argc, char const *argv[])
 	timer_mdelay(500);
 	power_on();
 	chip_enable();
-	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
-		power_is_on = false;
+	if (get_board_type() == SG2042EVB) {
+		if (is_evb_power_key_on() == false)
+			power_is_on = false;
+		printf("SG2042EVB REBOOT\n");
+	} else
+		printf("MILKV-PIONEER REBOOT\n");
+}
 
-	printf("SG2042EVB REBOOT\n");
+static void cmd_warmreboot(void *hint, int argc, char const *argv[])
+{
+	milkv_warm_reboot();
+	printf("Warm reboot only for milk-v pioneer\n");
 }
 
 static const char * const cmd_poweron_rv_usage =
@@ -89,7 +114,7 @@ static void cmd_poweron_rv(void *hint, int argc, char const *argv[])
 	gpio_clear(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
 	power_on();
 	chip_enable();
-	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
+	if (is_evb_power_key_on() == false)
 		power_is_on = false;
 
 	printf("PWRON RV OK\n");
@@ -104,7 +129,7 @@ static void cmd_poweron_a53(void *hint, int argc, char const *argv[])
 	gpio_set(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
 	power_on();
 	chip_enable();
-	if (gpio_get(GPIOE, GPIO_PIN_14) == 1)
+	if (is_evb_power_key_on() == false)
 		power_is_on = false;
 
 	printf("PWRON A53 OK\n");
@@ -116,9 +141,9 @@ static const char * const cmd_info_usage =
 
 static void cmd_info(void *hint, int argc, char const *argv[])
 {
-	printf("Board type: SG2042\n");
+	printf("Chip type: SG2042\n");
 	printf("PCB Version: %d\n", get_pcb_version());
-	printf("PCB type: SG2042_EVB_V1_1\n");
+	printf("Board type: %s\n", get_board_type_name());
 	printf("MCU_SW_VER: %d\n", MCU_SW_VER);
 }
 
@@ -234,7 +259,9 @@ static struct command command_list[] = {
 	{"hello", NULL, NULL, cmd_hello},
 	{"poweron", NULL, cmd_poweron_usage, cmd_poweron},
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
+	{"warmpoweroff", NULL, NULL, cmd_warm_poweroff},
 	{"reboot", NULL, cmd_reboot_usage, cmd_reboot},
+	{"warmreboot", NULL, NULL, cmd_warmreboot},
 	{"poweron_rv", NULL, cmd_poweron_rv_usage, cmd_poweron_rv},
 	{"poweron_a53", NULL, cmd_poweron_a53_usage, cmd_poweron_a53},
 	{"info", NULL, cmd_info_usage, cmd_info},
@@ -318,6 +345,12 @@ int console_init(void)
 void console_poll(void)
 {
 	ecdc_pump_console(console);
+}
+
+void console_add(void)
+{
+	console_init();
+	loop_add(console_poll);
 }
 
 void console_test(void)
