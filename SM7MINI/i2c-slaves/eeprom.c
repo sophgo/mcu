@@ -155,3 +155,8 @@ int is_mixed_mode(void)
 {
 	return eeprom_read_byte(EEPROM_MIXED_MODE_OFFSET) == 1 ? 1 : 0;
 }
+
+int is_test_mode(void)
+{
+	return eeprom_read_byte(EEPROM_TEST_MODE_OFFSET) == 1 ? 1 : 0;
+}

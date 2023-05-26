@@ -30,7 +30,6 @@
 #include <wdt.h>
 #include <pcie.h>
 #include <slt.h>
-#include <console.h>
 #include <tmp451.h>
 #include <rst_key.h>
 #include <mon_print.h>
@@ -56,34 +55,35 @@ int main(void)
 	i2c_master_init(I2C2);
 
 	/* check if i am in test board and if we need enter test mode */
-	// if (detect_test_mode() == TEST_MODE_HALT) {
+	if (is_test_mode()) {
+		mcu_set_test_mode(true);
 
-	// 	mcu_set_test_mode(true);
+		/* convert MCU_INT from input to output */
+		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
+		gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
+					GPIO_OSPEED_VERYHIGH, MCU_INT_PIN);
+		gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+				MCU_INT_PIN);
 
-	// 	/* convert MCU_INT from input to output */
-	// 	gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
-	// 	gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
-	// 				GPIO_OSPEED_VERYHIGH, MCU_INT_PIN);
-	// 	gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
-	// 			MCU_INT_PIN);
+		set_board_type(SM7M);
 
-	// 	set_board_type(SM7M);
+		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
+			    	I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
+		mcu_test_init(&i2c2_slave_ctx);
+		nvic_enable_irq(NVIC_I2C2_IRQ);
+		i2c_slave_start(&i2c2_slave_ctx);
 
-	// 	i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
-	// 		       I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
-	// 	mcu_test_init(&i2c2_slave_ctx);
-	// 	nvic_enable_irq(NVIC_I2C2_IRQ);
-	// 	i2c_slave_start(&i2c2_slave_ctx);
+		led_set_frequency(1000);
+		while (1) {
+			mcu_process();
+			if (!mcu_get_test_mode())
+				break;
+		}
 
-	// 	while (detect_test_mode() != TEST_MODE_RUN) {
-	// 		mcu_process();
-	// 		if (!mcu_get_test_mode())
-	// 			break;
-	// 	}
+		nvic_disable_irq(NVIC_I2C2_IRQ);
+		i2c_slave_stop(&i2c2_slave_ctx);
+	}
 
-	// 	nvic_disable_irq(NVIC_I2C2_IRQ);
-	// 	i2c_slave_stop(&i2c2_slave_ctx);
-	// }
 
 	/* reset MCU_INT */
 	gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
@@ -100,7 +100,6 @@ int main(void)
 	mp5475_init();
 	power_on();
 	chip_init();
-	
 
 	set_board_type(SM7M);
 
@@ -146,8 +145,8 @@ int main(void)
 	else
 		pcie_init();
 
-	rst_key_init();
-	console_add();
+	//rst_key_init();
+
 	/* never return */
 	loop_start();
 

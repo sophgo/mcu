@@ -126,8 +126,6 @@ static void tca6416a_i2c_slave_write(void *priv, uint8_t data)
 	case TCA6416A_P1_POL:
 	case TCA6416A_P0_CFG:
 	case TCA6416A_P1_CFG:
-		/* no effect and donot change pin config */
-		return;
 	case TCA6416A_P0_OUT:
 	case TCA6416A_P1_OUT:
 		/* output value is free for user */

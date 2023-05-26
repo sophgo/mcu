@@ -25,4 +25,5 @@ void eeprom_lock_code(uint8_t code);
 void eeprom_write_byte_protected(uint16_t offset, uint8_t data);
 uint8_t eeprom_read_byte(uint32_t offset);
 int is_mixed_mode(void);
+int is_test_mode(void);
 #endif
