@@ -13,6 +13,7 @@
 #include <pin.h>
 #include <mp5475.h>
 #include <isl68224.h>
+#include <power.h>
 
 
 static struct ecdc_console *console;
@@ -337,6 +338,15 @@ static void cmd_vddc(void *hint, int argc, char const *argv[])
 	return;
 }
 
+static const char * const cmd_poweroff_usage =
+"poweroff\n"
+"    poweroff sc7pro\n";
+
+static void cmd_poweroff(void *hint, int argc, char const *argv[])
+{
+	power_off();
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -359,6 +369,7 @@ static struct command command_list[] = {
 	{"tpu", NULL, cmd_tpu_usage, cmd_tpu},
 	{"vddc", NULL, NULL, cmd_vddc},
 	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
+	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
 };
 
 void print_usage(struct command *cmd)
