@@ -5,13 +5,20 @@
 #include <common.h>
 #include <stdlib.h>
 
+int milkv_atx_ctl_on(void);
+void milkv_atx_ctl_off(void);
+
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
 
-struct power_node const board_power_nodes[21] = {
+struct power_node const board_power_nodes[22] = {
+
+	{"MILKV_ATX_CTL", NODE_TYPE_FUNCTION, 1000,
+	 {(unsigned long)milkv_atx_ctl_on, (unsigned long)milkv_atx_ctl_off},
+	 },
 
 	{"EN_VDD_3V3", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)EN_VDD_3V3_PORT, (unsigned long)EN_VDD_3V3_PIN},

@@ -510,8 +510,8 @@ void mcu_x8_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 {
 	int i;
 	mcu_ctx.critical_action = CRITICAL_ACTION_REBOOT;
-	mcu_ctx.critical_temp = 80;
-	mcu_ctx.repoweron_temp = 55;
+	mcu_ctx.critical_temp = 120;
+	mcu_ctx.repoweron_temp = 85;
 	mcu_ctx.poweroff_reason = 0;
 	slave.addr = 0x17;
 	i2c01_slave_register(i2c_slave_ctx, &slave);
@@ -528,8 +528,8 @@ void mcu_milkv_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
 	int i;
 	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
-	mcu_ctx.critical_temp = 80;
-	mcu_ctx.repoweron_temp = 55;
+	mcu_ctx.critical_temp = 120;
+	mcu_ctx.repoweron_temp = 85;
 	mcu_ctx.poweroff_reason = 0;
 	slave.addr = 0x17;
 	i2c_slave_register(i2c_slave_ctx, &slave2);

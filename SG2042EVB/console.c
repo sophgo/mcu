@@ -52,7 +52,7 @@ static void cmd_poweron(void *hint, int argc, char const *argv[])
 			power_is_on = false;
 		printf("SG2042EVB POWER ON\n");
 	} else {
-		milkv_poweron();
+		power_on();
 		printf("MILKV-PIONEER POWER ON\n");
 	}
 }
@@ -70,7 +70,7 @@ static void cmd_poweroff(void *hint, int argc, char const *argv[])
 		timer_mdelay(500);
 		printf("SG2042EVB POWER OFF\n");
 	} else {
-		milkv_poweroff();
+		power_off();
 		printf("MILKV-PIONEER POWER OFF\n");
 	}
 }

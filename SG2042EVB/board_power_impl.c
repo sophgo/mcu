@@ -35,20 +35,6 @@ static bool is_reset_button_pressed(void)
 	return false;
 }
 
-void milkv_poweron(void)
-{
-	gpio_set(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
-	timer_mdelay(1);
-	power_on();
-}
-
-void milkv_poweroff(void)
-{
-	power_off();
-	timer_mdelay(1);
-	gpio_clear(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
-}
-
 void milkv_warm_poweroff(void)
 {
 	gpio_set(LINK_GPIO22_PORT, LINK_GPIO22_PIN);
@@ -77,14 +63,14 @@ static void milkv_power_button_control(void)
 
 	if (power_status() == true) {
 		if (press_time > FORCE_POWEROFF_PRESS_TIME) {
-			milkv_poweroff();
+			power_off();
 			while (is_power_button_pressed())
 				;
 		} else if (press_time > WARM_POWEROFF_PRESS_TIME)
 			milkv_warm_poweroff();
 	} else {
 		if (press_time > POWERON_PRESS_TIME)
-			milkv_poweron();
+			power_on();
 	}
 }
 
@@ -141,6 +127,20 @@ void board_power_control(void)
 	default:
 		break;
 	}
+}
+
+int milkv_atx_ctl_on(void)
+{
+	if (get_board_type() == MILKV_PIONEER)
+		gpio_set(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
+
+	return 0;
+}
+
+void milkv_atx_ctl_off(void)
+{
+	if (get_board_type() == MILKV_PIONEER)
+		gpio_clear(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
 }
 
 int sys_rst_assert_on(void)
