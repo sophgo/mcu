@@ -4,6 +4,17 @@
 #define __weak __attribute__((weak))
 #endif
 
+int __weak milkv_atx_ctl_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak milkv_atx_ctl_off(void)
+{
+	/* add customer code here */
+}
+
 int __weak sys_rst_assert_on(void)
 {
 	/* add customer code here */
