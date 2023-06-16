@@ -115,6 +115,16 @@ static void evb_power_control(void)
 	}
 }
 
+void milkv_auto_power_on(void)
+{
+	if (get_board_type() == MILKV_PIONEER) {
+		/* Wait for 12V to be stable */
+		timer_mdelay(1000);
+		/* power on automatically after ATX powered */
+		power_on();
+	}
+}
+
 void board_power_control(void)
 {
 	switch (get_board_type()) {
