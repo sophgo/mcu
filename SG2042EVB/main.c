@@ -16,6 +16,7 @@
 #include <nct218.h>
 #include <chip.h>
 #include <loop.h>
+#include <board_power_impl.h>
 
 int main(void)
 {
@@ -31,6 +32,7 @@ int main(void)
 	slave_init();
 	nct218_init();
 	console_add();
+	milkv_auto_power_on();
 
 	/* never return */
 	loop_start();
