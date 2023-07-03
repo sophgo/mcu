@@ -69,6 +69,7 @@ void set_board_type(uint8_t type);
 uint8_t get_board_type(void);
 uint8_t get_firmware_version(void);
 int get_work_mode(void);
+void set_work_mode(int wm);
 void board_init(void);
 uint8_t get_declared_board_type(void);
 uint8_t get_ddr_type(void);

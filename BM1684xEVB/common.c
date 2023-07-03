@@ -6,7 +6,7 @@
 #include <tick.h>
 #include <eeprom.h>
 
-#define MCU_SW_VER	6
+#define MCU_SW_VER	7
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
@@ -76,6 +76,11 @@ void board_init(void)
 		if (is_mixed_mode())
 			work_mode = WORK_MODE_MIXED;
 	}
+}
+
+void set_work_mode(int wm)
+{
+	work_mode = wm;
 }
 
 int get_work_mode(void)

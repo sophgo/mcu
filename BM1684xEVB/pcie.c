@@ -33,6 +33,7 @@ void pcie_reset_isr(void)
 		debug("pcie e-reset raising edge\n");
 	} else {
 		is_chip_ready = false;
+		set_work_mode(WORK_MODE_PCIE);
 		chip_disable();
 		tick_set_task_interval(pcie_task, 30);
 		wdt_reset();

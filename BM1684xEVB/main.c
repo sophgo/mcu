@@ -105,10 +105,7 @@ int main(void)
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);
 
-	if (get_work_mode() == WORK_MODE_SOC)
-		chip_enable();
-	else
-		pcie_init();
+	pcie_init();
 
 	rst_key_init();
 	console_add();
