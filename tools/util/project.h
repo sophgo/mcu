@@ -28,6 +28,8 @@
 #define SM7SE6M	0x31
 #define SM7MQY	0x32
 
+#define ATHENA2		0x40
+
 #define SG2042EVB   0x80
 #define SG2042REVB  0x81
 /* 0x82 use for mango Pisces */

@@ -39,7 +39,7 @@
 
 void usage_v1(void)
 {
-	printf("pack loader application application-offset upgrader upgrader-offset flash-image-file\n");
+	printf("pack loader application application-offset upgrade upgrade-offset flash-image-file\n");
 }
 
 static int is_invalid(struct comp *loader, struct comp *app,
@@ -52,7 +52,7 @@ static int is_invalid(struct comp *loader, struct comp *app,
 	}
 
 	if (upgrader->efie.offset < EFIT_END) {
-		error("upgrader start offset should over efit end\n");
+		error("upgrade start offset should over efit end\n");
 		return -1;
 	}
 
@@ -68,7 +68,7 @@ static int is_invalid(struct comp *loader, struct comp *app,
 					upgrader->efie.length;
 
 	if (!(region0_end <= region1_start || region0_start >= region1_end)) {
-		error("application and upgrader overlay\n");
+		error("application and upgrade overlay\n");
 		return -1;
 	}
 
@@ -77,8 +77,8 @@ static int is_invalid(struct comp *loader, struct comp *app,
 		return -1;
 	}
 	if (region1_end > PROGRAM_LIMIT) {
-		error("upgrader out of valid program region\n");
-		error("end of upgrader 0x%08lx\n", region1_end);
+		error("upgrade out of valid program region\n");
+		error("end of upgrade 0x%08lx\n", region1_end);
 		return -1;
 	}
 
