@@ -23,6 +23,7 @@
 #include <project.h>
 #include <power.h>
 #include <se5.h>
+#include <se6.h>
 #include <sm5.h>
 #include <loop.h>
 #include <keyboard.h>
@@ -33,6 +34,7 @@
 #include <tmp451.h>
 #include <rst_key.h>
 #include <mon_print.h>
+#include <at24c128c-e2prom.h>
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
@@ -101,7 +103,12 @@ int main(void)
 	power_on();
 	chip_init();
 
-	set_board_type(SM7M);
+	if (tca6416a_available())
+		set_board_type(SM7M);
+	else if (is_se6ctrl_board())
+		set_board_type(SM7MSE6M);
+	else
+		set_board_type(SE7);
 
 	debug("%s %s working at ",
 	      get_board_type_name(),
@@ -118,6 +125,17 @@ int main(void)
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
 		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
+
+	/* but chip reset still be asserted */
+	if (get_work_mode() == WORK_MODE_SOC) {
+		if (get_board_type() == SM7MSE6M) {
+			se6_init();
+			if (get_eeprom_type() == AT24C01D)
+				at24c01d_init(&i2c1_slave_ctx);
+			else
+				at24c128c_init(&i2c1_slave_ctx);
+		}
+	}
 
 	mon_init();
 	mon_print_init();
