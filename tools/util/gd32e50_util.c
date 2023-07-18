@@ -80,6 +80,7 @@ static struct {
 	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA, -1},	FILE_SIZE_64KB},
 	{"SG2042EVB",	{SG2042EVB, -1},	FILE_SIZE_64KB},
 	{"SG2042X4",	{SG2042X4, -1},	FILE_SIZE_80KB},
+	{"SM7G",        {SM7G, -1},	FILE_SIZE_64KB},
 };
 
 static const char *mcu_family_table[] = {"STM32L0", "GD32E50"};
