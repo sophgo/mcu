@@ -56,8 +56,11 @@ int main(void)
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
 
+	/* check if i am se8 crtl board */
+	if (is_se6ctrl_board())
+		set_board_type(SM7MSE6M);
 	/* check if i am in test board and if we need enter test mode */
-	if (is_test_mode()) {
+	else if (is_test_mode()) {
 		mcu_set_test_mode(true);
 
 		/* convert MCU_INT from input to output */
@@ -103,12 +106,12 @@ int main(void)
 	power_on();
 	chip_init();
 
-	if (tca6416a_available())
-		set_board_type(SM7M);
-	else if (is_se6ctrl_board())
-		set_board_type(SM7MSE6M);
-	else
-		set_board_type(SE7);
+	if (get_board_type() != SM7M && get_board_type() != SM7MSE6M) {
+		if (!tca6416a_available())
+			set_board_type(SE7);
+		else
+			set_board_type(SM7M);
+	}
 
 	debug("%s %s working at ",
 	      get_board_type_name(),
