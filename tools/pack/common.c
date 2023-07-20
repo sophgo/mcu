@@ -143,6 +143,7 @@ struct {
 	{"WOLFCLAW", {WOLFCLAW}},
 	{"SM7MINI", {SM7M}},
 	{"SM7MQY", {SM7MQY}},
+	{"ATHENA2EVB", {ATHENA2EVB}},
 };
 
 const char *mcu_family[] = {"STM32L0", "GD32E50"};

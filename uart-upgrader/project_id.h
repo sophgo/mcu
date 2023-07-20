@@ -17,6 +17,7 @@
 #define PROJ_SM5MA		13
 #define PROJ_SC7PRO		15
 #define PROJ_SC7HP75		0x22
+#define PROJ_ATHENA2EVB		0x40
 #define PROJ_SG2042EVB		0x80
 #define SG2042REVB		0x81
 
