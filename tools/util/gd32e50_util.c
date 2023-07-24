@@ -72,15 +72,17 @@ static struct {
 	int id[16];
 	int filesize;
 } firmware_table[] = {
-	{"EVB",		{EVB, SC5, -1},	FILE_SIZE_64KB},
-	{"SA5",		{SA5, SE5, SM5P, SM5S, -1},	FILE_SIZE_64KB},
+	{"EVB",	{EVB, SC5, -1},	FILE_SIZE_64KB},
+	{"SA5",	{SA5, SE5, SM5P, SM5S, -1},	FILE_SIZE_64KB},
 	{"SC5PLUS",	{SC5PLUS, -1},	FILE_SIZE_64KB},
 	{"SC5H",	{SC5H, -1},	FILE_SIZE_64KB},
 	{"SC5PRO",	{SC5PRO, -1},	FILE_SIZE_64KB},
 	{"SM5MINI",	{SM5ME, SM5MP, SM5MS, SM5MA, -1},	FILE_SIZE_64KB},
 	{"SG2042EVB",	{SG2042EVB, -1},	FILE_SIZE_64KB},
 	{"SG2042X4",	{SG2042X4, -1},	FILE_SIZE_80KB},
-	{"SM7G",        {SM7G, -1},	FILE_SIZE_64KB},
+	{"SM7G",	{SM7G, -1},	FILE_SIZE_64KB},
+	{"ATHENA2EVB",{ATHENA2EVB, -1},	FILE_SIZE_64KB},
+	{"ATHENA2ACP",{ATHENA2ACP, -1},	FILE_SIZE_64KB},
 };
 
 static const char *mcu_family_table[] = {"STM32L0", "GD32E50"};
