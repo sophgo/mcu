@@ -34,8 +34,8 @@
 #define RESTART_KEY_TIMER		(4 * 1000)
 
 /*redefine key in se6*/
-#define SE6_PWR_KEY_PORT	MCU_INT_PORT
-#define SE6_PWR_KEY_PIN		MCU_INT_PIN
+#define SE6_PWR_KEY_PORT	PMEB_PORT
+#define SE6_PWR_KEY_PIN		PMEB_PIN
 
 #define SE6_PWR_ON_PORT		MCU_UART1_RX_PORT
 #define SE6_PWR_ON_PIN		MCU_UART1_RX_PIN
@@ -176,7 +176,7 @@ static void se6_process(void)
 		se6ctrl_set_keyvalue(KEY_NONE);
 	}
 
-	 se6_wait_restart();
+	se6_wait_restart();
 }
 
 static void se6ctrl_init_board(void)
