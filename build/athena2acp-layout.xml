@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<firmware>
+	<family>GD32E50</family>
+	<name>ATHENA2ACP</name>
+	<size>0x18000</size>
+	<efit>
+		<offset>0xA000</offset>
+		<size>8192</size>
+	</efit>
+	<component>
+		<name>application</name>
+		<type>0</type>
+		<file>../ATHENA2ACP/build/ATHENA2ACP.bin</file>
+		<offset>0xC000</offset>
+	</component>
+	<component>
+		<name>loader</name>
+		<type>1</type>
+		<file>../ATHENA2ACP/build/ATHENA2ACP.bin</file>
+		<offset>0x0000</offset>
+	</component>
+</firmware>
