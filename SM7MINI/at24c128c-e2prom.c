@@ -28,6 +28,7 @@ static inline int __at24c_read_ack(uint8_t offset, uint8_t *value)
 	return (i2c_master_smbus_read_byte(I2C2, AT24_SLAVE_ADDR,
 					  1, offset, value));
 }
+
 static int at24c01d_read_byte(void *priv, unsigned int offset)
 {
 	int ret = 0;
