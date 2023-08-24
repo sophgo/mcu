@@ -6,7 +6,7 @@
 #include <tick.h>
 #include <eeprom.h>
 
-#define MCU_SW_VER	2
+#define MCU_SW_VER	4
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
@@ -43,6 +43,10 @@ char *get_board_type_name()
 	switch (board_type) {
 	case SM7M:
 		return "SM7MINI TIANQI";
+	case SE7:
+		return "SE7 TIANQI";
+	case SM7MSE6M:
+		return "SM7MSE6M TIANQI";
 	};
 	/* U means unknown type */
 	return "SM7M-U";

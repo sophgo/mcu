@@ -20,7 +20,7 @@ void rst_key_init(void)
 
 void rst_key_isr(void)
 {
-    unsigned int i;
+    	unsigned int i;
 	unsigned int hi = 0;
 	unsigned int lo = 0;
 

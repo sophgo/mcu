@@ -143,6 +143,9 @@ struct {
 	{"WOLFCLAW", {WOLFCLAW}},
 	{"SM7MINI", {SM7M}},
 	{"SM7MQY", {SM7MQY}},
+	{"SE7", {SE7}},
+	{"SM7MSE6M", {SM7MSE6M}},
+	{"SM7G", {SM7G}},
 	{"ATHENA2EVB", {ATHENA2EVB}},
 	{"ATHENA2ACP", {ATHENA2ACP}},
 };

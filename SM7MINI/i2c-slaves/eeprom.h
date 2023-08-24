@@ -11,6 +11,24 @@
 #include <stdint.h>
 #include <i2c_slave.h>
 
+struct eeprom_ctx {
+	int set_idx;
+	int idx;
+	int (*read_byte)(void *, unsigned int);
+	int (*write_byte)(void *, unsigned int, uint8_t);
+	unsigned int size;
+	unsigned char tmp;
+};
+
+void eeprom_create(
+	struct i2c_slave_ctx *i2c,
+	struct eeprom_ctx *eeprom,
+	struct i2c_slave_op *slave,
+	int (*read)(void *, unsigned int),
+	int (*write)(void *, unsigned int, uint8_t),
+	unsigned int size
+	);
+
 void eeprom_init(struct i2c_slave_ctx *i2c);
 void eeprom_log_power_off_reason(int reason);
 
