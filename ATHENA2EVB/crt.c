@@ -5,7 +5,7 @@
  * Author: Donghao Zhao <donghao.zhao@sophgo.com>
  */
 
-/* setup c runtime */
+/* Setup C runtime */
 
 #include <stdint.h>
 #include <upgrade/upgrade.h>
@@ -20,7 +20,7 @@ extern int stage;
 
 void __attribute__((noinline)) crt_init(void)
 {
-	/* stack is ready after chip init */
+	/* Stack is ready after chip init */
 
 	uint32_t *src;
 	uint32_t *dst = __ld_program_start;
@@ -33,7 +33,7 @@ void __attribute__((noinline)) crt_init(void)
 	else
 		st = RUN_STAGE_APP;
 
-	/* copy program */
+	/* Copy program */
 	src = (void *)(pc & ~FLASH_PAGE_MASK);
 
 	while (dst != __ld_program_end) {
@@ -41,11 +41,11 @@ void __attribute__((noinline)) crt_init(void)
 		++dst;
 		++src;
 	}
-	/* sync cache */
+	/* Sync cache */
 	asm volatile ("isb");
 	asm volatile ("dsb");
 
-	/* zero bss */
+	/* Zero bss */
 	for (dst = __ld_bss_start; dst != __ld_bss_end; ++dst)
 		*dst = 0;
 
@@ -56,8 +56,8 @@ void __attribute__((noinline)) crt_init(void)
 
 void Reset_Handler(void)
 {
-	/* main function should not return */
-	/* without volatile, gcc main optimize long call to a simple pc relative
+	/* Main function should not return */
+	/* Without volatile, gcc main optimize long call to a simple pc relative
 	 * branch
 	 */
 	void (*volatile ram_entry)(void) = main;
@@ -67,7 +67,7 @@ void Reset_Handler(void)
 
 	ram_entry();
 
-	/* should not reach here */
+	/* Should not reach here */
 	while (1)
 		;
 }

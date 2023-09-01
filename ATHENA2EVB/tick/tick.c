@@ -41,7 +41,7 @@ void tick_destroy(void)
 	SysTick->VAL = 0;
 }
 
-void delay_ms(unsigned long ms)
+void tick_delay_ms(unsigned long ms)
 {
 	unsigned long cur = tick;
 	/* make sure, wait time is larger than the given one */

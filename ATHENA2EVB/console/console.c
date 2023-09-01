@@ -41,58 +41,61 @@ static void console_putc(void *console_hint, char c)
 
 static void cmd_hello(void *hint, int argc, char const *argv[])
 {
-	printf("Hello! Athena2 EVB USER @v@\n");
+	printf("Hello! Athena2 EVB User @v@\n");
 }
 
 static const char * const cmd_poweron_usage =
-"poweron\n"
-"    power on the Athena2EVB\n";
+	"poweron\n"
+	"    Power ON the Athena2EVB\n";
 
 static void cmd_poweron(void *hint, int argc, char const *argv[])
 {
 	power_on();
-	printf("Athena2EVB POWER ON\n");
+	printf("Athena2EVB Power ON\n");
 }
 
 static const char * const cmd_poweroff_usage =
-"poweroff\n"
-"    power off the Athena2EVB\n";
+	"poweroff\n"
+	"    Power OFF the Athena2EVB\n";
 
 static void cmd_poweroff(void *hint, int argc, char const *argv[])
 {
 	power_off();
 	timer_delay_ms(500);
-	printf("Athena2EVB POWER OFF\n");
+	printf("Athena2EVB Power OFF\n");
 }
 
 static const char * const cmd_reboot_usage =
-"reboot\n"
-"    reboot the Athena2EVB\n";
+	"reboot\n"
+	"    Reboot the Athena2EVB\n";
 
 static void cmd_reboot(void *hint, int argc, char const *argv[])
 {
 	power_off();
 	timer_delay_ms(500);
 	power_on();
-	chip_enable();
-	printf("Athena2EVB REBOOT\n");
+	printf("Athena2EVB Reboot\n");
 }
 
 static const char * const cmd_info_usage =
-"info\n"
-"    get information about board and mcu\n";
+	"info\n"
+	"    Get Information about the Board and MCU\n";
 
 static void cmd_info(void *hint, int argc, char const *argv[])
 {
-	printf("Chip type: Athena2\n");
-	printf("Board type: %s\n", get_board_type_name());
-	printf("MCU_SW_VER: %d\n", MCU_SW_VER);
+	printf("Chip Type: Athena2\n");
+	printf("Board Name: %s\n", get_board_type_name());
+	printf("Board Type: %#x\n", get_board_type());
+	printf("MCU Firmware: %d\n", get_firmware_version());
+	printf("DDR Type: %s\n", get_ddr_type_name());
+	printf("PCB Version: %d\n", get_pcb_version());
+	printf("BOM Version: %d\n", get_bom_version());
 }
 
 static const char * const cmd_query_usage =
-"query\n"
-"    query slt reg result\n"
-"    query (reg_num)\n";
+	"query\n"
+	"    Query SLT Register Result\n"
+	"    Query (reg_num)\n";
 
 static void cmd_query(void *hint, int argc, char const *argv[])
 {
@@ -102,11 +105,11 @@ static void cmd_query(void *hint, int argc, char const *argv[])
 			uint16_t result = get_slt_result(reg);
 			printf("reg%d&reg%d = 0x%04x\n", (reg + 1), reg, result);
 		}
-	}else if (argc == 2){
+	} else if (argc == 2){
 		reg = atoi(argv[1]);
 		if (reg >= 64 || reg < 0){
 			printf("reg%d inexist\n",reg);
-		}else {
+		} else {
 			uint16_t result = get_slt_result(reg);
 			printf("reg%d&reg%d = 0x%04x\n", (reg + 1), reg, result);
 		}
@@ -116,12 +119,12 @@ static void cmd_query(void *hint, int argc, char const *argv[])
 }
 
 static const char * const cmd_status_usage =
-		"status\n"
-		"    output status\n";
+	"status\n"
+	"    Output Status of the Board\n";
 
 static void cmd_status(void *hint, int argc, char const *argv[])
 {
-	printf("core_power_status: %d\n", gpio_input(core_power_status_node));
+	printf("core_power_status: %d\n", gpio_input(core_power_status_signal));
 }
 
 struct command {
@@ -175,9 +178,9 @@ static void cmd_help(void *hint, int argc, char const *argv[])
 		if (cmd)
 			print_usage(cmd);
 		else
-			printf("\'%s\' not found\n", argv[1]);
+			printf("\'%s\' Not Found\n", argv[1]);
 	} else {
-		printf("invalid usage\n");
+		printf("Invalid Usage\n");
 		printf("help [command]\n");
 	}
 }
@@ -188,7 +191,7 @@ int console_init(void)
 
 	console = ecdc_alloc_console(NULL, console_getc, console_putc, 128, 4);
 	if (console == NULL) {
-		printf("create console failed\n");
+		printf("Create Console Failed\n");
 		return -1;
 	}
 	ecdc_configure_console(console, ECDC_MODE_ANSI, ECDC_SET_LOCAL_ECHO);

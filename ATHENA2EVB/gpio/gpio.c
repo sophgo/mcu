@@ -16,38 +16,34 @@
 #include <stdio.h>
 #include <gpio/gpio.h>
 
-#define KEY_POWER_ON_PRESS_VALID_VALUE		1
-#define KEY_POWER_ON_PRESS_TIME_SHORT		200
-#define KEY_POWER_ON_PRESS_TIME_LONG		5000
+struct gpio_nodes
+	power_reset_signal = {PWR_RSTN_H_PORT, PWR_RSTN_H_PIN},
+	power_management_signal = {PWR_BUTTON1_H_PORT, PWR_BUTTON1_H_PIN},
+	power_on_signal = {PWR_ON_H_PORT, PWR_ON_H_PIN},
+	power_wakeup_signal = {PWR_WAKEUP_H_PORT, PWR_WAKEUP_H_PIN},
+	system_reset_signal = {SYS_RSTN_H_HASH_PORT, SYS_RSTN_H_HASH_PIN},
+	pcie_mode_signal = {PCIE0_SEL_PORT, PCIE0_SEL_PIN};
 
 struct gpio_nodes
-	power_reset_node = {PWR_RSTN_H_PORT, PWR_RSTN_H_PIN},
-	power_management_node = {PWR_BUTTON1_H_PORT, PWR_BUTTON1_H_PIN},
-	power_on_node = {PWR_ON_H_PORT, PWR_ON_H_PIN},
-	power_wakeup_node = {PWR_WAKEUP_H_PORT, PWR_WAKEUP_H_PIN},
-	system_reset_node = {SYS_RSTN_H_HASH_PORT, SYS_RSTN_H_HASH_PIN},
-	pcie_mode_node = {PCIE0_SEL_PORT, PCIE0_SEL_PIN};
+	core_power_status_signal = {PG_VDDC_0V8_PORT, PG_VDDC_0V8_PIN};
 
-struct gpio_nodes
-	core_power_status_node = {PG_VDDC_0V8_PORT, PG_VDDC_0V8_PIN};
-
-void gpio_output(struct gpio_nodes gpio_node, int status)
+void gpio_output(struct gpio_nodes output_signal, int status)
 {
 	switch (status) {
-	case 0:
-		gpio_clear(gpio_node.port, gpio_node.pin);
-		break;
-	case 1:
-		gpio_set(gpio_node.port, gpio_node.pin);
-		break;
-	default:
-		break;
+		case 0:
+			gpio_clear(output_signal.port, output_signal.pin);
+			break;
+		case 1:
+			gpio_set(output_signal.port, output_signal.pin);
+			break;
+		default:
+			break;
 	}
 }
 
-bool gpio_input(struct gpio_nodes gpio_node)
+bool gpio_input(struct gpio_nodes input_signal)
 {
-	return gpio_get(gpio_node.port, gpio_node.pin);
+	return gpio_get(input_signal.port, input_signal.pin);
 }
 
 int sys_rst_assert_on(void)

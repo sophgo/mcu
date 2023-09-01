@@ -10,7 +10,7 @@
 
 void tick_init(void);
 void tick_destroy(void);
-void delay_ms(unsigned long ms);
+void tick_delay_ms(unsigned long ms);
 unsigned long tick_get(void);
 void tick_set(unsigned long n);
 int tick_register_task(void (*func)(void), unsigned long interval);

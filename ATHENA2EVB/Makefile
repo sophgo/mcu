@@ -20,7 +20,7 @@ SRCDIR = . board chip common console console/ecdc gpio i2c/i2c01_slave \
 INCDIR = . board chip common console console/ecdc gpio i2c/i2c01_slave \
 	i2c/i2c_master i2c-slaves/mcu i2c-slaves/slt loop power power/power_node \
 	slave system tick timer upgrade \
-	$(TOP)/libgd/GD32E50x_standard_peripheral/Include	\
+	$(TOP)/libgd/GD32E50x_standard_peripheral/Include \
 	$(TOP)/libgd/CMSIS \
 	$(TOP)/libgd/CMSIS/GD/GD32E50x/Include
 

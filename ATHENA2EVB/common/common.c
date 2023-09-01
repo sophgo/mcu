@@ -13,13 +13,14 @@
 #include <system/system.h>
 #include <i2c-slaves/mcu/mcu.h>
 
-#define DDR_TYPE		UNDEFINED_DDR_TYPE
-
-static uint8_t board_type;
-
-uint8_t get_ddr_type(void)
+uint8_t get_board_type(void)
 {
-	return DDR_TYPE;
+	return BOARD_TYPE;
+}
+
+uint8_t get_pcb_version(void)
+{
+	return PCB_VERSION;
 }
 
 uint8_t get_firmware_version(void)
@@ -27,23 +28,34 @@ uint8_t get_firmware_version(void)
 	return MCU_SW_VER;
 }
 
+uint8_t get_ddr_type(void)
+{
+	return DDR_TYPE;
+}
+
+uint8_t get_bom_version(void)
+{
+	return BOM_VERSION;
+}
+
 char *get_board_type_name(void)
 {
-	switch (board_type) {
+	switch (get_board_type()) {
 	case ATHENA2EVB:
 		return "Athena2 EVB";
 	default:
-		/* U means unknown type */
 		return "Athena2-Unknown";
 	}
 }
 
-void set_board_type(uint8_t type)
+char *get_ddr_type_name(void)
 {
-	board_type = type;
-}
-
-uint8_t get_board_type(void)
-{
-	return board_type;
+	switch (get_ddr_type()) {
+		case DDR_TYPE_DDR4:
+			return "Athena2 DDR4";
+		case DDR_TYPE_LP_DDR4:
+			return "Athena2 LP_DDR4";
+		default:
+			return "Athena2-Unknown";
+	}
 }

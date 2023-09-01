@@ -31,24 +31,21 @@ uint32_t chip_uptime(void)
 
 void chip_disable(void)
 {
-	// TODO: Inconsistent with hardware, commented for now.
-	//gpio_output	(pcie_mode_node,		false);
+	gpio_output(system_reset_signal, false);
 	chip_enabled = false;
 	uptime = 0;
 }
 
 void chip_enable(void)
 {
-	// TODO: Inconsistent with hardware, commented for now
-	//  Software sets true but hardware needs false
-	//gpio_output	(pcie_mode_node,		true);
+	gpio_output(system_reset_signal, true);
 	chip_enabled = true;
 }
 
 void chip_reset(void)
 {
 	chip_disable();
-	delay_ms(30);
+	tick_delay_ms(30);
 	uptime = 0;
 	++reset_times;
 	chip_enable();
@@ -58,7 +55,7 @@ void chip_popd_reset_early(void)
 {
 	power_off();
 	chip_disable();
-	delay_ms(50);
+	tick_delay_ms(50);
 }
 
 void chip_popd_reset_end(void)
@@ -79,6 +76,7 @@ static void chip_process(void)
 void chip_init(void)
 {
 	tick_register_task(chip_process, 1000);
+	chip_disable();
 }
 
 int chip_is_enabled(void)

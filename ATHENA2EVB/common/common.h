@@ -11,8 +11,13 @@
 #include <pin.h>
 #include <gd32e50x.h>
 #include <stdint.h>
+#include <project.h>
 
 #define MCU_SW_VER		0
+#define PCB_VERSION		0
+#define BOARD_TYPE		ATHENA2EVB
+#define DDR_TYPE		DDR_TYPE_LP_DDR4
+#define BOM_VERSION		0
 #define false			0
 #define true			1
 #define OFF			0
@@ -24,21 +29,20 @@
 #define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
 #define MCU_SLAVE_ADDR		0x17
 
-enum {
-    DDR_TYPE_LPDDR4X,
-    DDR_TYPE_LPDDR4,
-    UNDEFINED_DDR_TYPE,
-};
+#define DDR_TYPE_DDR4		0
+#define DDR_TYPE_LP_DDR4	1
 
 struct gpio_nodes {
 	int port, pin;
 };
 
-uint8_t get_ddr_type(void);
-uint8_t get_firmware_version(void);
-char *get_board_type_name(void);
 uint8_t get_board_type(void);
-void set_board_type(uint8_t type);
+uint8_t get_pcb_version(void);
+uint8_t get_firmware_version(void);
+uint8_t get_ddr_type(void);
+uint8_t get_bom_version(void);
+char *get_board_type_name(void);
+char *get_ddr_type_name(void);
 
 /* remap libopencm3 to libgd */
 #define gpio_clear		gpio_bit_reset

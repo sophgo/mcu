@@ -13,7 +13,7 @@
 #include <i2c-slaves/mcu/mcu.h>
 #include <i2c-slaves/slt/slt.h>
 
-#define I2C0_OA1		0x17
+#define I2C0_OA1		MCU_SLAVE_ADDR
 #define I2C0_OA2		0x68
 #define OA2_MASK		0x03
 
@@ -23,7 +23,7 @@ void slave_init(void)
 {
 	/* I2C0 as Slave */
 	i2c01_slave_init(&i2c0_slave_ctx, (void *)I2C0, I2C0_OA1, I2C0_OA2);
-	mcu_a2evb_init(&i2c0_slave_ctx);
+	mcu_init(&i2c0_slave_ctx);
 	slt_init(&i2c0_slave_ctx);
 	i2c01_slave_start(&i2c0_slave_ctx);
 	nvic_irq_enable(I2C0_EV_IRQn, 0, 0);
