@@ -4,9 +4,7 @@
 #include <pin.h>
 #include <tick.h>
 
-#include <stdio.h>
-
-#define MCU_SW_VER	3
+#define MCU_SW_VER	0
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
