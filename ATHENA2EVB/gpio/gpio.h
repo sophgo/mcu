@@ -12,17 +12,17 @@
 #include <common/common.h>
 
 extern struct gpio_nodes
-	power_reset_node,
-	power_management_node,
-	power_on_node,
-	power_wakeup_node,
-	system_reset_node,
-	pcie_mode_node;
+	power_reset_signal,
+	power_management_signal,
+	power_on_signal,
+	power_wakeup_signal,
+	system_reset_signal,
+	pcie_mode_signal;
 
 extern struct gpio_nodes
-	core_power_status_node;
+	core_power_status_signal;
 
-void gpio_output(struct gpio_nodes output_signal_node, int status);
+void gpio_output(struct gpio_nodes output_signal, int status);
 bool gpio_input(struct gpio_nodes input_signal);
 
 #endif /* __SIGNAL_H__ */
