@@ -43,7 +43,7 @@ int main(void)
 	clock_init();
 	system_init();
 
-	debug("\nBITMAIN SOPHONE SM7MINI\n");
+	debug("\nBITMAIN SOPHONE SE7\n");
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 
 #ifndef STANDALONE
@@ -56,11 +56,8 @@ int main(void)
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
 
-	/* check if i am se8 crtl board */
-	if (is_se6ctrl_board())
-		set_board_type(SM7MSE6M);
 	/* check if i am in test board and if we need enter test mode */
-	else if (is_test_mode()) {
+	if (is_test_mode()) {
 		mcu_set_test_mode(true);
 
 		/* convert MCU_INT from input to output */
@@ -70,7 +67,7 @@ int main(void)
 		gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 				MCU_INT_PIN);
 
-		set_board_type(SM7M);
+		set_board_type(SE7);
 
 		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
 			    	I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
@@ -87,9 +84,8 @@ int main(void)
 
 		nvic_disable_irq(NVIC_I2C2_IRQ);
 		i2c_slave_stop(&i2c2_slave_ctx);
-	} else {
-		set_board_type(SM7M);
 	}
+
 
 	/* reset MCU_INT */
 	gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
@@ -106,6 +102,8 @@ int main(void)
 	mp5475_init();
 	power_on();
 	chip_init();
+
+	set_board_type(SE7);
 
 	debug("%s %s working at ",
 	      get_board_type_name(),
