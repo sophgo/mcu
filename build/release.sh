@@ -1,5 +1,5 @@
 
-list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1684xevb sc7pro sc7hp75 sg2042evb sg2042revb wolfclaw sg2042x4 sm7mini sm7mqy athena2evb athena2acp sm7g'
+list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1684xevb sc7pro sc7hp75 sg2042evb sg2042revb wolfclaw sg2042x4 sm7mini sm7mqy se7 athena2evb athena2acp sm7g'
 
 top="$PWD/.."
 
@@ -121,6 +121,10 @@ function version()
         ;;
     sm7mqy)
         dir="$top/SM7MQY"
+        key_word='MCU_SW_VER'
+        ;;
+    se7)
+        dir="$top/SE7"
         key_word='MCU_SW_VER'
         ;;
     athena2evb)
