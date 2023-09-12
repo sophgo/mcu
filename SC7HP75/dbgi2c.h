@@ -33,6 +33,9 @@ struct dbgi2c_info {
 	uint32_t i12v_pcie;
 	uint32_t i3v3_pcie;
 
+	uint32_t rdrop_tpu;
+	uint32_t rdrop_vddc;
+	uint32_t rdrop_vdd_phy;
 
 } __attribute__((packed));
 
