@@ -370,7 +370,7 @@ static void cmd_tpupower(void *hint, int argc, char const *argv[])
 
 static const char * const cmd_rdrop_usage =
 "rdrop [idx page  resistance]\n"
-"    idx: 0-3, there are 4 isl68224 in sc7pro\n"
+"    idx: 0-2, there are 3 isl68224 in sc7hp75\n"
 "    page: 0-2 0:tpu 1:vddc 2:phy\n"
 "    resistance: range from 0 to 1600,  unit is uV/A\n";
 
