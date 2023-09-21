@@ -30,7 +30,7 @@
 #include <wdt.h>
 #include <pcie.h>
 #include <slt.h>
-#include <tmp451.h>
+#include <ct7451.h>
 #include <rst_key.h>
 #include <mon_print.h>
 #include <at24c128c.h>
@@ -72,7 +72,7 @@ int main(void)
 		gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
 				MCU_INT_PIN);
 
-		set_board_type(SM7M_MP_1_1);
+		set_board_type(SM7M);
 
 		nvic_enable_irq(NVIC_I2C3_IRQ);
 		i2c_slave_init(&i2c3_slave_ctx, (void *)I2C3_BASE,
@@ -141,7 +141,7 @@ int main(void)
 		pic_init(&i2c1_slave_ctx);
 	}
 
-	tmp451_init(&i2c1_slave_ctx);
+	ct7451_init(&i2c1_slave_ctx);
 
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);
