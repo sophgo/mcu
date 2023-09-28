@@ -278,6 +278,7 @@ void upgrader_init(void)
 	case SM7M:
 	case SM7SE6M:
 	case SM7MQY:
+	case SE7Q:
 	case SE7:
 	case SM7MSE6M:
 		i2c1_init(0x17, 0x00);
