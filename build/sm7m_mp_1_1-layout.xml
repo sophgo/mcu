@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<firmware>
+	<name>SM7M_MP_1_1</name>
+	<size>0x10000</size>
+	<efit>
+		<offset>0x7000</offset>
+		<size>4096</size>
+	</efit>
+	<component>
+		<name>application</name>
+		<type>0</type>
+		<file>../SM7M_MP_1_1/build/SM7M_MP_1_1_APP.bin</file>
+		<offset>0x8000</offset>
+	</component>
+	<component>
+		<name>i2c-upgrader</name>
+		<type>2</type>
+		<file>../upgrader/upgrader.bin</file>
+		<offset>0xf000</offset>
+	</component>
+	<component>
+		<name>loader</name>
+		<type>1</type>
+		<file>../SM7M_MP_1_1/build/SM7M_MP_1_1_LOADER.bin</file>
+		<offset>0x0000</offset>
+	</component>
+</firmware>
