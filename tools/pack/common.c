@@ -142,7 +142,7 @@ struct {
 	{"SC7HP75",  {SC7HP75}},
 	{"WOLFCLAW", {WOLFCLAW}},
 	{"SM7MINI", {SM7M}},
-	{"SM7MQY", {SM7MQY}},
+	{"SM7MQY", {SM7MQY, SE7Q}},
 	{"SE7", {SE7}},
 	{"SM7MSE6M", {SM7MSE6M}},
 	{"SM7G", {SM7G}},

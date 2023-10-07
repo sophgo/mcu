@@ -4,5 +4,6 @@
 void se5_init(void);
 void se5_reset_board(void);
 void se5_power_off_board(void);
+void se5_smb_alert(void);
 
 #endif

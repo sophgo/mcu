@@ -170,7 +170,7 @@ void se5_heater_ctrl(int temp)
 		heater_off();
 }
 
-static void se5_smb_alert(void)
+void se5_smb_alert(void)
 {
 	int err;
 

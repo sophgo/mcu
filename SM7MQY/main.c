@@ -60,6 +60,7 @@ int main(void)
 	i2c_master_init(I2C3);
 	mp5475_init();
 	mp5475_buck_on(0);
+	timer_mdelay(20);
 	/* check if i am in test board and if we need enter test mode */
 	if (detect_test_mode() == TEST_MODE_HALT) {
 
@@ -109,6 +110,9 @@ int main(void)
 	if (get_board_type() != SM7MQY)
 		set_board_type(SM7SE6M);
 
+    if (tca6416a_available() && pic_available())
+        set_board_type(SE7Q);
+
 	debug("%s %s working at ",
 	      get_board_type_name(),
 	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application");
@@ -141,6 +145,10 @@ int main(void)
 		pic_init(&i2c1_slave_ctx);
 	}
 
+    if (get_board_type() == SE7Q) {
+        se5_smb_alert();
+    }
+
 	tmp451_init(&i2c1_slave_ctx);
 
 	/* start i2c slaves */
@@ -156,6 +164,7 @@ int main(void)
 
 	return 0;
 }
+
 
 void i2c1_isr(void)
 {
