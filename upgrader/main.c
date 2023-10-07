@@ -61,6 +61,7 @@ static inline void led_init(void)
 		case BM1684XEVB:
 		case SM7M:
 		case SM7MQY:
+		case SM7M_MP_1_1:
 		case SE7:
 		case SM7MSE6M:
 			MCU_LED_PORT = GPIOC;
