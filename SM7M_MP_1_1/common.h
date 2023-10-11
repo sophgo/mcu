@@ -11,9 +11,9 @@
 #define I2C1_OA2		0x68
 #define I2C1_OA2_MASK		0x03
 
-#define I2C3_OA1		0x38
-#define I2C3_OA2		0x00
-#define I2C3_OA2_MASK		0x00
+#define I2C2_OA1		0x38
+#define I2C2_OA2		0x00
+#define I2C2_OA2_MASK		0x00
 
 #define PCIE_RESET_PORT	PCIEE_RST_X_MCU_PORT
 #define PCIE_RESET_PIN	PCIEE_RST_X_MCU_PIN

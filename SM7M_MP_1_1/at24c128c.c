@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #define AT24_SLAVE_ADDR	    (0x50)
-#define AT24_I2C		I2C3
+#define AT24_I2C		I2C2
 
 
 static inline int __at24c_read_ack(uint8_t offset, uint8_t *value)

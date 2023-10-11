@@ -4,7 +4,7 @@
 #include <libopencm3/cm3/nvic.h>
 
 #define PIC_ADDR		0x24
-#define PIC_I2C			I2C3
+#define PIC_I2C			I2C2
 /* smbus timeout, count in ms */
 #define PIC_SMBTO		1
 

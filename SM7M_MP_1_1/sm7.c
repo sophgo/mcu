@@ -5,7 +5,7 @@
 #include <loop.h>
 
 /* count in ms */
-#define SM5_POWER_OFF_DELAY	5000
+#define SM7_POWER_OFF_DELAY	5000
 
 /* gpio expandtion(tca6416a) config */
 /* port 0 */
@@ -53,41 +53,41 @@
 
 static const struct {
 	uint8_t port, pin;
-} sm5_leds[] = {
+} sm7_leds[] = {
 	{LED0_PORT, LED0_PIN},
 	{LED1_PORT, LED1_PIN}
 };
 
-int sm5_led_on(int led)
+int sm7_led_on(int led)
 {
-	if (led >= ARRAY_SIZE(sm5_leds))
+	if (led >= ARRAY_SIZE(sm7_leds))
 		return -1;
-	tca6416a_set(sm5_leds[led].port, sm5_leds[led].pin);
+	tca6416a_set(sm7_leds[led].port, sm7_leds[led].pin);
 	return 0;
 }
 
-int sm5_led_off(int led)
+int sm7_led_off(int led)
 {
-	if (led >= ARRAY_SIZE(sm5_leds))
+	if (led >= ARRAY_SIZE(sm7_leds))
 		return -1;
-	tca6416a_clr(sm5_leds[led].port, sm5_leds[led].pin);
+	tca6416a_clr(sm7_leds[led].port, sm7_leds[led].pin);
 	return 0;
 }
 
-int sm5_12v_on()
+int sm7_12v_on()
 {
 	tca6416a_set(POWER_ENABLE_PORT, POWER_ENABLE_PIN);
 	return 0;
 }
-int sm5_12v_off()
+int sm7_12v_off()
 {
 	tca6416a_clr(POWER_ENABLE_PORT, POWER_ENABLE_PIN);
 	return 0;
 }
 
-static uint32_t sm5_timer_start;
+static uint32_t sm7_timer_start;
 
-static void sm5_process(void)
+static void sm7_process(void)
 {
 	int err;
 
@@ -96,21 +96,21 @@ static void sm5_process(void)
 		return;
 
 	if (err) {
-		if (sm5_timer_start == 0)
-			sm5_timer_start = tick_get();
+		if (sm7_timer_start == 0)
+			sm7_timer_start = tick_get();
 		else {
-			if (tick_get() - sm5_timer_start >
-			    SM5_POWER_OFF_DELAY) {
-				sm5_led_off(0);
-				sm5_12v_off();
+			if (tick_get() - sm7_timer_start >
+			    SM7_POWER_OFF_DELAY) {
+				sm7_led_off(0);
+				sm7_12v_off();
 			}
 		}
 	} else {
-		sm5_timer_start = 0;
+		sm7_timer_start = 0;
 	}
 }
 
-void sm5_init(void)
+void sm7_init(void)
 {
 	tca6416a_write(TCA6416A_P0_OUT, P0_OUT);
 	tca6416a_write(TCA6416A_P1_OUT, P1_OUT);
@@ -119,5 +119,5 @@ void sm5_init(void)
 	tca6416a_write(TCA6416A_P0_POL, P0_POL);
 	tca6416a_write(TCA6416A_P1_POL, P1_POL);
 
-	loop_add(sm5_process);
+	loop_add(sm7_process);
 }

@@ -5,7 +5,7 @@
 
 #define TCA6416A_ADDR	0x20
 
-#define TCA6416A_I2C	I2C3
+#define TCA6416A_I2C	I2C2
 
 /* in ms */
 #define TCA6416A_SMBTO	(1)
