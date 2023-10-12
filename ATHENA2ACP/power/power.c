@@ -73,7 +73,7 @@ static int node_on(struct board_power_nodes const *node)
 		timer_delay_us(node->delay);
 	}
 
-	debug("[Delay: %d]\n", node->delay);
+	debug("Delay: [ %6d ]\n", node->delay);
 
 	__enable_irq();
 
@@ -82,9 +82,9 @@ static int node_on(struct board_power_nodes const *node)
 
 static void node_off(struct board_power_nodes const *node)
 {
-	debug("%s\n", node->name);
+	debug("%-20s OFF\n", node->name);
 
-	/* skip check nodes */
+	/* Skip Check Nodes */
 	if (node->type == NODE_TYPE_ENABLE) {
 		gpio_clear(node->param[0], node->param[1]);
 	} else if (node->type == NODE_TYPE_FUNCTION) {
@@ -108,7 +108,7 @@ int node_seq_on(struct board_power_nodes const *node, unsigned int num)
 			break;
 	}
 
-	/* do not power off */
+	/* Do NOT Power OFF */
 #if 0
 	if (err) {
 		--i;
@@ -129,7 +129,7 @@ void node_seq_off(struct board_power_nodes const *node, unsigned int num)
 
 	for (i = num - 1; i >= 0; --i) {
 		node_off(node + i);
-		timer_delay_ms(1000);
+		timer_delay_us(1000);
 	}
 	debug("\n");
 }
@@ -139,22 +139,24 @@ void power_on(void)
 	int err = node_seq_on(board_power_node, ARRAY_SIZE(board_power_node));
 
 	if (err) {
-		debug("power on failed node: %d\n", err);
+		debug("Power ON Failed on Node: %d\n", err);
 	} else {
-		//led_set_frequency(1);
 		gpio_output(power_led, true);
 		gpio_output(mcu_ssd_status_led, true);
 		gpio_output(mcu_status_led, true);
 		gpio_output(mcu_alarm_led, false);
 		gpio_output(mcu_ssd_alarm_led, false);
 
-		/* Wait for 20 ms to reset 5G */
+		gpio_output(power_reset_signal, true);
+
+		/* Wait for 20 ms to reset the 5G Module */
 		timer_delay_ms(20);
-		gpio_output(lte_5g_reset, false);
-		gpio_output(mcu_usb_hub_reset, false);
+		gpio_output(lte_5g_reset_signal, false);
+		gpio_output(mcu_usb_hub_reset_signal, false);
 
 		chip_enable();
 		power_is_on = true;
+		gpio_output(power_led, true);
 	}
 }
 
@@ -172,13 +174,14 @@ void power_off(void)
 	gpio_output(mcu_ssd_alarm_led, true);
 	gpio_output(mcu_ssd_alarm_led, true);
 
-	gpio_output(lte_5g_reset, true);
+	gpio_output(lte_5g_reset_signal, true);
+	gpio_output(power_led, false);
 }
 
 void board_power_control(void)
 {
 	/* Main loop query */
-	power_control();
+	signal_control();
 }
 
 void power_init(void)

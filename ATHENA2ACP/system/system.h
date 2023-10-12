@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 #define DEFAULT_BAUD_RATE	115200
-#define DEBUG_UART        	USART1
+#define DEBUG_UART		USART1
 
 void system_init(void);
 void system_i2c1_init(void);

@@ -17,7 +17,6 @@
 #define SLT_REG_LEN 64
 #define SLT_REG_MAX 64
 
-
 struct slt_ctx {
 	int set_idx;
 	int idx;
@@ -25,7 +24,6 @@ struct slt_ctx {
 };
 
 static struct slt_ctx slt_ctx;
-
 
 static inline void idx_set(struct slt_ctx *ctx, uint8_t idx)
 {
@@ -55,7 +53,7 @@ static void slt_write(void *priv, volatile uint8_t data)
 		return;
 	}
 
-    ctx->reg[ctx->idx] = data;
+	ctx->reg[ctx->idx] = data;
 
 	idx_inc(ctx);
 }
@@ -63,12 +61,12 @@ static void slt_write(void *priv, volatile uint8_t data)
 static uint8_t slt_read(void *priv)
 {
 	struct slt_ctx *ctx = priv;
-	uint8_t ret = 0;
+	uint8_t data_return = 0;
 
-    ret = ctx->reg[ctx->idx];
+	data_return = ctx->reg[ctx->idx];
 
 	idx_inc(ctx);
-	return ret;
+	return data_return;
 }
 
 static struct i2c01_slave_op slave = {

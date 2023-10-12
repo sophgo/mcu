@@ -26,7 +26,7 @@
 #include <project.h>
 
 static struct ecdc_console *console;
-extern int is_print_enabled;
+extern bool is_print_enabled;
 
 static int console_getc(void *console_hint)
 {
@@ -76,7 +76,6 @@ static void cmd_reboot(void *hint, int argc, char const *argv[])
 	power_off();
 	timer_delay_ms(500);
 	power_on();
-	chip_enable();
 	printf("Athena2 ACP REBOOT\n");
 }
 
@@ -87,40 +86,12 @@ static const char * const cmd_info_usage =
 static void cmd_info(void *hint, int argc, char const *argv[])
 {
 	printf("Chip Type: Athena2\n");
+	printf("Board Name: %s\n", get_board_type_name());
+	printf("Board Type: %#x\n", get_board_type());
+	printf("MCU Firmware: %d\n", get_firmware_version());
+	printf("DDR Type: %s\n", get_ddr_type_name());
 	printf("PCB Version: %d\n", get_pcb_version());
 	printf("BOM Version: %d\n", get_bom_version());
-	printf("Board Type: %s\n", get_board_type_name());
-	printf("MCU_SW_VER: %d\n", MCU_SW_VER);
-}
-
-static const char * const cmd_temp_usage =
-	"temp\n"
-	"    Temperature of SoC & Board\n";
-
-static void cmd_temp(void *hint, int argc, char const *argv[])
-{
-	if (argc == 1) {
-		printf("SoC: %d(C)\nBoard: %d(C)\nNTC1: %d(C)\nNTC2 ="
-		       " %d(C)\n", get_soc_temp(), get_board_temp(),
-		       get_board_temp_ntc1(), get_board_temp_ntc2());
-	} else if (argc == 2) {
-		if (strcmp(argv[1], "soc") == 0) {
-			printf("SoC: %d(C)\n", get_soc_temp());
-		} else if (strcmp(argv[1], "board") == 0) {
-			printf("Board: %d(C)\n", get_board_temp());
-		} else if (strcmp(argv[1], "board_ntc1") == 0) {
-			printf("Board NTC1: %d(C)\n",
-			       get_board_temp_ntc1());
-		} else if (strcmp(argv[1], "board_ntc2") == 0) {
-			printf("Board NTC2: %d(C)\n",
-			       get_board_temp_ntc2());
-		}
-		else {
-			printf("Get %s Temp Failed\n", argv[1]);
-		}
-	} else {
-		printf(cmd_temp_usage);
-	}
 }
 
 static const char * const cmd_query_usage =
@@ -151,7 +122,7 @@ static void cmd_query(void *hint, int argc, char const *argv[])
 
 static const char * const cmd_current_usage =
 	"current\n"
-	"    Output Current Once\n";
+	"    Output the Current of the Board\n";
 
 static void cmd_current(void *hint, int argc, char const *argv[])
 {
@@ -176,9 +147,37 @@ static void cmd_adc(void *hint, int argc, char const *argv[])
 	adc_print();
 }
 
+static const char * const cmd_temp_usage =
+	"temp\n"
+	"    Print I2C and NTC Temperature\n";
+
+static void cmd_temp(void *hint, int argc, char const *argv[])
+{
+	if (argc == 1) {
+		temp_print();
+	} else if (argc == 2) {
+		if (strcmp(argv[1], "local") == 0) {
+			printf("Local: %d(C)\n", get_temp_i2c_local());
+		} else if (strcmp(argv[1], "remote") == 0) {
+			printf("Remote: %d(C)\n", get_temp_i2c_remote());
+		} else if (strcmp(argv[1], "board_ntc1") == 0) {
+			printf("Board NTC1: %d(C)\n",
+			       get_temp_board_ntc1());
+		} else if (strcmp(argv[1], "board_ntc2") == 0) {
+			printf("Board NTC2: %d(C)\n",
+			       get_temp_board_ntc2());
+		}
+		else {
+			printf("Get %s Temp Failed\n", argv[1]);
+		}
+	} else {
+		printf(cmd_temp_usage);
+	}
+}
+
 static const char * const cmd_enprint_usage =
 	"enprint\n"
-	"    enprint 0/1; 1: Output Current Every Second\n";
+	"    enprint 0/1; 1: Enable Auto-printing, once per second\n";
 
 static void cmd_enprint(void *hint, int argc, char const *argv[])
 {
@@ -211,11 +210,11 @@ static struct command command_list[] = {
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
 	{"reboot", NULL, cmd_reboot_usage, cmd_reboot},
 	{"info", NULL, cmd_info_usage, cmd_info},
-	{"current", NULL, cmd_current_usage, cmd_current},
 	{"status", NULL, cmd_status_usage, cmd_status},
+	{"query", NULL, cmd_query_usage, cmd_query},
+	{"current", NULL, cmd_current_usage, cmd_current},
 	{"adc", NULL, cmd_adc_usage, cmd_adc},
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
-	{"query", NULL, cmd_query_usage, cmd_query},
 	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},
 };
 

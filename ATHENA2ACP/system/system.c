@@ -23,7 +23,7 @@
 
 static void system_uart_init(void)
 {
-	/* tx push-pull, rx floating */
+	/* TX Push-Pull, RX Floating */
 	gpio_init(MCU_USART_TX_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ,
 		  MCU_USART_TX_PIN);
 	gpio_init(MCU_USART_RX_PORT, GPIO_MODE_IN_FLOATING,
@@ -32,7 +32,8 @@ static void system_uart_init(void)
 	gpio_pin_remap_config(GPIO_USART1_REMAP, ENABLE);
 
 	rcu_periph_clock_enable(RCU_USART1);
-	/* uart1 setup for debug messages */
+
+	/* UART1 Setup for Debug Messages */
 	usart_deinit(DEBUG_UART);
 	usart_baudrate_set(DEBUG_UART, DEFAULT_BAUD_RATE);
 	usart_parity_config(DEBUG_UART, USART_PM_NONE);
@@ -58,56 +59,56 @@ static void system_gpio_init(void)
 	gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
 
 	/* GPIOA */
-	/* GPIOA OUTPUT PINS, setup output level first */
+	/* GPIOA Output Pins, setup output level first */
 	pins = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_12;
 	gpio_bit_reset(GPIOA, pins);
 	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
-	/* GPIOA INPUT PINS */
+	/* GPIOA Input Pins */
 	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5;
 	gpio_bit_reset(GPIOA, pins);
 	gpio_init(GPIOA, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOB */
-	/* GPIOB OUTPUT PINS */
+	/* GPIOB Output Pins */
 	pins = GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
 	gpio_bit_reset(GPIOB, pins);
 	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
-	/* GPIOB INPUT PINS */
+	/* GPIOB Input Pins */
 	pins = GPIO_PIN_2;
 	gpio_bit_reset(GPIOB, pins);
 	gpio_init(GPIOB, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOC */
-	/* GPIOC OUTPUT PINS */
-	pins = GPIO_PIN_1 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_9 | GPIO_PIN_13;
+	/* GPIOC Output Pins */
+	pins = GPIO_PIN_1 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_13;
 	gpio_bit_reset(GPIOC, pins);
 	gpio_init(GPIOC, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
-	/* GPIOB INPUT PINS */
+	/* GPIOC Input Pins */
 	pins = GPIO_PIN_9;
 	gpio_bit_reset(GPIOC, pins);
-	gpio_init(GPIOC, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
+	gpio_init(GPIOC, GPIO_MODE_IPD, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOD */
-	/* GPIOD OUTPUT PINS */
+	/* GPIOD Output Pins */
 	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_9 |
-		GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |
-		GPIO_PIN_14 | GPIO_PIN_15;
+		GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |
+		GPIO_PIN_15;
 	gpio_bit_reset(GPIOD, pins);
 	gpio_init(GPIOD, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
-	/* GPIOD INPUT PINS */
+	/* GPIOD Input Pins */
 	pins = GPIO_PIN_0 | GPIO_PIN_10;
 	gpio_bit_reset(GPIOD, pins);
 	gpio_init(GPIOD, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
 	/* GPIOE */
-	/* GPIOE OUTPUT PINS */
+	/* GPIOE Output Pins */
 	pins = GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_6 |
 		GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |
 		GPIO_PIN_14 | GPIO_PIN_15;
 	gpio_bit_reset(GPIOE, pins);
 	gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
-	/* GPIOE INPUT PINS */
+	/* GPIOE Input Pins */
 	pins = GPIO_PIN_5;
 	gpio_bit_reset(GPIOE, pins);
 	gpio_init(GPIOE, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
@@ -117,13 +118,13 @@ static void system_i2c0_init(void)
 {
 	rcu_periph_clock_enable(RCU_I2C0);
 
-	/*dont remap*/
+	/* Don't remap */
 	gpio_pin_remap_config(GPIO_I2C0_REMAP, DISABLE);
 
 	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ,
 		  GPIO_PIN_6 | GPIO_PIN_7);
 
-	/* magic deinit -- aka rcu reset, if not do this, af pin cannot work */
+	/* Magic deinit -- aka rcu reset, if not do this, af pin cannot work */
 	i2c_deinit(I2C0);
 	i2c_enable(I2C0);
 
@@ -150,8 +151,8 @@ static void system_timer_init(void)
 
 void system_adc_init(void)
 {
-	/* apb clock is 180M, adc clock should less than 35M */
-	/* adc working at 22.5M */
+	/* APB clock is 180M, adc clock should less than 35M */
+	/* ADC working at 22.5M */
 	rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV8);
 	rcu_periph_clock_enable(RCU_ADC0);
 	adc_deinit(ADC0);
@@ -163,7 +164,7 @@ void system_init(void)
 	system_uart_init();
 	system_timer_init();
 	tick_init();
-	/* I2C0 as Master */
+	/* I2C0 as Slave */
 	system_i2c0_init();
 	/* I2C1 as Master */
 	system_i2c1_init();
@@ -191,7 +192,7 @@ void *_sbrk(unsigned long inc)
 	return last;
 }
 
-/* for DEBUG put and get*/
+/* For DEBUG put and get */
 int usart_is_recv_ready(uint32_t usart_periph)
 {
 	return USART_STAT0(usart_periph) & USART_STAT0_RBNE;
@@ -224,7 +225,7 @@ int uart_puts(const char *s)
 	return i;
 }
 
-/* printf uart*/
+/* printf UART */
 _ssize_t _write_r(struct _reent *ptr, int fd,
 		  const void *buf, size_t cnt)
 {

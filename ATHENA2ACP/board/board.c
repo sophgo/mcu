@@ -17,9 +17,7 @@ bool core_power_status;
 
 void board_init(void)
 {
-	set_board_type(ATHENA2ACP);
-
-	gpio_output(power_reset_signal, true);
+	gpio_output(power_reset_signal, false);
 	gpio_output(power_wakeup_signal, true);
 	gpio_output(pcie_mode_signal, false);
 
@@ -31,12 +29,12 @@ void board_init(void)
 	gpio_output(mcu_alarm_led, true);
 	gpio_output(mcu_status_led, false);
 
-	gpio_output(mcu_usb_hub_reset, true);
-	gpio_output(fan_power, true);
-	gpio_output(bluetooth_power, false);
-	gpio_output(wifi_power, false);
-	gpio_output(sd_card_power_select, false);
-	gpio_output(flight_mode, false);
-	gpio_output(lte_5g_power, false);
-	gpio_output(lte_5g_reset, true);
+	gpio_output(mcu_usb_hub_reset_signal, true);
+	gpio_output(fan_power_signal, true);
+	gpio_output(bluetooth_power_signal, false);
+	gpio_output(wifi_power_signal, false);
+	gpio_output(sd_card_power_select_signal, false);
+	gpio_output(flight_mode_signal, false);
+	gpio_output(lte_5g_power_signal, false);
+	gpio_output(lte_5g_reset_signal, true);
 }

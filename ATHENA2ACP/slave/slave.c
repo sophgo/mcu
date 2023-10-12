@@ -14,7 +14,7 @@
 #include <i2c-slaves/mcu/mcu.h>
 #include <i2c-slaves/slt/slt.h>
 
-#define I2C0_OA1		0x17
+#define I2C0_OA1		MCU_SLAVE_ADDR
 #define I2C0_OA2		0x68
 #define OA2_MASK		0x03
 
