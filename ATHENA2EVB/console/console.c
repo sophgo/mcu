@@ -23,6 +23,7 @@
 #include <loop/loop.h>
 #include <gpio/gpio.h>
 #include <project.h>
+#include <i2c-slaves/ds1307/ds1307.h>
 
 static struct ecdc_console *console;
 
@@ -85,9 +86,9 @@ static void cmd_info(void *hint, int argc, char const *argv[])
 {
 	printf("Chip Type: Athena2\n");
 	printf("Board Name: %s\n", get_board_type_name());
+	printf("DDR Type: %s\n", get_ddr_type_name());
 	printf("Board Type: %#x\n", get_board_type());
 	printf("MCU Firmware: %d\n", get_firmware_version());
-	printf("DDR Type: %s\n", get_ddr_type_name());
 	printf("PCB Version: %d\n", get_pcb_version());
 	printf("BOM Version: %d\n", get_bom_version());
 }
@@ -127,6 +128,16 @@ static void cmd_status(void *hint, int argc, char const *argv[])
 	printf("core_power_status: %d\n", gpio_input(core_power_status_signal));
 }
 
+static const char * const cmd_time_usage =
+	"time\n"
+	"    Output time get from RTC\n";
+
+static void cmd_time(void *hint, int argc, char const *argv[])
+{
+	ds1307_get_time();
+	printf("Time: %s\n", time);
+}
+
 struct command {
 	const char *name, *alias, *usage;
 	ecdc_callback_fn fn;
@@ -142,6 +153,7 @@ static struct command command_list[] = {
 	{"reboot", NULL, cmd_reboot_usage, cmd_reboot},
 	{"info", NULL, cmd_info_usage, cmd_info},
 	{"status", NULL, cmd_status_usage, cmd_status},
+	{"time", NULL, cmd_time_usage, cmd_time},
 	{"query", NULL, cmd_query_usage, cmd_query},
 };
 

@@ -9,8 +9,9 @@
 #define __PIN_H__
 
 #include <gd32e50x_gpio.h>
+#include <common/common.h>
 
-/* port A definition */
+/* Port A definition */
 #define EN_VDD_1V8_RTC_PORT		GPIOA
 #define EN_VDD_1V8_RTC_PIN		GPIO_PIN_9
 #define EN_VDD_1V8_RTC_EXTI		EXTI_9
@@ -24,7 +25,7 @@
 #define PCIE0_SEL_PIN			GPIO_PIN_12
 #define PCIE0_SEL_EXTI			EXTI_12
 
-/* port B definition */
+/* Port B definition */
 #define MCU_BOOT1_PORT			GPIOB
 #define MCU_BOOT1_PIN			GPIO_PIN_2
 #define MCU_BOOT1_EXTI			EXTI_2
@@ -34,6 +35,15 @@
 #define MCU_I2C0_SDA_PORT		GPIOB
 #define MCU_I2C0_SDA_PIN		GPIO_PIN_7
 #define MCU_I2C0_SDA_EXTI		EXTI_7
+#define MCU_I2C1_SCL_PORT		GPIOB
+#define MCU_I2C1_SCL_PIN		GPIO_PIN_10
+#define MCU_I2C1_SCL_EXTI		EXTI_10
+#define MCU_I2C1_SDA_PORT		GPIOB
+#define MCU_I2C1_SDA_PIN		GPIO_PIN_11
+#define MCU_I2C1_SDA_EXTI		EXTI_11
+#define MCU_PWR_BUTTON_PORT		GPIOB
+#define MCU_PWR_BUTTON_PIN		GPIO_PIN_12
+#define MCU_PWR_BUTTON_EXTI		EXTI_12
 #define PWR_RSTN_H_PORT			GPIOB
 #define PWR_RSTN_H_PIN			GPIO_PIN_13
 #define PWR_RSTN_H_EXTI			EXTI_13
@@ -44,7 +54,7 @@
 #define PWR_ON_H_PIN			GPIO_PIN_15
 #define PWR_ON_H_EXTI			EXTI_15
 
-/* port C definition */
+/* Port C definition */
 #define EN_VDD_1V8_PCIE_PORT		GPIOC
 #define EN_VDD_1V8_PCIE_PIN		GPIO_PIN_6
 #define EN_VDD_1V8_PCIE_EXTI		EXTI_6
@@ -52,7 +62,13 @@
 #define EN_VDD_DDR_1V8_PIN		GPIO_PIN_7
 #define EN_VDD_DDR_1V8_EXTI		EXTI_7
 
-/* port D definition */
+#if DDR_TYPE == 0	/* DDR4 */
+#define POWER_LED_PORT			GPIOC
+#define POWER_LED_PIN			GPIO_PIN_13
+#define POWER_LED_EXTI			EXTI_13
+#endif			/* DDR4 */
+
+/* Port D definition */
 #define MCU_USART_TX_PORT		GPIOD
 #define MCU_USART_TX_PIN		GPIO_PIN_5
 #define MCU_USART_TX_EXTI		EXTI_5
@@ -81,7 +97,7 @@
 #define EN_VDD_0V8_PCIE_PIN		GPIO_PIN_15
 #define EN_VDD_0V8_PCIE_EXTI		EXTI_15
 
-/* port E definition */
+/* Port E definition */
 #define EN_VDDC_0V8_PORT		GPIOE
 #define EN_VDDC_0V8_PIN			GPIO_PIN_2
 #define EN_VDDC_0V8_EXTI		EXTI_2
@@ -94,5 +110,11 @@
 #define PG_VDDC_0V8_PORT		GPIOE
 #define PG_VDDC_0V8_PIN			GPIO_PIN_5
 #define PG_VDDC_0V8_EXTI		EXTI_5
+
+#if DDR_TYPE == 0	/* DDR4 */
+#define MCU_STATUS_LED_PORT		GPIOE
+#define MCU_STATUS_LED_PIN		GPIO_PIN_9
+#define MCU_STATUS_LED_EXTI		EXTI_9
+#endif			/* DDR4 */
 
 #endif /* __PIN_H__ */
