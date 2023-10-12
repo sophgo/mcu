@@ -266,4 +266,3 @@ int i2c01_slave_reset(struct i2c01_slave_ctx *ctx)
 	ctx->reg->cr1 |= CR1_PE;
 	return 0;
 }
-

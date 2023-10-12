@@ -21,12 +21,14 @@
 #include <upgrade/upgrade.h>
 #include <loop/loop.h>
 #include <gpio/gpio.h>
+#include <i2c-slaves/ds1307/ds1307.h>
 
 #define REG_BOARD_TYPE			0x00
 #define REG_SW_VER			0x01
 #define REG_HW_VER			0x02
 #define REG_DDR_TYPE			0x03
-#define REG_CMD				0x04
+#define REG_BOM_VER			0x04
+#define REG_CMD				0x05
 
 #define REG_SOC_RST_TIMES		0x0a
 #define REG_UPTIME_LO			0x0b
@@ -34,6 +36,16 @@
 #define REG_POWER_OFF_REASON		0x0d
 
 #define REG_MCU_FAMILY			0x18
+
+#define REG_RTC_SECONDS			0x20
+#define REG_RTC_MINUTES			0x21
+#define REG_RTC_HOURS			0x22
+#define REG_RTC_DAY_OF_WEEK		0x23
+#define REG_RTC_DATE			0x24
+#define REG_RTC_MONTH			0x25
+#define REG_RTC_YEAR			0x26
+#define REG_RTC_CONTROL			0x27
+#define REG_RTC_RAM			0x28
 
 #define REG_CRITICAL_ACTIONS		0x65
 #define REG_CRITICAL_TEMP		0x66
@@ -53,6 +65,9 @@ extern int power_is_on;
 bool is_print_enabled;
 static unsigned long last_time_print;
 static struct mcu_ctx mcu_ctx;
+
+static uint8_t ram_index;
+static uint8_t ram_operation;
 
 struct mcu_ctx {
     int set_idx;
@@ -160,6 +175,40 @@ static void mcu_write(void *priv, volatile uint8_t data_received)
 		case REG_CMD:
 			ctx->cmd_tmp = data_received;
 			break;
+		case REG_RTC_SECONDS:
+			ds1307_reg_write(ds1307_instance_reg.seconds, data_received);
+			break;
+		case REG_RTC_MINUTES:
+			ds1307_reg_write(ds1307_instance_reg.minutes, data_received);
+			break;
+		case REG_RTC_HOURS:
+			ds1307_reg_write(ds1307_instance_reg.hours, data_received);
+			break;
+		case REG_RTC_DAY_OF_WEEK:
+			ds1307_reg_write(ds1307_instance_reg.day_of_week, data_received);
+			break;
+		case REG_RTC_DATE:
+			ds1307_reg_write(ds1307_instance_reg.date, data_received);
+			break;
+		case REG_RTC_MONTH:
+			ds1307_reg_write(ds1307_instance_reg.month, data_received);
+			break;
+		case REG_RTC_YEAR:
+			ds1307_reg_write(ds1307_instance_reg.year, data_received);
+			break;
+		case REG_RTC_CONTROL:
+			ds1307_reg_write(ds1307_instance_reg.control, data_received);
+			break;
+		case REG_RTC_RAM:
+			if (!ram_operation) {
+				ram_index = data_received;
+				ram_operation = 1;
+			}
+			else if (ram_operation) {
+				ds1307_reg_write(ds1307_instance_reg.ram[ram_index], data_received);
+				ram_operation = 0;
+			}
+			break;
 		case REG_CRITICAL_ACTIONS:
 			ctx->critical_action = data_received;
 			break;
@@ -219,6 +268,9 @@ static uint8_t mcu_read(void *priv)
 		case REG_DDR_TYPE:
 			data_return = get_ddr_type();
 			break;
+		case REG_BOM_VER:
+			data_return = get_bom_version();
+			break;
 		case REG_CMD:
 			data_return = 0;
 			break;
@@ -236,6 +288,39 @@ static uint8_t mcu_read(void *priv)
 			data_return = ctx->power_off_reason;
 		case REG_MCU_FAMILY:
 			data_return = MCU_FAMILY_GD32E50;
+			break;
+		case REG_RTC_SECONDS:
+			data_return = ds1307_instance_reg.seconds.present_value;
+			break;
+		case REG_RTC_MINUTES:
+			data_return = ds1307_instance_reg.minutes.present_value;
+			break;
+		case REG_RTC_HOURS:
+			data_return = ds1307_instance_reg.hours.present_value;
+			break;
+		case REG_RTC_DAY_OF_WEEK:
+			data_return = ds1307_instance_reg.day_of_week.present_value;
+			break;
+		case REG_RTC_DATE:
+			data_return = ds1307_instance_reg.date.present_value;
+			break;
+		case REG_RTC_MONTH:
+			data_return = ds1307_instance_reg.month.present_value;
+			break;
+		case REG_RTC_YEAR:
+			data_return = ds1307_instance_reg.year.present_value;
+			break;
+		case REG_RTC_CONTROL:
+			data_return = ds1307_instance_reg.control.present_value;
+			break;
+		case REG_RTC_RAM:
+			if (ram_operation) {
+				data_return = ds1307_instance_reg.ram[ram_index].present_value;
+				ram_operation = 0;
+			}
+			else {
+				data_return = 0;
+			}
 			break;
 		case REG_CRITICAL_ACTIONS:
 			data_return = ctx->critical_action;
@@ -288,7 +373,7 @@ static void mcu_reset(void *priv)
 }
 
 static struct i2c01_slave_op slave = {
-	.addr = MCU_SLAVE_ADDR,	/* mcu common slave address */
+	.addr = MCU_SLAVE_ADDR,	/* MCU common slave address */
 	.mask = 0x00,
 	.match = mcu_match,
 	.write = mcu_write,
@@ -330,8 +415,8 @@ void mcu_process(void)
 	if (mcu_ctx.cmd == 0)
 		return;
 
-	i2c_disable(I2C0);
-	nvic_disable_irq(I2C0_EV_IRQn);
+	i2c_disable(I2C1);
+	nvic_disable_irq(I2C1_EV_IRQn);
 	switch (mcu_ctx.cmd) {
 		case CMD_POWER_OFF:
 			power_off();
@@ -349,7 +434,7 @@ void mcu_process(void)
 	}
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
-	i2c_enable(I2C0);
+	i2c_enable(I2C1);
 	slave_init();
 }
 

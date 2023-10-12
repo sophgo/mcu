@@ -51,9 +51,9 @@ char *get_board_type_name(void)
 char *get_ddr_type_name(void)
 {
 	switch (get_ddr_type()) {
-		case DDR_TYPE_DDR4:
+		case DDR4:
 			return "Athena2 DDR4";
-		case DDR_TYPE_LP_DDR4:
+		case LP_DDR4:
 			return "Athena2 LP_DDR4";
 		default:
 			return "Athena2-Unknown";

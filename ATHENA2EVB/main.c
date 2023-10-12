@@ -20,6 +20,8 @@
 #include <chip/chip.h>
 #include <loop/loop.h>
 #include <board/board.h>
+#include <gpio/gpio.h>
+#include <i2c-slaves/ds1307/ds1307.h>
 #include <debug.h>
 
 int main(void)
@@ -32,14 +34,17 @@ int main(void)
 	power_init();
 	board_init();
 	chip_init();
+	ds1307_init();
 	slave_init();
 	console_add();
 
 	/* Recommended to wait for at least 30ms before the power sequence */
 	timer_delay_ms(30);
-	power_on();
+	if (!gpio_input(mcu_pwr_button)) {
+		power_on();
+	}
 
-	/* never return */
+	/* Never return */
 	loop_start();
 
 	return 0;

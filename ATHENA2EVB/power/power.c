@@ -50,34 +50,30 @@ static int node_check(struct board_power_nodes const *node)
 
 static int node_on(struct board_power_nodes const *node)
 {
-        __disable_irq();
+	int err = 0;
 
-        int err = 0;
+	debug("%-20s ", node->name);
 
-        debug("%-20s ", node->name);
+	if (node->type == NODE_TYPE_ENABLE) {
+		gpio_set(node->param[0], node->param[1]);
+	} else if (node->type == NODE_TYPE_CHECK) {
+		err = node_check(node);
+	} else {
+		power_on_func func = (power_on_func)node->param[0];
 
-        if (node->type == NODE_TYPE_ENABLE) {
-                gpio_set(node->param[0], node->param[1]);
-        } else if (node->type == NODE_TYPE_CHECK) {
-                err = node_check(node);
-        } else {
-                power_on_func func = (power_on_func)node->param[0];
+		if (func)
+			err = func();
+	}
 
-                if (func)
-                        err = func();
-        }
+	debug("[%c] ", err ? 'X' : 'O');
 
-        debug("[%c] ", err ? 'X' : 'O');
+	if (err == 0 && node->delay) {
+		timer_delay_us(node->delay);
+	}
 
-        if (err == 0 && node->delay) {
-                timer_delay_us(node->delay);
-        }
+	debug("Delay: [ %6d ]\n", node->delay);
 
-        debug("Delay: [ %6d ]\n", node->delay);
-
-        __enable_irq();
-
-        return err;
+	return err;
 }
 
 static void node_off(struct board_power_nodes const *node)
@@ -136,6 +132,8 @@ void node_seq_off(struct board_power_nodes const *node, unsigned int num)
 
 void power_on(void)
 {
+	__disable_irq();
+
 	int err = node_seq_on(board_power_node, ARRAY_SIZE(board_power_node));
 
 	if (err) {
@@ -143,29 +141,35 @@ void power_on(void)
 	} else {
 		chip_enable();
 
-                timer_delay_ms(50);
+		timer_delay_ms(50);
 
-                gpio_output(power_reset_signal, true);
-                gpio_output(power_management_signal, true);
-                gpio_output(power_on_signal, false);
-                gpio_output(power_wakeup_signal, true);
+		gpio_output(power_reset_signal, true);
+		gpio_output(power_management_signal, true);
+		gpio_output(power_on_signal, false);
+		gpio_output(power_wakeup_signal, true);
 
 		power_is_on = true;
 	}
+	__enable_irq();
 }
 
 void power_off(void)
 {
+	__disable_irq();
+
 	slt_reset();
 	chip_disable();
 	power_is_on = false;
 
 	node_seq_off(board_power_node, ARRAY_SIZE(board_power_node));
+
+	__enable_irq();
 }
 
 void board_power_control(void)
 {
 	/* Main loop query */
+	signal_control();
 }
 
 void power_init(void)

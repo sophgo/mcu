@@ -13,10 +13,10 @@
 #include <stdint.h>
 #include <project.h>
 
-#define MCU_SW_VER		0
-#define PCB_VERSION		0
+#define MCU_SW_VER		0x01
+#define PCB_VERSION		0x01
 #define BOARD_TYPE		ATHENA2EVB
-#define DDR_TYPE		DDR_TYPE_LP_DDR4
+#define DDR_TYPE		DDR4
 #define BOM_VERSION		0
 #define false			0
 #define true			1
@@ -29,8 +29,8 @@
 #define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
 #define MCU_SLAVE_ADDR		0x17
 
-#define DDR_TYPE_DDR4		0
-#define DDR_TYPE_LP_DDR4	1
+#define DDR4			0
+#define LP_DDR4			1
 
 struct gpio_nodes {
 	int port, pin;

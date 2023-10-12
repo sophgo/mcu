@@ -24,5 +24,10 @@ void board_init(void)
 
 	gpio_output(pcie_mode_signal, false);
 
+#if DDR_TYPE == 0	/* DDR4 */
+	gpio_output(power_led, false);
+	gpio_output(mcu_status_led, true);
+#endif			/* DDR4 */
+
 	core_power_status = gpio_input(core_power_status_signal);
 }
