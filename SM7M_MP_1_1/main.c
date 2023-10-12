@@ -23,7 +23,7 @@
 #include <project.h>
 #include <power.h>
 #include <se5.h>
-#include <sm5.h>
+#include <sm7.h>
 #include <loop.h>
 #include <keyboard.h>
 #include <eeprom.h>
@@ -35,7 +35,7 @@
 #include <mon_print.h>
 #include <at24c128c.h>
 static struct i2c_slave_ctx i2c1_slave_ctx;
-static struct i2c_slave_ctx i2c3_slave_ctx;
+static struct i2c_slave_ctx i2c2_slave_ctx;
 
 int main(void)
 {
@@ -64,7 +64,6 @@ int main(void)
 	if (detect_test_mode() == TEST_MODE_HALT) {
 
 		mcu_set_test_mode(true);
-
 		/* convert MCU_INT from input to output */
 		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
 		gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
@@ -74,11 +73,11 @@ int main(void)
 
 		set_board_type(SM7M);
 
-		nvic_enable_irq(NVIC_I2C3_IRQ);
-		i2c_slave_init(&i2c3_slave_ctx, (void *)I2C3_BASE,
-			       I2C3_OA1, I2C3_OA2, I2C3_OA2_MASK);
-		mcu_test_init(&i2c3_slave_ctx);
-		i2c_slave_start(&i2c3_slave_ctx);
+		nvic_enable_irq(NVIC_I2C2_IRQ);
+		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
+			       I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
+		mcu_test_init(&i2c2_slave_ctx);
+		i2c_slave_start(&i2c2_slave_ctx);
 
 		while (detect_test_mode() != TEST_MODE_RUN) {
 			mcu_process();
@@ -87,10 +86,9 @@ int main(void)
 		}
 
 		set_board_type(SM7M_MP_1_1);
-		nvic_disable_irq(NVIC_I2C3_IRQ);
-		i2c_slave_stop(&i2c3_slave_ctx);
+		nvic_disable_irq(NVIC_I2C2_IRQ);
+		i2c_slave_stop(&i2c2_slave_ctx);
 	}
-
 	/* reset MCU_INT */
 	gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
 	gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,
@@ -106,7 +104,7 @@ int main(void)
 	power_on();
 	chip_init();
 
-	
+
 	set_board_type(SM7M_MP_1_1);
 
 	debug("%s %s working at ",
@@ -146,6 +144,10 @@ int main(void)
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);
 
+	if (get_work_mode() == WORK_MODE_SOC) {
+		sm7_init();
+	}
+
 	if (get_work_mode() == WORK_MODE_SOC)
 		chip_enable();
 	else
@@ -162,7 +164,7 @@ void i2c1_isr(void)
 	i2c_slave_isr(&i2c1_slave_ctx);
 }
 
-void i2c3_isr(void)
+void i2c2_isr(void)
 {
-	i2c_slave_isr(&i2c3_slave_ctx);
+	i2c_slave_isr(&i2c2_slave_ctx);
 }
