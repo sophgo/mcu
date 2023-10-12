@@ -19,14 +19,14 @@ extern const struct gpio_nodes
 	pcie_mode_signal,
 
 	/* Peripheral Control Signal */
-	mcu_usb_hub_reset,
-	fan_power,
-	bluetooth_power,
-	wifi_power,
-	sd_card_power_select,
-	flight_mode,
-	lte_5g_power,
-	lte_5g_reset,
+	mcu_usb_hub_reset_signal,
+	fan_power_signal,
+	bluetooth_power_signal,
+	wifi_power_signal,
+	sd_card_power_select_signal,
+	flight_mode_signal,
+	lte_5g_power_signal,
+	lte_5g_reset_signal,
 
 	/* LED */
 	power_led,
@@ -46,6 +46,6 @@ extern const struct gpio_nodes
 
 void gpio_output(struct gpio_nodes output_signal, int status);
 bool gpio_input(struct gpio_nodes input_signal);
-void power_control(void);
+void signal_control(void);
 
 #endif /* __SIGNAL_H__ */

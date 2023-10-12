@@ -31,17 +31,16 @@ uint32_t chip_uptime(void)
 
 void chip_disable(void)
 {
-	// TODO: Inconsistent with hardware, commented for now.
-	//gpio_output	(pcie_mode_signal,		false);
+	// TODO: This signal is being passed through to internal MCU
+	//gpio_output(system_reset_signal, false);
 	chip_enabled = false;
 	uptime = 0;
 }
 
 void chip_enable(void)
 {
-	// TODO: Inconsistent with hardware, commented for now
-	//  Software sets true but hardware needs false
-	//gpio_output	(pcie_mode_signal,		true);
+	// TODO: This signal is being passed through to internal MCU
+	//gpio_output(system_reset_signal, true);
 	chip_enabled = true;
 }
 

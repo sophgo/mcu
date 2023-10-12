@@ -19,7 +19,6 @@ void adc_init(void);
 uint8_t get_pcb_version(void);
 void set_pcb_version(uint8_t version);
 uint8_t get_bom_version(void);
-uint8_t get_hardware_version(void);
 unsigned long adc_read(unsigned int channel);
 
 #endif /* __ADC_H__ */

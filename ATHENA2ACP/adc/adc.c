@@ -20,13 +20,13 @@
 #define BOM_VRE0_CHANNEL	ADC_CHANNEL_1
 
 const struct adc_nodes adc_node[ADC_NODE_SUM] = {
-    {ADC_CHANNEL_4},	/* NTC1 */
-    {ADC_CHANNEL_5},	/* NTC2 */
-    {ADC_CHANNEL_10},	/* I_12V_SYS */
+	{ADC_CHANNEL_4},	/* NTC1 */
+	{ADC_CHANNEL_5},	/* NTC2 */
+	{ADC_CHANNEL_10},	/* I_12V_SYS */
 };
 
-static unsigned int pcb_ver = 100;
-static unsigned int bom_ver = 100;
+static uint8_t pcb_ver = -1;
+static uint8_t bom_ver = -1;
 
 uint8_t get_pcb_version(void)
 {
@@ -40,12 +40,7 @@ void set_pcb_version(uint8_t version)
 
 uint8_t get_bom_version(void)
 {
-    return bom_ver;
-}
-
-uint8_t get_hardware_version(void)
-{
-    return (pcb_ver << 4) | bom_ver;
+	return bom_ver;
 }
 
 /* channel: ADC_CHANNEL_x */
@@ -99,6 +94,8 @@ void adc_init(void)
 	adc_mode_config(ADC_MODE_FREE);
 
 	adc_regular_channel_config(ADC0, 0, PCB_VRE0_CHANNEL,
+				   ADC_SAMPLETIME_55POINT5);
+	adc_regular_channel_config(ADC0, 0, BOM_VRE0_CHANNEL,
 				   ADC_SAMPLETIME_55POINT5);
 	adc_resolution_config(ADC0, ADC_RESOLUTION_12B);
 

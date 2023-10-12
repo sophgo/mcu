@@ -36,13 +36,13 @@ extern "C" {
 
 // ---------------- Configuration modes
 enum ecdc_mode {
-    ECDC_MODE_ANSI = 0
+	ECDC_MODE_ANSI = 0
 };
 
 // ---------------- Configuration flags
 
 // Enable local echo
-#define ECDC_SET_LOCAL_ECHO     (1 << 0)
+#define ECDC_SET_LOCAL_ECHO	 (1 << 0)
 
 // --------- Internal console structure
 struct ecdc_console;
@@ -50,13 +50,13 @@ struct ecdc_console;
 /**
  * @brief Function pointer prototype for non-blocking character reads
  * @details When the console is pumped, this is polled for incoming characters.
- *          If there are no characters to read, then ECDC_GETC_EOF should be
- *          returned.
- *          It is expected that this is non-blocking
+ *	  If there are no characters to read, then ECDC_GETC_EOF should be
+ *	  returned.
+ *	  It is expected that this is non-blocking
  *
  * @param console_hint Optional console hint parameter. This pointer may be
- *          used for whatever the implementation wants (such as a this pointer,
- *          or a buffer pointer)
+ *	  used for whatever the implementation wants (such as a this pointer,
+ *	  or a buffer pointer)
  * @return User input character or ECDC_GETC_EOF
  */
 typedef int (*ecdc_getc_fn)(void *console_hint);
@@ -66,8 +66,8 @@ typedef int (*ecdc_getc_fn)(void *console_hint);
  * @details It is expected that this is non-blocking
  *
  * @param console_hint Optional console hint parameter. This pointer may be
- *          used for whatever the implementation wants (such as a this pointer,
- *          or a buffer pointer)
+ *	  used for whatever the implementation wants (such as a this pointer,
+ *	  or a buffer pointer)
  * @param c Character to write to the output console
  */
 typedef void (*ecdc_putc_fn)(void *console_hint, char c);
@@ -75,24 +75,24 @@ typedef void (*ecdc_putc_fn)(void *console_hint, char c);
 /**
  * @brief Allocates a console structure on the heap
  * @details The console will be allocated with default settings and no
- *          registered commands.
- *          The default settings are ECDC_MODE_ANSI with local echo enabled
+ *	  registered commands.
+ *	  The default settings are ECDC_MODE_ANSI with local echo enabled
  *
  * @param console_hint Optional console hint parameter. The getc_fn and putc_fn
- *          functions will be called with this pointer. This pointer may be
- *          used for whatever the implementation wants (such as a this pointer,
- *          or a buffer pointer). Set to NULL if not used
+ *	  functions will be called with this pointer. This pointer may be
+ *	  used for whatever the implementation wants (such as a this pointer,
+ *	  or a buffer pointer). Set to NULL if not used
  * @param getc_fn Character read function
  * @param putc_fn Character write function
  * @param max_arg_line_length Maximum length of an input line. This is the
- *          maximum size of the input line and its arguments. 80 characters is
- *          a sane default.
+ *	  maximum size of the input line and its arguments. 80 characters is
+ *	  a sane default.
  * @param max_arg_count Maximum number of arguments allowed per command. There
- *          should be moderate ratio between the argument line length and the
- *          maximum number of arguments. 10 arguments is a sane default.
+ *	  should be moderate ratio between the argument line length and the
+ *	  maximum number of arguments. 10 arguments is a sane default.
  *
  * @return Console pointer. It is the responsibility of the caller to deallocate
- *          this with a call to ecdc_free_console.
+ *	  this with a call to ecdc_free_console.
  */
 struct ecdc_console *ecdc_alloc_console(void *console_hint,
 					ecdc_getc_fn getc_fn,
@@ -111,8 +111,8 @@ void ecdc_free_console(struct ecdc_console *console);
 /**
  * @brief Periodic call to drive character receiving and parsing
  * @details This needs to be periodically called to drive the receiving and
- *          parsing of the commands by the console. Callbacks will also be
- *          driven by this call.
+ *	  parsing of the commands by the console. Callbacks will also be
+ *	  driven by this call.
  *
  * @param ecdc_console Console to execute
  */
@@ -121,7 +121,7 @@ void ecdc_pump_console(struct ecdc_console *console);
 /**
  * @brief Modifies the console's configuration
  * @details This is used to modify the control sequence standard (mode) used by
- *          the console, as well as configure things like local echo.
+ *	  the console, as well as configure things like local echo.
  *
  * @param ecdc_console Console to configure
  * @param ecdc_mode Control sequence standard
@@ -138,8 +138,8 @@ mode, int flags);
  * @param prompt Pointer to C-string containing the desired prompt
  *
  * @return Pointer to newly allocated prompt string.  It is the responsibility
- *         of the user to deallocate this with the ecdc_free_prompt fucnction.  NULL
- *         is returned on failure.
+ *	 of the user to deallocate this with the ecdc_free_prompt fucnction.  NULL
+ *	 is returned on failure.
  *
  */
 char const *ecdc_replace_prompt(struct ecdc_console *console, char const
@@ -148,7 +148,7 @@ char const *ecdc_replace_prompt(struct ecdc_console *console, char const
 /**
  * @brief Deallocated previously allocated prompt
  * @details This will deallocate any resources allocated by the ecdc_set_prompt command
- *          and resets prompt to default.
+ *	  and resets prompt to default.
  *
  * @param   ecdc_console Console for which to deallocate prompt
  */
@@ -164,7 +164,7 @@ struct ecdc_command;
  * @brief Function pointer prototype for console command callbacks
  *
  * @param hint Optional command hint parameter. This pointer may be used for
- *          whatever the implementation wants (such as a this pointer)
+ *	  whatever the implementation wants (such as a this pointer)
  * @param argc Argument count
  * @param argv Argument values. First argument is always the command name
  */
@@ -174,18 +174,18 @@ typedef void (*ecdc_callback_fn)(void *hint, int argc, char const *argv[]);
  * @brief Allocates a new command on the heap
  *
  * @param command_hint Optional command hint parameter. This will be passed to
- *          the command callback. This pointer may be used for whatever the
- *          implementation wants (such as a this pointer). If not used, set
- *          to NULL
+ *	  the command callback. This pointer may be used for whatever the
+ *	  implementation wants (such as a this pointer). If not used, set
+ *	  to NULL
  * @param ecdc_console Console to register the command with
  * @param command_name Name of the command. When a user inputs a string that
- *          matches this, the callback will be called. This string is copied, so
- *          its storage is allowed to be shorter than the returned pointer
+ *	  matches this, the callback will be called. This string is copied, so
+ *	  its storage is allowed to be shorter than the returned pointer
  * @param callback Command callback
  *
  * @return Command structure. It is the responsibility of the caller to
- *          deallocate this with the ecdc_free_command function. NULL is
- *          returned on failure.
+ *	  deallocate this with the ecdc_free_command function. NULL is
+ *	  returned on failure.
  */
 struct ecdc_command *ecdc_alloc_command(void *command_hint,
 					struct ecdc_console *console,
@@ -210,11 +210,11 @@ void ecdc_free_command(struct ecdc_command *command);
  * @param command_name Name of the command, i.e. "list", "ls", "dir"
  *
  * @return Command structure. It is the responsibility of the caller to
- *          deallocate this with the ecdc_free_command function. NULL is
- *          returned on failure.
+ *	  deallocate this with the ecdc_free_command function. NULL is
+ *	  returned on failure.
  */
 struct ecdc_command *ecdc_alloc_list_command(struct ecdc_console *console,
-					     const char *command_name);
+					const char *command_name);
 
 // --------------------------------------------------------------------- Extras
 

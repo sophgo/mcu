@@ -118,12 +118,12 @@ void isr_nackf_clr(struct i2c_slave_ctx *ctx, struct i2c_isr_op *isr_op)
 
 void isr_rxne_clr(struct i2c_slave_ctx *ctx, struct i2c_isr_op *isr_op)
 {
-	/* do nothing, read rxdr will clear this bit */
+	/* Do nothing, read rxdr will clear this bit */
 }
 
 void isr_rxne_cb(struct i2c_slave_ctx *ctx)
 {
-	/* this will clear rxne bit */
+	/* This will clear rxne bit */
 	uint8_t data = ctx->reg->rxdr;
 
 	if (ctx->slave && ctx->slave->write)
@@ -141,7 +141,7 @@ void isr_txis_cb(struct i2c_slave_ctx *ctx)
 
 void isr_txis_clr(struct i2c_slave_ctx *ctx, struct i2c_isr_op *isr_op)
 {
-	/* this bit will auto clear when txdr write to some data */
+	/* This bit will auto clear when txdr write to some data */
 }
 
 void isr_stopf_cb(struct i2c_slave_ctx *ctx)
@@ -190,7 +190,7 @@ void isr_addr_cb(struct i2c_slave_ctx *ctx)
 			ctx->slave->match(ctx->slave->priv, dir);
 		}
 		if (dir == I2C_SLAVE_READ && ctx->slave->read) {
-			ctx->reg->cr1 |= CR1_TXIE; /*Set transmit IT*/
+			ctx->reg->cr1 |= CR1_TXIE; /* Set transmit IT */
 			ctx->reg->txdr = ctx->slave->read(ctx->slave->priv);
 		}
 	}
@@ -273,7 +273,7 @@ static void __attribute__((__unused__)) peripheral_init(void *reg)
 {
 	uint32_t i2c = (uint32_t)reg;
 
-	/* let i2c2 works at fixed clock rate 8MHz */
+	/* Let i2c2 works at fixed clock rate 8MHz */
 	rcu_i2c2_clock_config(RCU_I2C2SRCSRC_CKIRC8M);
 
 	/* BAUD_RATE */
@@ -290,7 +290,7 @@ int i2c_slave_init(struct i2c_slave_ctx *ctx, void *reg,
 {
 	int i;
 
-	/* prepare hardware first */
+	/* Prepare hardware first */
 	peripheral_init(reg);
 
 	ctx->reg = reg;
@@ -329,7 +329,7 @@ int i2c_slave_start(struct i2c_slave_ctx *ctx)
 {
 	ctx->slave = NULL;
 	ctx->reg->cr1 |= CR1_PE;
-	/* enable error, address match, rx and tx isr, stop */
+	/* Enable error, address match, rx and tx isr, stop */
 	ctx->reg->cr1 |= CR1_ADDRIE | CR1_RXIE | CR1_TXIE |
 						CR1_STOPIE | CR1_NACKIE;
 	return 0;
