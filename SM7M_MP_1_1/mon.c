@@ -65,6 +65,12 @@ static unsigned int pcb_ver;
 static unsigned int bom_ver;
 static int ntc_tmp;
 
+void set_hardware_version(unsigned int pcb_ver_val, unsigned int bom_ver_val)
+{
+	pcb_ver = pcb_ver_val;
+	bom_ver = bom_ver_val;
+}
+
 uint16_t get_current(void)
 {
 	return i12v.value;

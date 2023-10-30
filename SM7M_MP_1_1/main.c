@@ -33,7 +33,8 @@
 #include <ct7451.h>
 #include <rst_key.h>
 #include <mon_print.h>
-#include <at24c128c.h>
+#include <at24c128c-e2prom.h>
+#include <se6.h>
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
@@ -54,16 +55,19 @@ int main(void)
 #endif
 
 	led_init();
-
+	led_set_frequency(0);
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
-	i2c_master_init(I2C3);
+	//i2c_master_init(I2C3);
 	mp5475_init();
 	mp5475_buck_on(0);
+	//timer_mdelay(200);
+
 	/* check if i am in test board and if we need enter test mode */
 	if (detect_test_mode() == TEST_MODE_HALT) {
 
 		mcu_set_test_mode(true);
+		led_set_frequency(10);
 		/* convert MCU_INT from input to output */
 		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
 		gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
@@ -73,10 +77,10 @@ int main(void)
 
 		set_board_type(SM7M);
 
-		nvic_enable_irq(NVIC_I2C2_IRQ);
 		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
 			       I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
 		mcu_test_init(&i2c2_slave_ctx);
+		nvic_enable_irq(NVIC_I2C2_IRQ);
 		i2c_slave_start(&i2c2_slave_ctx);
 
 		while (detect_test_mode() != TEST_MODE_RUN) {
@@ -105,8 +109,6 @@ int main(void)
 	chip_init();
 
 
-	set_board_type(SM7M_MP_1_1);
-
 	debug("%s %s working at ",
 	      get_board_type_name(),
 	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application");
@@ -126,6 +128,15 @@ int main(void)
 	mon_init();
 	mon_print_init();
 
+	/* check if i am se8 crtl board */
+	if (is_se6ctrl_board()){
+		set_board_type(SM7M_MP_SE8M);
+		set_hardware_version(0,0);
+		}
+	else {
+	 	set_board_type(SM7M_MP_1_1);
+	}
+	
 	mcu_init(&i2c1_slave_ctx);
 	eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
@@ -134,10 +145,10 @@ int main(void)
 	if (tca6416a_available())
 		tca6416a_init(&i2c1_slave_ctx);
 
-	if (pic_available()) {
+	if (get_board_type() == SM7M_MP_SE8M)
 		kbd_init(&i2c1_slave_ctx);
+	if (pic_available())
 		pic_init(&i2c1_slave_ctx);
-	}
 
 	ct7451_init(&i2c1_slave_ctx);
 
@@ -146,6 +157,13 @@ int main(void)
 
 	if (get_work_mode() == WORK_MODE_SOC) {
 		sm7_init();
+		if (get_board_type() == SM7M_MP_SE8M) {
+			se6_init();
+			if (get_eeprom_type() == AT24C01D)
+				at24c01d_init(&i2c1_slave_ctx);
+			else
+				at24c128c_init(&i2c1_slave_ctx);
+		}
 	}
 
 	if (get_work_mode() == WORK_MODE_SOC)
