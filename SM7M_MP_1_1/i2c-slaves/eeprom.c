@@ -9,6 +9,7 @@
 #include <libopencmsis/core_cm3.h>
 #include <i2c_slave.h>
 #include <common.h>
+#include <eeprom.h>
 
 uint8_t eeprom_read_byte(uint32_t offset)
 {
@@ -20,11 +21,7 @@ void eeprom_write_byte(uint32_t offset, uint8_t data)
 	eeprom_program_byte(EEPROM_BASE + offset, data);
 }
 
-static struct eeprom_ctx {
-	int set_idx;
-	int idx;
-	unsigned char tmp;
-} ctx;
+static struct eeprom_ctx ctx;
 
 static void eeprom_match(void *priv, int dir)
 {
@@ -154,4 +151,28 @@ void eeprom_log_power_off_reason(int reason)
 int is_mixed_mode(void)
 {
 	return eeprom_read_byte(EEPROM_MIXED_MODE_OFFSET) == 1 ? 1 : 0;
+}
+
+int is_test_mode(void)
+{
+	return eeprom_read_byte(EEPROM_TEST_MODE_OFFSET) == 1 ? 1 : 0;
+}
+void eeprom_create(
+	struct i2c_slave_ctx *i2c,
+	struct eeprom_ctx *eeprom,
+	struct i2c_slave_op *slave,
+	int (*read)(void *, unsigned int),
+	int (*write)(void *, unsigned int, unsigned char),
+	unsigned int size
+	)
+{
+	eeprom->read_byte = read;
+	eeprom->write_byte = write;
+	eeprom->size = size;
+	slave->priv = eeprom;
+	slave->match = eeprom_match;
+	slave->read = eeprom_read;
+	slave->write = eeprom_write;
+
+	i2c_slave_register(i2c, slave);
 }

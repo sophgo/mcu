@@ -8,5 +8,5 @@ uint8_t get_pcb_version(void);
 uint8_t get_bom_version(void);
 uint8_t get_hardware_version(void);
 int get_ntc_tmp(void);
-
+void set_hardware_version(unsigned int pcb_ver_val, unsigned int bom_ver_val);
 #endif
