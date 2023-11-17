@@ -9,6 +9,7 @@
 #include <mcu.h>
 #include <chip.h>
 #include <loop.h>
+#include <wdt.h>
 
 #define NCT218_REG_MAX	(21)
 
@@ -235,6 +236,7 @@ void nct218_process(void)
 		if (nct218_ctx.overtemp > NCT218_OVERTEMP_MAX) {
 			chip_disable();
 			power_off();
+			wdt_reset();
 			nct218_ctx.overtemp = 0;
 			printf("temp is over, board will ");
 			if (get_critical_action() == CRITICAL_ACTION_REBOOT) {

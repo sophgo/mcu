@@ -1,6 +1,7 @@
 #include <gd32e50x_i2c.h>
 #include <mcu.h>
 #include <adc.h>
+#include <eeprom.h>
 #include <stdio.h>
 #include <i2c_slave.h>
 #include <slave.h>
@@ -13,6 +14,7 @@
 #include <common.h>
 #include <power.h>
 #include <project.h>
+#include <wdt.h>
 #include <upgrade.h>
 
 #define REG_BOARD_TYPE		0x00
@@ -56,6 +58,10 @@
 #define REG_I_5V_L		0x30
 #define REG_I_VDD_12V_H		0x37
 #define REG_I_VDD_12V_L		0x38
+#define REG_EEPROM_OFFSET_LO	0x3e	/* 16bit eeprom address, low 8bits */
+#define REG_EEPROM_OFFSET_HI	0x3f	/* 16bit eeprom address, high 8bits */
+#define REG_EEPROM_DATA		0x40	/* eeprom data */
+#define REG_EEPROM_LOCK		0x60	/* eeprom write lock */
 #define REG_CRITICAL_ACTIONS		0x65
 #define REG_CTRITICAL_TEMP		0x66
 #define REG_REPOWERON_TEMP		0x67
@@ -70,6 +76,7 @@
 #define FLASH_CMD_ERASE		0x04
 
 #define MCU_REG_MAX		0x100
+#define MCU_EEPROM_DATA_MAX	0x20
 
 #define COLLECT_INTERVAL	25
 #define OUTPUT_CURRENT_INTERVAL	1000
@@ -122,6 +129,7 @@ struct mcu_ctx {
 	uint16_t tmp;
 	uint8_t int_status[2];
 	uint8_t int_mask[2];
+	uint8_t eeprom_offset_l, eeprom_offset_h;
 	uint8_t critical_action;
 	uint8_t	repoweron_temp;
 	uint8_t critical_temp;
@@ -209,6 +217,15 @@ static void mcu_match(void *priv, int dir)
 		ctx->set_idx = 1;
 }
 
+static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)
+{
+	uint16_t offset_base = ctx->eeprom_offset_l |
+		(ctx->eeprom_offset_h << 8);
+	uint16_t offset_off =
+		ctx->idx - REG_EEPROM_DATA;
+	return offset_base + offset_off;
+}
+
 static void mcu_write(void *priv, volatile uint8_t data)
 {
 	struct mcu_ctx *ctx = priv;
@@ -222,6 +239,19 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	switch (ctx->idx) {
 	case REG_CMD:
 		ctx->cmd_tmp = data;
+		break;
+	case REG_EEPROM_OFFSET_LO:
+		ctx->eeprom_offset_l = data;
+		break;
+	case REG_EEPROM_OFFSET_HI:
+		ctx->eeprom_offset_h = data;
+		break;
+	case REG_EEPROM_DATA ...
+		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
+		eeprom_write_byte_protected(eeprom_offset(ctx), data);
+		break;
+	case REG_EEPROM_LOCK:
+		eeprom_lock_code(data);
 		break;
 	case REG_CRITICAL_ACTIONS:
 		ctx->critical_action = data;
@@ -446,10 +476,12 @@ void mcu_process(void)
 			power_is_on = true;
 		timer_mdelay(500);
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_POWER_OFF;
+		wdt_reset();
 		break;
 	case CMD_RESET:
 		chip_reset();
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_RESET;
+		wdt_reset();
 		break;
 	case CMD_REBOOT:
 		chip_popd_reset_early();
@@ -457,6 +489,7 @@ void mcu_process(void)
 			power_is_on = true;
 		set_needpoweron();
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_REBOOT;
+		wdt_reset();
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(I2C2_EV_IRQn);
