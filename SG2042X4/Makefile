@@ -14,8 +14,8 @@ else
 endif
 
 OUTDIR = build
-SRCDIR = . ecdc
-INCDIR = . ecdc	\
+SRCDIR = . ecdc i2c-slaves
+INCDIR = . ecdc i2c-slaves	\
 	$(TOP)/libgd/GD32E50x_standard_peripheral/Include	\
 	$(TOP)/libgd/CMSIS \
 	$(TOP)/libgd/CMSIS/GD/GD32E50x/Include
