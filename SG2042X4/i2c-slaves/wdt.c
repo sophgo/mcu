@@ -123,18 +123,21 @@ static struct i2c_slave_op slave = {
 
 void wdt_reset(void)
 {
-	__disable_irq();
 	memset(&wdt_ctx, 0, sizeof(wdt_ctx));
 //	wdt_ctx.clock = (37 * 1000) / 128;
 	wdt_ctx.counter = wdt_ctx.counter_shadow =
 		wdt_ctx.timeout = wdt_ctx.timeout_shadow = 0xffffffff;
-	__enable_irq();
 }
+
+extern int power_is_on;
 
 void wdt_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
-		chip_disable();
+		chip_popd_reset_early();
+		if (gpio_get(MCU_PWER_OK_C_PORT, MCU_PWER_OK_C_PIN) == 0)
+			power_is_on = true;
+		set_needpoweron();
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		wdt_reset();	/* reset to initial state */
 		chip_reset();
@@ -154,7 +157,17 @@ void wdt_init(struct i2c_slave_ctx *i2c)
 	wdt_reset();
 
 	loop_add(wdt_process);
-	tick_register_task(wdt_isr, 1000);
 	i2c_slave_register(i2c, &slave);
 }
 
+void wdt_tick_task_enable(void)
+{
+	tick_register_task(wdt_isr, 1000);
+}
+
+void wdt_info_print(void)
+{
+	printf("wdt status: %s\n", wdt_ctx.enable ? "enabled" : "disabled");
+	printf("timeout: %ld s\n", wdt_ctx.timeout);
+	printf("counter: %ld s\n", wdt_ctx.counter);
+}

@@ -13,5 +13,7 @@
 void wdt_init(struct i2c_slave_ctx *i2c);
 void wdt_isr(void);
 void wdt_reset(void);
+void wdt_tick_task_enable(void);
+void wdt_info_print(void);
 
 #endif /* WDT_H_ */

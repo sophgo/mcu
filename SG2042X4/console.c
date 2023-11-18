@@ -14,6 +14,7 @@
 #include <chip.h>
 #include <power.h>
 #include <mcu.h>
+#include <wdt.h>
 
 static struct ecdc_console *console;
 extern int power_is_on;
@@ -142,6 +143,15 @@ static void cmd_enprint(void *hint, int argc, char const *argv[])
 	}
 }
 
+static const char * const cmd_wdt_usage =
+"wdt\n"
+"    show wdt information\n";
+
+static void cmd_wdt(void *hint, int argc, char const *argv[])
+{
+	wdt_info_print();
+}
+
 uint32_t sys_rst_pin_list[1][2] = {
 	{SYS_RST_X_H_PORT, SYS_RST_X_H_PIN},
 };
@@ -162,6 +172,7 @@ static struct command command_list[] = {
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"enprint", NULL, cmd_enprint_usage, cmd_enprint},
 	{"current", NULL, cmd_current_usage, cmd_current},
+	{"wdt", NULL, cmd_wdt_usage, cmd_wdt},
 };
 
 void print_usage(struct command *cmd)
