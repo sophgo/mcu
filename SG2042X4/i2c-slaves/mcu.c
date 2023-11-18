@@ -476,12 +476,10 @@ void mcu_process(void)
 			power_is_on = true;
 		timer_mdelay(500);
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_POWER_OFF;
-		wdt_reset();
 		break;
 	case CMD_RESET:
 		chip_reset();
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_RESET;
-		wdt_reset();
 		break;
 	case CMD_REBOOT:
 		chip_popd_reset_early();
@@ -489,7 +487,6 @@ void mcu_process(void)
 			power_is_on = true;
 		set_needpoweron();
 		mcu_ctx.poweroff_reason = POWER_OFF_REASON_REBOOT;
-		wdt_reset();
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(I2C2_EV_IRQn);

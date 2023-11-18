@@ -15,6 +15,7 @@
 #include <slave.h>
 #include <nct218.h>
 #include <mcu.h>
+#include <wdt.h>
 #include <chip.h>
 #include <loop.h>
 
@@ -29,6 +30,7 @@ int main(void)
 	chip_init();
 	slave_init();
 	board_init();
+	wdt_tick_task_enable();
 	console_add();
 	/* never return */
 	loop_start();
