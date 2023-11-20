@@ -44,6 +44,9 @@
 #include "mcc_generated_files/mcc.h"
 #include "power.h"
 #include "tick.h"
+
+#define SW_VERSION	1
+
 /*
                          Main application
  */
@@ -68,10 +71,9 @@ void main(void)
 
     // Disable the Peripheral Interrupts
     //INTERRUPT_PeripheralInterruptDisable();
-    //POWER_KEY_SetPullup();
-    POWER_ON_SetLow();
-    POWER_LED_SetLow();
- 
+
+    power_on();
+
     while (1)
     {
         power_ctrl();
