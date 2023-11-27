@@ -140,7 +140,6 @@ void wdt_process(void)
 		set_needpoweron();
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		wdt_reset();	/* reset to initial state */
-		chip_reset();
 	}
 }
 
