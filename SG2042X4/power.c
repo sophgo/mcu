@@ -11,6 +11,7 @@
 #include <timer.h>
 #include <chip.h>
 #include <loop.h>
+#include <wdt.h>
 
 /* in us */
 #define NODE_CHECK_TIMEOUT	(10 * 1000)
@@ -164,6 +165,7 @@ void board_power_control(void)
 	if (gpio_get(MCU_PWER_OK_C_PORT, MCU_PWER_OK_C_PIN) == 1) {
 		if (power_is_on == true) {
 			power_off();
+			wdt_reset();
 		}
 	}
 }
