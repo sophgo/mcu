@@ -35,6 +35,8 @@
 #include <mon_print.h>
 #include <at24c128c-e2prom.h>
 #include <se6.h>
+#include <mcu-e2prom.h>
+
 static struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
@@ -100,14 +102,12 @@ int main(void)
 
 	tca6416a_probe();
 	pic_probe();
-
 	timer_udelay(50*1000);
 	power_init();
 	timer_udelay(1000);
 	mp5475_init();
 	power_on();
 	chip_init();
-
 
 	debug("%s %s working at ",
 	      get_board_type_name(),
@@ -132,15 +132,20 @@ int main(void)
 	if (is_se6ctrl_board()){
 		set_board_type(SM7M_MP_SE8M);
 		set_hardware_version(0,0);
+		set_soc_forever();
 		}
-	else {
+	else if (mcu_get_se6_aiucore()){
+                set_soc_forever();
 	 	set_board_type(SM7M_MP_1_1);
+	}
+	else{
+		set_board_type(SM7M_MP_1_1);
 	}
 	
 	mcu_init(&i2c1_slave_ctx);
-	eeprom_init(&i2c1_slave_ctx);
+	mcu_eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
-	slt_init(&i2c1_slave_ctx);
+	//slt_init(&i2c1_slave_ctx);
 
 	if (tca6416a_available())
 		tca6416a_init(&i2c1_slave_ctx);
@@ -152,9 +157,6 @@ int main(void)
 
 	ct7451_init(&i2c1_slave_ctx);
 
-	/* start i2c slaves */
-	i2c_slave_start(&i2c1_slave_ctx);
-
 	if (get_work_mode() == WORK_MODE_SOC) {
 		sm7_init();
 		if (get_board_type() == SM7M_MP_SE8M) {
@@ -165,6 +167,9 @@ int main(void)
 				at24c128c_init(&i2c1_slave_ctx);
 		}
 	}
+
+	/* start i2c slaves */
+	i2c_slave_start(&i2c1_slave_ctx);
 
 	if (get_work_mode() == WORK_MODE_SOC)
 		chip_enable();

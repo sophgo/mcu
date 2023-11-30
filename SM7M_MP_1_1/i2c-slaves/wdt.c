@@ -16,6 +16,7 @@
 #include <mcu.h>
 #include <project.h>
 #include <se5.h>
+#include <mcu-e2prom.h>
 
 /* magic number for different type of watchdogs, no need now */
 /* this byte is used to handle some different software implementations of wdt */
@@ -136,7 +137,7 @@ void wdt_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
 		chip_disable();
-		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
+		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		mcu_raise_interrupt(1, MCU_INT_WDT_RST);
 		wdt_reset();	/* reset to initial state */
 		if (get_board_type() == SM5ME)

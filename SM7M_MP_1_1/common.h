@@ -81,4 +81,5 @@ void set_soc_temp(int temp);
 void set_board_temp(int temp);
 int get_board_temp(void);
 int get_soc_temp(void);
+void set_soc_forever(void);
 #endif
