@@ -81,6 +81,7 @@ static struct {
 	{"SG2042EVB",	{SG2042EVB, -1},			FILE_SIZE_64KB},
 	{"SG2042X4",	{SG2042X4, -1},				FILE_SIZE_80KB},
   	{"SM7G",        {SM7G, -1},	         		FILE_SIZE_64KB},
+	{"SM7M_MP_1_2", {SM7M_MP_1_2, -1},	        	FILE_SIZE_64KB},
 	{"ATHENA2EVB",	{ATHENA2EVB, -1},			FILE_SIZE_64KB},
 	{"ATHENA2ACP",	{ATHENA2ACP, -1},			FILE_SIZE_64KB},
 };

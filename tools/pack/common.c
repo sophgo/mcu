@@ -147,6 +147,7 @@ struct {
 	{"SM7MSE6M", {SM7MSE6M}},
 	{"SM7G", {SM7G}},
 	{"SM7M_MP_1_1", {SM7M_MP_1_1}},
+	{"SM7M_MP_1_2", {SM7M_MP_1_2}},
 	{"ATHENA2EVB", {ATHENA2EVB}},
 	{"ATHENA2ACP", {ATHENA2ACP}},
 };

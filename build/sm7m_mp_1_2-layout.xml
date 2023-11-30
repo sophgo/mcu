@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<firmware>
+	<family>GD32E50</family>
+	<name>SM7M_MP_1_2</name>
+	<size>0x10000</size>
+	<efit>
+		<offset>0x6000</offset>
+		<size>8192</size>
+	</efit>
+	<component>
+		<name>application</name>
+		<type>0</type>
+		<file>../SM7M_MP_1_2/build/SM7M_MP_1_2.bin</file>
+		<offset>0x8000</offset>
+	</component>
+	<component>
+		<name>loader</name>
+		<type>1</type>
+		<file>../SM7M_MP_1_2/build/SM7M_MP_1_2.bin</file>
+		<offset>0x0000</offset>
+	</component>
+</firmware>
