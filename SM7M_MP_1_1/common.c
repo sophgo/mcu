@@ -4,14 +4,21 @@
 #include <common.h>
 #include <pin.h>
 #include <tick.h>
-#include <eeprom.h>
+#include <i2c_slave.h>
+#include <i2c_master.h>
+#include <mcu-e2prom.h>
 
-#define MCU_SW_VER	3
+#define MCU_SW_VER	4
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
 static uint8_t work_mode;
 static int board_temp, soc_temp;
+
+void set_soc_forever(void)
+{
+	work_mode = WORK_MODE_SOC;
+}
 
 int get_board_temp(void)
 {

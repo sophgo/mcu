@@ -23,5 +23,6 @@ void mcu_set_test_mode(int mode);
 uint8_t get_critical_action(void);
 uint8_t get_critical_temp(void);
 uint8_t get_repoweron_temp(void);
+bool mcu_get_se6_aiucore(void);
 
 #endif

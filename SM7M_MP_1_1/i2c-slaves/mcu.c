@@ -8,6 +8,7 @@
 #include <upgrade.h>
 #include <loop.h>
 #include <chip.h>
+#include <mcu-e2prom.h>
 #include <eeprom.h>
 #include <power.h>
 #include <se5.h>
@@ -15,6 +16,8 @@
 #include <mcu.h>
 #include <stdio.h>
 #include <pcie.h>
+#include <at24c128c-e2prom.h>
+
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
 #define REG_HW_VER		0x02
@@ -195,17 +198,17 @@ void mcu_process(void)
 	nvic_disable_irq(NVIC_I2C1_IRQ);
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
-		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
+		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		power_off();
 		wdt_reset();
 		break;
 	case CMD_RESET:
-		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
+		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
 		chip_reset();
 		wdt_reset();
 		break;
 	case CMD_REBOOT:
-		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
+		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_REBOOT);
 		chip_popd_reset_early();
 		set_needpoweron();
 		wdt_reset();
@@ -278,7 +281,7 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
-		eeprom_write_byte_protected(eeprom_offset(ctx), data);
+		mcu_eeprom_write_byte_protected(eeprom_offset(ctx), data);
 		break;
 	case REG_EEPROM_LOCK:
 		eeprom_lock_code(data);
@@ -400,7 +403,7 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_EEPROM_DATA ...
 		(REG_EEPROM_DATA + MCU_EEPROM_DATA_MAX - 1):
-		ret = eeprom_read_byte(eeprom_offset(ctx));
+		ret = mcu_eeprom_read_byte(NULL, eeprom_offset(ctx));
 		break;
 	case REG_EEPROM_LOCK:
 		ret = eeprom_get_lock_status();

@@ -31,8 +31,8 @@ void sys_rst_assert_off(void);
 
 struct power_node board_power_nodes[17] = {
 
-    {"POWERCHIP_INIT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
-    {(unsigned long)powerchip_init_on, (unsigned long)powerchip_init_off},
+    {"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
+    {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
     },
 
     {"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
@@ -63,7 +63,7 @@ struct power_node board_power_nodes[17] = {
     {(unsigned long)GPIO2_PORT, (unsigned long)GPIO2_PIN},
     },
 
-    {"VDD-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+    {"VDD-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
     {(unsigned long)EN_VDD_TPU_PORT, (unsigned long)EN_VDD_TPU_PIN},
     },
 
@@ -79,7 +79,7 @@ struct power_node board_power_nodes[17] = {
     {(unsigned long)pmic_channel_c_on, (unsigned long)pmic_channel_c_off},
     },
 
-    {"VQPS-1.8V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
+    {"VQPS-1.8V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 25000,
     {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
     },
 
@@ -87,7 +87,7 @@ struct power_node board_power_nodes[17] = {
     {(unsigned long)check_pcie_reset_on, (unsigned long)check_pcie_reset_off},
     },
 
-    {"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
+    {"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 30000,
     {(unsigned long)sys_rst_deassert_on, (unsigned long)sys_rst_deassert_off},
     },
 
