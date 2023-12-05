@@ -31,61 +31,61 @@ void sys_rst_assert_off(void);
 
 struct power_node board_power_nodes[19] = {
 
-	{"EN_12V_SYS", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
-	 {(unsigned long)EN_12V_SYS_PORT, (unsigned long)EN_12V_SYS_PIN},
-	 },
-
-	{"POWERCHIP_INIT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
-	 {(unsigned long)powerchip_init_on, (unsigned long)powerchip_init_off},
+	{"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
+	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
 	 },
 
 	{"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
 	 {(unsigned long)pmic_channel_a_on, (unsigned long)pmic_channel_a_off},
 	 },
 
-	{"VDD-1.8V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"VDD-1.8V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
 	 },
 
-	{"VDD-CORE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
+	{"VDD-CORE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 5000,
 	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
 	 },
 
-	{"VDD-3.3V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"VDD-3.3V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)EN_VDDIO33_PORT, (unsigned long)EN_VDDIO33_PIN},
 	 },
 
-	{"VDD-0.8V", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
+	{"VDD-0.8V", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)pmic_channel_d_on, (unsigned long)pmic_channel_d_off},
 	 },
 
-	{"ACK-P08", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"ACK-P08", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)P08_PWR_GOOD_PORT, (unsigned long)P08_PWR_GOOD_PIN},
 	 },
 
-	{"VDD-PCIE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"VDD-PCIE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)EN_VDD_PCIE_VP_PORT,
 	  (unsigned long)EN_VDD_PCIE_VP_PIN},
 	 },
 
-	{"ACK-PCIE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"ACK-PCIE", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)GPIO2_PORT, (unsigned long)GPIO2_PIN},
 	 },
 
-	{"VDD-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"VDD-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 5000,
 	 {(unsigned long)EN_VDD_TPU_PORT, (unsigned long)EN_VDD_TPU_PIN},
 	 },
 
-	{"ACK-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 1000,
+	{"ACK-TPU", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)GPIO3_PORT, (unsigned long)GPIO3_PIN},
 	 },
 
-	{"DDR-VDDQ", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
+	{"DDR-VDDQ", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)pmic_channel_b_on, (unsigned long)pmic_channel_b_off},
 	 },
 
-	{"DDR-VDDQLP", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
+	{"DDR-VDDQLP", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 3000,
 	 {(unsigned long)pmic_channel_c_on, (unsigned long)pmic_channel_c_off},
+	 },
+
+	{"TPU_MEM_PG", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
+	 {(unsigned long)MCU_INT_PORT, (unsigned long)MCU_INT_PIN},
 	 },
 
 	{"VQPS-1.8V", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 3000,
@@ -97,12 +97,12 @@ struct power_node board_power_nodes[19] = {
 	  (unsigned long)check_pcie_reset_off},
 	 },
 
-	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
+	{"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 50000,
 	 {(unsigned long)sys_rst_deassert_on,
 	  (unsigned long)sys_rst_deassert_off},
 	 },
 
-	{"ACK-DDR", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 29000,
+	{"ACK-DDR", NODE_TYPE_ENABLE, POWER_STATUS_OFF, 30000,
 	 {(unsigned long)DDR_PWR_GOOD_PORT, (unsigned long)DDR_PWR_GOOD_PIN},
 	 },
 
