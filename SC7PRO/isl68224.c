@@ -10,6 +10,8 @@
 #define I2C			I2C1
 
 #define REG_VOUT_COMMAND	0x21
+#define REG_VOUT_DROOP		0X28
+
 #define REG_PAGE	0x0
 
 static uint8_t isl68224_channel[4] = {1, 3, 6, 7};
@@ -99,4 +101,23 @@ int isl68224_set_out_voltage(int idx, int page, int voltage)
 	isl68224_write_word(idx, REG_VOUT_COMMAND, (uint16_t)voltage);
 
 	return 0;
+}
+
+int isl68224_set_out_droop(int idx, int page, int resistance)
+{
+	isl68224_write_byte(idx, REG_PAGE, page);
+	isl68224_write_word(idx, REG_VOUT_DROOP, (uint16_t)resistance);
+
+	return 0;
+}
+
+unsigned long isl68224_out_droop(int idx, int page)
+{
+	unsigned long tmp;
+
+	isl68224_write_byte(idx, 0, page);
+	tmp = (unsigned long)isl68224_read_word(idx, REG_VOUT_DROOP);
+	tmp = tmp == 0xffff ? 0 : tmp;
+
+	return tmp  ;
 }
