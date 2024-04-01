@@ -299,6 +299,47 @@ static void cmd_setisl68224_vout(void *hint, int argc, char const *argv[])
 	return;
 }
 
+static const char * const cmd_rdrop_usage =
+"rdrop [idx page  resistance]\n"
+"    idx: 0-3, there are 4 isl68224 in sc7pro\n"
+"    page: 0-2 0:tpu 1:vddc 2:phy\n"
+"    resistance: range from 0 to 1600,  unit is uV/A\n";
+
+static void cmd_rdrop_vout(void *hint, int argc, char const *argv[])
+{
+	int idx = 0;
+	int page = 0;
+	int resistance = 0;
+
+	if (argc == 4 ) {
+		idx = strtol(argv[1], NULL, 0);
+		page = strtol(argv[2], NULL, 0);
+		resistance = strtol(argv[3], NULL, 0);
+		isl68224_set_out_droop(idx, page, resistance);
+	}else{
+		printf("%s", cmd_rdrop_usage);
+	}
+	return;
+}
+static const char * const cmd_tpu_rdrop_usage =
+"tpu_rdrop  [resistance]\n"
+"resistance: range from 0 to 1600,  unit is uV/A\n";
+static void cmd_tpu_rdrop_vout(void *hint, int argc, char const *argv[]){
+	int value;
+	int i;
+
+	if (argc != 2) {
+		printf("%s", cmd_tpu_rdrop_usage);
+		return;
+	}
+
+	value = strtol(argv[1], NULL, 0);
+	for (i = 0; i < 4; i++) {
+		isl68224_set_out_droop(i, 0, value);
+	}
+	return;
+}
+
 static const char * const cmd_tpu_usage =
 "tpu [voltage]\n"
 "    voltage: this value will be set in all isl68224,unit is mV\n";
@@ -369,6 +410,8 @@ static struct command command_list[] = {
 	{"tpu", NULL, cmd_tpu_usage, cmd_tpu},
 	{"vddc", NULL, NULL, cmd_vddc},
 	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
+	{"rdrop", NULL, cmd_rdrop_usage, cmd_rdrop_vout},
+	{"tpu_rdrop",NULL,cmd_tpu_rdrop_usage , cmd_tpu_rdrop_vout },
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
 };
 

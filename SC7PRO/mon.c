@@ -13,6 +13,7 @@
 #include <timer.h>
 #include <common.h>
 #include <mon.h>
+#include <console.h>
 
 #ifndef __maybe_unused
 #define __maybe_unused __attribute__((unused))
@@ -72,6 +73,7 @@ static struct filter mp5475_voltage[4][4];
 static struct filter isl68224_current[4][3];
 static struct filter isl68224_voltage[4][3];
 static struct filter isl68224_power[4][3];
+static struct filter isl68224_rdrop[4][3];
 
 static struct {
 	uint8_t id;
@@ -92,6 +94,7 @@ static struct {
 			uint32_t voltage;
 			uint32_t current;
 			uint32_t power;
+			uint32_t rdrop;
 		} rail[3];
 	} isl68224[4];
 } __attribute__((packed)) __attribute__((aligned(4))) pkg;
@@ -161,6 +164,10 @@ collect_isl68224(void)
 			pkg.isl68224[i].rail[j].power =
 				filter_in(&(isl68224_power[i][j]),
 					  isl68224_output_power(i, j));
+			
+			pkg.isl68224[i].rail[j].rdrop =
+				filter_in(&(isl68224_rdrop[i][j]),
+					  isl68224_out_droop(i, j));
 		}
 	}
 }
@@ -349,6 +356,13 @@ static void __maybe_unused broadcast(void)
 	dbgi2c_pkg.i12v_atx = get_i12v_atx();
 	dbgi2c_pkg.i12v_pcie = get_i12v_pcie();
 	dbgi2c_pkg.i3v3_pcie = get_i3v3_pcie();
+
+	dbgi2c_pkg.rdrop_tpu = 
+		pkg.isl68224[isl68224_idx].rail[0].rdrop;
+	dbgi2c_pkg.rdrop_vddc = 
+		pkg.isl68224[isl68224_idx].rail[1].rdrop;
+	dbgi2c_pkg.rdrop_vdd_phy = 
+		pkg.isl68224[isl68224_idx].rail[2].rdrop;
 
 	dbgi2c_broadcast(soc_idx, &dbgi2c_pkg);
 
