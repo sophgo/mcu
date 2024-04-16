@@ -125,6 +125,12 @@ int main(void)
 	else
 		debug("unkown mode\n");
 
+    if (get_board_type() == SE7Q) {
+        se5_init();
+        register_ext_led(MCU_UART1_TX_PORT, MCU_UART1_TX_PIN);
+        register_ext_led(MCU_UART1_RX_PORT, MCU_UART1_RX_PIN);
+    }
+
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
 		       I2C1_OA1, I2C1_OA2, I2C1_OA2_MASK);
@@ -144,10 +150,6 @@ int main(void)
 		kbd_init(&i2c1_slave_ctx);
 		pic_init(&i2c1_slave_ctx);
 	}
-
-    if (get_board_type() == SE7Q) {
-        se5_smb_alert();
-    }
 
 	tmp451_init(&i2c1_slave_ctx);
 
