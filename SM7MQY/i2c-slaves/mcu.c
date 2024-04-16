@@ -15,6 +15,8 @@
 #include <mcu.h>
 #include <stdio.h>
 #include <pcie.h>
+#define EXT_LED_MAX		8
+
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
 #define REG_HW_VER		0x02
@@ -44,6 +46,7 @@
 #define RTC_YEAR			0x13
 
 #define I_12V_ATX_L 		0x28
+#define REG_LED_CTRL		0x30
 
 #define BM1686_TMP_OVER_REPORT			1<<0
 #define POWER_68127_TMP_OVER_REPORT		1<<1
@@ -115,6 +118,54 @@ static const char *tpu_powers[] = {
 		"VDD-TPU-MEM",
 		"ACK-TPU_MEM"
 };
+
+static struct {
+	int num;
+	struct {
+		int port, pin;
+	} pins[EXT_LED_MAX];
+} ext_led;
+
+int register_ext_led(int port, int pin)
+{
+	if (ext_led.num >= ARRAY_SIZE(ext_led.pins))
+		return -1;
+
+	ext_led.pins[ext_led.num].port = port;
+	ext_led.pins[ext_led.num].pin = pin;
+
+	gpio_clear(port, pin);
+	gpio_mode_setup(port, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN, pin);
+
+	++ext_led.num;
+
+	return 0;
+}
+
+static void set_ext_led_status(uint8_t data)
+{
+	int i;
+
+	for (i = 0; i < ext_led.num; ++i) {
+		if (data & (1 << i))
+			gpio_set(ext_led.pins[i].port, ext_led.pins[i].pin);
+		else
+			gpio_clear(ext_led.pins[i].port, ext_led.pins[i].pin);
+	}
+}
+
+static uint8_t get_ext_led_status(void)
+{
+	int tmp, i;
+	uint8_t status = 0xff;
+
+	for (i = 0; i < ext_led.num; ++i) {
+		tmp = gpio_get(ext_led.pins[i].port, ext_led.pins[i].pin);
+		status &= ~((tmp ? 0 : 1) << i);
+	}
+
+	return status;
+}
 
 static void tpu_power_setup(unsigned char enable)
 {
@@ -267,6 +318,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_INT_MASK2:
 		mcu_set_int_mask(1, data);
 		break;
+    case REG_LED_CTRL:
+		set_ext_led_status(data);
+		break;
 	case REG_GP0:
 		ctx->gp0 = data;
 		break;
@@ -362,6 +416,9 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_UPTIME_HI:
 		ret = (ctx->tmp >> 8) & 0xff;
+		break;
+	case REG_LED_CTRL:
+		ret = get_ext_led_status();
 		break;
 	case REG_GP0:
 		ret = ctx->gp0;
@@ -504,3 +561,4 @@ void mcu_set_test_mode(int mode)
 {
 	mcu_ctx.test_mode = mode;
 }
+
