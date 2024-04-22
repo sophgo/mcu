@@ -26,13 +26,16 @@ void pin_init(void)
 	    | (GPIO_PUPD_PULLDOWN << (12 * 2)) | (GPIO_PUPD_PULLDOWN <<
 						  (15 * 2));
 	/* af, alternative function selection */
-	/* AFRL reset state */
+	GPIO_AFRL(GPIOA) =
+	    (GPIO_AFRL(GPIOA) & ~0x0000ff00) | (GPIO_AF4 << (2 * 4)) | (GPIO_AF4
+									<< (3 *
+									    4));
 	/* AFRH reset state */
 	/* mode, input, output, alternate function or analog */
 	GPIO_MODER(GPIOA) =
 	    (GPIO_MODER(GPIOA) & ~0xc3ffffff) | (GPIO_MODE_ANALOG << (0 * 2)) |
-	    (GPIO_MODE_ANALOG << (1 * 2)) | (GPIO_MODE_INPUT << (2 * 2)) |
-	    (GPIO_MODE_INPUT << (3 * 2)) | (GPIO_MODE_ANALOG << (4 * 2)) |
+	    (GPIO_MODE_ANALOG << (1 * 2)) | (GPIO_MODE_AF << (2 * 2)) |
+	    (GPIO_MODE_AF << (3 * 2)) | (GPIO_MODE_ANALOG << (4 * 2)) |
 	    (GPIO_MODE_INPUT << (5 * 2)) | (GPIO_MODE_ANALOG << (6 * 2)) |
 	    (GPIO_MODE_INPUT << (7 * 2)) | (GPIO_MODE_OUTPUT << (8 * 2)) |
 	    (GPIO_MODE_OUTPUT << (9 * 2)) | (GPIO_MODE_OUTPUT << (10 * 2)) |

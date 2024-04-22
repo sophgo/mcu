@@ -8,6 +8,9 @@
 int powerchip_init_on(void);
 void powerchip_init_off(void);
 
+int sys_rst_assert_on(void);
+void sys_rst_assert_off(void);
+
 int pmic_channel_a_on(void);
 void pmic_channel_a_off(void);
 
@@ -26,10 +29,11 @@ void check_pcie_reset_off(void);
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
 
-int sys_rst_assert_on(void);
-void sys_rst_assert_off(void);
+struct power_node board_power_nodes[20] = {
 
-struct power_node board_power_nodes[19] = {
+	{"POWERCHIP_INIT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 100,
+	 {(unsigned long)powerchip_init_on, (unsigned long)powerchip_init_off},
+	 },
 
 	{"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
 	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
