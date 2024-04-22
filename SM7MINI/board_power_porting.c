@@ -15,6 +15,17 @@ void __weak powerchip_init_off(void)
 	/* add customer code here */
 }
 
+int __weak sys_rst_assert_on(void)
+{
+	/* add customer code here */
+	return 0;
+}
+
+void __weak sys_rst_assert_off(void)
+{
+	/* add customer code here */
+}
+
 int __weak pmic_channel_a_on(void)
 {
 	/* add customer code here */
@@ -77,17 +88,6 @@ int __weak sys_rst_deassert_on(void)
 }
 
 void __weak sys_rst_deassert_off(void)
-{
-	/* add customer code here */
-}
-
-int __weak sys_rst_assert_on(void)
-{
-	/* add customer code here */
-	return 0;
-}
-
-void __weak sys_rst_assert_off(void)
 {
 	/* add customer code here */
 }

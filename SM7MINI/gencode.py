@@ -4,6 +4,7 @@ from openpyxl import load_workbook
 import sys, os
 from argparse import ArgumentParser
 
+
 def error(msg):
     sys.stderr.write(msg)
 
@@ -603,6 +604,7 @@ class Power:
         return s
 
     def gen_code(self):
+        funclist = ''
         code = '/* AUTO GENERATED CODE */\n\n'
 
         code += '#include <power.h>\n'
@@ -611,6 +613,9 @@ class Power:
         code += '#include <stdlib.h>\n\n'
 
         for node in self.nodes:
+            if node.get_code_name() in funclist:
+                continue
+            funclist += node.get_code_name()
             code += node.gen_porting_func_dec() + '\n'
 
         code += 'struct power_node board_power_nodes[{}] = {{\n\n'.format(len(self.nodes))
@@ -624,11 +629,15 @@ class Power:
         return code
 
     def gen_porting(self):
+        funclist = ''
         code = '/* AUTO GENERATED CODE */\n\n'
         code += '#ifndef __weak\n'
         code += '#define __weak __attribute__((weak))\n'
         code += '#endif\n\n'
         for node in self.nodes:
+            if node.get_code_name() in funclist:
+                continue
+            funclist += node.get_code_name()
             code += node.gen_porting_func_imp()
         code += '\n/* AUTO GENERATED CODE END */'
         return code
