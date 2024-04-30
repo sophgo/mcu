@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<firmware>
+	<name>SC7FP150</name>
+	<size>0x14000</size>
+	<efit>
+		<offset>0x8000</offset>
+		<size>8192</size>
+	</efit>
+	<component>
+		<name>application</name>
+		<type>0</type>
+		<file>../SC7FP150/build/SC7FP150.bin</file>
+		<offset>0xa000</offset>
+	</component>
+	<component>
+		<name>loader</name>
+		<type>1</type>
+		<file>../SC7FP150/build/SC7FP150.bin</file>
+		<offset>0x0000</offset>
+	</component>
+</firmware>
+
