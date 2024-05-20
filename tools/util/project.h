@@ -49,4 +49,7 @@
 #define MILKV_PIONEER   0x90
 #define BM1690EVB	0xb2
 
+
+#define BM2044REVB	0xb1
+
 #endif
