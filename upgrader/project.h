@@ -46,4 +46,6 @@
 
 #define BM1690EVB	0Xb2
 
+#define BM2044REVB	0xb1
+
 #endif
