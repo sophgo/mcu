@@ -65,6 +65,7 @@ static inline void led_init(void)
 		case SM7M_MP_1_1:
 		case SE7:
 		case SM7MSE6M:
+		case SM7CUSTV1:
 			MCU_LED_PORT = GPIOC;
 			MCU_LED_PIN = GPIO_PIN_13;
 			break;
