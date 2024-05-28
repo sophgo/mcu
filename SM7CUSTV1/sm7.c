@@ -95,6 +95,28 @@ int sm7_12v_off()
 static uint32_t sm7_timer_start;
 static uint8_t sm7_power_on_flag = 0;
 static uint8_t sm7_power_on_release = 1;
+uint8_t sm7_power_off_flag = 0;
+
+static void sm7_process_power_on(void)
+{
+	sm7_power_on_flag = 1;
+	debug("sm7_12v_on!\n");
+	sm7_led_on(1);
+	sm7_12v_on();
+	i2c_peripheral_enable(I2C1);
+}
+
+static void sm7_process_power_off(void)
+{
+	sm7_power_on_flag = 0;
+	debug("sm7_12v_off!\n");
+	sm7_led_off(1);
+	mdelay(1000);
+	sm7_12v_off();
+	mdelay(1000);
+	debug("sm7_12v_off end!\n");
+	//i2c_peripheral_enable(I2C1);
+}
 
 static void sm7_process(void)
 {
@@ -115,33 +137,26 @@ static void sm7_process(void)
 			if ( (sm7_power_on_release)&&(tick_get() - sm7_timer_start > SM7_POWER_OFF_DELAY) ) 
 			{
 				i2c_peripheral_disable(I2C1);
-			    sm7_power_on_release = 0;
-			    if(sm7_power_on_flag == 0)
-			    {
-					sm7_power_on_flag = 1;
-					debug("sm7_12v_on!\n");
-					sm7_led_on(1);
-					sm7_12v_on();
-					
-					i2c_peripheral_enable(I2C1);
-			    }
-			    else
-			    {
-			    	sm7_power_on_flag = 0;
-			    	debug("sm7_12v_off!\n");
-					sm7_led_off(1);
-					mdelay(1000);
-					sm7_12v_off();
-					mdelay(1000);
-					debug("sm7_12v_off end!\n");
-//					i2c_peripheral_enable(I2C1);
-			    }		
+				sm7_power_on_release = 0;
+				if(sm7_power_on_flag == 0)
+				{
+					sm7_process_power_on();
+				}
+				else
+				{
+					sm7_process_power_off();
+				}		
 			}
 		}
 	} else {
 		sm7_timer_start = 0;
 		sm7_power_on_release = 1;
 	}
+
+	if (sm7_power_off_flag==1){
+				    sm7_process_power_off();
+	}
+
 }
 
 void sm7_init(void)

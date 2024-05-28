@@ -82,6 +82,8 @@
 
 #define MCU_EEPROM_DATA_MAX	0x20
 
+extern uint8_t sm7_power_off_flag;
+
 struct mcu_ctx {
 	int set_idx;
 	int idx;
@@ -173,6 +175,7 @@ void mcu_process(void)
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		power_off();
 		wdt_reset();
+		sm7_power_off_flag = 1;
 		break;
 	case CMD_RESET:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
