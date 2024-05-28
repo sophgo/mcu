@@ -9,6 +9,7 @@
 
 /* count in ms */
 #define SM7_POWER_OFF_DELAY	3000
+#define SM7_POWER_ON_DELAY	500
 
 /* gpio expandtion(tca6416a) config */
 /* port 0 */
@@ -126,6 +127,11 @@ static void sm7_process(void)
 //	temp = tca6416a_read(TCA6416A_P0_OUT);
 //	debug("TCA6416A_P0_OUT is:0x%x\n",temp);	
 	// test end
+	if (sm7_power_off_flag==1){
+		sm7_power_off_flag = 0;
+		sm7_process_power_off();
+	}
+
 	err = tca6416a_get(POWER_BUTTON_PORT, POWER_BUTTON_PIN);
 	if (err < 0)
 		return;
@@ -134,7 +140,7 @@ static void sm7_process(void)
 		if (sm7_timer_start == 0)
 			sm7_timer_start = tick_get();
 		else {
-			if ( (sm7_power_on_release)&&(tick_get() - sm7_timer_start > SM7_POWER_OFF_DELAY) ) 
+			if ( (sm7_power_on_release)&&(sm7_power_on_flag == 0 ? (tick_get() - sm7_timer_start > SM7_POWER_ON_DELAY): (tick_get() - sm7_timer_start > SM7_POWER_OFF_DELAY)) ) 
 			{
 				i2c_peripheral_disable(I2C1);
 				sm7_power_on_release = 0;
@@ -152,11 +158,6 @@ static void sm7_process(void)
 		sm7_timer_start = 0;
 		sm7_power_on_release = 1;
 	}
-
-	if (sm7_power_off_flag==1){
-				    sm7_process_power_off();
-	}
-
 }
 
 void sm7_init(void)
