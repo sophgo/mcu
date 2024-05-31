@@ -100,10 +100,11 @@ int main(void)
 	if (tca6416a_available())
 		tca6416a_init(&i2c1_slave_ctx);
 
-	if (pic_available()) {
-		kbd_init(&i2c1_slave_ctx);
-		pic_init(&i2c1_slave_ctx);
-	}
+	kbd_init(&i2c1_slave_ctx);
+	//if (pic_available()) {
+	//	kbd_init(&i2c1_slave_ctx);
+	//	pic_init(&i2c1_slave_ctx);
+	//}
 
 	tmp451_init(&i2c1_slave_ctx);
 
