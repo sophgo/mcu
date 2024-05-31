@@ -4,11 +4,17 @@
 #include <tick.h>
 #include <loop.h>
 #include <debug.h>
+#include <keyboard.h>
 #include <libopencm3/stm32/l0/nvic.h>
 #include <libopencm3/stm32/i2c.h>
 
+/*virtual key define*/
+#define POWER_KEY_PORT          0
+#define POWER_KEY               (1 << 0)
+
 /* count in ms */
-#define SM7_POWER_OFF_DELAY	3000
+#define SM7_POWER_OFF_CMD_DELAY	3000 // 3 seconds to send power off command to kernel
+#define SM7_POWER_OFF_DELAY	10000 // 10 seconds to force mcu to power off
 #define SM7_POWER_ON_DELAY	500
 
 /* gpio expandtion(tca6416a) config */
@@ -93,14 +99,14 @@ int sm7_12v_off()
 	return 0;
 }
 
-static uint32_t sm7_timer_start;
-static uint8_t sm7_power_on_flag = 0;
-static uint8_t sm7_power_on_release = 1;
+static uint32_t sm7_timer_start = 0;
+static uint8_t sm7_power_on_flag = 0; // 0 closed 1 starting 2 started 3 closing
+static uint8_t sm7_power_on_release = 0;
 uint8_t sm7_power_off_flag = 0;
 
 static void sm7_process_power_on(void)
 {
-	sm7_power_on_flag = 1;
+	sm7_power_on_flag = 1; //starting
 	debug("sm7_12v_on!\n");
 	sm7_led_on(1);
 	sm7_12v_on();
@@ -122,11 +128,8 @@ static void sm7_process_power_off(void)
 static void sm7_process(void)
 {
 	int err;
-	// test start
-//	int temp;
-//	temp = tca6416a_read(TCA6416A_P0_OUT);
-//	debug("TCA6416A_P0_OUT is:0x%x\n",temp);	
-	// test end
+	int press_time;
+	static int run_status = 0;
 	if (sm7_power_off_flag==1){
 		sm7_power_off_flag = 0;
 		sm7_process_power_off();
@@ -137,26 +140,65 @@ static void sm7_process(void)
 		return;
 
 	if (err) {
-		if (sm7_timer_start == 0)
-			sm7_timer_start = tick_get();
-		else {
-			if ( (sm7_power_on_release)&&(sm7_power_on_flag == 0 ? (tick_get() - sm7_timer_start > SM7_POWER_ON_DELAY): (tick_get() - sm7_timer_start > SM7_POWER_OFF_DELAY)) ) 
-			{
-				i2c_peripheral_disable(I2C1);
-				sm7_power_on_release = 0;
-				if(sm7_power_on_flag == 0)
-				{
-					sm7_process_power_on();
-				}
-				else
-				{
-					sm7_process_power_off();
-				}		
+		if (sm7_power_on_release) {
+			press_time = tick_get() - sm7_timer_start;
+			// debug("press_time: %d run_status:%d\n", press_time, run_status);
+			if (sm7_power_on_flag == 0 && (press_time > SM7_POWER_ON_DELAY) && run_status == 0) {
+				run_status = 2;
 			}
+			else if (sm7_power_on_flag == 2) {
+				if (press_time > SM7_POWER_OFF_DELAY) {
+					run_status = 4;
+				}
+				else if (press_time > SM7_POWER_OFF_CMD_DELAY) {
+					run_status = 1;
+				}
+				else if (run_status != 4)
+					run_status = 0;
+			}
+			else if (run_status != 4)
+				run_status = 0;
 		}
-	} else {
+		else {
+			sm7_timer_start = tick_get();
+			sm7_power_on_release = 1;
+		}
+	}
+	else {
 		sm7_timer_start = 0;
-		sm7_power_on_release = 1;
+		sm7_power_on_release = 0;
+		if (run_status == 1) {
+			run_status = 3;
+		}
+		else {
+			run_status = 0;
+		}
+		if (sm7_power_on_flag == 1)
+			sm7_power_on_flag = 2;
+	}
+	switch (run_status)
+	{
+		case 0: 
+			/* NO DO */
+			break;
+		case 1:
+			/* wait button release */
+			break;
+		case 2:
+			/* poweron */
+			sm7_process_power_on();
+			break;
+		case 3:
+			/* poweroff 3s */
+			kbd_set(POWER_KEY_PORT, POWER_KEY);
+			break;
+		case 4:
+			/* poweroff 10s */
+			sm7_process_power_off();
+			break;
+		default: 
+			/* NO DO */
+			break;
 	}
 }
 
