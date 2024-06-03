@@ -5,108 +5,86 @@
 #include <common.h>
 #include <stdlib.h>
 
-int milkv_atx_ctl_on(void);
-void milkv_atx_ctl_off(void);
-
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
 
-struct power_node const board_power_nodes[22] = {
+struct power_node const board_power_nodes[20] = {
 
-	{"MILKV_ATX_CTL", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)milkv_atx_ctl_on, (unsigned long)milkv_atx_ctl_off},
+	{"PWR_OK_C", NODE_TYPE_CHECK, 500,
+	 {(unsigned long)PWR_OK_C_PORT, (unsigned long)PWR_OK_C_PIN},
 	 },
 
-	{"EN_VDD_3V3", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDD_3V3_PORT, (unsigned long)EN_VDD_3V3_PIN},
-	 },
-
-	{"EN_VDDIO18", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
-	 },
-
-	{"EN_VDDC", NODE_TYPE_ENABLE, 1000,
+	{"EN_VDDC", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)EN_VDDC_PORT, (unsigned long)EN_VDDC_PIN},
 	 },
 
-	{"PG_VDDC", NODE_TYPE_CHECK, 0,
-	 {(unsigned long)PG_VDDC_PORT, (unsigned long)PG_VDDC_PIN},
+	{"EN_VDDR", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDR_PORT, (unsigned long)EN_VDDR_PIN},
 	 },
 
-	{"EN_VDDIO33", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDDIO33_PORT, (unsigned long)EN_VDDIO33_PIN},
+	{"EN_VDD_PLL", NODE_TYPE_ENABLE, 1500,
+	 {(unsigned long)EN_VDD_PLL_PORT, (unsigned long)EN_VDD_PLL_PIN},
 	 },
 
-	{"EN_DDR_VDD_0V8", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_DDR_VDD_0V8_PORT,
-	  (unsigned long)EN_DDR_VDD_0V8_PIN},
+	{"EN_DDR_VDD", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_DDR_VDD_PORT, (unsigned long)EN_DDR_VDD_PIN},
 	 },
 
-	{"EN_VDD_PCIE_D_0V8", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDD_PCIE_D_0V8_PORT,
-	  (unsigned long)EN_VDD_PCIE_D_0V8_PIN},
+	{"EN_VDDIO12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDIO12_PORT, (unsigned long)EN_VDDIO12_PIN},
 	 },
 
-	{"EN_VDD_PLL_0V8", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDD_PLL_0V8_PORT,
-	  (unsigned long)EN_VDD_PLL_0V8_PIN},
+	{"EN_VDDIO12", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDIO12_PORT, (unsigned long)EN_VDDIO12_PIN},
 	 },
 
-	{"EN_VDD_PCIE_H_1V8", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDD_PCIE_H_1V8_PORT,
-	  (unsigned long)EN_VDD_PCIE_H_1V8_PIN},
+	{"SLOT1_PRSENT2_3", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)SLOT1_PRSENT2_3_PORT,
+	  (unsigned long)SLOT1_PRSENT2_3_PIN},
 	 },
 
-	{"PG_DDR_VDD_0V8", NODE_TYPE_CHECK, 0,
-	 {(unsigned long)PG_DDR_VDD_0V8_PORT,
-	  (unsigned long)PG_DDR_VDD_0V8_PIN},
+	{"EN_VDD_3V3", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_3V3_PORT, (unsigned long)EN_VDD_3V3_PIN},
 	 },
 
-	{"EN_DDR01_VPP_2V5", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_DDR01_VPP_2V5_PORT,
-	  (unsigned long)EN_DDR01_VPP_2V5_PIN},
+	{"EN_VQPS18", NODE_TYPE_ENABLE, 2000,
+	 {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
 	 },
 
-	{"EN_DDR23_VPP_2V5", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_DDR23_VPP_2V5_PORT,
-	  (unsigned long)EN_DDR23_VPP_2V5_PIN},
+	{"EN_VP_C2C", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VP_C2C_PORT, (unsigned long)EN_VP_C2C_PIN},
 	 },
 
-	{"EN_DDR01_VDDQ_1V2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_DDR01_VDDQ_1V2_PORT,
-	  (unsigned long)EN_DDR01_VDDQ_1V2_PIN},
+	{"EN_VPH_C2C", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VPH_C2C_PORT, (unsigned long)EN_VPH_C2C_PIN},
 	 },
 
-	{"EN_DDR23_VDDQ_1V2", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_DDR23_VDDQ_1V2_PORT,
-	  (unsigned long)EN_DDR23_VDDQ_1V2_PIN},
+	{"EN_VP_CXP", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VP_CXP_PORT, (unsigned long)EN_VP_CXP_PIN},
 	 },
 
-	{"PG_DDR01_VDDQ_1V2", NODE_TYPE_CHECK, 0,
-	 {(unsigned long)PG_DDR01_VDDQ_1V2_PORT,
-	  (unsigned long)PG_DDR01_VDDQ_1V2_PIN},
+	{"EN_VPH_CXP", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VPH_CXP_PORT, (unsigned long)EN_VPH_CXP_PIN},
 	 },
 
-	{"PG_DDR23_VDDQ_1V2", NODE_TYPE_CHECK, 0,
-	 {(unsigned long)PG_DDR23_VDDQ_1V2_PORT,
-	  (unsigned long)PG_DDR23_VDDQ_1V2_PIN},
+	{"EN_VP_ETH", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VP_ETH_PORT, (unsigned long)EN_VP_ETH_PIN},
 	 },
 
-	{"EN_DDR01_VTT_0V6", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_DDR01_VTT_0V6_PORT,
-	  (unsigned long)EN_DDR01_VTT_0V6_PIN},
+	{"EN_VPH_ETH", NODE_TYPE_ENABLE, 2000,
+	 {(unsigned long)EN_VPH_ETH_PORT, (unsigned long)EN_VPH_ETH_PIN},
 	 },
 
-	{"EN_DDR23_VTT_0V6", NODE_TYPE_ENABLE, 1000,
+	{"EN_DDR_VAA", NODE_TYPE_ENABLE, 2000,
+	 {(unsigned long)EN_DDR_VAA_PORT, (unsigned long)EN_DDR_VAA_PIN},
+	 },
+
+	{"EN_DDR23_VTT_0V6", NODE_TYPE_ENABLE, 2000,
 	 {(unsigned long)EN_DDR23_VTT_0V6_PORT,
 	  (unsigned long)EN_DDR23_VTT_0V6_PIN},
-	 },
-
-	{"EN_VQPS18", NODE_TYPE_ENABLE, 30000,
-	 {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
 	 },
 
 	{"SYS_RST_ASSERT", NODE_TYPE_FUNCTION, 30000,

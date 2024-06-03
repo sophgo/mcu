@@ -21,7 +21,7 @@
 int main(void)
 {
 	system_init();
-	debug("\nMANGO SG2042EVB\n");
+	debug("\nBM1690 EVB\n");
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	led_init();
 	power_init();
