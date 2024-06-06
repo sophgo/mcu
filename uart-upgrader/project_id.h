@@ -21,6 +21,7 @@
 #define PROJ_ATHENA2ACP		0x41
 #define PROJ_SG2042EVB		0x80
 #define SG2042REVB		0x81
+#define PROJ_BM1690EVB		0xb2
 
 #define PROJ_INVALID		-1
 

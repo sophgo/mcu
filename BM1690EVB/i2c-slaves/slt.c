@@ -56,7 +56,7 @@ static uint8_t slt_read(void *priv)
 	struct slt_ctx *ctx = priv;
 	uint8_t ret = 0;
 
-    ret = ctx->reg[ctx->idx];
+   	ret = ctx->reg[ctx->idx];
 
 	idx_inc(ctx);
 	return ret;

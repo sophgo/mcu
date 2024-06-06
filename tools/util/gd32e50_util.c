@@ -84,6 +84,7 @@ static struct {
 	{"SM7M_MP_1_2", {SM7M_MP_1_2, -1},	        	FILE_SIZE_64KB},
 	{"ATHENA2EVB",	{ATHENA2EVB, -1},			FILE_SIZE_64KB},
 	{"ATHENA2ACP",	{ATHENA2ACP, -1},			FILE_SIZE_64KB},
+	{"BM1690EVB",	{BM1690EVB, -1},			FILE_SIZE_64KB},
 };
 
 static const char *mcu_family_table[] = {"STM32L0", "GD32E50"};
