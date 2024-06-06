@@ -16,95 +16,94 @@
 
 bool is_evb_power_key_on(void)
 {
-	if (gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 0)
+	if (gpio_get(MCU_PS_ON_PORT, MCU_PS_ON_PIN) == 1)
 		return true;
 	return false;
 }
 
-static bool is_power_button_pressed(void)
-{
-	if (gpio_get(POWER_KEY_PORT, POWER_KEY_PIN) == PRESS_VALUE)
-		return true;
-	return false;
-}
+// static bool is_power_button_pressed(void)
+// {
+// 	if (gpio_get(POWER_KEY_PORT, POWER_KEY_PIN) == PRESS_VALUE)
+// 		return true;
+// 	return false;
+// }
 
-static bool is_reset_button_pressed(void)
-{
-	if (gpio_get(RESET_KEY_PORT, RESET_KEY_PIN) == PRESS_VALUE)
-		return true;
-	return false;
-}
+// static bool is_reset_button_pressed(void)
+// {
+// 	if (gpio_get(RESET_KEY_PORT, RESET_KEY_PIN) == PRESS_VALUE)
+// 		return true;
+// 	return false;
+// }
 
-void milkv_warm_poweroff(void)
-{
-	gpio_set(LINK_GPIO22_PORT, LINK_GPIO22_PIN);
-	timer_mdelay(150);
-	gpio_clear(LINK_GPIO22_PORT, LINK_GPIO22_PIN);
-}
+// void milkv_warm_poweroff(void)
+// {
+// 	gpio_set(LINK_GPIO22_PORT, LINK_GPIO22_PIN);
+// 	timer_mdelay(150);
+// 	gpio_clear(LINK_GPIO22_PORT, LINK_GPIO22_PIN);
+// }
 
-void milkv_warm_reboot(void)
-{
-	gpio_set(LINK_GPIO23_PORT, LINK_GPIO23_PIN);
-	timer_mdelay(150);
-	gpio_clear(LINK_GPIO23_PORT, LINK_GPIO23_PIN);
-}
+// void milkv_warm_reboot(void)
+// {
+// 	gpio_set(LINK_GPIO23_PORT, LINK_GPIO23_PIN);
+// 	timer_mdelay(150);
+// 	gpio_clear(LINK_GPIO23_PORT, LINK_GPIO23_PIN);
+// }
 
-static void milkv_power_button_control(void)
-{
-	uint16_t press_time, curren_time, last_time;
+// static void milkv_power_button_control(void)
+// {
+// 	uint16_t press_time, curren_time, last_time;
 
-	curren_time = last_time = tick_get();
-	while (is_power_button_pressed()) {
-		curren_time = tick_get();
-		if(curren_time - last_time > FORCE_POWEROFF_PRESS_TIME)
-			break;
-	}
-	press_time = curren_time - last_time;
+// 	curren_time = last_time = tick_get();
+// 	while (is_power_button_pressed()) {
+// 		curren_time = tick_get();
+// 		if(curren_time - last_time > FORCE_POWEROFF_PRESS_TIME)
+// 			break;
+// 	}
+// 	press_time = curren_time - last_time;
 
-	if (power_status() == true) {
-		if (press_time > FORCE_POWEROFF_PRESS_TIME) {
-			power_off();
-			while (is_power_button_pressed())
-				;
-		} else if (press_time > WARM_POWEROFF_PRESS_TIME)
-			milkv_warm_poweroff();
-	} else {
-		if (press_time > POWERON_PRESS_TIME)
-			power_on();
-	}
-}
+// 	if (power_status() == true) {
+// 		if (press_time > FORCE_POWEROFF_PRESS_TIME) {
+// 			power_off();
+// 			while (is_power_button_pressed())
+// 				;
+// 		} else if (press_time > WARM_POWEROFF_PRESS_TIME)
+// 			milkv_warm_poweroff();
+// 	} else {
+// 		if (press_time > POWERON_PRESS_TIME)
+// 			power_on();
+// 	}
+// }
 
-static void milkv_reset_button_control(void)
-{
-	uint16_t press_time, curren_time, last_time;
+// static void milkv_reset_button_control(void)
+// {
+// 	uint16_t press_time, curren_time, last_time;
 
-	curren_time = last_time = tick_get();
-	while ((power_status() == true) && is_reset_button_pressed()) {
-		curren_time = tick_get();
-		if (curren_time - last_time > FORCE_REBOOT_PRESS_TIME)
-			break;
-	}
-	press_time = curren_time - last_time;
+// 	curren_time = last_time = tick_get();
+// 	while ((power_status() == true) && is_reset_button_pressed()) {
+// 		curren_time = tick_get();
+// 		if (curren_time - last_time > FORCE_REBOOT_PRESS_TIME)
+// 			break;
+// 	}
+// 	press_time = curren_time - last_time;
 
-	if (press_time > FORCE_REBOOT_PRESS_TIME) {
-		power_off();
-		timer_mdelay(50);
-		power_on();
-	} else if (press_time > WARM_REBOOT_PRESS_TIME)
-		milkv_warm_reboot();
-}
+// 	if (press_time > FORCE_REBOOT_PRESS_TIME) {
+// 		power_off();
+// 		timer_mdelay(50);
+// 		power_on();
+// 	} else if (press_time > WARM_REBOOT_PRESS_TIME)
+// 		milkv_warm_reboot();
+// }
 
-static void milkv_power_control(void)
-{
-	milkv_power_button_control();
-	milkv_reset_button_control();
-}
+
 
 static void evb_power_control(void)
 {
 	if (is_evb_power_key_on() == true) {
 		if (power_status() == false) {
-			timer_udelay(1000);
+			while(gpio_get(PWR_OK_C_PORT, PWR_OK_C_PIN) == 1){
+				timer_udelay(1000);
+			}
+			timer_udelay(10000);
 			power_on();
 		}
 	}
@@ -115,23 +114,20 @@ static void evb_power_control(void)
 	}
 }
 
-void milkv_auto_power_on(void)
-{
-	if (get_board_type() == MILKV_PIONEER) {
-		/* Wait for 12V to be stable */
-		timer_mdelay(1000);
-		/* power on automatically after ATX powered */
-		power_on();
-	}
-}
+// void milkv_auto_power_on(void)
+// {
+// 	if (get_board_type() == MILKV_PIONEER) {
+// 		/* Wait for 12V to be stable */
+// 		timer_mdelay(1000);
+// 		/* power on automatically after ATX powered */
+// 		power_on();
+// 	}
+// }
 
 void board_power_control(void)
 {
 	switch (get_board_type()) {
-	case MILKV_PIONEER:
-		milkv_power_control();
-		break;
-	case SG2042EVB:
+	case BM1690EVB:
 		evb_power_control();
 		break;
 	default:
@@ -139,19 +135,19 @@ void board_power_control(void)
 	}
 }
 
-int milkv_atx_ctl_on(void)
-{
-	if (get_board_type() == MILKV_PIONEER)
-		gpio_set(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
+// int milkv_atx_ctl_on(void)
+// {
+// 	if (get_board_type() == MILKV_PIONEER)
+// 		gpio_set(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
 
-	return 0;
-}
+// 	return 0;
+// }
 
-void milkv_atx_ctl_off(void)
-{
-	if (get_board_type() == MILKV_PIONEER)
-		gpio_clear(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
-}
+// void milkv_atx_ctl_off(void)
+// {
+// 	if (get_board_type() == MILKV_PIONEER)
+// 		gpio_clear(MCU_ATX_ON_PORT, MCU_ATX_ON_PIN);
+// }
 
 int sys_rst_assert_on(void)
 {

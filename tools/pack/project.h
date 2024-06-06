@@ -46,5 +46,6 @@
 #define SG2042X4	0x83
 
 #define WOLFCLAW	0xa0
+#define BM1690EVB	0xb2
 
 #endif

@@ -21,7 +21,7 @@
 #define REG_SW_VER		0x01
 #define REG_HW_VER		0x02
 #define REG_CMD		0x03
-#define REG_SG2042_TMP		0x04
+#define REG_BM1690_TMP		0x04
 #define REG_BOARD_TMP		0x05
 #define REG_INT_STATUS1		0x06
 #define REG_INT_STATUS2		0x07
@@ -42,14 +42,14 @@
 
 #define REG_MCU_FAMILY		0x18
 
-#define SG2042_TMP_OVER_REPORT			1<<0
+#define BM1690_TMP_OVER_REPORT			1<<0
 #define POWER_68127_TMP_OVER_REPORT		1<<1
 #define BOARD_TMP_OVER_REPORT			1<<2
 #define BOARD_TMP_OVER_POWEROFF			1<<3
-#define SG2042_TMP_OVER_POWEROFF		1<<4
-#define SYS_POWER_EXCEPTION_POWEROFF	1<<5
+#define BM1690_TMP_OVER_POWEROFF		1<<4
+#define SYS_POWER_EXCEPTION_POWEROFF		1<<5
 #define V12_EXCEPTION_POWEROFF			1<<6
-#define SG2042_REBOOT_CMD				1<<7
+#define BM1690_REBOOT_CMD			1<<7
 
 #define WATCH_DOG 						1<<0
 #define TEST_INT						1<<1
@@ -311,7 +311,7 @@ static uint8_t mcu_read(void *priv)
 	case REG_CMD:
 		ret = 0;
 		break;
-	case REG_SG2042_TMP:
+	case REG_BM1690_TMP:
 		ret = get_soc_temp();
 		break;
 	case REG_BOARD_TMP:
@@ -495,17 +495,6 @@ static struct i2c01_slave_op slave = {
 	.priv = &mcu_ctx,
 };
 
-static struct i2c_slave_op slave2 = {
-	.addr = 0x17,	/* mcu common slave address */
-	.mask = 0x00,
-	.match = mcu_match,
-	.write = mcu_write,
-	.read = mcu_read,
-	.stop = mcu_stop,
-	.reset = mcu_reset,
-	.priv = &mcu_ctx,
-};
-
 void mcu_x8_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 {
 	int i;
@@ -515,24 +504,6 @@ void mcu_x8_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 	mcu_ctx.poweroff_reason = 0;
 	slave.addr = 0x17;
 	i2c01_slave_register(i2c_slave_ctx, &slave);
-
-	for(i = 0; i < 16; ++i) {
-		filter_init(&adc_averge_tab[i], 0);
-	}
-
-	last_time_collect = last_time_output = tick_get();
-	loop_add(mcu_process);
-}
-
-void mcu_milkv_init(struct i2c_slave_ctx *i2c_slave_ctx)
-{
-	int i;
-	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
-	mcu_ctx.critical_temp = 105;
-	mcu_ctx.repoweron_temp = 60;
-	mcu_ctx.poweroff_reason = 0;
-	slave.addr = 0x17;
-	i2c_slave_register(i2c_slave_ctx, &slave2);
 
 	for(i = 0; i < 16; ++i) {
 		filter_init(&adc_averge_tab[i], 0);
@@ -580,7 +551,7 @@ void mcu_process(void)
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		power_off();
-		if (get_board_type() == SG2042EVB)
+		if (get_board_type() == BM1690EVB)
 			if (is_evb_power_key_on() == true)
 				power_is_on = true;
 		timer_mdelay(500);
@@ -592,7 +563,7 @@ void mcu_process(void)
 		break;
 	case CMD_REBOOT:
 		chip_popd_reset_early();
-		if (get_board_type() == SG2042EVB)
+		if (get_board_type() == BM1690EVB)
 			if (is_evb_power_key_on() == true)
 				power_is_on = true;
 		set_needpoweron();

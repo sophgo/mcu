@@ -15,7 +15,7 @@
 #include <board_power_impl.h>
 
 /* in us */
-#define NODE_CHECK_TIMEOUT	(10 * 1000)
+#define NODE_CHECK_TIMEOUT	(10 * 1000 * 1000)
 
 int power_is_on;
 
@@ -29,7 +29,7 @@ static int node_check(struct power_node const *node)
 
 	timer_start(NODE_CHECK_TIMEOUT);
 
-	while (gpio_get(port, pin) == 0) {
+	while (gpio_get(port, pin) == 1) {
 		if (timer_is_timeout()) {
 			err = -1;
 			break;

@@ -17,11 +17,7 @@
 #define SM5MS	12
 #define SM5MA	13
 
-#define SG2042EVB	0x80
-#define SG2042REVB	0x81
-/* 0x82 use for mango Pisces */
-#define SG2042X4	0x83
-#define MILKV_PIONEER	0x90
+#define BM1690EVB	0Xb2
 
 /* MCU Family */
 enum {

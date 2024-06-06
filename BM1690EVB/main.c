@@ -13,7 +13,6 @@
 #include <console.h>
 #include <stdio.h>
 #include <slave.h>
-#include <nct218.h>
 #include <chip.h>
 #include <loop.h>
 #include <board_power_impl.h>
@@ -26,13 +25,10 @@ int main(void)
 	led_init();
 	power_init();
 
-	/* distinguish SG2042X8 and Milkv */
 	board_init();
 	chip_init();
 	slave_init();
-	nct218_init();
 	console_add();
-	milkv_auto_power_on();
 
 	/* never return */
 	loop_start();

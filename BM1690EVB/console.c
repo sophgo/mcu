@@ -37,53 +37,47 @@ static void console_putc(void *console_hint, char c)
 
 static void cmd_hello(void *hint, int argc, char const *argv[])
 {
-	printf("Hello! MANGO USER 0v0\n");
+	printf("Hello! BM1690 USER 0v0\n");
 }
 
 static const char * const cmd_poweron_usage =
 "poweron\n"
-"    power on the sg2042evb\n";
+"    power on the bm1690evb\n";
 
 static void cmd_poweron(void *hint, int argc, char const *argv[])
 {
-	if (get_board_type() == SG2042EVB) {
+	if (get_board_type() == BM1690EVB) {
 		power_on();
 		if (is_evb_power_key_on() == true)
 			power_is_on = false;
-		printf("SG2042EVB POWER ON\n");
-	} else {
-		power_on();
-		printf("MILKV-PIONEER POWER ON\n");
+		printf("BM1690EVB POWER ON\n");
 	}
 }
 
 static const char * const cmd_poweroff_usage =
 "poweroff\n"
-"    power off the sg2042evb\n";
+"    power off the bm1690evb\n";
 
 static void cmd_poweroff(void *hint, int argc, char const *argv[])
 {
-	if (get_board_type() == SG2042EVB) {
+	if (get_board_type() == BM1690EVB) {
 		power_off();
 		if (is_evb_power_key_on() == true)
 			power_is_on = true;
 		timer_mdelay(500);
-		printf("SG2042EVB POWER OFF\n");
-	} else {
-		power_off();
-		printf("MILKV-PIONEER POWER OFF\n");
+		printf("BM1690EVB POWER OFF\n");
 	}
 }
 
-static void cmd_warm_poweroff(void *hint, int argc, char const *argv[])
-{
-	milkv_warm_poweroff();
-	printf("Warm power off only for milk-v pioneer\n");
-}
+// static void cmd_warm_poweroff(void *hint, int argc, char const *argv[])
+// {
+// 	milkv_warm_poweroff();
+// 	printf("Warm power off only for milk-v pioneer\n");
+// }
 
 static const char * const cmd_reboot_usage =
 "reboot\n"
-"    reboot the sg2042evb\n";
+"    reboot the bm1690evb\n";
 
 static void cmd_reboot(void *hint, int argc, char const *argv[])
 {
@@ -91,49 +85,48 @@ static void cmd_reboot(void *hint, int argc, char const *argv[])
 	timer_mdelay(500);
 	power_on();
 	chip_enable();
-	if (get_board_type() == SG2042EVB) {
+	if (get_board_type() == BM1690EVB) {
 		if (is_evb_power_key_on() == false)
 			power_is_on = false;
-		printf("SG2042EVB REBOOT\n");
-	} else
-		printf("MILKV-PIONEER REBOOT\n");
+		printf("BM1690EVB REBOOT\n");
+	}
 }
 
-static void cmd_warmreboot(void *hint, int argc, char const *argv[])
-{
-	milkv_warm_reboot();
-	printf("Warm reboot only for milk-v pioneer\n");
-}
+// static void cmd_warmreboot(void *hint, int argc, char const *argv[])
+// {
+// 	milkv_warm_reboot();
+// 	printf("Warm reboot only for milk-v pioneer\n");
+// }
 
-static const char * const cmd_poweron_rv_usage =
-"poweron_rv\n"
-"    power on the riscv\n";
+// static const char * const cmd_poweron_rv_usage =
+// "poweron_rv\n"
+// "    power on the riscv\n";
 
-static void cmd_poweron_rv(void *hint, int argc, char const *argv[])
-{
-	gpio_clear(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
-	power_on();
-	chip_enable();
-	if (is_evb_power_key_on() == false)
-		power_is_on = false;
+// static void cmd_poweron_rv(void *hint, int argc, char const *argv[])
+// {
+// 	gpio_clear(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
+// 	power_on();
+// 	chip_enable();
+// 	if (is_evb_power_key_on() == false)
+// 		power_is_on = false;
 
-	printf("PWRON RV OK\n");
-}
+// 	printf("PWRON RV OK\n");
+// }
 
-static const char * const cmd_poweron_a53_usage =
-"poweron_a53\n"
-"    power on the a53\n";
+// static const char * const cmd_poweron_a53_usage =
+// "poweron_a53\n"
+// "    power on the a53\n";
 
-static void cmd_poweron_a53(void *hint, int argc, char const *argv[])
-{
-	gpio_set(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
-	power_on();
-	chip_enable();
-	if (is_evb_power_key_on() == false)
-		power_is_on = false;
+// static void cmd_poweron_a53(void *hint, int argc, char const *argv[])
+// {
+// 	gpio_set(MCU_BOOT_SEL6_H_PORT, MCU_BOOT_SEL6_H_PIN);
+// 	power_on();
+// 	chip_enable();
+// 	if (is_evb_power_key_on() == false)
+// 		power_is_on = false;
 
-	printf("PWRON A53 OK\n");
-}
+// 	printf("PWRON A53 OK\n");
+// }
 
 static const char * const cmd_info_usage =
 "info\n"
@@ -141,7 +134,7 @@ static const char * const cmd_info_usage =
 
 static void cmd_info(void *hint, int argc, char const *argv[])
 {
-	printf("Chip type: SG2042\n");
+	printf("Chip type: BM1690\n");
 	printf("PCB Version: %d\n", get_pcb_version());
 	printf("Board type: %s\n", get_board_type_name());
 	printf("MCU_SW_VER: %d\n", MCU_SW_VER);
@@ -259,11 +252,11 @@ static struct command command_list[] = {
 	{"hello", NULL, NULL, cmd_hello},
 	{"poweron", NULL, cmd_poweron_usage, cmd_poweron},
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
-	{"warmpoweroff", NULL, NULL, cmd_warm_poweroff},
+	//{"warmpoweroff", NULL, NULL, cmd_warm_poweroff},
 	{"reboot", NULL, cmd_reboot_usage, cmd_reboot},
-	{"warmreboot", NULL, NULL, cmd_warmreboot},
-	{"poweron_rv", NULL, cmd_poweron_rv_usage, cmd_poweron_rv},
-	{"poweron_a53", NULL, cmd_poweron_a53_usage, cmd_poweron_a53},
+	//{"warmreboot", NULL, NULL, cmd_warmreboot},
+	//{"poweron_rv", NULL, cmd_poweron_rv_usage, cmd_poweron_rv},
+	//{"poweron_a53", NULL, cmd_poweron_a53_usage, cmd_poweron_a53},
 	{"info", NULL, cmd_info_usage, cmd_info},
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"query", NULL, cmd_query_usage, cmd_query},

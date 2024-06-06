@@ -47,4 +47,6 @@
 #define SG2042X4	0x83
 
 #define MILKV_PIONEER   0x90
+#define BM1690EVB	0xb2
+
 #endif
