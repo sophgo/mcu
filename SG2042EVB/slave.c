@@ -14,25 +14,36 @@ static struct i2c_slave_ctx i2c2_slave_ctx;
 #define I2C1_OA2		0x68
 #define OA2_MASK		0x03
 
+static int slave_init_time = 1;
+
 void slave_init(void)
 {
 	if (get_board_type() == MILKV_PIONEER) {
 		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2, I2C1_OA1, I2C1_OA2, OA2_MASK);
-		mcu_milkv_init(&i2c2_slave_ctx);
+		if (slave_init_time > 0)
+			mcu_milkv_init(&i2c2_slave_ctx);
 		i2c_slave_start(&i2c2_slave_ctx);
 		nvic_irq_enable(I2C2_EV_IRQn, 0, 0);
 	} else {
 		i2c01_slave_init(&i2c0_slave_ctx, (void *)I2C0, I2C1_OA1, I2C1_OA2);
-		mcu_x8_init(&i2c0_slave_ctx);
-		slt_init(&i2c0_slave_ctx);
+		if (slave_init_time > 0) {
+			mcu_x8_init(&i2c0_slave_ctx);
+			slt_init(&i2c0_slave_ctx);
+		}
 		i2c01_slave_start(&i2c0_slave_ctx);
 		nvic_irq_enable(I2C0_EV_IRQn, 0, 0);
 	}
 
+	slave_init_time = 0;
 }
 
 /* replace default isr */
 void I2C0_EV_IRQHandler(void)
+{
+	i2c01_slave_isr(&i2c0_slave_ctx);
+}
+
+void I2C0_ER_IRQHandler(void)
 {
 	i2c01_slave_isr(&i2c0_slave_ctx);
 }
