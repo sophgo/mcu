@@ -4,7 +4,7 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	7
+#define MCU_SW_VER	0x8
 
 #define false 0
 #define true 1
