@@ -15,7 +15,6 @@
 /* count in ms */
 #define SM7_POWER_OFF_CMD_DELAY	3000 // 3 seconds to send power off command to kernel
 #define SM7_POWER_OFF_DELAY	10000 // 10 seconds to force mcu to power off
-#define SM7_POWER_ON_DELAY	500
 
 /* gpio expandtion(tca6416a) config */
 /* port 0 */
@@ -128,7 +127,7 @@ static void sm7_process_power_off(void)
 static void sm7_process(void)
 {
 	int err;
-	int press_time;
+	uint32_t press_time;
 	static int run_status = 0;
 	if (sm7_power_off_flag==1){
 		sm7_power_off_flag = 0;
@@ -141,12 +140,8 @@ static void sm7_process(void)
 
 	if (err) {
 		if (sm7_power_on_release) {
-			press_time = tick_get() - sm7_timer_start;
-			// debug("press_time: %d run_status:%d\n", press_time, run_status);
-			if (sm7_power_on_flag == 0 && (press_time > SM7_POWER_ON_DELAY) && run_status == 0) {
-				run_status = 2;
-			}
-			else if (sm7_power_on_flag == 2) {
+			press_time = tick_get() - sm7_timer_start; 
+			if (sm7_power_on_flag == 2) {
 				if (press_time > SM7_POWER_OFF_DELAY) {
 					run_status = 4;
 				}
@@ -176,6 +171,7 @@ static void sm7_process(void)
 		if (sm7_power_on_flag == 1)
 			sm7_power_on_flag = 2;
 	}
+
 	switch (run_status)
 	{
 		case 0: 
@@ -196,7 +192,7 @@ static void sm7_process(void)
 			/* poweroff 10s */
 			sm7_process_power_off();
 			break;
-		default: 
+		default:
 			/* NO DO */
 			break;
 	}
@@ -210,7 +206,8 @@ void sm7_init(void)
 	tca6416a_write(TCA6416A_P1_CFG, P1_CFG);
 	tca6416a_write(TCA6416A_P0_POL, P0_POL);
 	tca6416a_write(TCA6416A_P1_POL, P1_POL);
-
+	
+	sm7_process_power_on();
 	loop_add(sm7_process);
 }
 
