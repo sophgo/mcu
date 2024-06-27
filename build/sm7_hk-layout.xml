@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<firmware>
+	<name>SM7_HK</name>
+	<size>0x10000</size>
+	<efit>
+		<offset>0x7000</offset>
+		<size>4096</size>
+	</efit>
+	<component>
+		<name>application</name>
+		<type>0</type>
+		<file>../SM7_HK/build/SM7_HK_APP.bin</file>
+		<offset>0x8000</offset>
+	</component>
+	<component>
+		<name>i2c-upgrader</name>
+		<type>2</type>
+		<file>../upgrader/upgrader.bin</file>
+		<offset>0xf000</offset>
+	</component>
+	<component>
+		<name>loader</name>
+		<type>1</type>
+		<file>../SM7_HK/build/SM7_HK_LOADER.bin</file>
+		<offset>0x0000</offset>
+	</component>
+</firmware>
