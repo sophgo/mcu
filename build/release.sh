@@ -146,6 +146,10 @@ function version()
         dir="$top/SM7M_MP_1_2"
         key_word='MCU_SW_VER'
         ;;
+    sm7_hk)
+        dir="$top/SM7_HK"
+        key_word='MCU_SW_VER'
+        ;;
     esac
     _version
     # echo "$1 $fw_ver"
