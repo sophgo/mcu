@@ -5,7 +5,7 @@
 #include <common.h>
 #include <upgrade.h>
 #include <board_power.h>
-
+#include <chip.h>
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -147,7 +147,8 @@ int board_power_control(void)
 	if (gpio_get(MCU_PS_ON_PORT, MCU_PS_ON_PIN) == 1) {
 		if (power_is_on == false) {
 			timer_udelay(100000);
-			return power_on();
+			power_on();
+			chip_enable();
 		}
 	}
 

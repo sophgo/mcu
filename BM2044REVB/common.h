@@ -4,7 +4,18 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	0
+#define MCU_SW_VER	1
+
+enum {
+	WORK_MODE_SOC = 1,
+	WORK_MODE_PCIE = 2,
+	WORK_MODE_MIXED = 3,
+};
+
+#define PCIE_RESET_PORT	PCIEE_RST_X_MCU_PORT
+#define PCIE_RESET_PIN	PCIEE_RST_X_MCU_PIN
+#define PCIE_RESET_EXTI	PCIEE_RST_X_MCU_EXTI
+#define PCIE_RESET_NVIC	EXTI1_IRQn
 
 #define false 0
 #define true 1

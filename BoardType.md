@@ -276,8 +276,20 @@ MILKV_PIONEER
 
 群星闪耀 科技使用SG2042 开发的 工作站
 
+## 0XB1
+
+Chip: BM2044R
+
+BM2044REVB
+
 ## 0xB2
 
 Chip: BM1690
 
 BM1690EVB
+
+## 0xB3
+
+Chip: BM1690
+
+SC11
