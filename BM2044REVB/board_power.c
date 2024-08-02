@@ -5,13 +5,22 @@
 #include <common.h>
 #include <stdlib.h>
 
+
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
 
-struct power_node const board_power_nodes[16] = {
+int check_pcie_reset_on(void);
+void check_pcie_reset_off(void);
+
+struct power_node const board_power_nodes[17] = {
+
+	{"SYS_RST_DEASSERT", NODE_TYPE_FUNCTION, 30000,
+	 {(unsigned long)sys_rst_deassert_on,
+	  (unsigned long)sys_rst_deassert_off},
+	 },
 
 	{"EN_VDDC_0V75", NODE_TYPE_ENABLE, 4000,
 	 {(unsigned long)EN_VDDC_0V75_PORT, (unsigned long)EN_VDDC_0V75_PIN},
@@ -75,7 +84,11 @@ struct power_node const board_power_nodes[16] = {
 	  (unsigned long)VDDIO_EFUSE_EN_PIN},
 	 },
 
-	{"SYS_RST_ASSERT", NODE_TYPE_FUNCTION, 30000,
+	// {"CHECK-PCIE-RESET", NODE_TYPE_FUNCTION, 0,
+    	// {(unsigned long)check_pcie_reset_on, (unsigned long)check_pcie_reset_off},
+    	// },
+
+	{"SYS_RST_ASSERT", NODE_TYPE_FUNCTION, 50000,
 	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
 	 },
 

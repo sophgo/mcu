@@ -14,6 +14,7 @@
 #include <mcu.h>
 #include <chip.h>
 #include <ct7451.h>
+#include <pcie.h>
 
 int main(void)
 {
@@ -22,12 +23,10 @@ int main(void)
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	led_init();
    	power_init();
-	board_power_control();
 	chip_init();
 	slave_init();
 	console_init();
 	set_board_type(BM2044REVB);
-	chip_enable();
 	while (1) {
 		board_power_control();
 		mcu_process();

@@ -66,7 +66,10 @@ void board_init(void)
 	/* donot probe twice */
 	if (work_mode)
 		return;
-	work_mode = 1;
+
+	work_mode = gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN) ?
+		WORK_MODE_SOC : WORK_MODE_PCIE;
+
 }
 
 int get_work_mode(void)
