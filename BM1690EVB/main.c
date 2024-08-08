@@ -23,9 +23,8 @@ int main(void)
 	debug("\nBM1690 EVB\n");
 	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	led_init();
-	power_init();
-
 	board_init();
+	power_init();
 	chip_init();
 	slave_init();
 	console_add();
