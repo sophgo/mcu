@@ -1,5 +1,5 @@
 TOP = ..
-TARGET = SC7HP75
+TARGET = SC11FP300
 DEBUG = 1
 STANDALONE = 0
 
@@ -39,7 +39,7 @@ SPEC_CFLAGS = -specs=nano.specs
 
 CPPFLAGS = $(foreach dir, $(INCDIR), -I$(dir))
 CFLAGS = $(CPPFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) \
-	  -std=gnu11 -ffunction-sections -fdata-sections -Wall -Werror \
+	  -std=gnu11 -ffunction-sections -fdata-sections \
 	  $(foreach dir, $(INCDIR), -I$(dir))
 
 CFLAGS += -DGD32E50X -DGD32E50X_HD

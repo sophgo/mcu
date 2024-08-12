@@ -13,10 +13,10 @@
 #include <system.h>
 
 #define DBGI2C_ADDR_BASE	0x20
-#define DBGI2C_I2C_MASTER	I2C0
+#define DBGI2C_I2C_MASTER	I2C1
 #define DBGI2C_I2C_TIMEOUT	1
 
-static uint8_t dbg_channel[3] = {4, 5, 6};
+static uint8_t dbg_channel[2] = {0, 1};
 
 static inline uint8_t dbgi2c_idx2addr(int idx)
 {
@@ -25,21 +25,21 @@ static inline uint8_t dbgi2c_idx2addr(int idx)
 
 int dbgi2c_i2c_write_byte(int idx, uint8_t data)
 {
-	pca9848_set(PCA9848_2, 1 << dbg_channel[idx]);
+	pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
 	return i2c_master_write_byte(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				     DBGI2C_I2C_TIMEOUT, data);
 }
 
 int dbgi2c_i2c_write_block(int idx, uint8_t *data, unsigned int len)
 {
-	pca9848_set(PCA9848_2, 1 << dbg_channel[idx]);
+	pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
 	return i2c_master_write_block(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				      DBGI2C_I2C_TIMEOUT, data, len);
 }
 
 int dbgi2c_i2c_read_block(int idx, uint8_t *data, unsigned int len)
 {
-	pca9848_set(PCA9848_2, 1 << dbg_channel[idx]);
+	pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
 	return i2c_master_read_block(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				     DBGI2C_I2C_TIMEOUT, data, len);
 }
@@ -255,9 +255,9 @@ static void dbgi2c_collect(void)
 
 	for (i = 0; i < SOC_NUM; ++i) {
 		timer_udelay(100);
-		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(SOC_TEMP), &soc_temp[i]);
-		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(BOARD_TEMP),
-			     &board_temp[i]);
+		// dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(SOC_TEMP), &soc_temp[i]);
+		// dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(BOARD_TEMP),
+		// 	     &board_temp[i]);
 	}
 }
 

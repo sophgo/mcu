@@ -4,15 +4,15 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	4
-#define SOC_NUM	3
+#define MCU_SW_VER	1
+#define SOC_NUM	2
 
 #define false 0
 #define true 1
 
-#define PCIE_RESET_PORT	PCIE_MCU_RST_X_PORT
-#define PCIE_RESET_PIN	PCIE_MCU_RST_X_PIN
-#define PCIE_RESET_EXTI	PCIE_MCU_RST_X_EXTI
+#define PCIE_RESET_PORT	PCIE_RST_X_PORT
+#define PCIE_RESET_PIN	PCIE_RST_X_PIN
+#define PCIE_RESET_EXTI	PCIE_RST_X_EXTI
 #define PCIE_RESET_NVIC	EXTI2_IRQn
 
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))

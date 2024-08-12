@@ -5,136 +5,121 @@
 #include <common.h>
 #include <stdlib.h>
 
-int pmic_outa_on(void);
-void pmic_outa_off(void);
-
-int pmic_outd_on(void);
-void pmic_outd_off(void);
-
-int pmic_outc_on(void);
-void pmic_outc_off(void);
-
-int pmic_outb_on(void);
-void pmic_outb_off(void);
-
 int chip_assert_n_on(void);
 void chip_assert_n_off(void);
 
 int chip_deassert_n_on(void);
 void chip_deassert_n_off(void);
 
-struct power_node const board_power_nodes[33] = {
+struct power_node const board_power_nodes[25] = {
 
-	{"PMIC_OUTA", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_outa_on, (unsigned long)pmic_outa_off},
+	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 50000,
+	 {(unsigned long)chip_deassert_n_on,
+	  (unsigned long)chip_deassert_n_off},
+	 },
+
+	{"EN_VDD5V", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_5V_PORT, (unsigned long)EN_VDD_5V_PIN},
+	 },
+
+	{"EN_VDD_3V3", NODE_TYPE_ENABLE, 100000,
+	 {(unsigned long)EN_VDD_3V3_PORT, (unsigned long)EN_VDD_3V3_PIN},
+	 },
+
+	{"EN_VDDC_B0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDC_BM0_PORT, (unsigned long)EN_VDDC_BM0_PIN},
 	 },
 
 	{"EN_VDDC_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDDC_B1_PORT, (unsigned long)EN_VDDC_B1_PIN},
+	 {(unsigned long)EN_VDDC_BM1_PORT, (unsigned long)EN_VDDC_BM1_PIN},
 	 },
 
-	{"EN_VDDC_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDDC_B2_PORT, (unsigned long)EN_VDDC_B2_PIN},
+	{"EN_VDDR_B0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDR_BM0_PORT, (unsigned long)EN_VDDR_BM0_PIN},
 	 },
 
-	{"EN_VDDC_B3", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDDC_B3_PORT, (unsigned long)EN_VDDC_B3_PIN},
+	{"EN_VDDR_B1", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDDR_BM1_PORT, (unsigned long)EN_VDDR_BM1_PIN},
 	 },
 
-	{"EN_VDDIO33_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDDIO33_B1_PORT, (unsigned long)EN_VDDIO33_B1_PIN},
+	{"EN_VDD_PLL_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_PLL_BM0_PORT,
+	  (unsigned long)EN_VDD_PLL_BM0_PIN},
 	 },
 
-	{"EN_VDDIO33_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDDIO33_B2_PORT, (unsigned long)EN_VDDIO33_B2_PIN},
+	{"EN_VDD_PLL_BM1", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_PLL_BM1_PORT,
+	  (unsigned long)EN_VDD_PLL_BM1_PIN},
 	 },
 
-	{"EN_VDDIO33_B3", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDDIO33_B3_PORT, (unsigned long)EN_VDDIO33_B3_PIN},
+	{"EN_DDR_VDD_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_DDR_VDD_BM0_PORT,
+	  (unsigned long)EN_DDR_VDD_BM0_PIN},
 	 },
 
-	{"PMIC_OUTD", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_outd_on, (unsigned long)pmic_outd_off},
+	{"EN_DDR_VDD_BM1", NODE_TYPE_ENABLE, 100000,
+	 {(unsigned long)EN_DDR_VDD_BM1_PORT,
+	  (unsigned long)EN_DDR_VDD_BM1_PIN},
 	 },
 
-	{"P08_PG_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)P08_PG_B1_PORT, (unsigned long)P08_PG_B1_PIN},
+	{"EN_VPH_PCIE_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VPH_PCIE_BM0_PORT,
+	  (unsigned long)EN_VPH_PCIE_BM0_PIN},
 	 },
 
-	{"P08_PG_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)P08_PG_B2_PORT, (unsigned long)P08_PG_B2_PIN},
+	{"EN_VPH_PCIE_BM1", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VPH_PCIE_BM1_PORT,
+	  (unsigned long)EN_VPH_PCIE_BM1_PIN},
 	 },
 
-	{"P08_PG_B3", NODE_TYPE_ENABLE, 2000,
-	 {(unsigned long)P08_PG_B3_PORT, (unsigned long)P08_PG_B3_PIN},
+	{"EN_VP_PCIE_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VP_PCIE_BM0_PORT,
+	  (unsigned long)EN_VP_PCIE_BM0_PIN},
 	 },
 
-	{"PCIE_PG_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)PCIE_PG_B1_PORT, (unsigned long)PCIE_PG_B1_PIN},
+	{"EN_VP_PCIE_BM1", NODE_TYPE_ENABLE, 20000,
+	 {(unsigned long)EN_VP_PCIE_BM1_PORT,
+	  (unsigned long)EN_VP_PCIE_BM1_PIN},
 	 },
 
-	{"PCIE_PG_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)PCIE_PG_B2_PORT, (unsigned long)PCIE_PG_B2_PIN},
+	{"EN_DDR_VAA_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_DDR_VAA_BM0_PORT,
+	  (unsigned long)EN_DDR_VAA_BM0_PIN},
 	 },
 
-	{"PCIE_PG_B3", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)PCIE_PG_B3_PORT, (unsigned long)PCIE_PG_B3_PIN},
+	{"EN_DDR_VAA_BM1", NODE_TYPE_ENABLE, 20000,
+	 {(unsigned long)EN_DDR_VAA_BM1_PORT,
+	  (unsigned long)EN_DDR_VAA_BM1_PIN},
 	 },
 
-	{"EN_VDD_TPU_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDD_TPU_B1_PORT, (unsigned long)EN_VDD_TPU_B1_PIN},
+	{"EN_DDR_VDD1_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_DDR_VDD1_BM0_PORT,
+	  (unsigned long)EN_DDR_VDD1_BM0_PIN},
 	 },
 
-	{"EN_VDD_TPU_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VDD_TPU_B2_PORT, (unsigned long)EN_VDD_TPU_B2_PIN},
+	{"EN_DDR_VDD1_BM1", NODE_TYPE_ENABLE, 20000,
+	 {(unsigned long)EN_DDR_VDD1_BM1_PORT,
+	  (unsigned long)EN_DDR_VDD1_BM1_PIN},
 	 },
 
-	{"EN_VDD_TPU_B3", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)EN_VDD_TPU_B3_PORT, (unsigned long)EN_VDD_TPU_B3_PIN},
+	{"EN_DDR_VDD2H_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_DDR_VDD2H_BM0_PORT,
+	  (unsigned long)EN_DDR_VDD2H_BM0_PIN},
 	 },
 
-	{"TPU_PG_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)TPU_PG_B1_PORT, (unsigned long)TPU_PG_B1_PIN},
+	{"EN_DDR_VDD2H_BM1", NODE_TYPE_ENABLE, 20000,
+	 {(unsigned long)EN_DDR_VDD2H_BM1_PORT,
+	  (unsigned long)EN_DDR_VDD2H_BM1_PIN},
 	 },
 
-	{"TPU_PG_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)TPU_PG_B2_PORT, (unsigned long)TPU_PG_B2_PIN},
+	{"EN_DDR_VDDQ_BM0", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_DDR_VDDQ_BM0_PORT,
+	  (unsigned long)EN_DDR_VDDQ_BM0_PIN},
 	 },
 
-	{"TPU_PG_B3", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)TPU_PG_B3_PORT, (unsigned long)TPU_PG_B3_PIN},
-	 },
-
-	{"PMIC_OUTC", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_outc_on, (unsigned long)pmic_outc_off},
-	 },
-
-	{"PMIC_OUTB", NODE_TYPE_FUNCTION, 2000,
-	 {(unsigned long)pmic_outb_on, (unsigned long)pmic_outb_off},
-	 },
-
-	{"TPUMEM_PG_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)TPUMEM_PG_B1_PORT, (unsigned long)TPUMEM_PG_B1_PIN},
-	 },
-
-	{"TPUMEM_PG_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)TPUMEM_PG_B2_PORT, (unsigned long)TPUMEM_PG_B2_PIN},
-	 },
-
-	{"TPUMEM_PG_B3", NODE_TYPE_ENABLE, 1000,
-	 {(unsigned long)TPUMEM_PG_B3_PORT, (unsigned long)TPUMEM_PG_B3_PIN},
-	 },
-
-	{"EN_VQPS18_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VQPS18_B1_PORT, (unsigned long)EN_VQPS18_B1_PIN},
-	 },
-
-	{"EN_VQPS18_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)EN_VQPS18_B2_PORT, (unsigned long)EN_VQPS18_B2_PIN},
-	 },
-
-	{"EN_VQPS18_B3", NODE_TYPE_ENABLE, 2000,
-	 {(unsigned long)EN_VQPS18_B3_PORT, (unsigned long)EN_VQPS18_B3_PIN},
+	{"EN_DDR_VDDQ_BM1", NODE_TYPE_ENABLE, 20000,
+	 {(unsigned long)EN_DDR_VDDQ_BM1_PORT,
+	  (unsigned long)EN_DDR_VDDQ_BM1_PIN},
 	 },
 
 	{"CHIP_ASSERT_N", NODE_TYPE_FUNCTION, 0,
@@ -144,18 +129,6 @@ struct power_node const board_power_nodes[33] = {
 	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 30000,
 	 {(unsigned long)chip_deassert_n_on,
 	  (unsigned long)chip_deassert_n_off},
-	 },
-
-	{"DDR_PG_B1", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)DDR_PG_B1_PORT, (unsigned long)DDR_PG_B1_PIN},
-	 },
-
-	{"DDR_PG_B2", NODE_TYPE_ENABLE, 0,
-	 {(unsigned long)DDR_PG_B2_PORT, (unsigned long)DDR_PG_B2_PIN},
-	 },
-
-	{"DDR_PG_B3", NODE_TYPE_ENABLE, 10,
-	 {(unsigned long)DDR_PG_B3_PORT, (unsigned long)DDR_PG_B3_PIN},
 	 },
 
 };

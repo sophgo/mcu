@@ -7,13 +7,13 @@
 #include <system.h>
 
 #define ISL68224_SLAVE_ADDR	0x60
-#define I2C			I2C0
+#define I2C			I2C1
 
 #define REG_VOUT_COMMAND	0x21
 #define REG_VOUT_DROOP		0X28
 #define REG_PAGE	0x0
 
-static uint8_t isl68224_channel[3] = {1, 5, 3};
+static uint8_t isl68224_channel[2] = {6, 7};
 
 static inline void isl68224_select(int idx)
 {

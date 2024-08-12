@@ -203,11 +203,9 @@ static void cmd_burn(void *hint, int argc, char const *argv[])
 	}
 }
 
-uint32_t sys_rst_pin_list[4][2] = {
-	{B1_SYS_RST_N_PORT, B1_SYS_RST_N_PIN},
-	{B2_SYS_RST_N_PORT, B2_SYS_RST_N_PIN},
-	{B3_SYS_RST_N_PORT, B3_SYS_RST_N_PIN},
-	{GPIOB, GPIO_PIN_0},
+uint32_t sys_rst_pin_list[2][2] = {
+	{SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN},
+	{SYS_RST_X_H_BM1_PORT, SYS_RST_X_H_BM1_PIN},
 };
 static void cmd_low(void *hint, int argc, char const *argv[])
 {
@@ -332,41 +330,41 @@ static void cmd_vddc(void *hint, int argc, char const *argv[])
 	return;
 }
 
-static const char * const cmd_tpupower_usage =
-"tpupower [0/1]\n"
-"    0:tpu powerdown 1:tpu powerup\n";
+// static const char * const cmd_tpupower_usage =
+// "tpupower [0/1]\n"
+// "    0:tpu powerdown 1:tpu powerup\n";
 
-static void cmd_tpupower(void *hint, int argc, char const *argv[])
-{
-	int value;
+// static void cmd_tpupower(void *hint, int argc, char const *argv[])
+// {
+// 	int value;
 
-	if (argc != 2) {
-		printf("%s", cmd_tpupower_usage);
-		return;
-	}
+// 	if (argc != 2) {
+// 		printf("%s", cmd_tpupower_usage);
+// 		return;
+// 	}
 
-	value = strtol(argv[1], NULL, 0);
-	if (value == 0){
-		gpio_clear(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
-		gpio_clear(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
-		gpio_clear(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
-		timer_mdelay(1);
-		gpio_clear(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
-		gpio_clear(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
-		gpio_clear(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
-	}else if(value == 1){
-		gpio_set(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
-		gpio_set(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
-		gpio_set(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
-		timer_mdelay(1);
-		gpio_set(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
-		gpio_set(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
-		gpio_set(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
-	}else{
-		;
-	}
-	return;
-}
+// 	value = strtol(argv[1], NULL, 0);
+// 	if (value == 0){
+// 		gpio_clear(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
+// 		gpio_clear(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
+// 		gpio_clear(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
+// 		timer_mdelay(1);
+// 		gpio_clear(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
+// 		gpio_clear(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
+// 		gpio_clear(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
+// 	}else if(value == 1){
+// 		gpio_set(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
+// 		gpio_set(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
+// 		gpio_set(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
+// 		timer_mdelay(1);
+// 		gpio_set(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
+// 		gpio_set(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
+// 		gpio_set(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
+// 	}else{
+// 		;
+// 	}
+// 	return;
+// }
 
 static const char * const cmd_rdrop_usage =
 "rdrop [idx page  resistance]\n"
@@ -434,7 +432,7 @@ static struct command command_list[] = {
 	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
 	{"rdrop", NULL, cmd_rdrop_usage, cmd_rdrop_vout},
 	{"tpu_rdrop",NULL,cmd_tpu_rdrop_usage , cmd_tpu_rdrop_vout },
-	{"tpupower", NULL, cmd_tpupower_usage, cmd_tpupower},
+	//{"tpupower", NULL, cmd_tpupower_usage, cmd_tpupower},
 };
 
 void print_usage(struct command *cmd)

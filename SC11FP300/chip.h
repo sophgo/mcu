@@ -14,15 +14,14 @@ void sys_rst_enable(void);
 
 #define BN_SYS_RST_ENABLE(n)					\
 	do {							\
-		gpio_set(B ## n ## _SYS_RST_N_PORT,		\
-			 B ## n ## _SYS_RST_N_PIN);		\
+		gpio_set(SYS_RST_X_H_BM ## n ## _PORT,		\
+			 SYS_RST_X_H_BM ## n ## _PIN);		\
 	} while (0)
-
 
 #define BN_SYS_RST_DISABLE(n)					\
 	do {							\
-		gpio_clear(B ## n ## _SYS_RST_N_PORT,		\
-			   B ## n ## _SYS_RST_N_PIN);		\
+		gpio_clear(SYS_RST_X_H_BM ## n ## _PORT,		\
+			   SYS_RST_X_H_BM ## n ## _PIN);		\
 	} while (0)
 
 #endif

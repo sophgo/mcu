@@ -8,12 +8,12 @@
 
 void led_on(void)
 {
-	// gpio_bit_set(LED_PORT, LED_PIN);
+	gpio_bit_set(STATUS_LED0_PORT, STATUS_LED0_PIN);
 }
 
 void led_off(void)
 {
-	// gpio_bit_reset(LED_PORT, LED_PIN);
+	gpio_bit_reset(STATUS_LED0_PORT, STATUS_LED0_PIN);
 }
 
 int led_tick_handle;
