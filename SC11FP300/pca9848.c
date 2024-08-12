@@ -4,15 +4,14 @@
 #include <gd32e50x_i2c.h>
 #include <system.h>
 
-#define PCA9848_SLAVE_ADDR	0x71
+//#define PCA9848_SLAVE_ADDR	0x71
 
 static struct {
 	int i2c;
 	unsigned int mask;
 	unsigned char slave_addr;
 } ctx[2] = {
-	{.i2c = I2C0, .mask = 0, .slave_addr = 0x71},
-	{.i2c = I2C0, .mask = 0, .slave_addr = 0x73},
+	{.i2c = I2C1, .mask = 0, .slave_addr = 0x73},
 };
 
 void pca9848_init(void)

@@ -17,11 +17,25 @@
 #include <console.h>
 #include <stdio.h>
 #include <slave.h>
+#include <pcie.h>
+//#include <ct7451.h>
+
 int main(void)
 {
 	system_init();
+	gpio_bit_reset(EN_VDD_3V3_PORT, EN_VDD_3V3_PIN);
+	gpio_bit_reset(SYS_RST_X_H_BM1_PORT, SYS_RST_X_H_BM1_PIN);
+	gpio_bit_reset(SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN);
+	// while(1) {
+	// 	gpio_bit_reset(SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN);
+	// 	timer_udelay(1);
+	// 	gpio_bit_set(SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN);
+	// 	timer_udelay(1);
+	// }
 
-	debug("\nBITMAIN SOPHONE SC11FP300\n");
+	led_init();
+	//led_set_frequency(1);
+	// debug("\nBITMAIN SOPHONE SC11FP300\n");
 	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	dbg_printf("bitmain\n");
 
@@ -32,24 +46,26 @@ int main(void)
 #else
 // #warn stand alone environment
 #endif
-	pca9848_init();
-	mp5475_init();
+	//pca9848_init();
+	// ct7451_init(0);
+	// ct7451_init(1);
+	//mp5475_init();
 	board_power_init();
 #if 0
 	timer_mdelay(30);
 	sys_rst_enable();
 #endif
-	chip_init();
-	mon_init();
-	slave_init();
-	console_init();
+	//chip_init();
+	// mon_init();
+	// slave_init();
+	// console_init();
 
-	//sys_rst_enable();
+	pcie_init();
 	while (1) {
-		chip_update();
-		if (chip_enable())
-			mon_process();
-
+		//chip_update();
+		// if (chip_enable())
+			//mon_process();
+		//ct7451_process();
 		console_poll();
 	}
 

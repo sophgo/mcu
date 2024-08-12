@@ -50,5 +50,6 @@
 
 #define BM2044REVB	0xb1
 #define BM1690EVB	0xb2
+#define SC11FP300	0xb3
 
 #endif

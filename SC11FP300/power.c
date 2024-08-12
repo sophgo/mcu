@@ -143,5 +143,6 @@ int power_status(void)
 
 int board_power_init(void)
 {
+	timer_udelay(30000);
 	return power_on();
 }

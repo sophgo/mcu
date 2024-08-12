@@ -7,11 +7,11 @@
 #include <stdarg.h>
 #include <timer.h>
 
-#define CURRENT_PCIE_3V3_CHANNEL ADC_CHANNEL_13
+#define CURRENT_PCIE_3V3_CHANNEL ADC_CHANNEL_1
 #define CURRENT_SYS_12V_CHANNEL ADC_CHANNEL_0
 #define CURRENT_PCIE_12V_CHANNEL ADC_CHANNEL_10
-#define PROD_VER_CHANNEL ADC_CHANNEL_8
-#define HW_VER_CHANNEL ADC_CHANNEL_9
+#define PROD_VER_CHANNEL ADC_CHANNEL_11
+#define HW_VER_CHANNEL ADC_CHANNEL_12
 
 static unsigned int pcb_ver;
 static unsigned int bom_ver;
