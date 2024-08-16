@@ -14,6 +14,7 @@
 static volatile int is_chip_ready;
 static volatile int is_chip_enabled;
 static volatile int need_enable_chip;
+static int needpoweron;
 
 int chip_is_enabled(void)
 {
@@ -102,4 +103,19 @@ void EXTI2_IRQHandler(void)
 int chip_enable(void)
 {
 	return is_chip_enabled;
+}
+
+void set_needpoweron(void)
+{
+	needpoweron = 1;
+}
+
+void clr_needpoweron(void)
+{
+	needpoweron = 0;
+}
+
+int get_needpoweron_satus(void)
+{
+	return needpoweron;
 }
