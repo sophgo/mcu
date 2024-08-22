@@ -11,6 +11,7 @@
 #include <timer.h>
 #include <common.h>
 #include <system.h>
+#include <power.h>
 
 #define DBGI2C_ADDR_BASE	0x20
 #define DBGI2C_I2C_MASTER	I2C1
@@ -239,10 +240,29 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 #define DBGI2C_SOC_INFO_BOARD_TEMP_OFFSET	1
 #define DBGI2C_SOC_INFO_ADDR(reg)	(DBGI2C_SOC_INFO_BASE +	\
 					 DBGI2C_SOC_INFO_ ## reg ## _OFFSET)
+#define TMP451_OVERTEMP_MAX	5
 
 static uint8_t dbgi2c_chip_map[CHIP_MAP_SIZE];
 static uint8_t soc_temp[8];
 static uint8_t board_temp[8];
+static int overtemp;
+
+static void tmp451_process(uint8_t soc)
+{
+	if (!chip_is_enabled()) {
+		overtemp = 0;
+		return;
+	}
+
+	if (soc > 95) {
+		++overtemp;
+		if (overtemp > TMP451_OVERTEMP_MAX) {
+			sys_rst_disable();
+			power_off();
+			overtemp = 0;
+		}
+	}
+}
 
 static void dbgi2c_collect(void)
 {
@@ -258,6 +278,7 @@ static void dbgi2c_collect(void)
 		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(SOC_TEMP), &soc_temp[i]);
 		dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(BOARD_TEMP),
 			     &board_temp[i]);
+		tmp451_process(soc_temp[i]);
 	}
 }
 
