@@ -115,18 +115,3 @@ int chip_enable(void)
 {
 	return is_chip_enabled;
 }
-
-void set_needpoweron(void)
-{
-	needpoweron = 1;
-}
-
-void clr_needpoweron(void)
-{
-	needpoweron = 0;
-}
-
-int get_needpoweron_satus(void)
-{
-	return needpoweron;
-}

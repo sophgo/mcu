@@ -244,14 +244,6 @@ static int overtemp;
 
 static void tmp451_process(uint8_t soc)
 {
-	if (get_needpoweron_satus() == 1) {
-		if (soc < 95) {
-			power_on();
-			sys_rst_enable();
-			clr_needpoweron();
-		}
-	}
-
 	if (!chip_is_enabled()) {
 		overtemp = 0;
 		return;
@@ -263,7 +255,6 @@ static void tmp451_process(uint8_t soc)
 			sys_rst_disable();
 			power_off();
 			overtemp = 0;
-			set_needpoweron();
 		}
 	}
 }
