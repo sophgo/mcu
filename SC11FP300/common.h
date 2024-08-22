@@ -4,6 +4,17 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
+#define MCU_SW_VER	1
+#define SOC_NUM	2
+
+#define false 0
+#define true 1
+
+#define PCIE_RESET_PORT	PCIE_RST_X_PORT
+#define PCIE_RESET_PIN	PCIE_RST_X_PIN
+#define PCIE_RESET_EXTI	PCIE_RST_X_EXTI
+#define PCIE_RESET_NVIC	EXTI2_IRQn
+
 #define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 #define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
 
@@ -12,11 +23,6 @@
 #define I2C1_OA1		0x17
 #define I2C1_OA2		0x68
 #define I2C1_OA2_MASK		0x03
-
-#define PCIE_RESET_PORT	PCIEE_RST_X_MCU_PORT
-#define PCIE_RESET_PIN	PCIEE_RST_X_MCU_PIN
-#define PCIE_RESET_EXTI	PCIEE_RST_X_MCU_EXTI
-#define PCIE_RESET_NVIC	EXTI6_IRQn
 
 #define FLASH_SIZE	(256 * 1024)
 #define FLASH_PAGE_SIZE	(8 * 1024)
@@ -53,21 +59,10 @@ enum {
 	DDR_TYPE_LPDDR4 = 1,
 };
 
-void set_board_type(uint8_t type);
-uint8_t get_board_type(void);
-uint8_t get_firmware_version(void);
-int get_work_mode(void);
-void board_init(void);
-uint8_t get_declared_board_type(void);
-uint8_t get_ddr_type(void);
-char *get_board_type_name();
 void led_init(void);
+void led_on(void);
+void led_off(void);
 void led_set_frequency(unsigned long freq);
-
-int get_board_temp(void);
-int get_soc_temp(void);
-void set_board_temp(int temp);
-void set_soc_temp(int temp);
 
 /* remap libopencm3 to libgd */
 #define gpio_clear	gpio_bit_reset
@@ -75,7 +70,7 @@ void set_soc_temp(int temp);
 #define gpio_get	gpio_input_bit_get
 
 #define MCU_CPLD_I2C_IRQ	I2C0_EV_IRQn
-#define MCU_SOC_I2C_IRQ		I2C2_EV_IRQn
+#define DEBUG_I2C_IRQ		I2C2_EV_IRQn
 #define nvic_disable_irq(irq)	nvic_irq_disable(irq)
 #define nvic_enable_irq(irq)	nvic_irq_enable(irq, 0, 0)
 

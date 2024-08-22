@@ -48,5 +48,6 @@
 #define BM1690EVB	0Xb2
 
 
+#define SC11FP300	0xb3
 
 #endif
