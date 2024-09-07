@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <debug.h>
 #include <pca9848.h>
+#include <timer.h>
 
 
 #define CT7451_REG_MAX	(22)
@@ -77,7 +78,9 @@ void tmp_i2c_read(int idx)
 void ct7451_process(void)
 {
 	tmp_i2c_read(0);
+	timer_mdelay(500);
 	tmp_i2c_read(1);
+	timer_mdelay(500);
 }
 
 

@@ -81,21 +81,21 @@ static struct {
 	uint8_t sw_ver;
 	uint8_t hw_ver;
 	uint32_t i12v;
-	struct {
-		struct {
-			uint32_t voltage;
-			uint32_t current;
-		} buck[4];
-	} mp5475[SOC_NUM];
+	// struct {
+	// 	struct {
+	// 		uint32_t voltage;
+	// 		uint32_t current;
+	// 	} buck[4];
+	// } mp5475[SOC_NUM];
 
-	struct {
-		struct {
-			uint32_t voltage;
-			uint32_t current;
-			uint32_t power;
-			uint32_t rdrop;
-		} rail[2];
-	} isl68224[SOC_NUM];
+	// struct {
+	// 	struct {
+	// 		uint32_t voltage;
+	// 		uint32_t current;
+	// 		uint32_t power;
+	// 		uint32_t rdrop;
+	// 	} rail[2];
+	// } isl68224[SOC_NUM];
 	int soc_temp[SOC_NUM];
 	int board_temp[SOC_NUM];
 } __attribute__((packed)) __attribute__((aligned(4))) pkg;
@@ -114,12 +114,13 @@ void mon_init(void)
 	// 		filter_init(&(mp5475_voltage[i][j]), 0);
 	// 	}
 	// }
-
+	pkg.id = 0x0;
 	pkg.type = SC11FP300;
 	pkg.sw_ver = MCU_SW_VER;
 	pkg.hw_ver = get_hardware_version();
 
 	dbgi2c_pkg.tag = 0xdeadbeef;
+	dbgi2c_pkg.id = pkg.id;
 	dbgi2c_pkg.type = pkg.type;
 	dbgi2c_pkg.sw_ver = pkg.sw_ver;
 	dbgi2c_pkg.hw_ver = pkg.hw_ver;
@@ -146,54 +147,54 @@ void mon_init(void)
 // 	}
 // }
 
-static void __maybe_unused
-collect_isl68224(void)
-{
-	int i, j;
+// static void __maybe_unused
+// collect_isl68224(void)
+// {
+// 	int i, j;
 
-	for (i = 0; i < SOC_NUM; ++i) {
-		for (j = 0; j < 2; ++j) {
+// 	for (i = 0; i < SOC_NUM; ++i) {
+// 		for (j = 0; j < 2; ++j) {
 
-			pkg.isl68224[i].rail[j].current =
-				filter_in(&(isl68224_current[i][j]),
-					  isl68224_output_current(i, j));
+// 			pkg.isl68224[i].rail[j].current =
+// 				filter_in(&(isl68224_current[i][j]),
+// 					  isl68224_output_current(i, j));
 
-			pkg.isl68224[i].rail[j].voltage =
-				filter_in(&(isl68224_voltage[i][j]),
-					  isl68224_output_voltage(i, j));
+// 			pkg.isl68224[i].rail[j].voltage =
+// 				filter_in(&(isl68224_voltage[i][j]),
+// 					  isl68224_output_voltage(i, j));
 
-			pkg.isl68224[i].rail[j].power =
-				filter_in(&(isl68224_power[i][j]),
-					  isl68224_output_power(i, j));
+// 			pkg.isl68224[i].rail[j].power =
+// 				filter_in(&(isl68224_power[i][j]),
+// 					  isl68224_output_power(i, j));
 
-			pkg.isl68224[i].rail[j].rdrop =
-				filter_in(&(isl68224_rdrop[i][j]),
-					  isl68224_out_droop(i, j));
-		}
-	}
-}
+// 			pkg.isl68224[i].rail[j].rdrop =
+// 				filter_in(&(isl68224_rdrop[i][j]),
+// 					  isl68224_out_droop(i, j));
+// 		}
+// 	}
+// }
 
-static void __maybe_unused
-collect_tpu(void)
-{
-	int i, j;
+// static void __maybe_unused
+// collect_tpu(void)
+// {
+// 	int i, j;
 
-	j = 0;
+// 	j = 0;
 
-	for (i = 0; i < SOC_NUM; ++i) {
-		pkg.isl68224[i].rail[j].current =
-			filter_in(&(isl68224_current[i][j]),
-				  isl68224_output_current(i, j));
+// 	for (i = 0; i < SOC_NUM; ++i) {
+// 		pkg.isl68224[i].rail[j].current =
+// 			filter_in(&(isl68224_current[i][j]),
+// 				  isl68224_output_current(i, j));
 
-		pkg.isl68224[i].rail[j].voltage =
-			filter_in(&(isl68224_voltage[i][j]),
-				  isl68224_output_voltage(i, j));
+// 		pkg.isl68224[i].rail[j].voltage =
+// 			filter_in(&(isl68224_voltage[i][j]),
+// 				  isl68224_output_voltage(i, j));
 
-		pkg.isl68224[i].rail[j].power =
-			filter_in(&(isl68224_power[i][j]),
-				  isl68224_output_power(i, j));
-	}
-}
+// 		pkg.isl68224[i].rail[j].power =
+// 			filter_in(&(isl68224_power[i][j]),
+// 				  isl68224_output_power(i, j));
+// 	}
+// }
 
 static void collect_temp(void)
 {
@@ -215,18 +216,27 @@ void set_soc_temp(int idx, int temp)
 	soc_temp[idx] = temp;
 }
 
+int get_board_temp(int idx)
+{
+	return board_temp[idx];
+}
+
+int get_soc_temp(int idx)
+{
+	return soc_temp[idx];
+}
 
 static void collect(void)
 {
 	/* get 12v current from adc */
 	pkg.i12v = filter_in(&i12v, adc_read_i12v());
 
-	if (mon_mode == MON_MODE_VERBOSE) {
-		// collect_mp5475();
-		collect_isl68224();
-	} else if (mon_mode == MON_MODE_NORMAL) {
-		collect_tpu();
-	}
+	// if (mon_mode == MON_MODE_VERBOSE) {
+	// 	// collect_mp5475();
+	// 	collect_isl68224();
+	// } else if (mon_mode == MON_MODE_NORMAL) {
+	// 	collect_tpu();
+	// }
 
 	collect_temp();
 
@@ -272,14 +282,14 @@ static void mon_put_normal(void)
 	mon_printf("hardware version %u\n", pkg.hw_ver);
 	mon_printf("12v current(mA): %lu\n", pkg.i12v);
 
-	mon_printf("tpu information\n");
-	mon_printf("%12s %12s %12s\n",
-		   "voltage(mV)", "current(mA)", "power(mW)");
-	for (i = 0; i < 2; ++i) {
-		mon_printf("%12lu %12lu %12lu\n",
-			   pkg.isl68224[i].rail[0].voltage,
-			   pkg.isl68224[i].rail[0].current,
-			   pkg.isl68224[i].rail[0].power);
+	mon_printf("temperature information\n");
+	// mon_printf("%12s %12s %12s\n",
+	// 	   "voltage(mV)", "current(mA)", "power(mW)");
+	for (i = 0; i < SOC_NUM; ++i) {
+		mon_printf("chip%d: soc temp:%d board temp:%d \n",
+			   i,
+			   pkg.soc_temp[i],
+			   pkg.board_temp[i]);
 	}
 }
 
@@ -302,28 +312,38 @@ static void mon_put_verbose(void)
 	mon_printf("12v current(mA): %lu\n", pkg.i12v);
 
 	mon_printf("{\n");
-	for (i = 0; i < SOC_NUM; ++i) {
-		mon_printf("\tmp5475%d:\n", i);
-		for (j = 0; j < 4; ++j) {
-			mon_printf("\t\tbuck%d ", j);
-			mon_printf("%lu (mV) %lu (mA)\n",
-			       pkg.mp5475[i].buck[j].voltage,
-			       pkg.mp5475[i].buck[j].current);
-		}
-	}
-	mon_printf("}\n");
 
-	mon_printf("{\n");
+	mon_printf("temperature information\n");
+	// mon_printf("%12s %12s %12s\n",
+	// 	   "voltage(mV)", "current(mA)", "power(mW)");
 	for (i = 0; i < SOC_NUM; ++i) {
-		mon_printf("\tisl68224%d:\n", i);
-		for (j = 0; j < 2; ++j) {
-			mon_printf("\t\trail%d ", j);
-			mon_printf("%lu (mV) %lu (mA) %lu (mW)\n",
-			       pkg.isl68224[i].rail[j].voltage,
-			       pkg.isl68224[i].rail[j].current,
-			       pkg.isl68224[i].rail[j].power);
-		}
+		mon_printf("chip%d: soc temp:%d board temp:%d \n",
+			   i,
+			   pkg.soc_temp[i],
+			   pkg.board_temp[i]);
 	}
+	// for (i = 0; i < SOC_NUM; ++i) {
+	// 	mon_printf("\tmp5475%d:\n", i);
+	// 	for (j = 0; j < 4; ++j) {
+	// 		mon_printf("\t\tbuck%d ", j);
+	// 		mon_printf("%lu (mV) %lu (mA)\n",
+	// 		       pkg.mp5475[i].buck[j].voltage,
+	// 		       pkg.mp5475[i].buck[j].current);
+	// 	}
+	// }
+	// mon_printf("}\n");
+
+	// mon_printf("{\n");
+	// for (i = 0; i < SOC_NUM; ++i) {
+	// 	mon_printf("\tisl68224%d:\n", i);
+	// 	for (j = 0; j < 2; ++j) {
+	// 		mon_printf("\t\trail%d ", j);
+	// 		mon_printf("%lu (mV) %lu (mA) %lu (mW)\n",
+	// 		       pkg.isl68224[i].rail[j].voltage,
+	// 		       pkg.isl68224[i].rail[j].current,
+	// 		       pkg.isl68224[i].rail[j].power);
+	// 	}
+	// }
 	mon_printf("}\n");
 }
 
@@ -350,32 +370,15 @@ static void __maybe_unused broadcast(void)
 		return;
 	}
 
-	isl68224_rail = 0;
-	isl68224_idx = soc_idx;
-
 	dbgi2c_pkg.id = pkg.id;
 	dbgi2c_pkg.i12v = pkg.i12v;
-	dbgi2c_pkg.tpu.voltage =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].voltage;
-	dbgi2c_pkg.tpu.current =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].current;
-	dbgi2c_pkg.tpu.power =
-		pkg.isl68224[isl68224_idx].rail[isl68224_rail].power;
 
-	dbgi2c_pkg.vddc.voltage =
-		pkg.isl68224[isl68224_idx].rail[1].voltage;
-	dbgi2c_pkg.vddc.current =
-		pkg.isl68224[isl68224_idx].rail[1].current;
-	dbgi2c_pkg.vddc.power =
-		pkg.isl68224[isl68224_idx].rail[1].power;
-
+	dbgi2c_pkg.i12v_atx = get_i12v_atx();
 	dbgi2c_pkg.i12v_pcie = get_i12v_pcie();
 	dbgi2c_pkg.i3v3_pcie = get_i3v3_pcie();
 
-	dbgi2c_pkg.rdrop_tpu = 
-		pkg.isl68224[isl68224_idx].rail[0].rdrop;
-	dbgi2c_pkg.rdrop_vddc = 
-		pkg.isl68224[isl68224_idx].rail[1].rdrop;
+	dbgi2c_pkg.soc_temp = pkg.soc_temp[soc_idx];
+	dbgi2c_pkg.board_temp = pkg.board_temp[soc_idx];
 
 	dbgi2c_broadcast(soc_idx, &dbgi2c_pkg);
 

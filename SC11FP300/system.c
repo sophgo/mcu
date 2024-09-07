@@ -136,17 +136,17 @@ static void system_i2c0_init(void)
 	i2c_master_init(I2C0);
 }
 
-// static void system_i2c1_init(void)
-// {
-// 	rcu_periph_clock_enable(RCU_I2C1);
+static void system_i2c1_init(void)
+{
+	rcu_periph_clock_enable(RCU_I2C1);
 
-// 	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ,
-// 		  GPIO_PIN_10 | GPIO_PIN_11);
+	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_10MHZ,
+		  GPIO_PIN_10 | GPIO_PIN_11);
 
-// 	i2c_deinit(I2C1);
+	i2c_deinit(I2C1);
 
-// 	i2c_master_init(I2C1);
-// }
+	i2c_master_init(I2C1);
+}
 
 void system_i2c2_init(void)
 {
@@ -182,12 +182,12 @@ void system_init(void)
 {
 	system_gpio_init();
 	system_uart_init();
-	//system_i2c0_init();
-	//system_i2c1_init();
-	//system_i2c2_init();
+	system_i2c0_init();
+	system_i2c1_init();
+	system_i2c2_init();
 	system_timer_init();
-	//system_adc_init();
-	//adc_init();
+	system_adc_init();
+	adc_init();
 
 	tick_init();
 }

@@ -11,31 +11,12 @@ struct dbgi2c_info {
 	uint8_t hw_ver;
 	uint32_t i12v;
 
-	struct {
-		uint32_t voltage;
-		uint32_t current;
-		uint32_t power;
-	} tpu;
-
-	struct {
-		uint32_t voltage;
-		uint32_t current;
-		uint32_t power;
-	}vddc;
-
-	struct {
-		uint32_t voltage;
-		uint32_t current;
-		uint32_t power;
-	}vdd_phy;
-
 	uint32_t i12v_atx;
 	uint32_t i12v_pcie;
 	uint32_t i3v3_pcie;
 
-	uint32_t rdrop_tpu;
-	uint32_t rdrop_vddc;
-	uint32_t rdrop_vdd_phy;
+	int soc_temp;
+	int board_temp;
 
 } __attribute__((packed));
 

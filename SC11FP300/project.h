@@ -2,6 +2,7 @@
 #define __PROJECT_H__
 
 #define SC11FP300	0xb3
+#define BOARD_TPYE	SC11FP300
 
 /* MCU Family */
 enum {

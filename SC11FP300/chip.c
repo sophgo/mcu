@@ -15,13 +15,13 @@ static volatile int is_chip_ready;
 static volatile int is_chip_enabled;
 static volatile int need_enable_chip;
 
-// int chip_is_enabled(void)
-// {
-// 	if (is_chip_enabled)
-// 		return tick64_get() > CHIP_BOOT_TIME;
-// 	else
-// 		return false;
-// }
+int chip_is_enabled(void)
+{
+	if (is_chip_enabled)
+		return tick64_get() > CHIP_BOOT_TIME;
+	else
+		return false;
+}
 
 // void chip_init(void)
 // {
@@ -98,7 +98,7 @@ void sys_rst_disable(void)
 // 	exti_reset_request(PCIE_RESET_EXTI);
 // }
 
-// int chip_enable(void)
-// {
-// 	return is_chip_enabled;
-// }
+int chip_enable(void)
+{
+	return is_chip_enabled;
+}
