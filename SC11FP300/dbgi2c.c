@@ -11,8 +11,10 @@
 #include <timer.h>
 #include <common.h>
 #include <system.h>
+#include <mon.h>
+#include <project.h>
 
-#define DBGI2C_ADDR_BASE	0x20
+#define DBGI2C_ADDR_BASE	0x41
 #define DBGI2C_I2C_MASTER	I2C1
 #define DBGI2C_I2C_TIMEOUT	1
 
@@ -20,7 +22,7 @@ static uint8_t dbg_channel[2] = {0, 1};
 
 static inline uint8_t dbgi2c_idx2addr(int idx)
 {
-	return DBGI2C_ADDR_BASE + idx;
+	return DBGI2C_ADDR_BASE - idx;
 }
 
 int dbgi2c_i2c_write_byte(int idx, uint8_t data)
@@ -87,7 +89,7 @@ static int __dbgi2c_write(int idx, int addr_width, int data_width,
 		dbg_printf("%d write set address width failed\n", idx);
 		return err;
 	}
-
+	timer_mdelay(50);
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err)
 		dbg_printf("write address or data failed of soc%d\n", idx);
@@ -114,11 +116,16 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 		dbg_printf("%d read set adr width failed\n", idx);
 		return err;
 	}
+
+	timer_mdelay(50);
+
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err) {
 		dbg_printf("%d set addr %xl failed\n", idx, addr);
 		return err;
 	}
+
+	timer_mdelay(50);
 
 	/* get data */
 	err = dbgi2c_i2c_read_block(idx, data, len);
@@ -133,7 +140,7 @@ static inline int get_addr_width(uint64_t addr)
 	int i;
 
 	for (i = 8; i <= 48; i += 8) {
-		if ((addr & ~(((unsigned long)1 << i) - 1)) == 0)
+		if ((addr & ~(((uint64_t )1 << i) - 1)) == 0)
 			break;
 	}
 
@@ -212,7 +219,8 @@ void dbgi2c_test(void)
 static void dbgi2c_collect(void);
 
 /* i2c master operations */
-#define DBGI2C_MCU_INFO_BASE	0x101fb000ULL
+#define DBGI2C_MCU_INFO_BASE	0x7010000000ULL
+#define BOARD_TPYE_BASE 	0x70500001c8ULL
 void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 {
 	int i;
@@ -223,6 +231,8 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 
 	}
 
+	dbgi2c_write32(idx, BOARD_TPYE_BASE, BOARD_TPYE);
+
 	if (idx == 0)
 		dbgi2c_collect();
 
@@ -231,7 +241,7 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 /* i2c slave operations */
 
 #define DBGI2C_SLAVE_BASE	0x60
-#define DBGI2C_SOC_INFO_BASE	0x101fb100ULL
+#define DBGI2C_SOC_INFO_BASE	0x7010000000ULL
 #define DBGI2C_REG_MASK		(0xff)
 #define CHIP_MAP_SIZE		0x80
 
@@ -248,16 +258,19 @@ static void dbgi2c_collect(void)
 {
 	int i;
 
-	for (i = 0; i < sizeof(dbgi2c_chip_map) / 4; ++i) {
-		dbgi2c_read32(0, DBGI2C_SOC_INFO_BASE + i * 4,
-			      &((uint32_t *)dbgi2c_chip_map)[i]);
-	}
+	// for (i = 0; i < sizeof(dbgi2c_chip_map) / 4; ++i) {
+	// 	dbgi2c_read32(0, DBGI2C_SOC_INFO_BASE + i * 4,
+	// 		      &((uint32_t *)dbgi2c_chip_map)[i]);
+	// }
 
 	for (i = 0; i < SOC_NUM; ++i) {
 		timer_udelay(100);
 		// dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(SOC_TEMP), &soc_temp[i]);
 		// dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(BOARD_TEMP),
 		// 	     &board_temp[i]);
+		//for bmc
+		board_temp[i] = get_board_temp(i);
+		soc_temp[i] = get_soc_temp(i);
 	}
 }
 
