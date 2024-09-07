@@ -4,7 +4,7 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	1
+#define MCU_SW_VER	2
 
 #define false 0
 #define true 1
@@ -34,8 +34,10 @@ void board_init(void);
 uint8_t get_ddr_type(void);
 int get_board_temp(void);
 int get_soc_temp(void);
+int get_soc_temp_x(void);
 void set_board_temp(int temp);
 void set_soc_temp(int temp);
+void set_soc_temp_x(int temp);
 char *get_board_type_name();
 uint8_t get_board_type(void);
 void led_init(void);
