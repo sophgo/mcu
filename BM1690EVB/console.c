@@ -146,12 +146,13 @@ static const char * const cmd_temp_usage =
 
 static void cmd_temp(void *hint, int argc, char const *argv[])
 {
-	int boardtemp, soctemp;
+	int boardtemp, soctemp, soctemp_x;
 
 	boardtemp = get_board_temp();
 	soctemp = get_soc_temp();
+	soctemp_x = get_soc_temp_x();
 	if (argc == 1){
-		printf("soc temp = %d(C)\tboard temp = %d(C)\n", soctemp, boardtemp);
+		printf("soc temp = %d(C)\tboard temp = %d(C)\torigin = %d(C)\n", soctemp, boardtemp, soctemp_x);
 	}else if (argc == 2){
 		if (strcmp(argv[1], "soc") == 0){
 			printf("soc temp = %d(C)\n", soctemp);

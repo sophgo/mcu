@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <debug.h>
 #include <mcu.h>
+#include <math.h>
 
 #define CT7451_REG_MAX	(22)
 
@@ -150,14 +151,14 @@ static uint8_t real_temp_to_reg(int temp)
 		else if (temp > 191)
 			temp = 191;
 
-		reg = temp + 64;
+		reg = round(temp * 1.1841f - 15.194f + 3.0f + 64.0f);
 	} else {
 		if (temp < 0)
 			reg = 0;
 		else if (temp > 127)
 			reg = 127;
 		else
-			reg = temp;
+			reg = round(temp * 1.1841f - 15.194f + 3.0f);
 	}
 	return reg;
 }
@@ -201,7 +202,8 @@ static void ct7451_update_temp(void)
 			CT7451_RT, &tmp);
 	ct7451_ctx.local_temp = (int)tmp - 64;
 
-	set_soc_temp(ct7451_ctx.local_temp - 5);
+	set_soc_temp(round(ct7451_ctx.local_temp * 1.1841f - 18.114f));
+	set_soc_temp_x(ct7451_ctx.local_temp);
 	set_board_temp(ct7451_ctx.remote_temp);
 }
 
