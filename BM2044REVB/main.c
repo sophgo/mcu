@@ -19,8 +19,8 @@
 int main(void)
 {
 	system_init();
-	debug("\nBM2044REVB\n");
-	debug("firmware build time:%s-%s\n", __DATE__, __TIME__);
+	dbg_printf("\nBM2044REVB\n");
+	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	led_init();
    	power_init();
 	chip_init();
