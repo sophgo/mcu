@@ -15,6 +15,7 @@
 #include <mcu.h>
 #include <stdio.h>
 #include <pcie.h>
+#include <pic.h>
 #define EXT_LED_MAX		8
 
 #define REG_BOARD_TYPE		0x00
@@ -249,6 +250,8 @@ void mcu_process(void)
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
 		power_off();
 		wdt_reset();
+		if (pic_available())
+			pic_write(PIC_REG_CTRL, PIC_CMD_POWER_OFF);
 		break;
 	case CMD_RESET:
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_RESET);
@@ -260,6 +263,8 @@ void mcu_process(void)
 		chip_popd_reset_early();
 		set_needpoweron();
 		wdt_reset();
+		if (pic_available())
+			pic_write(PIC_REG_CTRL, PIC_CMD_REBOOT);
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(NVIC_I2C1_IRQ);
