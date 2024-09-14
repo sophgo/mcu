@@ -8,6 +8,8 @@ int mon_get_mode(void);
 void mon_put_text(void);
 void set_soc_temp(int idx, int temp);
 void set_board_temp(int idx, int temp);
+int get_board_temp(int idx);
+int get_soc_temp(int idx);
 
 enum MON_MODE {
 	MON_MODE_NORMAL = 0,

@@ -13,7 +13,7 @@
 
 static uint8_t board_type;
 
-static int board_temp, soc_temp;
+static int board_temp, soc_temp, soc_temp_x;
 static struct
 {
 	int num, port, pin;
@@ -32,6 +32,11 @@ int get_soc_temp(void)
 	return soc_temp;
 }
 
+int get_soc_temp_x(void)
+{
+	return soc_temp_x;
+}
+
 void set_board_temp(int temp)
 {
 	board_temp = temp;
@@ -40,6 +45,11 @@ void set_board_temp(int temp)
 void set_soc_temp(int temp)
 {
 	soc_temp = temp;
+}
+
+void set_soc_temp_x(int temp)
+{
+	soc_temp_x = temp;
 }
 
 uint8_t get_ddr_type(void)

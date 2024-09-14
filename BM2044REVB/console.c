@@ -47,13 +47,12 @@ static const char * const cmd_poweron_usage =
 
 static void cmd_poweron(void *hint, int argc, char const *argv[])
 {
+	power_on();
+	chip_enable();
+	if (gpio_get(MCU_PS_ON_PORT, MCU_PS_ON_PIN) == 0)
+		power_is_on = false;
 
-	gpio_set(GPIOC, GPIO_PIN_12);
-
-	if(power_is_on == true)
-		chip_enable();
-
-	printf("BM2044REVB OK\n");
+	printf("SG2042REVB OK\n");
 }
 
 static const char * const cmd_poweroff_usage =
@@ -62,11 +61,10 @@ static const char * const cmd_poweroff_usage =
 
 static void cmd_poweroff(void *hint, int argc, char const *argv[])
 {
-	gpio_clear(GPIOC, GPIO_PIN_12);
-
-	if(power_is_on == false)
-		chip_disable();
-
+	power_off();
+	chip_disable();
+	if (gpio_get(MCU_PS_ON_PORT, MCU_PS_ON_PIN) == 1)
+		power_is_on = true;
 	timer_mdelay(500);
 
 	printf("BM2044REVB OFF\n");
