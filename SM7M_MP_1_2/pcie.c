@@ -10,7 +10,7 @@
 static volatile int is_chip_ready;
 static int pcie_task;
 
-void EXTI3_IRQHandler(void)
+void EXTI5_9_IRQHandler(void)
 {
 	if (!exti_interrupt_flag_get(PCIE_RESET_EXTI))
 		return;
@@ -43,7 +43,7 @@ void pcie_init(void)
 {
 	is_chip_ready = 1;
 
-	gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_3);
+	gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOA, GPIO_PIN_SOURCE_6);
 	exti_init(PCIE_RESET_EXTI, EXTI_INTERRUPT, EXTI_TRIG_BOTH);
 	exti_interrupt_flag_clear(PCIE_RESET_EXTI);
 
