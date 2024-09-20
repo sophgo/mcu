@@ -20,6 +20,9 @@
 #include <pcie.h>
 #include <ct7451.h>
 #include <dbgi2c.h>
+#include <isl68224.h>
+#include <freq.h>
+#include <mcu.h>
 
 int main(void)
 {
@@ -29,7 +32,7 @@ int main(void)
 	gpio_bit_reset(SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN);
 
 	led_init();
-	//led_set_frequency(1);
+
 	debug("\nBITMAIN SOPHONE SC11FP300\n");
 	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	dbg_printf("BITMAIN SOPHONE SC11FP300\n");
@@ -44,44 +47,25 @@ int main(void)
 	pca9848_init();
 	ct7451_init(0);
 	ct7451_init(1);
-	//mp5475_init();
 	board_power_init();
-#if 0
-	timer_mdelay(30);
-	sys_rst_enable();
-#endif
 	//chip_init();
 	mon_init();
 	slave_init();
-	// console_init();
-
+	console_init();
 	pcie_init();
+	timer1_init();
+
 	while (1) {
 		//chip_update();
-		if (chip_enable())
+		if (chip_enable()) {
+			// sg2044_clk_pll_set_rate(0, 4, 1100 * MHZ, 25 * MHZ); //mpll4
+			// sg2044_clk_pll_set_rate(0, 5, 901 * MHZ, 25 * MHZ); //mpll5
 			mon_process();
-		ct7451_process();
-		//console_poll();
-		//dbg_printf("count %d: \n",i);
-		// unsigned int temp ;
-		// dbgi2c_read32(0, 0x70500001c8, &temp);
-		// timer_mdelay(1000);
-		// dbg_printf("temp1 before:0x%lx\n",temp);
-		// dbgi2c_write32(0, 0x70500001c8,0xbeefcafe);
-		// timer_mdelay(1000);
-		// dbgi2c_read32(0, 0x70500001c8, &temp);
-		// dbg_printf("temp1 after:0x%lx\n",temp);
-		// timer_mdelay(1000);
+		}
 
-		// dbgi2c_read32(0, 0x7010000000, &temp);
-		// timer_mdelay(1000);
-		// dbg_printf("temp2 before:0x%lx\n",temp);
-		// dbgi2c_write32(0, 0x7010000000,0xbeefcafe);
-		// timer_mdelay(1000);
-		// dbgi2c_read32(0, 0x7010000000, &temp);
-		// dbg_printf("temp2 after:0x%lx\n",temp);
-		// timer_mdelay(1000);
-		// i++;
+		ct7451_process();
+		console_poll();
+		mcu_process();
 	}
 
 	return 0;

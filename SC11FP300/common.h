@@ -4,8 +4,8 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	3
-#define SOC_NUM	2
+#define MCU_SW_VER	4
+#define SOC_NUM		2
 
 #define false 0
 #define true 1
@@ -69,7 +69,8 @@ void led_set_frequency(unsigned long freq);
 #define gpio_set	gpio_bit_set
 #define gpio_get	gpio_input_bit_get
 
-#define MCU_CPLD_I2C_IRQ	I2C0_EV_IRQn
+#define BM1690_I2C0_IRQ		I2C0_EV_IRQn
+#define BM1690_I2C_IRQ		I2C1_EV_IRQn
 #define DEBUG_I2C_IRQ		I2C2_EV_IRQn
 #define nvic_disable_irq(irq)	nvic_irq_disable(irq)
 #define nvic_enable_irq(irq)	nvic_irq_enable(irq, 0, 0)

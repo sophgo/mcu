@@ -62,7 +62,7 @@ static struct ct7451_ctx {
 void tmp_i2c_read(int idx)
 {
 	uint8_t tmp;
-	pca9848_set(PCA9848_1, 1 << tmp_channel[idx]);
+	pca9848_set(PCA9848_1, 1 << tmp_channel[idx] | 0x3 << 0 );
 
 	i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
  			CT7451_LT, &tmp);
@@ -78,9 +78,9 @@ void tmp_i2c_read(int idx)
 void ct7451_process(void)
 {
 	tmp_i2c_read(0);
-	timer_mdelay(500);
+	timer_udelay(10);
 	tmp_i2c_read(1);
-	timer_mdelay(500);
+	timer_udelay(10);
 }
 
 

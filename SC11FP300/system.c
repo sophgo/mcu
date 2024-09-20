@@ -22,7 +22,7 @@ static void system_uart_init(void)
 	gpio_pin_remap_config(GPIO_USART1_REMAP, ENABLE);
 
 	rcu_periph_clock_enable(RCU_USART1);
-	 /* uart0 setup for debug messages */
+	 /* uart1 setup for debug messages */
 	usart_deinit(DEBUG_UART);
 	usart_baudrate_set(DEBUG_UART, 115200);
 	usart_parity_config(DEBUG_UART, USART_PM_NONE);
