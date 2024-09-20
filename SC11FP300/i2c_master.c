@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <common.h>
 
-#define I2C_SPEED	(100 * 1000)
+#define I2C_SPEED	(1000 * 1000)
 
 int i2c_master_init(int i2c)
 {

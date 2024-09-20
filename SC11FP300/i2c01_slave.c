@@ -1,5 +1,5 @@
 #include <gd32e50x_i2c.h>
-
+#include <common.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -7,9 +7,6 @@
 #include <timer.h>
 
 #define BAUDRATE	(100 * 1000)
-
-/* APB1 clock */
-#define I2C01_INTERNAL_CLOCK	(90 * 1000 * 1000)
 
 struct i2c01_reg {
 	uint32_t cr1;
@@ -59,8 +56,6 @@ struct i2c01_isr_op {
 #define CR2_ITEVTEN		BIT(9)
 #define CR2_ITERREN		BIT(8)
 #define CR2_FREQ		FIELD(0, 7)
-
-#define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
 
 /* nack is not supported on i2c0 and i2c1, i2c0 and i2c1 cannot generate stop
  * event when pattern NACK + STOP, that means a normal smbus register read
@@ -124,9 +119,8 @@ static void isr_addr_cb(struct i2c01_slave_ctx *ctx)
 	unsigned int dir;
 
 	addr = (sr2 & BIT(7)) ?
-		((ctx->reg->oar2 >> 1) & 0x3f) :
-		((ctx->reg->oar1 >> 1) & 0x3f);
-
+		((ctx->reg->oar2 >> 1) & 0x7f) :
+		((ctx->reg->oar1 >> 1) & 0x7f);
 	dir = (sr2 & BIT(2)) ? I2C_SLAVE_READ : I2C_SLAVE_WRITE;
 
 	ctx->dir = dir;
@@ -196,8 +190,7 @@ void i2c01_slave_isr(struct i2c01_slave_ctx *ctx)
 	}
 }
 
-int i2c01_slave_init(struct i2c01_slave_ctx *ctx, void *reg,
-		   int oa1, int oa2, int oa2mask)
+int i2c01_slave_init(struct i2c01_slave_ctx *ctx, void *reg, int oa1, int oa2)
 {
 	int i;
 	uint32_t i2c = (uint32_t)reg;
@@ -207,7 +200,6 @@ int i2c01_slave_init(struct i2c01_slave_ctx *ctx, void *reg,
 	/* prepare hardware first */
 	i2c_deinit(i2c);
 	ctx->reg->cr2 &= ~FIELD(0, 7);
-	ctx->reg->cr2 |= I2C01_INTERNAL_CLOCK;
 	ctx->reg->cr1 &= ~CR1_NOSTRETCH;
 	i2c_clock_config(i2c, BAUDRATE, I2C_DTCY_2);
 
@@ -225,7 +217,6 @@ int i2c01_slave_init(struct i2c01_slave_ctx *ctx, void *reg,
 
 	for (i = 0; i < ARRAY_SIZE(i2c01_isr_table); ++i)
 		ctx->isr_irq_mask |= (1 << i2c01_isr_table[i].bit);
-
 	return 0;
 }
 

@@ -27,21 +27,21 @@ static inline uint8_t dbgi2c_idx2addr(int idx)
 
 int dbgi2c_i2c_write_byte(int idx, uint8_t data)
 {
-	pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
+	//pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
 	return i2c_master_write_byte(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				     DBGI2C_I2C_TIMEOUT, data);
 }
 
 int dbgi2c_i2c_write_block(int idx, uint8_t *data, unsigned int len)
 {
-	pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
+	//pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
 	return i2c_master_write_block(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				      DBGI2C_I2C_TIMEOUT, data, len);
 }
 
 int dbgi2c_i2c_read_block(int idx, uint8_t *data, unsigned int len)
 {
-	pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
+	//pca9848_set(PCA9848_1, 1 << dbg_channel[idx]);
 	return i2c_master_read_block(DBGI2C_I2C_MASTER, dbgi2c_idx2addr(idx),
 				     DBGI2C_I2C_TIMEOUT, data, len);
 }
@@ -89,7 +89,7 @@ static int __dbgi2c_write(int idx, int addr_width, int data_width,
 		dbg_printf("%d write set address width failed\n", idx);
 		return err;
 	}
-	timer_mdelay(50);
+	timer_udelay(10);
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err)
 		dbg_printf("write address or data failed of soc%d\n", idx);
@@ -117,7 +117,7 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 		return err;
 	}
 
-	timer_mdelay(50);
+	timer_udelay(10);
 
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err) {
@@ -125,7 +125,7 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 		return err;
 	}
 
-	timer_mdelay(50);
+	timer_udelay(10);
 
 	/* get data */
 	err = dbgi2c_i2c_read_block(idx, data, len);
