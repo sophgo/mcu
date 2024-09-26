@@ -4,7 +4,7 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	4
+#define MCU_SW_VER	5
 #define SOC_NUM		2
 
 #define false 0
@@ -76,5 +76,7 @@ void led_set_frequency(unsigned long freq);
 #define nvic_enable_irq(irq)	nvic_irq_enable(irq, 0, 0)
 
 #define exti_reset_request	exti_interrupt_flag_clear
+
+uint8_t get_firmware_version(void);
 
 #endif

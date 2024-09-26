@@ -30,8 +30,8 @@ void slave_init(void)
 	i2c01_slave_start(&i2c0_slave_ctx);
 	i2c_slave_start(&i2c2_slave_ctx);
 
-	nvic_irq_enable(DEBUG_I2C_IRQ, 0, 0);
-	nvic_irq_enable(BM1690_I2C0_IRQ, 0, 1);
+	nvic_irq_enable(DEBUG_I2C_IRQ, 0, 1);
+	nvic_irq_enable(BM1690_I2C0_IRQ, 0, 0);
 }
 
 /* replace default isr */
