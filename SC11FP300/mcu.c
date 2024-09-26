@@ -15,6 +15,8 @@
 #include <project.h>
 #include <upgrade.h>
 #include <mon.h>
+#include <system.h>
+#include <isl68224.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -24,20 +26,19 @@
 #define REG_BOARD_1_TMP		0x05
 #define REG_BM1690_2_TMP	0x06
 #define REG_BOARD_2_TMP		0x07
-#define REG_INT_MASK1		0x08
-#define REG_INT_MASK2 		0x09
+#define REG_VDDR_VOLT_0_L	0x08
+#define REG_VDDR_VOLT_0_H	0x09
+#define REG_VDDR_VOLT_1_L	0x0a
+#define REG_VDDR_VOLT_1_H	0x0b
+#define REG_I12V_L		0x0c
+#define REG_I12V_H		0x0d
+#define REG_SYS_I12V_L		0x0e
+#define REG_SYS_I12V_H		0x0f
+#define REG_PCIE_I12V_L		0x10
+#define REG_PCIE_I12V_H		0x11
+#define REG_PCIE_I3V3_L		0x12
+#define REG_PCIE_I3V3_H		0x13
 
-#define REG_SOC_RST_TIMES	0x0a
-#define REG_UPTIME_LO		0x0b
-#define REG_UPTIME_HI		0x0c
-#define REG_POWEROFF_REASON	0x0d
-
-#define RTC_SECONDS		0x0e
-#define RTC_MINUTES		0x0f
-#define RTC_HOURS		0x10
-#define RTC_DATE		0x11
-#define RTC_MONTH		0x12
-#define RTC_YEAR		0x13
 
 #define REG_MCU_FAMILY		0x18
 
@@ -53,6 +54,8 @@
 #define WATCH_DOG 				1<<0
 #define TEST_INT				1<<1
 
+#define REG_SET_VOLT_L		0x60
+#define REG_SET_VOLT_H		0x61
 #define REG_FLASH_CMD		0x63
 #define REG_FLASH_OFFSET	0x7c
 #define REG_FLASH_DATA		0x80
@@ -63,6 +66,51 @@
 #define FLASH_CMD_ERASE		0x04
 
 #define MCU_REG_MAX		0x100
+
+#define COLLECT_INTERVAL	25
+#define OUTPUT_CURRENT_INTERVAL	1000
+#define FILTER_DEPTH_SHIFT	2
+#define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
+#define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
+
+struct filter {
+	unsigned short data[FILTER_DEPTH];
+	unsigned long total;
+	unsigned long value;
+	int p;
+};
+
+static struct filter adc_averge_tab[16];
+static unsigned char set_vddr_val[2];
+static uint8_t vddr_volt[2][2];
+
+static unsigned long filter_init(struct filter *f, unsigned long d)
+{
+	int i;
+
+	f->p = 0;
+	f->total = 0;
+	for (i = 0; i < FILTER_DEPTH; ++i) {
+		f->data[i] = d;
+		f->total += d;
+	}
+	return d;
+}
+
+static unsigned long filter_in(struct filter *f, unsigned long d)
+{
+	f->total -= f->data[f->p];
+	f->total += d;
+	f->data[f->p] = d;
+	f->p = (f->p + 1) & FILTER_DEPTH_MASK;
+	f->value = f->total >> FILTER_DEPTH_SHIFT;
+
+#ifdef FILTER_DISABLE
+	return d;
+#else
+	return f->value;
+#endif
+}
 
 struct mcu_ctx {
 	int set_idx;
@@ -103,6 +151,15 @@ static inline uint32_t flash_byte2u32(void *byte)
 	p = byte;
 	/* big endian */
 	return p[3] | (p[2] << 8) | (p[1] << 16) | (p[0] << 24);
+}
+
+static inline uint16_t  volt_byte2u16(void *byte)
+{
+	uint8_t *p;
+
+	p = byte;
+
+	return p[1] << 8 | p[0] ;
 }
 
 static inline uint32_t flash_offset(struct mcu_ctx *ctx)
@@ -173,6 +230,12 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_CMD:
 		ctx->cmd_tmp = data;
 		break;
+	case REG_SET_VOLT_L:
+		set_vddr_val[0] = data;
+		break;
+	case REG_SET_VOLT_H:
+		set_vddr_val[1] = data;
+		break;
 	case REG_FLASH_CMD:
 		flash_exec_cmd(ctx, data);
 		break;
@@ -214,9 +277,9 @@ static uint8_t mcu_read(void *priv)
 	case REG_BOARD_TYPE:
 		ret = SC11FP300;
 		break;
-	// case REG_SW_VER:
-	// 	ret = get_firmware_version();
-	// 	break;
+	case REG_SW_VER:
+		ret = get_firmware_version();
+		break;
 	// case REG_HW_VER:
 	// 	ret = get_pcb_version();
 	// 	break;
@@ -235,8 +298,50 @@ static uint8_t mcu_read(void *priv)
 	case REG_BOARD_2_TMP:
 		ret = get_board_temp(1);
 		break;
+	case REG_VDDR_VOLT_0_L:
+		ret = vddr_volt[0][1];
+		break;
+	case REG_VDDR_VOLT_0_H:
+		ret = vddr_volt[0][0];
+		break;
+	case REG_VDDR_VOLT_1_L:
+		ret = vddr_volt[1][1];
+		break;
+	case REG_VDDR_VOLT_1_H:
+		ret = vddr_volt[1][0];
+		break;
+	case REG_I12V_L:
+		ret = (adc_averge_tab[0].value & 0xff);
+		break;
+	case REG_I12V_H:
+		ret = (adc_averge_tab[0].value >> 8);
+		break;
+	case REG_SYS_I12V_L:
+		ret = (adc_averge_tab[1].value & 0xff);
+		break;
+	case REG_SYS_I12V_H:
+		ret = (adc_averge_tab[1].value >> 8);
+		break;
+	case REG_PCIE_I12V_L:
+		ret = (adc_averge_tab[2].value & 0xff);
+		break;
+	case REG_PCIE_I12V_H:
+		ret = (adc_averge_tab[2].value >> 8);
+		break;
+	case REG_PCIE_I3V3_L:
+		ret = (adc_averge_tab[3].value & 0xff);
+		break;
+	case REG_PCIE_I3V3_H:
+		ret = (adc_averge_tab[3].value >> 8);
+		break;
 	case REG_MCU_FAMILY:
 		ret = MCU_FAMILY_GD32E50;
+		break;
+	case REG_SET_VOLT_L:
+		ret = set_vddr_val[0];
+		break;
+	case REG_SET_VOLT_H:
+		ret = set_vddr_val[1];
 		break;
 	case REG_FLASH_OFFSET + 0:
 		ret = ctx->flash_offset[0];
@@ -302,15 +407,37 @@ void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 
 }
 
-#define CMD_POWER_OFF		0x02
-#define CMD_RESET		0x03	// drag reset pin
-#define CMD_REBOOT		0x07	// power off - power on
+#define CMD_CHIP0_VDDR		0x01
+#define CMD_CHIP1_VDDR		0x02
+#define CMD_REBOOT		0x07
 #define CMD_UPDATE		0x08
 extern int power_is_on;
 
 void mcu_process(void)
 {
+	unsigned long current_time, adc_date, volt_date;
+	unsigned short temp;
+	int i;
 
+	current_time = tick_get();
+
+	if (current_time - last_time_collect > COLLECT_INTERVAL) {
+		adc_date = adc_read_i12v();
+		filter_in(&adc_averge_tab[0], adc_date);
+		adc_date =  get_i12v_atx();
+		filter_in(&adc_averge_tab[1], adc_date);
+		adc_date =  get_i12v_pcie();
+		filter_in(&adc_averge_tab[2], adc_date);
+		adc_date =  get_i3v3_pcie();
+		filter_in(&adc_averge_tab[3], adc_date);
+		last_time_collect = current_time;
+		volt_date = isl68224_output_voltage(0, 0);
+		vddr_volt[0][0] = (volt_date >> 8) & 0xff;
+		vddr_volt[0][1] = volt_date & 0xff;
+		volt_date = isl68224_output_voltage(1, 0);
+		vddr_volt[1][0] = (volt_date >> 8) & 0xff;
+		vddr_volt[1][1] = volt_date & 0xff;
+	}
 	if (mcu_ctx.cmd == 0)
 		return;
 
@@ -319,24 +446,20 @@ void mcu_process(void)
 	nvic_disable_irq(I2C0_EV_IRQn);
 	nvic_disable_irq(I2C2_EV_IRQn);
 	switch (mcu_ctx.cmd) {
-	// case CMD_POWER_OFF:
-	// 	power_off();
-	// 	if (is_evb_power_key_on() == true)
-	// 		power_is_on = true;
-	// 	timer_mdelay(500);
-	// 	mcu_ctx.poweroff_reason = POWER_OFF_REASON_POWER_OFF;
-	// 	break;
-	// case CMD_RESET:
-	// 	chip_reset();
-	// 	mcu_ctx.poweroff_reason = POWER_OFF_REASON_RESET;
-	// 	break;
-	// case CMD_REBOOT:
-	// 	chip_popd_reset_early();
-	// 	if (is_evb_power_key_on() == true)
-	// 		power_is_on = true;
-	// 	set_needpoweron();
-	// 	mcu_ctx.poweroff_reason = POWER_OFF_REASON_REBOOT;
-	// 	break;
+	case CMD_CHIP0_VDDR:
+		temp = volt_byte2u16(set_vddr_val);
+		isl68224_set_out_voltage(0, 0, (int)temp);
+		volt_date = isl68224_output_voltage(0, 0);
+		vddr_volt[0][0] = (volt_date >> 8) & 0xff;
+		vddr_volt[0][1] = volt_date & 0xff;
+		break;
+	case CMD_CHIP1_VDDR:
+		temp = volt_byte2u16(set_vddr_val);
+		isl68224_set_out_voltage(1, 0, (int)temp);
+		volt_date = isl68224_output_voltage(1, 0);
+		vddr_volt[0][0] = (volt_date >> 8) & 0xff;
+		vddr_volt[0][1] = volt_date & 0xff;
+		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(I2C0_EV_IRQn);
 		nvic_enable_irq(I2C2_EV_IRQn);

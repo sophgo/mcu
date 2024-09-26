@@ -52,3 +52,8 @@ void led_isr(void)
 	else
 		led_off();
 }
+
+uint8_t get_firmware_version(void)
+{
+	return MCU_SW_VER;
+}

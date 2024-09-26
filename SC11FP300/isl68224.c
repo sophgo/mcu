@@ -17,7 +17,7 @@ static uint8_t isl68224_channel[2] = {7, 6};
 
 static inline void isl68224_select(int idx)
 {
-	pca9848_set(PCA9848_1, 1 << isl68224_channel[idx] | 0x3 << 0);
+	pca9848_set(PCA9848_1, 1 << isl68224_channel[idx]);
 }
 
 static inline int isl68224_read_byte(int idx, unsigned char cmd)
@@ -96,7 +96,7 @@ unsigned long isl68224_output_power(int idx, int page)
 
 int isl68224_set_out_voltage(int idx, int page, int voltage)
 {
-	//isl68224_write_byte(idx, REG_PAGE, page);
+	isl68224_write_byte(idx, REG_PAGE, page);
 	isl68224_write_word(idx, REG_VOUT_COMMAND, (uint16_t)voltage);
 
 	return 0;

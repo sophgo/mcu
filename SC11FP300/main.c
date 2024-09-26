@@ -53,7 +53,7 @@ int main(void)
 	slave_init();
 	console_init();
 	pcie_init();
-	timer1_init();
+	//timer1_init();
 
 	while (1) {
 		//chip_update();
