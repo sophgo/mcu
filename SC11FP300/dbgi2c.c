@@ -89,7 +89,7 @@ static int __dbgi2c_write(int idx, int addr_width, int data_width,
 		dbg_printf("%d write set address width failed\n", idx);
 		return err;
 	}
-	timer_mdelay(50);
+	timer_udelay(10);
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err)
 		dbg_printf("write address or data failed of soc%d\n", idx);
@@ -117,7 +117,7 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 		return err;
 	}
 
-	timer_mdelay(50);
+	timer_udelay(10);
 
 	err = dbgi2c_i2c_write_block(idx, msg, msg_len);
 	if (err) {
@@ -125,7 +125,7 @@ static int __dbgi2c_read(int idx, int addr_width, int data_width,
 		return err;
 	}
 
-	timer_mdelay(50);
+	timer_udelay(10);
 
 	/* get data */
 	err = dbgi2c_i2c_read_block(idx, data, len);

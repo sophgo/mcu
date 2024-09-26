@@ -102,33 +102,30 @@ void adc_init(void)
 	bom_ver = adc2ver(adc_read(PROD_VER_CHANNEL));
 }
 
+/* SYS_12V= (ADC_Code * 3.3 * 1000 ) / (4096*100*0.005) 
+ * unit：mv
+ */
 unsigned long adc_read_sys_i12v()
 {
 	unsigned long adc_data = adc_read(CURRENT_SYS_12V_CHANNEL);
 
-	return (adc_data * 36000 / 4096);
+	return (adc_data * 66000 / 4096);
 }
 
-/* I_12V= (ADC_Code*1.8) / (4096*50*0.003) */
-
+/* I_12V= (ADC_Code*3.3) / (4096*100*0.003) */
 unsigned long adc_read_pcie_i12v()
 {
 	unsigned long adc_data = adc_read(CURRENT_PCIE_12V_CHANNEL);
 
-	return (adc_data * 12000 / 4096);
+	return (adc_data * 11000 / 4096);
 }
 
-/* I_3.3V = (ADC_Code*1.8) / (4096*50*0.005) */
-/* However, we return 1/4 of I_3.3V here, because pcie software will
-* count the board power by allcurrent * 12V. In func get_i3v3_pcie()
-* can get the corret current.
-*/
-
+/* I_3.3V = (ADC_Code*3.3) / (4096*100*0.005) */
 unsigned long adc_read_pcie_i3v3()
 {
 	unsigned long adc_data = adc_read(CURRENT_PCIE_3V3_CHANNEL);
 
-	return (adc_data * 1800 / 4096);
+	return (adc_data * 1650 / 4096);
 }
 
 unsigned long adc_read_i12v(void)
@@ -137,7 +134,7 @@ unsigned long adc_read_i12v(void)
 	i12v_pcie = adc_read_pcie_i12v();
 	i3v3_pcie = adc_read_pcie_i3v3();
 
-	return i12v_pcie + i3v3_pcie;
+	return i12v_atx + i12v_pcie + i3v3_pcie;
 }
 
 unsigned int get_i12v_atx(void)

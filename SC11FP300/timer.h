@@ -9,5 +9,8 @@ void timer_test(void);
 void timer_mdelay(unsigned long ms);
 void timer_udelay(unsigned long us);
 int timer_is_timeout(void);
+void timer1_init(void);
+unsigned long get_timer1_tick(void);
+void set_timer1_tick(unsigned long temp);
 
 #endif

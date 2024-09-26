@@ -2,6 +2,9 @@
 #include <stdint.h>
 #include <debug.h>
 #include <timer.h>
+#include <system.h>
+
+static volatile unsigned long tick_count;
 
 #define TIMER6_COUNTER_MAX	65536
 
@@ -69,5 +72,47 @@ void timer_test(void)
 		// timer_stop();
 		debug("%ld seconds\n", i);
 	}
+}
+
+void timer1_init()
+{
+	timer_parameter_struct tim_struct = {0};
+
+	rcu_periph_clock_enable(RCU_TIMER1);
+
+	tim_struct.counterdirection = TIMER_COUNTER_UP;  // 向上计数
+	tim_struct.prescaler = (2 - 1);  // 预分频：180MHz / 2 = 90MHz
+	tim_struct.period = (90 - 1);  // 90 / 90MHz = 1us
+
+	timer_init(TIMER1, &tim_struct);
+
+	nvic_priority_group_set(NVIC_PRIGROUP_PRE4_SUB0);
+	nvic_irq_enable(TIMER1_IRQn, 1, 1);
+
+	timer_interrupt_flag_clear(TIMER1, TIMER_INT_FLAG_UP);
+	timer_interrupt_enable(TIMER1, TIMER_INT_UP);
+
+	timer_enable(TIMER1);
+
+}
+
+void set_timer1_tick(unsigned long temp)
+{
+	timer_interrupt_disable(TIMER1,TIMER_INT_UP);
+	tick_count = temp ;
+	timer_interrupt_enable(TIMER1, TIMER_INT_UP);
+}
+
+unsigned long get_timer1_tick(void)
+{
+	timer_interrupt_disable(TIMER1,TIMER_INT_UP);
+	return tick_count;
+	timer_interrupt_enable(TIMER1, TIMER_INT_UP);
+}
+
+void TIMER1_IRQHandler()
+{
+	tick_count++;
+	timer_interrupt_flag_clear(TIMER1, TIMER_INT_FLAG_UP);
 }
 

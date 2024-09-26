@@ -13,7 +13,7 @@
 #define REG_VOUT_DROOP		0X28
 #define REG_PAGE	0x0
 
-static uint8_t isl68224_channel[2] = {6, 7};
+static uint8_t isl68224_channel[2] = {7, 6};
 
 static inline void isl68224_select(int idx)
 {
