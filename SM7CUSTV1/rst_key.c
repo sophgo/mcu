@@ -7,6 +7,7 @@
 #include <debug.h>
 #include <wdt.h>
 #include <rst_key.h>
+#include <libopencm3/stm32/i2c.h>
 
 #define DEBOUNCE_COUNT	512
 
@@ -32,6 +33,8 @@ void rst_key_isr(void)
 	}
 
 	if (hi > lo) {
+		i2c_peripheral_disable(I2C1);
+		i2c_peripheral_enable(I2C1);
 		set_chip_states(true);
 		chip_enable();
 		debug("rst key gpio level high\n");
