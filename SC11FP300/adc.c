@@ -102,8 +102,8 @@ void adc_init(void)
 	bom_ver = adc2ver(adc_read(PROD_VER_CHANNEL));
 }
 
-/* SYS_12V= (ADC_Code * 3.3 * 1000 ) / (4096*100*0.005) 
- * unit：mv
+/* SYS_12V= (ADC_Code * 3.3 * 1000 ) / (4096*100*0.0005)
+ * unit：mA
  */
 unsigned long adc_read_sys_i12v()
 {
@@ -112,7 +112,7 @@ unsigned long adc_read_sys_i12v()
 	return (adc_data * 66000 / 4096);
 }
 
-/* I_12V= (ADC_Code*3.3) / (4096*100*0.003) */
+/* I_12V= (ADC_Code* 3.3 * 1000) / (4096*100*0.003) */
 unsigned long adc_read_pcie_i12v()
 {
 	unsigned long adc_data = adc_read(CURRENT_PCIE_12V_CHANNEL);
@@ -120,7 +120,7 @@ unsigned long adc_read_pcie_i12v()
 	return (adc_data * 11000 / 4096);
 }
 
-/* I_3.3V = (ADC_Code*3.3) / (4096*100*0.005) */
+/* I_3.3V = (ADC_Code * 3.3 * 1000) / (4096*100*0.005) */
 unsigned long adc_read_pcie_i3v3()
 {
 	unsigned long adc_data = adc_read(CURRENT_PCIE_3V3_CHANNEL);
@@ -147,6 +147,7 @@ unsigned int get_i12v_pcie(void)
 	return i12v_pcie;
 }
 
+/* pcie 3v3 real value*/
 unsigned int get_i3v3_pcie(void)
 {
 	return i3v3_pcie * 4;

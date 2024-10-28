@@ -41,6 +41,10 @@
 #define CT7451_LT			(0)	/* Local temperature */
 #define CT7451_RT			(1)	/* Remote temperature */
 
+#define TEMP_COLLECT_INTERVAL		500
+
+static unsigned long last_time_temp;
+
 struct ct7451_reg {
 	const int16_t read_ptr;			/* Read pointer */
 	const int16_t write_ptr;		/* Write pointer */
@@ -77,10 +81,17 @@ void tmp_i2c_read(int idx)
 
 void ct7451_process(void)
 {
-	tmp_i2c_read(0);
-	timer_udelay(10);
-	tmp_i2c_read(1);
-	timer_udelay(10);
+	unsigned long current_time;
+
+	current_time = tick_get();
+	if (current_time - last_time_temp > TEMP_COLLECT_INTERVAL) {
+		tmp_i2c_read(0);
+		timer_udelay(10);
+		tmp_i2c_read(1);
+		timer_udelay(10);
+		last_time_temp = current_time;
+	}
+
 }
 
 
@@ -107,5 +118,7 @@ void ct7451_init(int idx)
 	 * it takes at most 62.5ms till next conversion */
 
 	 mdelay(65);
+
+	 last_time_temp = tick_get();
 
 }

@@ -118,6 +118,7 @@ int power_on(void)
 		else
 			led_set_frequency(1);
 		power_is_on = true;
+		gpio_bit_set(CARD_PWR_STA_PORT,CARD_PWR_STA_PIN);
 	}
 
 	return err;

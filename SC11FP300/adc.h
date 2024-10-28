@@ -7,4 +7,5 @@ uint8_t get_hardware_version(void);
 unsigned int get_i12v_atx(void);
 unsigned int get_i12v_pcie(void);
 unsigned int get_i3v3_pcie(void);
+uint8_t get_pcb_version(void);
 #endif

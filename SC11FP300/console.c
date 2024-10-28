@@ -11,7 +11,6 @@
 #include <flash.h>
 #include <timer.h>
 #include <pin.h>
-#include <mp5475.h>
 #include <isl68224.h>
 
 
@@ -92,54 +91,54 @@ static void cmd_monmode(void *hint, int argc, char const *argv[])
 		printf("invalid verbose mode \'%s\'", argv[1]);
 }
 
-static const char * const cmd_sn_usage =
-"sn [sn]\n"
-"    if sn is ommited, this command shows current sn\n"
-"    otherwise, sn will write to eeprom\n";
+// static const char * const cmd_sn_usage =
+// "sn [sn]\n"
+// "    if sn is ommited, this command shows current sn\n"
+// "    otherwise, sn will write to eeprom\n";
 
-static void cmd_sn(void *hint, int argc, char const *argv[])
-{
-	int i;
-	uint8_t tmp;
-	uint8_t flash_data[FLASH_PAGE_SIZE] = {0};
-	volatile uint8_t *p_eeprom = (uint8_t *) EEPROM_BASE;
+// static void cmd_sn(void *hint, int argc, char const *argv[])
+// {
+// 	int i;
+// 	uint8_t tmp;
+// 	uint8_t flash_data[FLASH_PAGE_SIZE] = {0};
+// 	volatile uint8_t *p_eeprom = (uint8_t *) EEPROM_BASE;
 
-	if (argc > 2)
-		printf("invalid usage\n");
-	else if (argc == 1) {
-		/* read sn out */
-		for (i = 0; i < EEPROM_CELL_SIZE; ++i) {
-			tmp = eeprom_read_byte(EEPROM_SN_OFFSET + i);
-			if (tmp) {
-				if (isprint(tmp))
-					printf("%c", tmp);
-				else
-					printf(".");
-			} else
-				break;
-		}
-		printf("\n");
-	}
-	else {
-			for (i = 0; i < FLASH_PAGE_SIZE; i++){
-				flash_data[i] = p_eeprom[i];
-			}
+// 	if (argc > 2)
+// 		printf("invalid usage\n");
+// 	else if (argc == 1) {
+// 		/* read sn out */
+// 		for (i = 0; i < EEPROM_CELL_SIZE; ++i) {
+// 			tmp = eeprom_read_byte(EEPROM_SN_OFFSET + i);
+// 			if (tmp) {
+// 				if (isprint(tmp))
+// 					printf("%c", tmp);
+// 				else
+// 					printf(".");
+// 			} else
+// 				break;
+// 		}
+// 		printf("\n");
+// 	}
+// 	else {
+// 			for (i = 0; i < FLASH_PAGE_SIZE; i++){
+// 				flash_data[i] = p_eeprom[i];
+// 			}
 
-			/* write sn to eeprom */
-			for (i = 0; i < EEPROM_CELL_SIZE - 1; ++i) {
-				tmp = argv[1][i];
+// 			/* write sn to eeprom */
+// 			for (i = 0; i < EEPROM_CELL_SIZE - 1; ++i) {
+// 				tmp = argv[1][i];
 
-				if (tmp){
-					flash_data[EEPROM_SN_OFFSET + i] = tmp;
-				}
-				else
-					break;
-			}
-			/* zero terminated */
-			flash_data[EEPROM_SN_OFFSET + i] = 0;
-			flash_program_page(EEPROM_BASE, flash_data, FLASH_PAGE_SIZE);
-	}
-}
+// 				if (tmp){
+// 					flash_data[EEPROM_SN_OFFSET + i] = tmp;
+// 				}
+// 				else
+// 					break;
+// 			}
+// 			/* zero terminated */
+// 			flash_data[EEPROM_SN_OFFSET + i] = 0;
+// 			flash_program_page(EEPROM_BASE, flash_data, FLASH_PAGE_SIZE);
+// 	}
+// }
 
 
 static const char * const cmd_download_usage =
@@ -234,37 +233,6 @@ static void cmd_high(void *hint, int argc, char const *argv[])
 	gpio_set(sys_rst_pin_list[pin][0], sys_rst_pin_list[pin][1]);
 
 	printf("set chip%lu high\n", pin);
-}
-
-static void cmd_close_pmic(void *hint, int argc, char const *argv[])
-{
-	int port = -1;
-	int bunk = -1;
-	int i = 0;
-
-	if (argc == 2) {
-		port = strtol(argv[1], NULL, 0);
-	} else if (argc == 3) {
-		port = strtol(argv[1], NULL, 0);
-		bunk = strtol(argv[2], NULL, 0);
-	} else {
-		printf("invaild argument\n");
-		return;
-	}
-
-	if (port >= 0 && bunk >= 0) {
-		mp5475_buck_off(port, bunk);
-		printf("close 5475-%d bunk%d\n", port, bunk);
-		return;
-	}
-
-	if (port >= 0 && bunk == -1) {
-		for (i = 0; i < 3; i++) {
-			mp5475_buck_off(port, i);
-		}
-		printf("mp5475-%d close all bunk\n", port);
-		return;
-	}
 }
 
 static const char * const cmd_setisl68224_usage =
@@ -421,12 +389,11 @@ static struct command command_list[] = {
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
 	{"show", NULL, cmd_show_usage, cmd_show},
 	{"monmode", NULL, cmd_monmode_usage, cmd_monmode},
-	{"sn", NULL, cmd_sn_usage, cmd_sn},
+	//{"sn", NULL, cmd_sn_usage, cmd_sn},
 	{"download", NULL, cmd_download_usage, cmd_download},
 	{"burn", NULL, cmd_burn_usage, cmd_burn},
 	{"low", NULL, cmd_burn_usage, cmd_low},
 	{"high", NULL, cmd_burn_usage, cmd_high},
-	{"closepmic", NULL, NULL, cmd_close_pmic},
 	{"tpu", NULL, cmd_tpu_usage, cmd_tpu},
 	{"vddc", NULL, NULL, cmd_vddc},
 	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
