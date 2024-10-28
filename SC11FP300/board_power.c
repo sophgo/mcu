@@ -11,7 +11,7 @@ void chip_assert_n_off(void);
 int chip_deassert_n_on(void);
 void chip_deassert_n_off(void);
 
-struct power_node const board_power_nodes[25] = {
+struct power_node const board_power_nodes[28] = {
 
 	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 50000,
 	 {(unsigned long)chip_deassert_n_on,
@@ -57,9 +57,19 @@ struct power_node const board_power_nodes[25] = {
 	  (unsigned long)EN_DDR_VDD_BM0_PIN},
 	 },
 
-	{"EN_DDR_VDD_BM1", NODE_TYPE_ENABLE, 100000,
+	{"EN_DDR_VDD_BM1", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)EN_DDR_VDD_BM1_PORT,
 	  (unsigned long)EN_DDR_VDD_BM1_PIN},
+	 },
+
+	{"EN_VDD_1V2", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_VDD_1V2_PORT,
+	  (unsigned long)EN_VDD_1V2_PIN},
+	 },
+
+	{"EN_VDD_1V8", NODE_TYPE_ENABLE, 100000,
+	 {(unsigned long)EN_VDD_1V8_PORT,
+	  (unsigned long)EN_VDD_1V8_PIN},
 	 },
 
 	{"EN_VPH_PCIE_BM0", NODE_TYPE_ENABLE, 0,
@@ -95,6 +105,14 @@ struct power_node const board_power_nodes[25] = {
 	{"EN_DDR_VDD1_BM0", NODE_TYPE_ENABLE, 0,
 	 {(unsigned long)EN_DDR_VDD1_BM0_PORT,
 	  (unsigned long)EN_DDR_VDD1_BM0_PIN},
+	 },
+
+	/* The pin of DDR_VDD1_BM0 is different between the first version PCB(VER1) 
+	 * and subsequent PCBs, and can be simultaneously enabled for compatibility 
+	 * without using PC10 as the serial port */
+	{"EN_DDR_VDD1_BM0_VER1", NODE_TYPE_ENABLE, 0,
+	 {(unsigned long)EN_DDR_VDD1_BM0_VER1_PORT,
+	  (unsigned long)EN_DDR_VDD1_BM0_VER1_PIN},
 	 },
 
 	{"EN_DDR_VDD1_BM1", NODE_TYPE_ENABLE, 20000,

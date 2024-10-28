@@ -6,7 +6,6 @@
 #include <system.h>
 #include <tick.h>
 #include <project.h>
-#include <mp5475.h>
 #include <isl68224.h>
 #include <dbgi2c.h>
 #include <chip.h>
@@ -22,7 +21,7 @@
 
 static int board_temp[2], soc_temp[2];
 
-#define BROADCAST_INTERVAL	100
+#define BROADCAST_INTERVAL	200
 #define COLLECT_INTERVAL	30
 
 #define FILTER_DEPTH_SHIFT	6
@@ -68,8 +67,6 @@ static unsigned long last_time_broadcast;
 static unsigned long last_time_collect;
 static int mon_mode = MON_MODE_NORMAL;
 static struct filter i12v;
-// static struct filter mp5475_current[SOC_NUM][4];
-// static struct filter mp5475_voltage[SOC_NUM][4];
 static struct filter isl68224_current[SOC_NUM][3];
 static struct filter isl68224_voltage[SOC_NUM][3];
 static struct filter isl68224_power[SOC_NUM][3];
@@ -81,21 +78,6 @@ static struct {
 	uint8_t sw_ver;
 	uint8_t hw_ver;
 	uint32_t i12v;
-	// struct {
-	// 	struct {
-	// 		uint32_t voltage;
-	// 		uint32_t current;
-	// 	} buck[4];
-	// } mp5475[SOC_NUM];
-
-	// struct {
-	// 	struct {
-	// 		uint32_t voltage;
-	// 		uint32_t current;
-	// 		uint32_t power;
-	// 		uint32_t rdrop;
-	// 	} rail[2];
-	// } isl68224[SOC_NUM];
 	int soc_temp[SOC_NUM];
 	int board_temp[SOC_NUM];
 } __attribute__((packed)) __attribute__((aligned(4))) pkg;
@@ -104,16 +86,8 @@ static struct dbgi2c_info __attribute__((aligned(4))) dbgi2c_pkg;
 
 void mon_init(void)
 {
-	//int i, j;
-
 	filter_init(&i12v, 0);
 
-	// for (i = 0; i < SOC_NUM; ++i) {
-	// 	for (j = 0; j < 4; ++j) {
-	// 		filter_init(&(mp5475_current[i][j]), 0);
-	// 		filter_init(&(mp5475_voltage[i][j]), 0);
-	// 	}
-	// }
 	pkg.id = 0x0;
 	pkg.type = SC11FP300;
 	pkg.sw_ver = MCU_SW_VER;
@@ -127,25 +101,6 @@ void mon_init(void)
 
 	last_time_collect = last_time_broadcast = tick_get();
 }
-
-// static void __maybe_unused
-// collect_mp5475(void)
-// {
-// 	int i, j;
-
-// 	for (i = 0; i < SOC_NUM; ++i) {
-// 		for (j = 0; j < 4; ++j) {
-
-// 			pkg.mp5475[i].buck[j].current =
-// 				filter_in(&(mp5475_current[i][j]),
-// 					  mp5475_output_current(i, j));
-
-// 			pkg.mp5475[i].buck[j].voltage =
-// 				filter_in(&(mp5475_voltage[i][j]),
-// 					  mp5475_output_voltage(i, j));
-// 		}
-// 	}
-// }
 
 // static void __maybe_unused
 // collect_isl68224(void)

@@ -13,6 +13,7 @@
 #include <system.h>
 #include <mon.h>
 #include <project.h>
+#include <mcu.h>
 
 #define DBGI2C_ADDR_BASE	0x41
 #define DBGI2C_I2C_MASTER	I2C1
@@ -228,7 +229,6 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 	for (i = 0; i < sizeof(struct dbgi2c_info) / 4; ++i) {
 		dbgi2c_write32(idx, DBGI2C_MCU_INFO_BASE + i * 4,
 			       ((uint32_t *)info)[i]);
-
 	}
 
 	dbgi2c_write32(idx, BOARD_TPYE_BASE, BOARD_TPYE);
@@ -247,10 +247,15 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 
 #define DBGI2C_SOC_INFO_SOC_TEMP_OFFSET		0
 #define DBGI2C_SOC_INFO_BOARD_TEMP_OFFSET	1
+#define DBGI2C_SOC_INFO_BOARD_TYPE		2
+#define DBGI2C_SOC_INFO_SW_VER			3
+#define DBGI2C_SOC_INFO_HW_VER			4
+#define DBGI2C_SOC_INFO_12V_CURRENT_L		5
+#define DBGI2C_SOC_INFO_12V_CURRENT_H		6
+
 #define DBGI2C_SOC_INFO_ADDR(reg)	(DBGI2C_SOC_INFO_BASE +	\
 					 DBGI2C_SOC_INFO_ ## reg ## _OFFSET)
 
-static uint8_t dbgi2c_chip_map[CHIP_MAP_SIZE];
 static uint8_t soc_temp[8];
 static uint8_t board_temp[8];
 
@@ -258,17 +263,7 @@ static void dbgi2c_collect(void)
 {
 	int i;
 
-	// for (i = 0; i < sizeof(dbgi2c_chip_map) / 4; ++i) {
-	// 	dbgi2c_read32(0, DBGI2C_SOC_INFO_BASE + i * 4,
-	// 		      &((uint32_t *)dbgi2c_chip_map)[i]);
-	// }
-
 	for (i = 0; i < SOC_NUM; ++i) {
-		timer_udelay(100);
-		// dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(SOC_TEMP), &soc_temp[i]);
-		// dbgi2c_read8(i, DBGI2C_SOC_INFO_ADDR(BOARD_TEMP),
-		// 	     &board_temp[i]);
-		//for bmc
 		board_temp[i] = get_board_temp(i);
 		soc_temp[i] = get_soc_temp(i);
 	}
@@ -323,11 +318,21 @@ static uint8_t dbgi2c_i2c_slave_read(void *priv)
 		case DBGI2C_SOC_INFO_BOARD_TEMP_OFFSET:
 			data = board_temp[soc];
 			break;
+		case DBGI2C_SOC_INFO_BOARD_TYPE:
+			data = SC11FP300;
+			break;
+		case DBGI2C_SOC_INFO_SW_VER:
+			data = get_firmware_version();
+			break;
+		case DBGI2C_SOC_INFO_12V_CURRENT_L:
+			data = get_12v_power_l();
+			break;
+		case DBGI2C_SOC_INFO_12V_CURRENT_H:
+			data = get_12v_power_h();
+			break;
 		default:
-			if (ctx.idx < sizeof(dbgi2c_chip_map))
-				data = dbgi2c_chip_map[ctx.idx];
-			else
-				data = 0xff;
+			data = 0xff;
+			break;
 		}
 	} else {
 		data = (soc << 8) | ctx.idx;

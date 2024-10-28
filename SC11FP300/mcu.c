@@ -17,6 +17,7 @@
 #include <mon.h>
 #include <system.h>
 #include <isl68224.h>
+#include <dvfs.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -41,6 +42,8 @@
 
 
 #define REG_MCU_FAMILY		0x18
+#define REG_DVFS_ENABLE		0X19
+#define REG_POWER_LIMIT		0x1a
 
 #define BM1690_TMP_OVER_REPORT			1<<0
 #define POWER_68127_TMP_OVER_REPORT		1<<1
@@ -53,6 +56,13 @@
 
 #define WATCH_DOG 				1<<0
 #define TEST_INT				1<<1
+
+#define REG_SET_DROOP_L		0x50
+#define REG_SET_DROOP_H		0x51
+#define REG_DROOP_0_L		0x58
+#define REG_DROOP_0_H		0x59
+#define REG_DROOP_1_L		0x5a
+#define REG_DROOP_1_H		0x5b
 
 #define REG_SET_VOLT_L		0x60
 #define REG_SET_VOLT_H		0x61
@@ -69,7 +79,7 @@
 
 #define COLLECT_INTERVAL	25
 #define OUTPUT_CURRENT_INTERVAL	1000
-#define FILTER_DEPTH_SHIFT	2
+#define FILTER_DEPTH_SHIFT	5
 #define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
 #define FILTER_DEPTH_MASK	(FILTER_DEPTH - 1)
 
@@ -80,9 +90,14 @@ struct filter {
 	int p;
 };
 
-static struct filter adc_averge_tab[16];
+static unsigned long last_time_collect;
+static struct filter adc_averge_tab[4];
 static unsigned char set_vddr_val[2];
 static uint8_t vddr_volt[2][2];
+static unsigned char set_droop_val[2];
+static uint8_t droop_val[2][2];
+extern uint8_t dvfs_p_enable;
+extern uint8_t atx_300W;
 
 static unsigned long filter_init(struct filter *f, unsigned long d)
 {
@@ -112,6 +127,28 @@ static unsigned long filter_in(struct filter *f, unsigned long d)
 #endif
 }
 
+/* unit: W*/
+unsigned int get_12v_power(void)
+{
+	return adc_averge_tab[0].value * 12 / 1000 ;
+}
+
+/* unit: W*/
+unsigned char get_12v_power_l(void)
+{
+	unsigned int power;
+	power = get_12v_power();
+	return power & 0xff;
+}
+
+/* unit: W*/
+unsigned char get_12v_power_h(void)
+{
+	unsigned int power;
+	power = get_12v_power();
+	return power >> 8;
+}
+
 struct mcu_ctx {
 	int set_idx;
 	int idx;
@@ -129,10 +166,7 @@ struct mcu_ctx {
 	int flash_flush;
 };
 
-int is_print_enabled;
 static struct mcu_ctx mcu_ctx;
-static unsigned long last_time_collect;
-static unsigned long last_time_output;
 
 static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
 {
@@ -153,7 +187,7 @@ static inline uint32_t flash_byte2u32(void *byte)
 	return p[3] | (p[2] << 8) | (p[1] << 16) | (p[0] << 24);
 }
 
-static inline uint16_t  volt_byte2u16(void *byte)
+static inline uint16_t  byte2u16(void *byte)
 {
 	uint8_t *p;
 
@@ -235,6 +269,19 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		break;
 	case REG_SET_VOLT_H:
 		set_vddr_val[1] = data;
+		break;
+	case REG_DVFS_ENABLE:
+		dvfs_p_enable = data;
+		break;
+	case REG_POWER_LIMIT:
+		atx_300W = data;
+		dvfs_p_threshold();
+		break;
+	case REG_SET_DROOP_L:
+		set_droop_val[0] = data;
+		break;
+	case REG_SET_DROOP_H:
+		set_droop_val[1] = data;
 		break;
 	case REG_FLASH_CMD:
 		flash_exec_cmd(ctx, data);
@@ -337,6 +384,30 @@ static uint8_t mcu_read(void *priv)
 	case REG_MCU_FAMILY:
 		ret = MCU_FAMILY_GD32E50;
 		break;
+	case REG_DVFS_ENABLE:
+		ret = dvfs_p_enable;
+		break;
+	case REG_POWER_LIMIT:
+		ret = atx_300W;
+		break;
+	case REG_SET_DROOP_L:
+		ret = set_droop_val[0];
+		break;
+	case REG_SET_DROOP_H:
+		ret = set_droop_val[1];
+		break;
+	case REG_DROOP_0_L:
+		ret = droop_val[0][1];
+		break;
+	case REG_DROOP_0_H:
+		ret = droop_val[0][0];
+		break;
+	case REG_DROOP_1_L:
+		ret = droop_val[1][1];
+		break;
+	case REG_DROOP_1_H:
+		ret = droop_val[1][0];
+		break;
 	case REG_SET_VOLT_L:
 		ret = set_vddr_val[0];
 		break;
@@ -398,6 +469,7 @@ static struct i2c01_slave_op slave = {
 void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 {
 	int i;
+
 	mcu_ctx.critical_action = CRITICAL_ACTION_REBOOT;
 	mcu_ctx.critical_temp = 105;
 	mcu_ctx.repoweron_temp = 60;
@@ -405,38 +477,52 @@ void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 	slave.addr = 0x17;
 	i2c01_slave_register(i2c_slave_ctx, &slave);
 
+	for(i = 0; i < 4; ++i) {
+		filter_init(&adc_averge_tab[i], 0);
+	}
+
+	last_time_collect = tick_get();
 }
 
 #define CMD_CHIP0_VDDR		0x01
 #define CMD_CHIP1_VDDR		0x02
+#define CMD_CHIP0_DROOP		0x11
+#define CMD_CHIP1_DROOP		0x12
 #define CMD_REBOOT		0x07
 #define CMD_UPDATE		0x08
 extern int power_is_on;
-
+static int flag = 0;
 void mcu_process(void)
 {
-	unsigned long current_time, adc_date, volt_date;
+	unsigned long current_time, adc_data, temp_data;
 	unsigned short temp;
 	int i;
+
 
 	current_time = tick_get();
 
 	if (current_time - last_time_collect > COLLECT_INTERVAL) {
-		adc_date = adc_read_i12v();
-		filter_in(&adc_averge_tab[0], adc_date);
-		adc_date =  get_i12v_atx();
-		filter_in(&adc_averge_tab[1], adc_date);
-		adc_date =  get_i12v_pcie();
-		filter_in(&adc_averge_tab[2], adc_date);
-		adc_date =  get_i3v3_pcie();
-		filter_in(&adc_averge_tab[3], adc_date);
+		adc_data = adc_read_i12v();
+		filter_in(&adc_averge_tab[0], adc_data);
+		adc_data =  get_i12v_atx();
+		filter_in(&adc_averge_tab[1], adc_data);
+		adc_data =  get_i12v_pcie();
+		filter_in(&adc_averge_tab[2], adc_data);
+		adc_data =  get_i3v3_pcie();
+		filter_in(&adc_averge_tab[3], adc_data);
+		temp_data = isl68224_output_voltage(0, 0);
+		vddr_volt[0][0] = (temp_data >> 8) & 0xff;
+		vddr_volt[0][1] = temp_data & 0xff;
+		temp_data = isl68224_output_voltage(1, 0);
+		vddr_volt[1][0] = (temp_data >> 8) & 0xff;
+		vddr_volt[1][1] = temp_data & 0xff;
+		temp_data = isl68224_out_droop(0, 0);
+		droop_val[0][0] = (temp_data >> 8) & 0xff;
+		droop_val[0][1] = temp_data & 0xff;
+		temp_data = isl68224_out_droop(1, 0);
+		droop_val[1][0] = (temp_data >> 8) & 0xff;
+		droop_val[1][1] = temp_data & 0xff;
 		last_time_collect = current_time;
-		volt_date = isl68224_output_voltage(0, 0);
-		vddr_volt[0][0] = (volt_date >> 8) & 0xff;
-		vddr_volt[0][1] = volt_date & 0xff;
-		volt_date = isl68224_output_voltage(1, 0);
-		vddr_volt[1][0] = (volt_date >> 8) & 0xff;
-		vddr_volt[1][1] = volt_date & 0xff;
 	}
 	if (mcu_ctx.cmd == 0)
 		return;
@@ -447,18 +533,26 @@ void mcu_process(void)
 	nvic_disable_irq(I2C2_EV_IRQn);
 	switch (mcu_ctx.cmd) {
 	case CMD_CHIP0_VDDR:
-		temp = volt_byte2u16(set_vddr_val);
+		temp = byte2u16(set_vddr_val);
 		isl68224_set_out_voltage(0, 0, (int)temp);
-		volt_date = isl68224_output_voltage(0, 0);
-		vddr_volt[0][0] = (volt_date >> 8) & 0xff;
-		vddr_volt[0][1] = volt_date & 0xff;
+		temp_data = isl68224_output_voltage(0, 0);
+		vddr_volt[0][0] = (temp_data >> 8) & 0xff;
+		vddr_volt[0][1] = temp_data & 0xff;
 		break;
 	case CMD_CHIP1_VDDR:
-		temp = volt_byte2u16(set_vddr_val);
+		temp = byte2u16(set_vddr_val);
 		isl68224_set_out_voltage(1, 0, (int)temp);
-		volt_date = isl68224_output_voltage(1, 0);
-		vddr_volt[0][0] = (volt_date >> 8) & 0xff;
-		vddr_volt[0][1] = volt_date & 0xff;
+		temp_data = isl68224_output_voltage(1, 0);
+		vddr_volt[0][0] = (temp_data >> 8) & 0xff;
+		vddr_volt[0][1] = temp_data & 0xff;
+		break;
+	case CMD_CHIP0_DROOP:
+		temp = byte2u16(set_droop_val);
+		isl68224_set_out_voltage(0, 0, (int)temp);
+		break;
+	case CMD_CHIP1_DROOP:
+		temp = byte2u16(set_droop_val);
+		isl68224_set_out_voltage(1, 0, (int)temp);
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(I2C0_EV_IRQn);
@@ -468,6 +562,7 @@ void mcu_process(void)
 	default:
 		break;
 	}
+
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
 	i2c_enable(I2C0);
