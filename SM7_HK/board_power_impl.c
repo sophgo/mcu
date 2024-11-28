@@ -64,11 +64,11 @@ void sys_rst_assert_off(void)
 	chip_disable();
 }
 
-int check_pcie_reset_on(void)
-{
-	board_init();
-	return 0;
-}
+// int check_pcie_reset_on(void)
+// {
+// 	board_init();
+// 	return 0;
+// }
 
 void check_pcie_reset_off(void)
 {

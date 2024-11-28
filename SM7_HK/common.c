@@ -8,7 +8,7 @@
 #include <i2c_master.h>
 #include <mcu-e2prom.h>
 
-#define MCU_SW_VER	0
+#define MCU_SW_VER	1
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
@@ -72,25 +72,25 @@ uint8_t get_firmware_version(void)
 	return MCU_SW_VER;
 }
 
-void board_init(void)
-{
-	/* donot probe twice */
-	if (work_mode)
-		return;
+// void board_init(void)
+// {
+// 	/* donot probe twice */
+// 	if (work_mode)
+// 		return;
 
-	work_mode = gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN) ?
-		WORK_MODE_SOC : WORK_MODE_PCIE;
+// 	work_mode = gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN) ?
+// 		WORK_MODE_SOC : WORK_MODE_PCIE;
 
-	if (work_mode == WORK_MODE_PCIE) {
-		if (is_mixed_mode())
-			work_mode = WORK_MODE_MIXED;
-	}
-}
+// 	if (work_mode == WORK_MODE_PCIE) {
+// 		if (is_mixed_mode())
+// 			work_mode = WORK_MODE_MIXED;
+// 	}
+// }
 
-int get_work_mode(void)
-{
-	return work_mode;
-}
+// int get_work_mode(void)
+// {
+// 	return work_mode;
+// }
 
 uint8_t get_declared_board_type(void)
 {

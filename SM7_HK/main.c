@@ -28,9 +28,7 @@
 #include <keyboard.h>
 #include <eeprom.h>
 #include <wdt.h>
-#include <pcie.h>
 #include <slt.h>
-#include <ct7451.h>
 #include <rst_key.h>
 #include <mon_print.h>
 #include <at24c128c-e2prom.h>
@@ -57,46 +55,46 @@ int main(void)
 #endif
 
 	led_init();
-	led_set_frequency(1000);
+	//led_set_frequency(1000);
 	i2c_master_init(I2C1);
 	i2c2_master_init(I2C2);
 	//i2c_master_init(I2C3);
 	mp5475_init();
 	mp5475_buck_on(0);
 	//timer_mdelay(200);
-	
+
 	led_set_frequency(10);
 
-	/* check if i am in test board and if we need enter test mode */
-	if (detect_test_mode() == TEST_MODE_HALT) {
+	// /* check if i am in test board and if we need enter test mode */
+	// if (detect_test_mode() == TEST_MODE_HALT) {
 
-		mcu_set_test_mode(true);
-		led_set_frequency(10);
-		/* convert MCU_INT from input to output */
-		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
-		gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
-					GPIO_OSPEED_VERYHIGH, MCU_INT_PIN);
-		gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
-				MCU_INT_PIN);
+	// 	mcu_set_test_mode(true);
+	// 	led_set_frequency(10);
+	// 	/* convert MCU_INT from input to output */
+	// 	gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
+	// 	gpio_set_output_options(MCU_INT_PORT, GPIO_OTYPE_PP,
+	// 				GPIO_OSPEED_VERYHIGH, MCU_INT_PIN);
+	// 	gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+	// 			MCU_INT_PIN);
 
-		set_board_type(SM7M);
+	// 	set_board_type(SM7M);
 
-		i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
-			       I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
-		mcu_test_init(&i2c2_slave_ctx);
-		nvic_enable_irq(NVIC_I2C2_IRQ);
-		i2c_slave_start(&i2c2_slave_ctx);
+	// 	i2c_slave_init(&i2c2_slave_ctx, (void *)I2C2_BASE,
+	// 		       I2C2_OA1, I2C2_OA2, I2C2_OA2_MASK);
+	// 	mcu_test_init(&i2c2_slave_ctx);
+	// 	nvic_enable_irq(NVIC_I2C2_IRQ);
+	// 	i2c_slave_start(&i2c2_slave_ctx);
 
-		while (detect_test_mode() != TEST_MODE_RUN) {
-			mcu_process();
-			if (!mcu_get_test_mode())
-				break;
-		}
+	// 	while (detect_test_mode() != TEST_MODE_RUN) {
+	// 		mcu_process();
+	// 		if (!mcu_get_test_mode())
+	// 			break;
+	// 	}
 
-		set_board_type(SM7_HK);
-		nvic_disable_irq(NVIC_I2C2_IRQ);
-		i2c_slave_stop(&i2c2_slave_ctx);
-	}
+	// 	set_board_type(SM7_HK);
+	// 	nvic_disable_irq(NVIC_I2C2_IRQ);
+	// 	i2c_slave_stop(&i2c2_slave_ctx);
+	// }
 	/* reset MCU_INT */
 	gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
 	gpio_mode_setup(MCU_INT_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP,
@@ -111,17 +109,17 @@ int main(void)
 	power_on();
 	chip_init();
 
-	debug("%s %s working at ",
-	      get_board_type_name(),
-	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application");
-	if (get_work_mode() == WORK_MODE_SOC)
-		debug("soc mode\n");
-	else if (get_work_mode() == WORK_MODE_PCIE)
-		debug("pcie mode\n");
-	else if (get_work_mode() == WORK_MODE_MIXED)
-		debug("mix mode\n");
-	else
-		debug("unkown mode\n");
+	// debug("%s %s working at ",
+	//       get_board_type_name(),
+	//       get_stage() == RUN_STAGE_LOADER ? "loader" : "application");
+	// if (get_work_mode() == WORK_MODE_SOC)
+	// 	debug("soc mode\n");
+	// else if (get_work_mode() == WORK_MODE_PCIE)
+	// 	debug("pcie mode\n");
+	// else if (get_work_mode() == WORK_MODE_MIXED)
+	// 	debug("mix mode\n");
+	// else
+	// 	debug("unkown mode\n");
 
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
@@ -143,7 +141,7 @@ int main(void)
 	else{
 		set_board_type(SM7_HK);
 	}
-	
+
 	mcu_init(&i2c1_slave_ctx);
 	mcu_eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
@@ -157,27 +155,28 @@ int main(void)
 	if (pic_available())
 		pic_init(&i2c1_slave_ctx);
 
-	ct7451_init(&i2c1_slave_ctx);
+	//ct7451_init(&i2c1_slave_ctx);
 
-	if (get_work_mode() == WORK_MODE_SOC) {
-		sm7_init();
-		if (get_board_type() == SM7M_MP_SE8M) {
-			se6_init();
-			if (get_eeprom_type() == AT24C01D)
-				at24c01d_init(&i2c1_slave_ctx);
-			else
-				at24c128c_init(&i2c1_slave_ctx);
-		}
-	}
+	// if (get_work_mode() == WORK_MODE_SOC) {
+	// 	sm7_init();
+	// 	if (get_board_type() == SM7M_MP_SE8M) {
+	// 		se6_init();
+	// 		if (get_eeprom_type() == AT24C01D)
+	// 			at24c01d_init(&i2c1_slave_ctx);
+	// 		else
+	// 			at24c128c_init(&i2c1_slave_ctx);
+	// 	}
+	// }
 
 	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);
 
-	if (get_work_mode() == WORK_MODE_SOC)
-		chip_enable();
-	else
-		pcie_init();
+	// if (get_work_mode() == WORK_MODE_SOC)
+		// chip_enable();
+	// else
+	// 	pcie_init();
 
+	chip_enable();
 	/* never return */
 	loop_start();
 
