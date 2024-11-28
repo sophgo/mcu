@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <i2c01_slave.h>
 #include <timer.h>
+#include <system.h>
 
 #define BAUDRATE	(100 * 1000)
 
@@ -162,7 +163,7 @@ void i2c01_slave_isr(struct i2c01_slave_ctx *ctx)
 
 	sts = ctx->reg->sr1;
 	if (sts & ERR_MASK) {
-		printf("bus error occor\n");
+		dbg_printf("bus error occor\n");
 		/* reset i2c controller */
 		ctx->reg->cr1 &= ~CR1_PE;
 		timer_udelay(10);

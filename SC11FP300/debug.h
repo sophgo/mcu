@@ -4,8 +4,9 @@
 #ifdef DEBUG
 
 #include <stdio.h>
+#include <system.h>
 
-#define debug(...)	printf(__VA_ARGS__)
+#define debug(...)	dbg_printf(__VA_ARGS__)
 
 #else
 

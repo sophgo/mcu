@@ -5,6 +5,7 @@
 #include <chip.h>
 #include <tick.h>
 #include <stdbool.h>
+#include <system.h>
 
 static volatile int is_chip_ready;
 static int pcie_task;

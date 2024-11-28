@@ -32,20 +32,20 @@ static void system_uart_init(void)
 	usart_receive_config(DEBUG_UART, USART_RECEIVE_ENABLE);
 	usart_enable(DEBUG_UART);
 
-	/* tx push-pull, rx floating */
-	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_9);
-	gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, GPIO_PIN_10);
+	// /* tx push-pull, rx floating */
+	// gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_9);
+	// gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, GPIO_PIN_10);
 
-	rcu_periph_clock_enable(RCU_USART0);
-	/* uart0 setup, this uart link to bm1690 */
-	usart_deinit(LINK_TO_BM_UART);
-	usart_baudrate_set(LINK_TO_BM_UART, 115200);
-	usart_parity_config(LINK_TO_BM_UART, USART_PM_NONE);
-	usart_word_length_set(LINK_TO_BM_UART, USART_WL_8BIT);
-	usart_stop_bit_set(LINK_TO_BM_UART, USART_STB_1BIT);
-	usart_transmit_config(LINK_TO_BM_UART, USART_TRANSMIT_ENABLE);
-	usart_receive_config(LINK_TO_BM_UART, USART_RECEIVE_ENABLE);
-	usart_enable(LINK_TO_BM_UART);
+	// rcu_periph_clock_enable(RCU_USART0);
+	// /* uart0 setup, this uart link to bm1690 */
+	// usart_deinit(LINK_TO_BM_UART);
+	// usart_baudrate_set(LINK_TO_BM_UART, 115200);
+	// usart_parity_config(LINK_TO_BM_UART, USART_PM_NONE);
+	// usart_word_length_set(LINK_TO_BM_UART, USART_WL_8BIT);
+	// usart_stop_bit_set(LINK_TO_BM_UART, USART_STB_1BIT);
+	// usart_transmit_config(LINK_TO_BM_UART, USART_TRANSMIT_ENABLE);
+	// usart_receive_config(LINK_TO_BM_UART, USART_RECEIVE_ENABLE);
+	// usart_enable(LINK_TO_BM_UART);
 }
 
 static void system_gpio_init(void)

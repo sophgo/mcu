@@ -40,15 +40,11 @@ int main(void)
 {
 	system_init();
 	gpio_bit_set(CARD_PWR_PRES_PORT,CARD_PWR_PRES_PIN);
-	gpio_bit_reset(EN_VDD_3V3_PORT, EN_VDD_3V3_PIN);
-	gpio_bit_reset(SYS_RST_X_H_BM1_PORT, SYS_RST_X_H_BM1_PIN);
-	gpio_bit_reset(SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN);
 	led_init();
 
-	//debug("\nBITMAIN SOPHONE SC11FP300\n");
 	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
 	dbg_printf("BITMAIN SOPHONE SC11FP300\n");
-	timer_udelay(100);
+	timer_mdelay(1);
 
 #ifndef STANDALONE
 	if (get_stage() == RUN_STAGE_LOADER)
@@ -57,23 +53,26 @@ int main(void)
 #else
 // #warn stand alone environment
 #endif
+	board_power_init();
 	pca9848_init();
 	ct7451_init(0);
 	ct7451_init(1);
-	board_power_init();
 	mon_init();
+	console_init();
 	slave_init();
 	pcie_init();
 	dvfs_init();
-
+	isl68224_init();
 	while (1) {
 		if (chip_enable()) {
 			mon_process();
 		}
 
 		ct7451_process();
-		mcu_process();
 		dvfs_process();
+		console_poll();
+		mcu_process();
+		timer_udelay(1);
 	}
 
 	return 0;

@@ -17,6 +17,7 @@
 #include <debug.h>
 #include <pca9848.h>
 #include <timer.h>
+#include <system.h>
 
 
 #define CT7451_REG_MAX	(22)
@@ -66,13 +67,19 @@ static struct ct7451_ctx {
 void tmp_i2c_read(int idx)
 {
 	uint8_t tmp;
+	int ret;
+
 	pca9848_set(PCA9848_1, 1 << tmp_channel[idx] );
 
-	i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
+	ret = i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
  			CT7451_LT, &tmp);
+	if(ret) 
+		debug("ct7451%d_init read lt reg fail!(read)\n",idx);
  	ct7451_ctx[idx].remote_temp = (int)tmp - 64;
 	i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
  			CT7451_RT, &tmp);
+	if(ret) 
+		debug("ct7451%d_init read lt reg fail!(read)\n",idx);
  	ct7451_ctx[idx].local_temp = (int)tmp - 64;
 
 	set_soc_temp(idx, ct7451_ctx[idx].local_temp - 5);
@@ -98,21 +105,31 @@ void ct7451_process(void)
 void ct7451_init(int idx)
 {
 	uint8_t tmp;
+	int ret;
 
 	pca9848_set(PCA9848_1, 1 << tmp_channel[idx]);
 	/* Enable smbus timeout */
-	i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
+	ret = i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
 				   CT7451_ALERT, &tmp);
+	if(ret) 
+		dbg_printf("ct7451%d_init enable smbus fail!(read)\n",idx);
 	tmp |= CT7451_SMBTO_MASK;
 	i2c_master_smbus_write_byte(I2C, CT7451_SLAVE_ADDR,
 				    SMBTO, CT7451_ALERT, tmp);
+	if(ret) 
+		dbg_printf("ct7451%d_init enable smbus fail!(write)\n",idx);
 
+	tmp |= CT7451_SMBTO_MASK;
 	/* Enable extended mode */
 	i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
 				   CT7451_CONFIG_RD_ADDR, &tmp);
+	if(ret) 
+		dbg_printf("ct7451%d_init enable extended mode fail!(read)\n",idx);
 	tmp |= CT7451_RANGE_MASK;
 	i2c_master_smbus_write_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
 				    CT7451_CONFIG_WR_ADDR, tmp);
+	if(ret) 
+		dbg_printf("ct7451%d_init enable extended mode fail!(write)\n",idx);
 
 	/* Wait until next conversion, ct7451 default conversion rate is 16, so
 	 * it takes at most 62.5ms till next conversion */

@@ -11,7 +11,7 @@
 #define STD_UART	ALL_UART
 #define MON_UART	ALL_UART
 #define UPG_UART	ALL_UART
-#define CONSOLE_UART	ALL_UART
+#define CONSOLE_UART	DEBUG_UART
 
 void system_init(void);
 void clock_init(void);

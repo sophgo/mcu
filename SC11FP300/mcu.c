@@ -327,9 +327,9 @@ static uint8_t mcu_read(void *priv)
 	case REG_SW_VER:
 		ret = get_firmware_version();
 		break;
-	// case REG_HW_VER:
-	// 	ret = get_pcb_version();
-	// 	break;
+	case REG_HW_VER:
+		ret = get_hardware_version();
+		break;
 	case REG_CMD:
 		ret = 0;
 		break;
