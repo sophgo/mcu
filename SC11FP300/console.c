@@ -12,7 +12,10 @@
 #include <timer.h>
 #include <pin.h>
 #include <isl68224.h>
-
+#include <gd32e50x.h>
+#include <adc.h>
+#include <mon.h>
+#include <project.h>
 
 static struct ecdc_console *console;
 
@@ -31,177 +34,58 @@ static void console_putc(void *console_hint, char c)
 
 static void cmd_hello(void *hint, int argc, char const *argv[])
 {
-	printf("Hello BITMAIN SOPHON\n");
+	printf("Hello SOPHON SC11-FP300\n");
 }
 
+static const char * const cmd_sn_usage =
+"sn [sn]\n"
+"    if sn is ommited, this command shows current sn\n"
+"    otherwise, sn will write to eeprom\n";
 
-static const char * const cmd_upgrade_usage =
-"upgrade\n"
-"    enter uart upgrade mode\n";
-
-static void cmd_upgrade(void *hint, int argc, char const *argv[])
+static void cmd_sn(void *hint, int argc, char const *argv[])
 {
-	if (argc != 1) {
-		printf("invalid usage\n");
-		return;
-	}
+	int i;
+	uint8_t tmp;
+	uint8_t flash_data[FLASH_PAGE_SIZE] = {0};
+	volatile uint8_t *p_sn = (uint8_t *) SN_BASE;
 
-	printf("entering uart upgrade mode\n");
-	uart_upgrade_start();
-}
-
-static const char * const cmd_show_usage =
-"show\n"
-"    show collected information, voltage, current, power etc.\n";
-
-static void cmd_show(void *hint, int argc, char const *argv[])
-{
-	if (argc != 1) {
-		printf("invalid usage\n");
-		return;
-	}
-
-	mon_put_text();
-}
-
-static const char * const cmd_monmode_usage =
-"monmode [clear|normal|verbose]\n"
-"    switch mon collection mode between clear, normal and verbose\n"
-"    if on or off ommited, this command shows current verbose mode\n"
-"    valid collection modes are:\n"
-"    -----------------------------------------------------------------------\n"
-"    clear: MCU never collect information from MP5475 and ISL68224\n"
-"    normal: MCU only collect TPU voltage, current and power from ISL68224\n"
-"    verbose: MCU collect all information from both MP5475 and ISL68224\n";
-
-static void cmd_monmode(void *hint, int argc, char const *argv[])
-{
 	if (argc > 2)
 		printf("invalid usage\n");
-	else if (argc == 1)
-		printf("current collect mode %s\n",
-		       mon_get_mode() ? "on" : "off");
-	else if (strcmp("clear", argv[1]) == 0)
-		mon_set_mode(MON_MODE_CLEAR);
-	else if (strcmp("normal", argv[1]) == 0)
-		mon_set_mode(MON_MODE_NORMAL);
-	else if (strcmp("verbose", argv[1]) == 0)
-		mon_set_mode(MON_MODE_VERBOSE);
-	else
-		printf("invalid verbose mode \'%s\'", argv[1]);
-}
-
-// static const char * const cmd_sn_usage =
-// "sn [sn]\n"
-// "    if sn is ommited, this command shows current sn\n"
-// "    otherwise, sn will write to eeprom\n";
-
-// static void cmd_sn(void *hint, int argc, char const *argv[])
-// {
-// 	int i;
-// 	uint8_t tmp;
-// 	uint8_t flash_data[FLASH_PAGE_SIZE] = {0};
-// 	volatile uint8_t *p_eeprom = (uint8_t *) EEPROM_BASE;
-
-// 	if (argc > 2)
-// 		printf("invalid usage\n");
-// 	else if (argc == 1) {
-// 		/* read sn out */
-// 		for (i = 0; i < EEPROM_CELL_SIZE; ++i) {
-// 			tmp = eeprom_read_byte(EEPROM_SN_OFFSET + i);
-// 			if (tmp) {
-// 				if (isprint(tmp))
-// 					printf("%c", tmp);
-// 				else
-// 					printf(".");
-// 			} else
-// 				break;
-// 		}
-// 		printf("\n");
-// 	}
-// 	else {
-// 			for (i = 0; i < FLASH_PAGE_SIZE; i++){
-// 				flash_data[i] = p_eeprom[i];
-// 			}
-
-// 			/* write sn to eeprom */
-// 			for (i = 0; i < EEPROM_CELL_SIZE - 1; ++i) {
-// 				tmp = argv[1][i];
-
-// 				if (tmp){
-// 					flash_data[EEPROM_SN_OFFSET + i] = tmp;
-// 				}
-// 				else
-// 					break;
-// 			}
-// 			/* zero terminated */
-// 			flash_data[EEPROM_SN_OFFSET + i] = 0;
-// 			flash_program_page(EEPROM_BASE, flash_data, FLASH_PAGE_SIZE);
-// 	}
-// }
-
-
-static const char * const cmd_download_usage =
-"download [offset]\n"
-"    download file from host to program flash through xmodem\n"
-"    if offset ommitted, program downloaded file from the beginning of program flash\n";
-
-static void cmd_download(void *hint, int argc, char const *argv[])
-{
-	long int offset = 0;
-
-	if (argc > 2) {
-		printf("invalid usage\n");
-		return;
-	}
-
-	if (argc == 2) {
-		offset = strtol(argv[1], NULL, 0);
-		if (offset == LONG_MIN || offset == LONG_MAX) {
-			printf("invalid argument\n");
-			return;
+	else if (argc == 1) {
+		/* read sn out */
+		for (i = 0; i < EEPROM_CELL_SIZE; ++i) {
+			tmp = p_sn[i];
+			if (tmp) {
+				if (isprint(tmp))
+					printf("%c", tmp);
+				else
+					printf(".");
+			} else
+				break;
 		}
+		printf("\n");
 	}
+	else {
+			for (i = 0; i < FLASH_PAGE_SIZE; i++){
+				flash_data[i] = p_sn[i];
+			}
 
-	printf("download to 0x%lx though xmodem\n", offset);
+			/* write sn to eeprom */
+			for (i = 0; i < SN_CELL_SIZE - 1; ++i) {
+				tmp = argv[1][i];
 
-	if (download_to_flash(offset) < 0)
-		printf("download failed\n");
-	else
-		printf("download success\n");
-}
-
-static const char * const cmd_burn_usage =
-"burn\n"
-"    burn firmware to program flash through xmodem\n";
-
-static void cmd_burn(void *hint, int argc, char const *argv[])
-{
-	long int firmware_size;
-	int err;
-
-	if (argc != 1) {
-		printf("invalid usage\n");
-		return;
-	}
-
-	printf("download firmware though xmodem\n");
-
-	firmware_size = download_to_flash(0);
-	if (firmware_size < 0) {
-		printf("download failed\n");
-		return;
-	}
-
-	err = check_firmware(firmware_size);
-
-	while (uart_getc() != '\r') {
-		printf("firmware upgrade %s, press enter return to console\n",
-		       err ? "failed" : "success");
-		timer_mdelay(200);
+				if (tmp){
+					flash_data[SN_CELL_OFFSET(0) + i] = tmp;
+				}
+				else
+					break;
+			}
+			/* zero terminated */
+			flash_data[SN_CELL_OFFSET(0) + i] = 0;
+			flash_program_page(SN_BASE, flash_data, FLASH_PAGE_SIZE);
 	}
 }
-
+#if 0
 uint32_t sys_rst_pin_list[2][2] = {
 	{SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN},
 	{SYS_RST_X_H_BM1_PORT, SYS_RST_X_H_BM1_PIN},
@@ -235,145 +119,58 @@ static void cmd_high(void *hint, int argc, char const *argv[])
 	printf("set chip%lu high\n", pin);
 }
 
-static const char * const cmd_setisl68224_usage =
-"isl68224 [idx page voltage]\n"
-"    idx: 0-3, there are 4 isl68224 in sc7hp75\n"
-"    page: 0-3\n"
-"    voltage: the value of voltage, unit is mV\n";
-
-static void cmd_setisl68224_vout(void *hint, int argc, char const *argv[])
+static void cmd_devmem(void *hint, int argc, char const *argv[])
 {
-	int idx = 0;
-	int page = 0;
-	int voltage = 0;
+	uint32_t reg_val;
+	uint32_t addr;
 
-	if (argc == 4) {
-		idx = strtol(argv[1], NULL, 0);
-		page = strtol(argv[2], NULL, 0);
-		voltage = strtol(argv[3], NULL, 0);
-		isl68224_set_out_voltage(idx, page, voltage);
-	} else {
-		printf("%s", cmd_setisl68224_usage);
-	}
-
-	return;
+	addr = (uint32_t)strtol(argv[1], NULL, 16);
+	reg_val = REG32(addr);
+	printf("0x%x",reg_val);
 }
 
-static const char * const cmd_tpu_usage =
-"tpu [voltage]\n"
-"    voltage: this value will be set in all isl68224,unit is mV\n";
-static void cmd_tpu(void *hint, int argc, char const *argv[])
+static const char * const cmd_info_usage =
+"info\n"
+"    get information about board and mcu\n";
+
+static void cmd_info(void *hint, int argc, char const *argv[])
 {
-	int value;
-	int i;
-
-	if (argc != 2) {
-		printf("%s", cmd_tpu_usage);
-		return;
-	}
-
-	value = strtol(argv[1], NULL, 0);
-	for (i = 0; i < 3; i++) {
-		isl68224_set_out_voltage(i, 0, value);
-	}
-
-	return;
+	printf("Chip type: BM1690\n");
+	printf("PCB Version: %d\n", get_pcb_version());
+	printf("Board type: %s\n", SC11FP300);
+	printf("MCU_SW_VER: %d\n", MCU_SW_VER);
 }
 
-static void cmd_vddc(void *hint, int argc, char const *argv[])
+#endif
+
+static const char * const cmd_temp_usage =
+"temp\n"
+"    temp soc&board\n";
+static void cmd_temp(void *hint, int argc, char const *argv[])
 {
-	int value;
-	int i;
+	int boardtemp0, soctemp0, boardtemp1, soctemp1;
 
-	if (argc != 2) {
-		printf("%s", cmd_tpu_usage);
-		return;
+
+	boardtemp0 = get_board_temp(0);
+	soctemp0 = get_soc_temp(0);
+	boardtemp1 = get_board_temp(1);
+	soctemp1 = get_soc_temp(1);
+	if (argc == 1){
+		printf("CHIP0: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp0, boardtemp0);
+		printf("CHIP1: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp1, boardtemp1);
+	}else if (argc == 2){
+		if (strcmp(argv[1], "soc") == 0){
+			printf("chip0:soc temp = %d(C)\n", soctemp0);
+			printf("chip1:soc temp = %d(C)\n", soctemp1);
+		}else if (strcmp(argv[1], "board") == 0){
+			printf("chip0:board temp = %d(C)\n", boardtemp0);
+			printf("chip1 board temp = %d(C)\n", boardtemp1);
+		}
+		else
+			printf("get %s temp failed\n", argv[1]);
+	}else {
+		printf(cmd_temp_usage);
 	}
-
-	value = strtol(argv[1], NULL, 0);
-	for (i = 0; i < 3; i++) {
-		isl68224_set_out_voltage(i, 1, value);
-	}
-
-	return;
-}
-
-// static const char * const cmd_tpupower_usage =
-// "tpupower [0/1]\n"
-// "    0:tpu powerdown 1:tpu powerup\n";
-
-// static void cmd_tpupower(void *hint, int argc, char const *argv[])
-// {
-// 	int value;
-
-// 	if (argc != 2) {
-// 		printf("%s", cmd_tpupower_usage);
-// 		return;
-// 	}
-
-// 	value = strtol(argv[1], NULL, 0);
-// 	if (value == 0){
-// 		gpio_clear(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
-// 		gpio_clear(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
-// 		gpio_clear(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
-// 		timer_mdelay(1);
-// 		gpio_clear(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
-// 		gpio_clear(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
-// 		gpio_clear(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
-// 	}else if(value == 1){
-// 		gpio_set(EN_VDD_TPU_B1_PORT, EN_VDD_TPU_B1_PIN);
-// 		gpio_set(EN_VDD_TPU_B2_PORT, EN_VDD_TPU_B2_PIN);
-// 		gpio_set(EN_VDD_TPU_B3_PORT, EN_VDD_TPU_B3_PIN);
-// 		timer_mdelay(1);
-// 		gpio_set(TPU_PG_B1_PORT, TPU_PG_B1_PIN);
-// 		gpio_set(TPU_PG_B2_PORT, TPU_PG_B2_PIN);
-// 		gpio_set(TPU_PG_B3_PORT, TPU_PG_B3_PIN);
-// 	}else{
-// 		;
-// 	}
-// 	return;
-// }
-
-static const char * const cmd_rdrop_usage =
-"rdrop [idx page  resistance]\n"
-"    idx: 0-2, there are 3 isl68224 in sc7hp75\n"
-"    page: 0-2 0:tpu 1:vddc 2:phy\n"
-"    resistance: range from 0 to 1600,  unit is uV/A\n";
-
-static void cmd_rdrop_vout(void *hint, int argc, char const *argv[])
-{
-	int idx = 0;
-	int page = 0;
-	int resistance = 0;
-
-	if (argc == 4 ) {
-		idx = strtol(argv[1], NULL, 0);
-		page = strtol(argv[2], NULL, 0);
-		resistance = strtol(argv[3], NULL, 0);
-		isl68224_set_out_droop(idx, page, resistance);
-	}else{
-		printf("%s", cmd_rdrop_usage);
-	}
-
-	return;
-}
-static const char * const cmd_tpu_rdrop_usage =
-"tpu_rdrop  [resistance]\n"
-"resistance: range from 0 to 1600,  unit is uV/A\n";
-static void cmd_tpu_rdrop_vout(void *hint, int argc, char const *argv[]){
-	int value;
-	int i;
-
-	if (argc != 2) {
-		printf("%s", cmd_tpu_rdrop_usage);
-		return;
-	}
-
-	value = strtol(argv[1], NULL, 0);
-	for (i = 0; i < 3; i++) {
-		isl68224_set_out_droop(i, 0, value);
-	}
-	return;
 }
 
 struct command {
@@ -386,20 +183,13 @@ static void cmd_help(void *hint, int argc, char const *argv[]);
 static struct command command_list[] = {
 	{"help", NULL , NULL, cmd_help},
 	{"hello", NULL , NULL, cmd_hello},
-	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
-	{"show", NULL, cmd_show_usage, cmd_show},
-	{"monmode", NULL, cmd_monmode_usage, cmd_monmode},
-	//{"sn", NULL, cmd_sn_usage, cmd_sn},
-	{"download", NULL, cmd_download_usage, cmd_download},
-	{"burn", NULL, cmd_burn_usage, cmd_burn},
-	{"low", NULL, cmd_burn_usage, cmd_low},
-	{"high", NULL, cmd_burn_usage, cmd_high},
-	{"tpu", NULL, cmd_tpu_usage, cmd_tpu},
-	{"vddc", NULL, NULL, cmd_vddc},
-	{"isl68224", NULL, cmd_setisl68224_usage, cmd_setisl68224_vout},
-	{"rdrop", NULL, cmd_rdrop_usage, cmd_rdrop_vout},
-	{"tpu_rdrop",NULL,cmd_tpu_rdrop_usage , cmd_tpu_rdrop_vout },
-	//{"tpupower", NULL, cmd_tpupower_usage, cmd_tpupower},
+	//{"info", NULL, cmd_info_usage, cmd_info},
+	{"temp", NULL, cmd_temp_usage, cmd_temp},
+	// {"show", NULL, cmd_show_usage, cmd_show},
+	{"sn", NULL, cmd_sn_usage, cmd_sn},
+	// {"low", NULL, NULL, cmd_low},
+	// {"high", NULL, NULL, cmd_high},
+	// {"devmem", NULL, NULL, cmd_devmem},
 };
 
 void print_usage(struct command *cmd)

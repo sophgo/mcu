@@ -14,5 +14,5 @@ unsigned long isl68224_output_power(int idx, int page);
 int isl68224_set_out_voltage(int idx, int page, int voltage);
 int isl68224_set_out_droop(int idx, int page, int resistance);
 unsigned long isl68224_out_droop(int idx, int page);
-
+int isl68224_init(void);
 #endif

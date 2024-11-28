@@ -2,7 +2,6 @@
 #include <tick.h>
 #include <timer.h>
 #include <debug.h>
-#include <tca9554.h>
 #include <stdio.h>
 #include <common.h>
 #include <chip.h>
@@ -90,7 +89,7 @@ void sys_rst_disable(void)
 
 // void EXTI2_IRQHandler(void)
 // {
-// 	dbg_printf("pcie ep reset falling edge\n");
+// 	debug("pcie ep reset falling edge\n");
 // 	sys_rst_disable();
 // 	timer_start(30000);
 // 	is_chip_ready = 0;

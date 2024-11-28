@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
-#include <xmodem.h>
 #include <system.h>
 #include <md5.h>
 #include <common.h>
@@ -104,14 +103,14 @@ static int save_data(void *priv, void *data, unsigned long len)
 	return 0;
 }
 
-long download_to_flash(unsigned long offset)
-{
-	struct flash_ctx ctx;
+// long download_to_flash(unsigned long offset)
+// {
+// 	struct flash_ctx ctx;
 
-	ctx.offset = offset;
+// 	ctx.offset = offset;
 
-	return xmodem_receive(save_data, &ctx);
-}
+// 	return xmodem_receive(save_data, &ctx);
+// }
 
 static void __attribute__((unused))
 	hex_dump(void *hex, unsigned long len)

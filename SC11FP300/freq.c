@@ -4,6 +4,7 @@
 #include <system.h>
 #include <common.h>
 #include <gd32e50x.h>
+#include <debug.h>
 
 #define	POSTDIV_RESULT_INDEX	2
 
@@ -316,6 +317,7 @@ static inline int sg2044_pll_enable(int idx, struct sg2044_pll_clock *pll, char 
 	uint32_t value;
 	uint64_t enter;
 	uint32_t id = pll->id;
+	uint64_t counter = 0;
 
 	if (en) {
 		/* wait pll lock */
@@ -323,14 +325,25 @@ static inline int sg2044_pll_enable(int idx, struct sg2044_pll_clock *pll, char 
 		top_misc_read(idx, pll->status_offset, &value);
 		while (!((value >> (PLL_STAT_LOCK_OFFSET + id)) & 0x1)) {
 			top_misc_read(idx, pll->status_offset, &value);
+			counter++;
+			if (counter == 100) {
+				dbg_printf("%s:top misc read fail\n", __LINE__);
+				break;
+			}
 			// if (time_after(jiffies, enter + HZ / 10))
 			// 	pr_warn("%s not locked\n", pll->name);
 		}
 		/* wait pll updating */
 		//enter = jiffies;
+		counter = 0;
 		top_misc_read(idx, pll->status_offset, &value);
 		while (((value >> id) & 0x1)) {
 			top_misc_read(idx, pll->status_offset, &value);
+			counter++;
+			if (counter == 100) {
+				dbg_printf("%s:top misc read fail\n", __LINE__);
+				break;
+			}
 			// if (time_after(jiffies, enter + HZ / 10))
 			// 	pr_warn("%s still updating\n", pll->name);
 		}
@@ -418,7 +431,7 @@ int sg2044_clk_pll_set_rate(int idx, int mpll_id, uint64_t rate, uint64_t parent
 	foutvco = parent_rate * pctrl_table.fbdiv / pctrl_table.refdiv;
 	__set_pll_vcosel(idx, sg2044_pll, foutvco);
 
-	//dbg_printf("cal val is %u \n", value);
+	//debug("cal val is %u \n", value);
 
 	/* write the value to top register */
 	sg2044_pll_write(idx, sg2044_pll->id, value);

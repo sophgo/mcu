@@ -11,29 +11,32 @@
 #include <isl68224.h>
 #include <adc.h>
 #include <common.h>
+#include <debug.h>
 
 #define TPU_MPLL		2
 #define PARENT_FREQ		25 * MHZ
-#define CRITICAL_TEMP		100
+#define CRITICAL_TEMP		105
 #define TEMP_DETECT_INTERVAL	500
 #define mW			1000UL
 
 struct dvfs_pair freq_volt_pair[] = {
-	{1000 * MHZ, 800}, //0
-	{975 * MHZ, 790},
-	{950 * MHZ, 780}, // 2
-	{925 * MHZ, 780},
-	{950 * MHZ, 770}, // 4
-	{800 * MHZ, 770},
-	{700 * MHZ, 750},//6
-	{660 * MHZ, 750},
-	{660 * MHZ, 750},//8
-	{50 * MHZ, 750},//9
+	{1000 * MHZ, 800},
+	{950 * MHZ, 780},
+	{900 * MHZ, 780},
+	{850 * MHZ, 760},
+	{800 * MHZ, 760}, // 4
+	{750 * MHZ, 740},
+	{700 * MHZ, 740},
+	{650 * MHZ, 720},
+	{600 * MHZ, 720},//8
+	{550 * MHZ, 700},
+	{500 * MHZ, 700},
+	{50 * MHZ, 680},//11
 };
 
 struct dvfs_trip dvfs_trips[] = {
-	{85, 3,  &freq_volt_pair[5], &freq_volt_pair[0]},
-	{95, 4,  &freq_volt_pair[9], &freq_volt_pair[5]},
+	{85, 5,  &freq_volt_pair[4], &freq_volt_pair[0]},
+	{95, 5,  &freq_volt_pair[11], &freq_volt_pair[4]},
 };
 
 static struct dvfs_sensor dvfs_sensor[SOC_NUM];
@@ -56,7 +59,7 @@ static struct dvfs_pair* dvfs_get_tpu_target_freq_volt(uint8_t idx,
 	uint64_t power_freq_target = 0;
 
 	if (!target_pair || idx >= SOC_NUM) {
-		dbg_printf("dvfs get tpu target freq volt fail!\n");
+		debug("dvfs get tpu target freq volt fail!\n");
         	return NULL;
    	}
 
@@ -84,16 +87,17 @@ static void __dvfs_set_freq_volt(int idx,
 	if (mode == DVFS_DOWN_MODE) {
 		ret = sg2044_clk_pll_set_rate(idx, TPU_MPLL, target_pair->freq, PARENT_FREQ);
 		if (ret != 0) {
-			dbg_printf("device chip tpu freq cfg fail, %d\n", ret);
+			debug("device chip tpu freq cfg fail, %d\n", ret);
 			return;
 		}
+		timer_udelay(20);
 		isl68224_set_out_voltage(idx, 0, target_pair->volt);
 	} else if (mode == DVFS_UP_MODE) {
 			isl68224_set_out_voltage(idx, 0, target_pair->volt);
-			timer_mdelay(15);
+			timer_udelay(20);
 			ret = sg2044_clk_pll_set_rate(idx, TPU_MPLL, target_pair->freq, PARENT_FREQ);
 			if (ret != 0) {
-				dbg_printf("device chip tpu freq cfg fail, %d\n", ret);
+				debug("device chip tpu freq cfg fail, %d\n", ret);
 				return;
 			}
 	}
@@ -127,13 +131,13 @@ static const struct dvfs_trip* temp_thermal_trip(const struct dvfs_trip *trips,
 {
 
 	for (int i = 0; i < trips_size; i++) {
-		//dbg_printf("chip %d temp%d \n",idx, sensor->temp);
-		//dbg_printf("trip_bak:%d flag:%d\n", sensor->trip_back,sensor->hysteresis_flag);
+		//debug("chip %d temp%d \n",idx, sensor->temp);
+		//debug("trip_bak:%d flag:%d\n", sensor->trip_back,sensor->hysteresis_flag);
 		if (sensor->last_temp < trips[i].trip_temp &&
 		    sensor->temp >= trips[i].trip_temp) {
 			sensor->hysteresis_flag = 0;
 			dvfs_set_freq_volt(idx, FREQ_CALLER_TEMP, trips[i].temp_up_pair);
-			dbg_printf("FREQ DOWN: chip%d  set tpu freq is %lu\n",
+			debug("FREQ DOWN: chip%d  set tpu freq is %lu\n",
 				   idx, trips[i].temp_up_pair->freq);
 		}
 
@@ -141,14 +145,14 @@ static const struct dvfs_trip* temp_thermal_trip(const struct dvfs_trip *trips,
 		    sensor->temp < trips[i].trip_temp) {
 			sensor->hysteresis_flag = 1;
 			sensor->trip_back = i;
-			//dbg_printf("into down,trip:%d\n",i);
+			//debug("into down,trip:%d\n",i);
 		}
 
 		if (sensor->temp < (trips[sensor->trip_back].trip_temp - trips[sensor->trip_back].hysteresis) &&
 		    sensor->hysteresis_flag == 1) {
 			sensor->hysteresis_flag = 0;
 			dvfs_set_freq_volt(idx, FREQ_CALLER_TEMP, trips[sensor->trip_back].temp_down_pair);
-			dbg_printf("FREQ UP:chip%d, set tpu freq is %lu\n",
+			debug("FREQ UP:chip%d, set tpu freq is %lu\n",
 				   idx, trips[sensor->trip_back].temp_down_pair->freq);
 		}
 	}
@@ -159,7 +163,7 @@ static const struct dvfs_trip* temp_thermal_trip(const struct dvfs_trip *trips,
 		if (over_temp_count[idx] == 5) {
 			power_off();
 			eeprom_write_byte(EEPROM_POWER_OFF_REASON_OFFSET, POWER_OFF_REASON_OVER_HEAT);
-			dbg_printf("chip%d current temperature is over %d celsius degree, power off!\n",
+			debug("chip%d current temperature is over %d celsius degree, power off!\n",
 				   idx, CRITICAL_TEMP);
 		}
 	}
@@ -175,14 +179,14 @@ int power_thermal_trip(int idx)
 		if (dvfs_power.dvfs_level < dvfs_power.dvfs_max_level - 1){
 			dvfs_power.dvfs_level++;
 			power_pair = &freq_volt_pair[dvfs_power.dvfs_level];
-			//dbg_printf("chip %d, VDFS-P DOWN\n", idx);
+			//debug("chip %d, VDFS-P DOWN\n", idx);
 		} else
 			return 0;
 	} else if (dvfs_power.power_average <= dvfs_power.power_lower_threshold) {
 		if (dvfs_power.dvfs_level > 0){
 			dvfs_power.dvfs_level--;
 			power_pair = &freq_volt_pair[dvfs_power.dvfs_level];
-			//dbg_printf("chip %d, VDFS-P UP\n", idx);
+			//debug("chip %d, VDFS-P UP\n", idx);
 		} else
 			return 0;
 	} else {
@@ -209,10 +213,10 @@ int dvfs_process(void)
 			temp_thermal_trip(dvfs_trips, &dvfs_sensor[i], ARRAY_SIZE(dvfs_trips), i);
 			if(dvfs_p_enable) {
 				dvfs_power.power_average = get_12v_power();
-				dbg_printf("power_average: %u\n",dvfs_power.power_average);
-				dbg_printf("dvfs_level: %d\n",dvfs_power.dvfs_level);
+				//debug("power_average: %u\n",dvfs_power.power_average);
+				//debug("dvfs_level: %d\n",dvfs_power.dvfs_level);
 				power_thermal_trip(i);
-				dbg_printf("\n");
+				//debug("\n");
 				dvfs_p_init_flag = 1;
 			} else if(dvfs_p_enable == 0 && dvfs_p_init_flag == 1) {
 				dvfs_p_init();
@@ -245,7 +249,7 @@ void dvfs_p_threshold()
 		dvfs_power.power_upper_threshold = 300;
 		dvfs_power.power_lower_threshold = 300;
 	}
-	dbg_printf("power_upper_threshold: %u\n",dvfs_power.power_upper_threshold);
+	debug("power_upper_threshold: %uW\n",dvfs_power.power_upper_threshold);
 }
 
 /* atx_300W: 1, max power 300w；*
@@ -279,18 +283,22 @@ int dvfs_init(void)
 	case MODE_DVFS_350W:
 		dvfs_p_enable = 1;
 		atx_300W = 0; //350W
+		debug("MODE_DVFS_350W\n");
 		break;
 	case MODE_DVFS_300W:
 		dvfs_p_enable = 1;
 		atx_300W = 1;//300W
+		debug("MODE_DVFS_300W\n");
 		break;
 	case NO_DVFS:
 		atx_300W = 0;
 		dvfs_p_enable = 0;
+		debug("NO_DVFS\n");
 		break;
 	default:
 		atx_300W = 0;
 		dvfs_p_enable = 0;
+		debug("default:NO_DVFS\n");
 		break;
 	}
 

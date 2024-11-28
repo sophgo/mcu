@@ -195,9 +195,10 @@ static void collect(void)
 
 	collect_temp();
 
-	++pkg.id;
+	//++pkg.id;
 }
 
+#if 0
 static inline void mon_putc(int c)
 {
 	if (c == '\n') {
@@ -311,6 +312,7 @@ void mon_put_text(void)
 	else if (mon_mode == MON_MODE_CLEAR)
 		mon_put_clear();
 }
+#endif
 
 static void __maybe_unused broadcast(void)
 {

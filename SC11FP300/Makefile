@@ -1,6 +1,6 @@
 TOP = ..
 TARGET = SC11FP300
-DEBUG = 1
+DEBUG = 0
 STANDALONE = 0
 
 V ?= 0
@@ -14,8 +14,8 @@ else
 endif
 
 OUTDIR = build
-SRCDIR = . dvfs
-INCDIR = . dvfs\
+SRCDIR = . ecdc dvfs
+INCDIR = . ecdc dvfs\
 	$(TOP)/libgd/GD32E50x_standard_peripheral/Include	\
 	$(TOP)/libgd/CMSIS \
 	$(TOP)/libgd/CMSIS/GD/GD32E50x/Include
@@ -33,7 +33,7 @@ DEPS := $(patsubst %.o, %.d, $(OBJS))
 
 LDSCRIPT = target.ld
 
-OPT_CFLAGS = -g -O2
+OPT_CFLAGS = -Os -g
 ARCH_CFLAGS = -mthumb -mcpu=cortex-m33
 SPEC_CFLAGS = -specs=nano.specs
 
