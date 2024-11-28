@@ -83,9 +83,9 @@ struct power_node board_power_nodes[17] = {
     {(unsigned long)EN_VQPS18_PORT, (unsigned long)EN_VQPS18_PIN},
     },
 
-    {"CHECK-PCIE-RESET", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
-    {(unsigned long)check_pcie_reset_on, (unsigned long)check_pcie_reset_off},
-    },
+//     {"CHECK-PCIE-RESET", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 0,
+//     {(unsigned long)check_pcie_reset_on, (unsigned long)check_pcie_reset_off},
+//     },
 
     {"SYS-RST-DEASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 30000,
     {(unsigned long)sys_rst_deassert_on, (unsigned long)sys_rst_deassert_off},

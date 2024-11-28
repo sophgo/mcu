@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <libopencm3/stm32/exti.h>
 #include <pin.h>
-#include <pcie.h>
 #include <chip.h>
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/scb.h>

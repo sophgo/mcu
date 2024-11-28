@@ -15,7 +15,6 @@
 #include <wdt.h>
 #include <mcu.h>
 #include <stdio.h>
-#include <pcie.h>
 #include <at24c128c-e2prom.h>
 
 #define REG_BOARD_TYPE		0x00
@@ -169,11 +168,11 @@ static void mcu_match(void *priv, int dir)
 		ctx->set_idx = 1;
 }
 
-static void mcu_set_se6_aiucore(void)
-{
-	pcie_init();//open pciee reset
-	mcu_ctx.is_se6_aiucore = true;
-}
+// static void mcu_set_se6_aiucore(void)
+// {
+// 	pcie_init();//open pciee reset
+// 	mcu_ctx.is_se6_aiucore = true;
+// }
 
 /*
  * if is aiu core return ture else false
@@ -217,10 +216,10 @@ void mcu_process(void)
 		nvic_enable_irq(NVIC_I2C1_IRQ);
 		i2c_upgrade_start();
 		break;
-	case CMD_SE6_AIU_POWER_ON:
-		mcu_set_test_mode(false);
-		mcu_set_se6_aiucore();
-		break;
+	// case CMD_SE6_AIU_POWER_ON:
+	// 	mcu_set_test_mode(false);
+	// 	mcu_set_se6_aiucore();
+	// 	break;
 	default:
 		break;
 	}
@@ -375,9 +374,9 @@ static uint8_t mcu_read(void *priv)
 	case REG_PWR_GOOD:
 		ret = 1;
 		break;
-	case REG_MODE_FLAG:
-		ret = get_work_mode();
-		break;
+	// case REG_MODE_FLAG:
+	// 	ret = get_work_mode();
+	// 	break;
 	case REG_POWER_LO:
 		ctx->tmp = get_current() * 12;
 		ret = ctx->tmp & 0xff;
