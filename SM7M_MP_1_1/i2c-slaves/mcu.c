@@ -256,7 +256,7 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_INT_STATUS1:
 		if (data == 0x80) {
 			mcu_clear_interrupt(1, TEST_INT);
-		} else 
+		} else
 			mcu_clear_interrupt(0, data);
 		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
 		break;
@@ -470,7 +470,7 @@ static struct i2c_slave_op slave = {
 void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
 	mcu_ctx.critical_action = CRITICAL_ACTION_POWERDOWN;
-	mcu_ctx.critical_temp = 120;
+	mcu_ctx.critical_temp = 105;
 	mcu_ctx.repoweron_temp = 85;
 	loop_add(mcu_process);
 	slave.addr = 0x17;
