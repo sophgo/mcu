@@ -46,6 +46,22 @@ static void system_uart_init(void)
 	// usart_transmit_config(LINK_TO_BM_UART, USART_TRANSMIT_ENABLE);
 	// usart_receive_config(LINK_TO_BM_UART, USART_RECEIVE_ENABLE);
 	// usart_enable(LINK_TO_BM_UART);
+
+	gpio_init(GPIOC, GPIO_MODE_AF_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_10);
+	gpio_init(GPIOC, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_10MHZ, GPIO_PIN_11);
+
+	gpio_pin_remap_config(GPIO_USART2_PARTIAL_REMAP, ENABLE);
+
+	rcu_periph_clock_enable(RCU_USART2);
+	/* uart0 setup, this uart link to bm1690 */
+	usart_deinit(LINK_TO_BM1_UART);
+	usart_baudrate_set(LINK_TO_BM1_UART, 115200);
+	usart_parity_config(LINK_TO_BM1_UART, USART_PM_NONE);
+	usart_word_length_set(LINK_TO_BM1_UART, USART_WL_8BIT);
+	usart_stop_bit_set(LINK_TO_BM1_UART, USART_STB_1BIT);
+	usart_transmit_config(LINK_TO_BM1_UART, USART_TRANSMIT_ENABLE);
+	usart_receive_config(LINK_TO_BM1_UART, USART_RECEIVE_ENABLE);
+	usart_enable(LINK_TO_BM1_UART);
 }
 
 static void system_gpio_init(void)
