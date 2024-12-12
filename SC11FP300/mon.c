@@ -21,8 +21,8 @@
 
 static int board_temp[2], soc_temp[2];
 
-#define BROADCAST_INTERVAL	200
-#define COLLECT_INTERVAL	30
+#define BROADCAST_INTERVAL	3000
+#define COLLECT_INTERVAL	50
 
 #define FILTER_DEPTH_SHIFT	6
 #define FILTER_DEPTH		(1 << FILTER_DEPTH_SHIFT)
@@ -67,10 +67,6 @@ static unsigned long last_time_broadcast;
 static unsigned long last_time_collect;
 static int mon_mode = MON_MODE_NORMAL;
 static struct filter i12v;
-static struct filter isl68224_current[SOC_NUM][3];
-static struct filter isl68224_voltage[SOC_NUM][3];
-static struct filter isl68224_power[SOC_NUM][3];
-static struct filter isl68224_rdrop[SOC_NUM][2];
 
 static struct {
 	uint8_t id;
@@ -185,16 +181,7 @@ static void collect(void)
 {
 	/* get 12v current from adc */
 	pkg.i12v = filter_in(&i12v, adc_read_i12v());
-
-	// if (mon_mode == MON_MODE_VERBOSE) {
-	// 	// collect_mp5475();
-	// 	collect_isl68224();
-	// } else if (mon_mode == MON_MODE_NORMAL) {
-	// 	collect_tpu();
-	// }
-
 	collect_temp();
-
 	//++pkg.id;
 }
 
@@ -316,7 +303,6 @@ void mon_put_text(void)
 
 static void __maybe_unused broadcast(void)
 {
-	int isl68224_idx, isl68224_rail;
 	static int soc_idx;
 
 	/* broadcast to one soc per-timer */

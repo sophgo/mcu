@@ -191,7 +191,7 @@ int isl68224_read_slow_oc_limit(int idx, int page)
 	return tmp;
 }
 
-int isl68224_init(void)
+void isl68224_init(void)
 {
 	int val;
 

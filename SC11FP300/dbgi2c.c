@@ -14,12 +14,24 @@
 #include <mon.h>
 #include <project.h>
 #include <mcu.h>
+#include <adc.h>
 
 #define DBGI2C_ADDR_BASE	0x41
 #define DBGI2C_I2C_MASTER	I2C1
 #define DBGI2C_I2C_TIMEOUT	1
 
 static uint8_t dbg_channel[2] = {0, 1};
+
+uint8_t get_sn_bit(int i)
+{
+	uint8_t tmp;
+	volatile uint8_t *p_sn = (uint8_t *) SN_BASE;
+
+	tmp = p_sn[i];
+
+	return tmp;
+
+}
 
 static inline uint8_t dbgi2c_idx2addr(int idx)
 {
@@ -250,8 +262,11 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 #define DBGI2C_SOC_INFO_BOARD_TYPE		2
 #define DBGI2C_SOC_INFO_SW_VER			3
 #define DBGI2C_SOC_INFO_HW_VER			4
-#define DBGI2C_SOC_INFO_12V_CURRENT_L		5
-#define DBGI2C_SOC_INFO_12V_CURRENT_H		6
+#define DBGI2C_SOC_INFO_12V_POWER_L		5
+#define DBGI2C_SOC_INFO_12V_POWER_H		6
+#define FIRMWARE_VER				7
+#define SN_START_ADDR				8
+#define SN_END_ADDR				24
 
 #define DBGI2C_SOC_INFO_ADDR(reg)	(DBGI2C_SOC_INFO_BASE +	\
 					 DBGI2C_SOC_INFO_ ## reg ## _OFFSET)
@@ -324,11 +339,19 @@ static uint8_t dbgi2c_i2c_slave_read(void *priv)
 		case DBGI2C_SOC_INFO_SW_VER:
 			data = get_firmware_version();
 			break;
-		case DBGI2C_SOC_INFO_12V_CURRENT_L:
+		case DBGI2C_SOC_INFO_HW_VER:
+			data = get_hardware_version();
+		case DBGI2C_SOC_INFO_12V_POWER_L:
 			data = get_12v_power_l();
 			break;
-		case DBGI2C_SOC_INFO_12V_CURRENT_H:
+		case DBGI2C_SOC_INFO_12V_POWER_H:
 			data = get_12v_power_h();
+			break;
+		case FIRMWARE_VER:
+			data = get_firmware_version();
+			break;
+		case SN_START_ADDR ...  SN_END_ADDR:
+			data = get_sn_bit(ctx.idx - SN_START_ADDR);
 			break;
 		default:
 			data = 0xff;

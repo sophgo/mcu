@@ -36,6 +36,7 @@ void NMI_Handler(void)
 		;
 }
 
+
 int main(void)
 {
 	system_init();
@@ -69,10 +70,10 @@ int main(void)
 		}
 
 		ct7451_process();
-		dvfs_process();
-		console_poll();
 		mcu_process();
 		timer_udelay(1);
+		console_poll();
+		dvfs_process();
 	}
 
 	return 0;

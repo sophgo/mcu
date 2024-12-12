@@ -43,7 +43,6 @@ static struct dvfs_sensor dvfs_sensor[SOC_NUM];
 static struct dvfs_power dvfs_power;
 static int over_temp_count[SOC_NUM];
 static struct dvfs_pair last_pair[SOC_NUM];
-static struct dvfs_pair power_last_pair;
 static unsigned long last_time_temp;
 uint8_t dvfs_p_enable = 0;
 uint8_t atx_300W = 0;
@@ -107,7 +106,6 @@ static void dvfs_set_freq_volt(int idx,
 			       enum dvfs_freq_scaling_caller caller,
 			       struct dvfs_pair *input_pair)
 {
-	int ret = 0;
 	int mode;
 	struct dvfs_pair *target_pair;
 
@@ -125,7 +123,7 @@ static void dvfs_set_freq_volt(int idx,
 	last_pair[idx] = *target_pair;
 }
 
-static const struct dvfs_trip* temp_thermal_trip(const struct dvfs_trip *trips,
+static void temp_thermal_trip(const struct dvfs_trip *trips,
 					    struct dvfs_sensor *sensor,
 					    int trips_size, int idx)
 {
@@ -171,8 +169,6 @@ static const struct dvfs_trip* temp_thermal_trip(const struct dvfs_trip *trips,
 
 int power_thermal_trip(int idx)
 {
-	int mode;
-	uint32_t volt = 0;
 	struct dvfs_pair *power_pair;
 
 	if (dvfs_power.power_average >= dvfs_power.power_upper_threshold) {
@@ -200,9 +196,8 @@ int power_thermal_trip(int idx)
 	return 0;
 }
 
-int dvfs_process(void)
+void dvfs_process(void)
 {
-	struct dvfs_trip *trip;
 	unsigned long current_time;
 
 	current_time = tick_get();
@@ -213,10 +208,10 @@ int dvfs_process(void)
 			temp_thermal_trip(dvfs_trips, &dvfs_sensor[i], ARRAY_SIZE(dvfs_trips), i);
 			if(dvfs_p_enable) {
 				dvfs_power.power_average = get_12v_power();
-				//debug("power_average: %u\n",dvfs_power.power_average);
-				//debug("dvfs_level: %d\n",dvfs_power.dvfs_level);
+				debug("power_average: %u\n",dvfs_power.power_average);
+				debug("dvfs_level: %d\n",dvfs_power.dvfs_level);
 				power_thermal_trip(i);
-				//debug("\n");
+				debug("\n");
 				dvfs_p_init_flag = 1;
 			} else if(dvfs_p_enable == 0 && dvfs_p_init_flag == 1) {
 				dvfs_p_init();
@@ -230,8 +225,8 @@ int dvfs_process(void)
 /* In some versions, the maximum power  is equal to 350W 
  * and needs to be determined */
 void dvfs_p_threshold()
-{	
-	if (get_pcb_version() == 1) {
+{		
+	if (get_pcb_version() != 0) {
 		if (atx_300W == 1) {
 			dvfs_power.power_upper_threshold = 300;
 			dvfs_power.power_lower_threshold = 300;
@@ -242,13 +237,11 @@ void dvfs_p_threshold()
 			dvfs_power.power_upper_threshold = 350;
 			dvfs_power.power_lower_threshold = 350;
 		}
-	} else if (get_pcb_version() == 0) {
-		dvfs_power.power_upper_threshold = 300;
-		dvfs_power.power_lower_threshold = 300;
 	} else {
 		dvfs_power.power_upper_threshold = 300;
 		dvfs_power.power_lower_threshold = 300;
 	}
+
 	debug("power_upper_threshold: %uW\n",dvfs_power.power_upper_threshold);
 }
 
@@ -256,8 +249,6 @@ void dvfs_p_threshold()
  * atx_300W: 0, max power 350w；*/
 void dvfs_p_init(void)
 {
-	dvfs_p_threshold();
-
 	dvfs_power.dvfs_max_level = ARRAY_SIZE(freq_volt_pair);
 	dvfs_power.power_average = get_12v_power();
 	dvfs_power.power_target_pair = &freq_volt_pair[0];
@@ -273,10 +264,11 @@ void dvfs_t_init(void)
 	}
 }
 
-int dvfs_init(void)
+void dvfs_init(void)
 {
-	int dvfs_mode;
+	//int dvfs_mode;
 	last_time_temp = tick_get();
+#if 0
 	dvfs_mode = eeprom_read_byte(EEPROM_DVFS_MODE_OFFSET);
 	switch (dvfs_mode)
 	{
@@ -301,6 +293,38 @@ int dvfs_init(void)
 		debug("default:NO_DVFS\n");
 		break;
 	}
+#endif
+
+	if (gpio_get(PWR_SENSE0_PORT, PWR_SENSE0_PIN) == 0 &&
+	    gpio_get(PWR_SENSE1_PORT, PWR_SENSE1_PIN) == 0) {
+		dvfs_power.power_upper_threshold = 350;
+		dvfs_power.power_lower_threshold = 350;
+		atx_300W = 0;
+	} else if (gpio_get(PWR_SENSE0_PORT, PWR_SENSE0_PIN) == 1 &&
+		   gpio_get(PWR_SENSE1_PORT, PWR_SENSE1_PIN) == 0) {
+		dvfs_power.power_upper_threshold = 350;
+		dvfs_power.power_lower_threshold = 350;
+		atx_300W = 0;
+	} else if (gpio_get(PWR_SENSE0_PORT, PWR_SENSE0_PIN) == 0 &&
+		   gpio_get(PWR_SENSE1_PORT, PWR_SENSE1_PIN) == 1) {
+		dvfs_power.power_upper_threshold = 300;
+		dvfs_power.power_lower_threshold = 300;
+		atx_300W = 1;
+	} else {
+		dvfs_power.power_upper_threshold = 300;
+		dvfs_power.power_lower_threshold = 300;
+		atx_300W = 1;
+	}
+
+	/* In some versions, the maximum power  is equal to 350W 
+	* and needs to be determined */
+	if (get_pcb_version() == 0 && dvfs_power.power_upper_threshold == 350) {
+		dvfs_power.power_upper_threshold = 300;
+		dvfs_power.power_lower_threshold = 300;	
+		atx_300W = 1;
+	}
+
+	debug("power_upper_threshold: %uW\n",dvfs_power.power_upper_threshold);
 
 	dvfs_t_init();
 	dvfs_p_init();
