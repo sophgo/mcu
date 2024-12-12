@@ -53,8 +53,7 @@ struct dvfs_power {
 	struct dvfs_pair *power_target_pair;
 };
 
-int dvfs_init(void);
-int dvfs_process(void);
+void dvfs_init(void);
 void dvfs_p_threshold(void);
-
+void dvfs_process();
 #endif

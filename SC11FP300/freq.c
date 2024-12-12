@@ -158,9 +158,10 @@ int top_misc_read(int idx, uint64_t offset, uint32_t *value)
 
 	addr = TOP_MISC_BASE + offset;
 	err = dbgi2c_read32(idx, addr, value);
-	if (err)
+	if (err) {
 		dbg_printf("failed on top misc reg read at addr 0x%lx\n", addr);
 		return err;
+	}
 
 	return err;
 }
@@ -173,9 +174,10 @@ int top_misc_write(int idx, uint64_t offset, uint32_t value)
 
 	addr = TOP_MISC_BASE + offset;
 	err = dbgi2c_write32(idx, addr, value);
-	if (err)
+	if (err) {
 		dbg_printf("failed on top misc reg write at addr 0x%lx\n", addr);
 		return err;
+	}
 
 	return err;
 }
@@ -292,7 +294,8 @@ static inline int sg2044_pll_id2shift(uint32_t id)
 		if (sg2044_pll_mux[i][0] == id)
 			return sg2044_pll_mux[i][1];
 	}
-	//BUG_ON(1);
+	
+	return -1;
 }
 
 static inline int sg2044_pll_switch_mux(int idx, struct sg2044_pll_clock *pll, char en)
@@ -302,6 +305,10 @@ static inline int sg2044_pll_switch_mux(int idx, struct sg2044_pll_clock *pll, c
 	int shift;
 
 	shift = sg2044_pll_id2shift(id);
+	if (shift == -1) {
+		dbg_printf("%s Unable to find a suitable shift!\n", __func__);
+		return -1;
+	}
 	top_misc_read(idx, PLL_SELECT_OFFSET, &value);
 	if (en) {
 		top_misc_write(idx, PLL_SELECT_OFFSET, value & (~(1<<shift)));
@@ -315,7 +322,6 @@ static inline int sg2044_pll_switch_mux(int idx, struct sg2044_pll_clock *pll, c
 static inline int sg2044_pll_enable(int idx, struct sg2044_pll_clock *pll, char en)
 {
 	uint32_t value;
-	uint64_t enter;
 	uint32_t id = pll->id;
 	uint64_t counter = 0;
 
@@ -401,7 +407,6 @@ static int __get_pll_ctl_setting(struct sg2044_pll_ctrl *best,
 int sg2044_clk_pll_set_rate(int idx, int mpll_id, uint64_t rate, uint64_t parent_rate)
 {
 	int ret = 0;
-	uint64_t flags;
 	uint32_t value;
 	uint64_t foutvco;
 	struct sg2044_pll_ctrl pctrl_table;

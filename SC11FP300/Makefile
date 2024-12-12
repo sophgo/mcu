@@ -33,13 +33,13 @@ DEPS := $(patsubst %.o, %.d, $(OBJS))
 
 LDSCRIPT = target.ld
 
-OPT_CFLAGS = -Os -g
+OPT_CFLAGS = -O -g
 ARCH_CFLAGS = -mthumb -mcpu=cortex-m33
 SPEC_CFLAGS = -specs=nano.specs
 
 CPPFLAGS = $(foreach dir, $(INCDIR), -I$(dir))
 CFLAGS = $(CPPFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS) $(SPEC_CFLAGS) \
-	  -std=gnu11 -ffunction-sections -fdata-sections \
+	  -std=gnu11 -ffunction-sections -fdata-sections -Wall -Werror \
 	  $(foreach dir, $(INCDIR), -I$(dir))
 
 CFLAGS += -DGD32E50X -DGD32E50X_HD

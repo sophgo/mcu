@@ -490,14 +490,13 @@ void mcu_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 #define CMD_CHIP1_DROOP		0x12
 #define CMD_REBOOT		0x07
 #define CMD_UPDATE		0x08
+
 extern int power_is_on;
-static int flag = 0;
+
 void mcu_process(void)
 {
 	unsigned long current_time, adc_data, temp_data;
 	unsigned short temp;
-	int i;
-
 
 	current_time = tick_get();
 

@@ -93,7 +93,7 @@ static void system_gpio_init(void)
 
 	/* GPIOC INPUT PINS*/
 	pins =  GPIO_PIN_13 | GPIO_PIN_14;
-	gpio_init(GPIOE, GPIO_MODE_IPD, GPIO_OSPEED_2MHZ, pins);
+	gpio_init(GPIOE, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_2MHZ, pins);
 
 	/* ANALOG */
 	gpio_init(GPIOC, GPIO_MODE_AIN, GPIO_OSPEED_2MHZ, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2);
