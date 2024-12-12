@@ -3,15 +3,15 @@
 
 #define DEFAULT_BAUDRATE	115200
 
-#define LINK_TO_BM_UART USART0
+#define LINK_TO_BM1_UART USART2
 #define DEBUG_UART USART1
 
-#define ALL_UART LINK_TO_BM_UART
+#define ALL_UART LINK_TO_BM1_UART
 
 #define STD_UART	ALL_UART
 #define MON_UART	ALL_UART
 #define UPG_UART	ALL_UART
-#define CONSOLE_UART	DEBUG_UART
+#define CONSOLE_UART	LINK_TO_BM1_UART
 
 void system_init(void);
 void clock_init(void);
