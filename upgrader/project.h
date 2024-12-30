@@ -23,6 +23,7 @@
 #define BM1684XEVB	0x20
 #define SC7PRO		0x21
 #define SC7HP75		0x22
+#define SC7HP75_1   0x24
 #define SC7FP150        0x23
 
 #define SM7M            0x30
