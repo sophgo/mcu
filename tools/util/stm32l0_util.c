@@ -87,6 +87,7 @@ static struct {
 	{"SM7MINI",     {SM7M, -1}},
 	{"SM7MQY",      {SM7MQY, SE7Q, -1}},
 	{"SE7",         {SE7, -1}},
+	{"BM1684X_M_2",         {BM1684X_M_2, -1}},
 	{"SM7MSE6M",    {SM7MSE6M, -1}},
 	{"SM7M_MP_1_1",		{SM7M_MP_1_1, -1}},
 	{"SM7_HK",         {SM7_HK, -1}},
