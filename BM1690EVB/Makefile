@@ -33,7 +33,7 @@ DEPS := $(patsubst %.o, %.d, $(OBJS))
 
 LDSCRIPT = target.ld
 
-OPT_CFLAGS = -g -O2
+OPT_CFLAGS = -g -Os
 ARCH_CFLAGS = -mthumb -mcpu=cortex-m33
 SPEC_CFLAGS = -specs=nano.specs
 

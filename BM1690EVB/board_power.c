@@ -12,7 +12,7 @@ void sys_rst_assert_off(void);
 int sys_rst_deassert_on(void);
 void sys_rst_deassert_off(void);
 
-struct power_node const board_power_nodes[19] = {
+struct power_node const board_power_nodes[17] = {
 
 	{"EN_VDD_3V3", NODE_TYPE_ENABLE, 100000,
 	 {(unsigned long)EN_VDD_3V3_PORT, (unsigned long)EN_VDD_3V3_PIN},
@@ -82,14 +82,14 @@ struct power_node const board_power_nodes[19] = {
 	 {(unsigned long)EN_DDR_VDDQ_PORT, (unsigned long)EN_DDR_VDDQ_PIN},
 	 },
 
-	{"SYS_RST_ASSERT", NODE_TYPE_FUNCTION, 30000,
-	 {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
-	 },
+	// {"SYS_RST_ASSERT", NODE_TYPE_FUNCTION, 30000,
+	//  {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
+	//  },
 
-	{"SYS_RST_DEASSERT", NODE_TYPE_FUNCTION, 30000,
-	 {(unsigned long)sys_rst_deassert_on,
-	  (unsigned long)sys_rst_deassert_off},
-	 },
+	// {"SYS_RST_DEASSERT", NODE_TYPE_FUNCTION, 30000,
+	//  {(unsigned long)sys_rst_deassert_on,
+	//   (unsigned long)sys_rst_deassert_off},
+	//  },
 
 };
 

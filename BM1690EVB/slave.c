@@ -8,7 +8,7 @@
 #include <i2c-slaves/mcu.h>
 #include <i2c-slaves/slt.h>
 
-static struct i2c01_slave_ctx i2c0_slave_ctx;
+struct i2c01_slave_ctx i2c0_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
 #define I2C1_OA1		0x17
@@ -20,7 +20,6 @@ void slave_init(void)
 	i2c01_slave_init(&i2c0_slave_ctx, (void *)I2C0, I2C1_OA1, I2C1_OA2);
 	mcu_x8_init(&i2c0_slave_ctx);
 	slt_init(&i2c0_slave_ctx);
-	ct7451_init(&i2c0_slave_ctx);
 	i2c01_slave_start(&i2c0_slave_ctx);
 	nvic_irq_enable(I2C0_EV_IRQn, 0, 0);
 }

@@ -22,9 +22,38 @@ uint32_t chip_uptime(void)
 	return uptime;
 }
 
+void preset_reset(void)
+{
+	gpio_bit_reset(PCIE4_L0_PRESET_PORT, PCIE4_L0_PRESET_PIN);
+	gpio_bit_reset(PCIE4_L1_PRESET_PORT, PCIE4_L1_PRESET_PIN);
+	gpio_bit_reset(PCIE0_L0_PRESET_PORT, PCIE0_L0_PRESET_PIN);
+	gpio_bit_reset(PCIE0_L1_PRESET_PORT, PCIE0_L1_PRESET_PIN);
+	gpio_bit_reset(PCIE2_L0_PRESET_PORT, PCIE2_L0_PRESET_PIN);
+	gpio_bit_reset(PCIE2_L1_PRESET_PORT, PCIE2_L1_PRESET_PIN);
+	gpio_bit_reset(PCIE1_L0_PRESET_PORT, PCIE1_L0_PRESET_PIN);
+	gpio_bit_reset(PCIE1_L1_PRESET_PORT, PCIE1_L1_PRESET_PIN);
+	gpio_bit_reset(PCIE3_L0_PRESET_PORT, PCIE3_L0_PRESET_PIN);
+	gpio_bit_reset(PCIE3_L1_PRESET_PORT, PCIE3_L1_PRESET_PIN);
+}
+
+void preset_set(void)
+{
+	gpio_bit_set(PCIE4_L0_PRESET_PORT, PCIE4_L0_PRESET_PIN);
+	gpio_bit_set(PCIE4_L1_PRESET_PORT, PCIE4_L1_PRESET_PIN);
+	gpio_bit_set(PCIE0_L0_PRESET_PORT, PCIE0_L0_PRESET_PIN);
+	gpio_bit_set(PCIE0_L1_PRESET_PORT, PCIE0_L1_PRESET_PIN);
+	gpio_bit_set(PCIE2_L0_PRESET_PORT, PCIE2_L0_PRESET_PIN);
+	gpio_bit_set(PCIE2_L1_PRESET_PORT, PCIE2_L1_PRESET_PIN);
+	gpio_bit_set(PCIE1_L0_PRESET_PORT, PCIE1_L0_PRESET_PIN);
+	gpio_bit_set(PCIE1_L1_PRESET_PORT, PCIE1_L1_PRESET_PIN);
+	gpio_bit_set(PCIE3_L0_PRESET_PORT, PCIE3_L0_PRESET_PIN);
+	gpio_bit_set(PCIE3_L1_PRESET_PORT, PCIE3_L1_PRESET_PIN);
+}
+
 void chip_disable(void)
 {
 	gpio_clear(SYS_RST_X_H_PORT, SYS_RST_X_H_PIN);
+	preset_reset();
 	chip_enabled = false;
 	uptime = 0;
 }
@@ -32,6 +61,7 @@ void chip_disable(void)
 void chip_enable(void)
 {
 	gpio_set(SYS_RST_X_H_PORT, SYS_RST_X_H_PIN);
+	preset_set();
 	chip_enabled = true;
 }
 
