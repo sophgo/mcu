@@ -202,7 +202,7 @@ static void ct7451_update_temp(void)
 			CT7451_RT, &tmp);
 	ct7451_ctx.local_temp = (int)tmp - 64;
 
-	set_soc_temp(round(ct7451_ctx.local_temp * 1.1841f - 18.114f));
+	set_soc_temp(round(ct7451_ctx.local_temp * 1.0732f - 12.739f));
 	set_soc_temp_x(ct7451_ctx.local_temp);
 	set_board_temp(ct7451_ctx.remote_temp);
 }

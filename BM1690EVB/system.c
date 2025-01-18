@@ -55,6 +55,10 @@ static void system_gpio_init(void)
 	gpio_bit_reset(GPIOA, pins);
 	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
+	pins = GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
+	gpio_bit_reset(GPIOA, pins);
+	gpio_init(GPIOA, GPIO_MODE_OUT_OD, GPIO_OSPEED_2MHZ, pins);
+
 	/* GPIOA ANALOG*/
 	// pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5
 	// 	 | GPIO_PIN_6 | GPIO_PIN_7;
@@ -87,6 +91,10 @@ static void system_gpio_init(void)
 	pins = GPIO_PIN_0 | GPIO_PIN_1;
 	gpio_init(GPIOC, GPIO_MODE_AIN, GPIO_OSPEED_2MHZ, pins);
 
+	pins = GPIO_PIN_4 | GPIO_PIN_5;
+	gpio_bit_reset(GPIOC, pins);
+	gpio_init(GPIOC, GPIO_MODE_OUT_OD, GPIO_OSPEED_2MHZ, pins);
+
 	/* GPIOD */
 	/* GPIOD OUTPUT PINS*/
 	pins = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12
@@ -105,12 +113,17 @@ static void system_gpio_init(void)
 	gpio_bit_reset(GPIOE, pins);
 	gpio_init(GPIOE, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, pins);
 
+	pins =  GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11;
+	gpio_bit_reset(GPIOE, pins);
+	gpio_init(GPIOE, GPIO_MODE_OUT_OD, GPIO_OSPEED_2MHZ, pins);
+
 	/* GPIOE INPUT PINS*/
-	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
+	pins = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 |
 		GPIO_PIN_11 | GPIO_PIN_12| GPIO_PIN_13 ;
 	gpio_init(GPIOE, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, pins);
 
-	gpio_init(GPIOE, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_2MHZ, GPIO_PIN_14);
+	pins = GPIO_PIN_7 | GPIO_PIN_14;
+	gpio_init(GPIOE, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_2MHZ, pins);
 
 }
 

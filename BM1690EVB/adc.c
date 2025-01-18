@@ -6,23 +6,11 @@
 #include <project.h>
 #include <stdarg.h>
 #include <timer.h>
+#include <debug.h>
 
-// #define I_DDR_VDD_0V8_CHANNEL	ADC_CHANNEL_0
-// #define I_DDR01_VDDQ_1V2_CHANNEL	ADC_CHANNEL_1
-// #define I_DDR23_VDDQ_1V2_CHANNEL	ADC_CHANNEL_2
-// #define PCB_VRE0_CHANNEL	ADC_CHANNEL_3
-// #define I_VQPS18_CHANNEL	ADC_CHANNEL_4
-// #define I_VDD_PLL_0V8_CHANNEL	ADC_CHANNEL_5
-// #define I_VDD_PCIE_D_0V8_CHANNEL	ADC_CHANNEL_6
-// #define I_VDD_PCIE_C_0V8_CHANNEL	ADC_CHANNEL_7
 #define I_5V_CHANNEL	ADC_CHANNEL_8
 #define I_VDD_12V_CHANNEL	ADC_CHANNEL_9
 #define PCB_VRE0_CHANNEL	ADC_CHANNEL_10
-// #define I_VDD_EMMC_1V8_CHANNEL	ADC_CHANNEL_11
-// #define I_VDD_EMMC_3V3_CHANNEL	ADC_CHANNEL_12
-// #define I_VDDC_CHANNEL	ADC_CHANNEL_13
-// #define I_VDD_PCIE_H_1V8_CHANNEL	ADC_CHANNEL_14
-// #define I_VDDIO18_CHANNEL	ADC_CHANNEL_15
 
 static unsigned int pcb_ver;
 
@@ -99,4 +87,20 @@ void adc_init(void)
 	timer_udelay(1);
 
 	pcb_ver = adc2ver(adc_read(PCB_VRE0_CHANNEL));
+}
+
+/* I_12V= (ADC_Code* 3.3 * 1000) / (4096*100*0.0005) */
+unsigned long adc_read_atx_12v_current(void)
+{
+	unsigned long adc_data = adc_read(I_VDD_12V_CHANNEL);
+
+	return (adc_data * 66000 / 4096);	
+}
+
+/* I_3.3V = (ADC_Code * 3.3 * 1000) / (4096*100*0.0005) */
+unsigned long adc_read_atx_5v_current(void)
+{
+	unsigned long adc_data = adc_read(I_5V_CHANNEL);
+
+	return (adc_data * 66000 / 4096);
 }

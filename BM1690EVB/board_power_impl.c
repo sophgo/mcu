@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <tick.h>
 #include <timer.h>
+#include <i2c01_slave.h>
+#include <i2c_slave.h>
+#include <i2c-slaves/ct7451.h>
 
 #define PRESS_VALUE	1
 #define FORCE_POWEROFF_PRESS_TIME	2000
@@ -14,87 +17,14 @@
 #define FORCE_REBOOT_PRESS_TIME	2000
 #define WARM_REBOOT_PRESS_TIME	500
 
+extern struct i2c01_slave_ctx i2c0_slave_ctx;
+
 bool is_evb_power_key_on(void)
 {
 	if (gpio_get(MCU_PS_ON_PORT, MCU_PS_ON_PIN) == 1)
 		return true;
 	return false;
 }
-
-// static bool is_power_button_pressed(void)
-// {
-// 	if (gpio_get(POWER_KEY_PORT, POWER_KEY_PIN) == PRESS_VALUE)
-// 		return true;
-// 	return false;
-// }
-
-// static bool is_reset_button_pressed(void)
-// {
-// 	if (gpio_get(RESET_KEY_PORT, RESET_KEY_PIN) == PRESS_VALUE)
-// 		return true;
-// 	return false;
-// }
-
-// void milkv_warm_poweroff(void)
-// {
-// 	gpio_set(LINK_GPIO22_PORT, LINK_GPIO22_PIN);
-// 	timer_mdelay(150);
-// 	gpio_clear(LINK_GPIO22_PORT, LINK_GPIO22_PIN);
-// }
-
-// void milkv_warm_reboot(void)
-// {
-// 	gpio_set(LINK_GPIO23_PORT, LINK_GPIO23_PIN);
-// 	timer_mdelay(150);
-// 	gpio_clear(LINK_GPIO23_PORT, LINK_GPIO23_PIN);
-// }
-
-// static void milkv_power_button_control(void)
-// {
-// 	uint16_t press_time, curren_time, last_time;
-
-// 	curren_time = last_time = tick_get();
-// 	while (is_power_button_pressed()) {
-// 		curren_time = tick_get();
-// 		if(curren_time - last_time > FORCE_POWEROFF_PRESS_TIME)
-// 			break;
-// 	}
-// 	press_time = curren_time - last_time;
-
-// 	if (power_status() == true) {
-// 		if (press_time > FORCE_POWEROFF_PRESS_TIME) {
-// 			power_off();
-// 			while (is_power_button_pressed())
-// 				;
-// 		} else if (press_time > WARM_POWEROFF_PRESS_TIME)
-// 			milkv_warm_poweroff();
-// 	} else {
-// 		if (press_time > POWERON_PRESS_TIME)
-// 			power_on();
-// 	}
-// }
-
-// static void milkv_reset_button_control(void)
-// {
-// 	uint16_t press_time, curren_time, last_time;
-
-// 	curren_time = last_time = tick_get();
-// 	while ((power_status() == true) && is_reset_button_pressed()) {
-// 		curren_time = tick_get();
-// 		if (curren_time - last_time > FORCE_REBOOT_PRESS_TIME)
-// 			break;
-// 	}
-// 	press_time = curren_time - last_time;
-
-// 	if (press_time > FORCE_REBOOT_PRESS_TIME) {
-// 		power_off();
-// 		timer_mdelay(50);
-// 		power_on();
-// 	} else if (press_time > WARM_REBOOT_PRESS_TIME)
-// 		milkv_warm_reboot();
-// }
-
-
 
 static void evb_power_control(void)
 {
@@ -105,6 +35,7 @@ static void evb_power_control(void)
 			}
 			timer_udelay(10000);
 			power_on();
+			ct7451_init(&i2c0_slave_ctx);
 		}
 	}
 

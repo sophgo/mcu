@@ -69,6 +69,20 @@ static void cmd_poweroff(void *hint, int argc, char const *argv[])
 	}
 }
 
+static const char * const cmd_power_usage =
+"power\n"
+"    Reading 5V and 12V power.\n";
+
+static void cmd_power(void *hint, int argc, char const *argv[])
+{
+	unsigned long atx_12v_power, atx_5v_power;
+
+	atx_5v_power = adc_read_atx_5v_current() * 5 ;
+	atx_12v_power = adc_read_atx_12v_current() * 12 ;
+
+	printf("atx 5v power: %lu mW, atx 12v power: %lu mW\n", atx_5v_power, atx_12v_power);
+}
+
 // static void cmd_warm_poweroff(void *hint, int argc, char const *argv[])
 // {
 // 	milkv_warm_poweroff();
@@ -253,6 +267,7 @@ static struct command command_list[] = {
 	{"hello", NULL, NULL, cmd_hello},
 	{"poweron", NULL, cmd_poweron_usage, cmd_poweron},
 	{"poweroff", NULL, cmd_poweroff_usage, cmd_poweroff},
+	{"power", NULL, cmd_power_usage, cmd_power},
 	//{"warmpoweroff", NULL, NULL, cmd_warm_poweroff},
 	{"reboot", NULL, cmd_reboot_usage, cmd_reboot},
 	//{"warmreboot", NULL, NULL, cmd_warmreboot},
