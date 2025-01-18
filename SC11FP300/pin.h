@@ -115,8 +115,8 @@
 #define MCU_I2C3_SDA_PORT		GPIOC
 #define MCU_I2C3_SDA_PIN		GPIO_PIN_9
 #define MCU_I2C3_SDA_EXTI		EXTI_9
-#define EN_DDR_VDD1_BM0_VER1_PORT	GPIOC // first pcb use
-#define EN_DDR_VDD1_BM0_VER1_PIN	GPIO_PIN_10
+#define EN_DDR_VDD1_BM0_VER0_PORT	GPIOC // v0 pcb use it as enable power and v1 pcb uses it as usart
+#define EN_DDR_VDD1_BM0_VER0_PIN	GPIO_PIN_10
 #define EN_DDR_VDD1_BM0_VER1EXTI	EXTI_10
 #define EN_DDR_VDD_BM0_PORT		GPIOC
 #define EN_DDR_VDD_BM0_PIN		GPIO_PIN_12
@@ -129,7 +129,7 @@
 #define PWR_SENSE1_EXTI			EXTI_14
 
 /* port D definition */
-#define EN_DDR_VDD1_BM0_PORT		GPIOD //  pcb use
+#define EN_DDR_VDD1_BM0_PORT		GPIOD //  v1 pcb uses it as vdd1 enable port
 #define EN_DDR_VDD1_BM0_PIN		GPIO_PIN_0
 #define EN_DDR_VDD1_BM0_EXTI		EXTI_0
 #define PG_VP_PCIE_BM0_PORT		GPIOD
