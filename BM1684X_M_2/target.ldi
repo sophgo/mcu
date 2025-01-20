@@ -1,0 +1,11 @@
+/* Define memory regions. */
+MEMORY
+{
+	rom (rx) : ORIGIN = ROM_START, LENGTH = ROM_SIZE
+	ram (rwx) : ORIGIN = RAM_START, LENGTH = RAM_SIZE
+	eep (r) : ORIGIN = 0x08080000, LENGTH = 2K
+}
+
+/* Include the common ld script. */
+INCLUDE cortex-m-generic.ld
+
