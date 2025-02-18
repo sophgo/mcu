@@ -256,7 +256,7 @@ static void ct7451_process(void)
 	}
 }
 
-void ct7451_init(struct i2c01_slave_ctx *i2c_slave_ctx)
+void ct7451_init(void)
 {
 	uint8_t tmp;
 
@@ -283,7 +283,11 @@ void ct7451_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 
 	last_time = tick_get();
 	ct7451_software_reset();
+}
 
+
+void ct7451_slave_init(struct i2c01_slave_ctx *i2c_slave_ctx)
+{
 	i2c01_slave_register(i2c_slave_ctx, &tmp451_slave);
 	loop_add(ct7451_process);
 }
