@@ -35,7 +35,7 @@ static void evb_power_control(void)
 			}
 			timer_udelay(10000);
 			power_on();
-			ct7451_init(&i2c0_slave_ctx);
+			ct7451_init();
 		}
 	}
 
