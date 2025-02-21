@@ -18,6 +18,7 @@
 #include <pca9848.h>
 #include <timer.h>
 #include <system.h>
+#include <math.h>
 
 
 #define CT7451_REG_MAX	(22)
@@ -75,15 +76,15 @@ void tmp_i2c_read(int idx)
  			CT7451_LT, &tmp);
 	if(ret) 
 		debug("ct7451%d_init read lt reg fail!(read)\n",idx);
- 	ct7451_ctx[idx].remote_temp = (int)tmp - 64;
+ 	ct7451_ctx[idx].local_temp = (int)tmp - 64;
 	i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
  			CT7451_RT, &tmp);
 	if(ret) 
 		debug("ct7451%d_init read lt reg fail!(read)\n",idx);
- 	ct7451_ctx[idx].local_temp = (int)tmp - 64;
+ 	ct7451_ctx[idx].remote_temp = (int)tmp - 64;
 
-	set_soc_temp(idx, ct7451_ctx[idx].local_temp - 5);
-	set_board_temp(idx, ct7451_ctx[idx].remote_temp);
+	set_soc_temp(idx, round(ct7451_ctx[idx].remote_temp * 1.0732f - 12.739f));
+	set_board_temp(idx, ct7451_ctx[idx].local_temp);
 }
 
 void ct7451_process(void)

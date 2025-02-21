@@ -22,15 +22,6 @@ int chip_is_enabled(void)
 		return false;
 }
 
-// void chip_init(void)
-// {
-// 	gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOE, GPIO_PIN_SOURCE_2);
-// 	exti_init(PCIE_RESET_EXTI, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
-// 	exti_flag_clear(PCIE_RESET_EXTI);
-// 	exti_interrupt_enable(PCIE_RESET_EXTI);
-// 	is_chip_ready = 1;
-// }
-
 void chip_destroy(void)
 {
 	nvic_disable_irq(PCIE_RESET_NVIC);
@@ -63,39 +54,6 @@ void sys_rst_disable(void)
 	gpio_bit_reset(SYS_RST_X_H_BM0_PORT, SYS_RST_X_H_BM0_PIN);
 	gpio_bit_reset(SYS_RST_X_H_BM1_PORT, SYS_RST_X_H_BM1_PIN);
 }
-
-// void chip_update(void)
-// {
-// 	nvic_disable_irq(PCIE_RESET_NVIC);
-// 	if (is_chip_ready) {
-// 		if (gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN)) {
-// 			if (need_enable_chip) {
-// 				sys_rst_enable();
-// 			} else {
-// 				is_chip_ready = 0;
-// 				timer_start(30000);
-// 			}
-// 		}
-// 	} else {
-// 		is_chip_ready = timer_is_timeout();
-// 		if (is_chip_ready)
-// 			need_enable_chip = 1;
-// 	}
-// 	nvic_enable_irq(PCIE_RESET_NVIC);
-
-// }
-
-
-
-// void EXTI2_IRQHandler(void)
-// {
-// 	debug("pcie ep reset falling edge\n");
-// 	sys_rst_disable();
-// 	timer_start(30000);
-// 	is_chip_ready = 0;
-// 	need_enable_chip = 1;
-// 	exti_reset_request(PCIE_RESET_EXTI);
-// }
 
 int chip_enable(void)
 {

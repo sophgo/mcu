@@ -13,7 +13,7 @@ SECTIONS
 {
     .text :
     {
-        . = ALIGN(4);
+        . = ALIGN(8);
         __ld_program_start = .;
         KEEP(*(.vector));   /* startup code */
         *(.text.crt_init);  /* make sure crt_init located into 8K offset */
@@ -25,15 +25,15 @@ SECTIONS
 
         KEEP (*(.init));
         KEEP (*(.fini));
-        . = ALIGN(4);
+        . = ALIGN(8);
     } > RAM AT > ROM
 
     .rodata :
     {
-        . = ALIGN(4);
+        . = ALIGN(8);
         *(.rodata);         /* .rodata sections (constants, strings, etc.) */
         *(.rodata*);        /* .rodata* sections (constants, strings, etc.) */
-        . = ALIGN(4);
+        . = ALIGN(8);
     } > RAM AT > ROM
 
     .ARM.extab :
@@ -76,11 +76,11 @@ SECTIONS
     /* Initialized data sections goes into RAM, load LMA copy after code */
     .data : 
     {
-        . = ALIGN(4);
+        . = ALIGN(8);
         __ld_data_start = .;
         *(.data);           /* .data sections */
         *(.data*);          /* .data* sections */
-        . = ALIGN(4);
+        . = ALIGN(8);
         __ld_data_end = .;
         __ld_program_end = .;
     } > RAM AT > ROM
@@ -95,12 +95,12 @@ SECTIONS
     .bss :
     {
         /* This is used by the startup in order to initialize the .bss secion */
-        . = ALIGN(4);
+        . = ALIGN(8);
         __ld_bss_start = .;
         *(.bss);
         *(.bss*);
         *(COMMON);
-        . = ALIGN(4);
+        . = ALIGN(8);
         __ld_bss_end = .;
     } > RAM
 
