@@ -208,26 +208,26 @@ int dbgi2c_write(int idx, uint64_t addr, void *data, int len)
 			      addr, data, len);
 }
 
-void dbgi2c_test(void)
-{
-	int i;
-	uint32_t value = 0;
-	int err = 0;
+// void dbgi2c_test(void)
+// {
+// 	int i;
+// 	uint32_t value = 0;
+// 	int err = 0;
 
-	for (i = 0; i < SOC_NUM; ++i) {
-		if (!chip_is_enabled()) {
-			printf("chip slot %d not enabled\n", i);
-			continue;
-		}
+// 	for (i = 0; i < SOC_NUM; ++i) {
+// 		if (!chip_is_enabled()) {
+// 			printf("chip slot %d not enabled\n", i);
+// 			continue;
+// 		}
 
-		printf("chip slot %d\n", i);
-		err = dbgi2c_read32(i, 0x50010000, &value);
-		if (err)
-			printf("failed on dbgi2c_test\n");
-		else
-			printf("chip id 0x%08lx\n", value);
-	}
-}
+// 		printf("chip slot %d\n", i);
+// 		err = dbgi2c_read32(i, 0x50010000, &value);
+// 		if (err)
+// 			printf("failed on dbgi2c_test\n");
+// 		else
+// 			printf("chip id 0x%08lx\n", value);
+// 	}
+// }
 
 static void dbgi2c_collect(void);
 

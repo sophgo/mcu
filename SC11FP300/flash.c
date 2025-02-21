@@ -4,7 +4,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <system.h>
-#include <md5.h>
 #include <common.h>
 
 static int __attribute__((unused))
@@ -123,18 +122,18 @@ static void __attribute__((unused))
 	printf("\n");
 }
 
-int check_firmware(unsigned long size)
-{
-	struct md5_ctx ctx;
-	uint8_t md5[16];
+// int check_firmware(unsigned long size)
+// {
+// 	struct md5_ctx ctx;
+// 	uint8_t md5[16];
 
-	md5_init(&ctx);
-	md5_update(&ctx, (void *)(FLASH_BASE), size - 128);
-	md5_final(&ctx, md5);
-	return memcmp(md5,
-		      (void *)(((unsigned long)FLASH_BASE) + size - 128),
-		      16);
-}
+// 	md5_init(&ctx);
+// 	md5_update(&ctx, (void *)(FLASH_BASE), size - 128);
+// 	md5_final(&ctx, md5);
+// 	return memcmp(md5,
+// 		      (void *)(((unsigned long)FLASH_BASE) + size - 128),
+// 		      16);
+// }
 
 void flash_clear_error(void)
 {

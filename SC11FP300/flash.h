@@ -6,7 +6,7 @@ void flash_clear_error(void);
 uint8_t eeprom_read_byte(uint32_t offset);
 void eeprom_write_byte(uint32_t offset, uint8_t data);
 long download_to_flash(unsigned long offset);
-int check_firmware(unsigned long size);
+// int check_firmware(unsigned long size);
 #define GD32E50X_FLASH_SIZE (256*1024)
 
 #endif

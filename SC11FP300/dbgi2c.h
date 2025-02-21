@@ -24,7 +24,7 @@ struct dbgi2c_info {
 int dbgi2c_write32(int idx, uint64_t addr, uint32_t value);
 int dbgi2c_read32(int idx, uint64_t addr, uint32_t *value);
 int dbgi2c_read(int idx, uint64_t addr, void *data, int len);
-void dbgi2c_test(void);
+// void dbgi2c_test(void);
 void dbgi2c_init(struct i2c_slave_ctx *i2c);
 void dbgi2c_broadcast(int idx, struct dbgi2c_info *info);
 

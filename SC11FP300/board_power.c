@@ -11,9 +11,9 @@ void chip_assert_n_off(void);
 int chip_deassert_n_on(void);
 void chip_deassert_n_off(void);
 
-struct power_node const board_power_nodes[28] = {
+struct power_node const board_power_nodes[26] = {
 
-	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 0,
+	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 27200,
 	 {(unsigned long)chip_deassert_n_on,
 	  (unsigned long)chip_deassert_n_off},
 	 },
@@ -57,7 +57,7 @@ struct power_node const board_power_nodes[28] = {
 	  (unsigned long)EN_VDD_PLL_BM0_PIN},
 	 },
 
-	{"EN_VDD_PLL_BM1", NODE_TYPE_ENABLE, 3200,
+	{"EN_VDD_PLL_BM1", NODE_TYPE_ENABLE, 1200,
 	 {(unsigned long)EN_VDD_PLL_BM1_PORT,
 	  (unsigned long)EN_VDD_PLL_BM1_PIN},
 	 },
@@ -95,7 +95,7 @@ struct power_node const board_power_nodes[28] = {
 	  (unsigned long)EN_VP_PCIE_BM0_PIN},
 	 },
 
-	{"EN_VP_PCIE_BM1", NODE_TYPE_ENABLE, 6000,
+	{"EN_VP_PCIE_BM1", NODE_TYPE_ENABLE, 4000,
 	 {(unsigned long)EN_VP_PCIE_BM1_PORT,
 	  (unsigned long)EN_VP_PCIE_BM1_PIN},
 	 },
@@ -113,7 +113,7 @@ struct power_node const board_power_nodes[28] = {
 	  (unsigned long)EN_DDR_VDD1_BM0_PIN},
 	 },
 
-	{"EN_DDR_VDD1_BM1", NODE_TYPE_ENABLE, 5900,
+	{"EN_DDR_VDD1_BM1", NODE_TYPE_ENABLE, 3900,
 	 {(unsigned long)EN_DDR_VDD1_BM1_PORT,
 	  (unsigned long)EN_DDR_VDD1_BM1_PIN},
 	 },
@@ -123,7 +123,7 @@ struct power_node const board_power_nodes[28] = {
 	  (unsigned long)EN_DDR_VAA_BM0_PIN},
 	 },
 
-	{"EN_DDR_VAA_BM1", NODE_TYPE_ENABLE, 7800,
+	{"EN_DDR_VAA_BM1", NODE_TYPE_ENABLE, 2800,
 	 {(unsigned long)EN_DDR_VAA_BM1_PORT,
 	  (unsigned long)EN_DDR_VAA_BM1_PIN},
 	 },
@@ -133,19 +133,19 @@ struct power_node const board_power_nodes[28] = {
 	  (unsigned long)EN_DDR_VDDQ_BM0_PIN},
 	 },
 
-	{"EN_DDR_VDDQ_BM1", NODE_TYPE_ENABLE, 12300,
+	{"EN_DDR_VDDQ_BM1", NODE_TYPE_ENABLE, 8300,
 	 {(unsigned long)EN_DDR_VDDQ_BM1_PORT,
 	  (unsigned long)EN_DDR_VDDQ_BM1_PIN},
 	 },
 
-	{"CHIP_ASSERT_N", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)chip_assert_n_on, (unsigned long)chip_assert_n_off},
-	 },
+	// {"CHIP_ASSERT_N", NODE_TYPE_FUNCTION, 1000,
+	//  {(unsigned long)chip_assert_n_on, (unsigned long)chip_assert_n_off},
+	//  },
 
-	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)chip_deassert_n_on,
-	  (unsigned long)chip_deassert_n_off},
-	 },
+	// {"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 1000,
+	//  {(unsigned long)chip_deassert_n_on,
+	//   (unsigned long)chip_deassert_n_off},
+	//  },
 
 };
 
