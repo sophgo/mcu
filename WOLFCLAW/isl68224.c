@@ -138,6 +138,124 @@ void isl68224_get_reversion_id()
 	led_3_0_on();
 }
 
+int isl68224_proof(char *name)
+{
+	static FILINFO info;
+	int err;
+	char *hex;
+	FIL fp;
+	UINT br;
+	uint8_t slave_addr;
+
+	err = f_stat(name, &info);
+	if (err) {
+		debug("\r\ncannot get file status\r\n");
+		return err;
+	}
+
+	hex = malloc(info.fsize + 1);
+	if (!hex) {
+		debug("\r\nallocate buffer failed\r\n");
+		return -ENOMEM;
+	}
+
+	for (int i = 0; i < info.fsize; i++) {
+		hex[i] = '?';
+	}
+
+	err = f_open(&fp, name, FA_READ);
+	if (err != 0) {
+		debug("\r\ncannot open file %s\r\n", name);
+		return err;
+	}
+
+	err = f_read(&fp, hex, info.fsize, &br);
+	f_close(&fp);
+	if (br < info.fsize) {
+		debug("\r\ncannot get enough data\r\n");
+		return err;
+	}
+
+	hex[info.fsize] = 0;
+
+	int i, j;
+	// int tag, nb, cmd, pa, crc;
+	int tag, nb, pa;
+	uint8_t line_buf[64];
+	int line_size;
+	uint8_t data_buf[32];
+	int data_size;
+
+	for (i = 0; i < info.fsize; ++i) {
+		for (line_size = 0; i < info.fsize; ++i) {
+			if (line_size > sizeof(line_buf)) {
+				debug("\r\nhex string too long\r\n");
+				goto free_buf;
+			}
+
+			if (hex[i] == '\n')
+				break;
+			else if (isxdigit((int)hex[i]))
+				line_buf[line_size++] = hex[i];
+		}
+
+		/* empty line */
+		if (line_size == 0)
+			continue;
+
+		if (line_size % 2) {
+			debug("\r\nwrong hex number per line\r\n");
+			goto free_buf;
+		}
+
+		/* convert hex string to binary */
+		for (j = 0; j < line_size; j += 2) {
+			data_buf[j / 2] = hex2bin(line_buf[j]) << 4 |
+				hex2bin(line_buf[j + 1]);
+		}
+		data_size = line_size / 2;
+
+		if (data_size < 2) {
+			debug("\r\nwrong format: line too short\r\n");
+			goto free_buf;
+		}
+
+		tag = data_buf[0];
+		nb = data_buf[1];
+
+		if (nb + 2 != data_size) {
+			debug("\r\nwrong format: invalid byte count\r\n");
+			goto free_buf;
+		}
+
+		if (tag != 0)
+			/* skip lines that shouldnot burn into device */
+			continue;
+
+		if (nb < 3) {
+			debug("\r\nwrong format: invalid byte count\r\n");
+			goto free_buf;
+		}
+
+		pa = data_buf[2];
+		slave_addr = pa >> 1;
+		if (get_default_addr() != slave_addr){
+			set_default_addr(slave_addr);
+			set_default_device(!get_default_device());
+			debug("default device has been proofed\r\n");
+		}
+		else{
+			debug("default device is correct\r\n");
+		}
+		break;
+	}
+
+free_buf:
+	free(hex);
+
+	return 0;
+}
+
 int isl68224_program(char *name)
 {
 	static FILINFO info;
@@ -264,8 +382,10 @@ int isl68224_program(char *name)
 		debug("  programming... %ld%%\r", (i + 1) * 100 / info.fsize);
 
 		slave_addr = pa >> 1;
-		if (get_default_addr() != slave_addr)
-			set_default_addr(slave_addr);
+		if (get_default_addr() != slave_addr){
+ 			set_default_addr(slave_addr);
+			set_default_device(!get_default_device());
+		}
 		err = i2c_smbus_write_i2c_block_data(SLAVE_I2C, slave_addr, cmd, nb - 3, write_buf);
 		if(err) {
 			led_3_1_on();
@@ -370,8 +490,10 @@ int isl68224_program_from_mcuflash(uint32_t file_addr)
 		debug("programming... %ld%%\r", (i + 1) * 100 / info_fsize);
 
 		slave_addr = pa >> 1;
-		if (get_default_addr() != slave_addr)
+		if (get_default_addr() != slave_addr){
 			set_default_addr(slave_addr);
+			set_default_device(!get_default_device());
+		}
 
 		err = i2c_smbus_write_i2c_block_data(SLAVE_I2C, slave_addr, cmd, nb - 3, write_buf);
 		if(err) {

@@ -164,6 +164,25 @@ static void cmd_default_device(void *hint, int argc, char const *argv[])
 		printf("%s", cmd_default_device_usage);
 }
 
+static const char * const cmd_proof_usage =
+"proof\n"
+"    proof device automatically\n"
+"    calibrate default power chip setting\n";
+
+static void cmd_proof(void *hint, int argc, char const *argv[])
+{
+	if (argc != 1){
+		printf("%s", cmd_proof_usage);
+		return;
+	}
+
+	isl68224_proof(get_default_filename());
+
+	isl68224_get_nvm_slot_num();
+	isl68224_get_device_id();
+	isl68224_get_reversion_id();
+}
+
 static const char * const cmd_filename_usage =
 "filename\n"
 "    filename <0:otherfilename.hex>\n"
@@ -236,6 +255,7 @@ static struct command command_list[] = {
 	{"mcuinfo", NULL, cmd_mcu_info_usage, cmd_mcu_info},
 	{"deviceinfo", NULL, cmd_device_info_usage, cmd_device_info},
 	{"led", NULL, cmd_led_usage, cmd_led},
+	{"proof", NULL, cmd_proof_usage, cmd_proof},
 	{"addr", NULL, cmd_default_addr_usage, cmd_default_addr},
 	{"device", NULL, cmd_default_device_usage, cmd_default_device},
 	{"filename", NULL, cmd_filename_usage, cmd_filename},
