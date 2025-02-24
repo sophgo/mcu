@@ -33,6 +33,7 @@
 #define SM7G	0x35
 #define SM7M_MP_1_1   0X36
 #define SM7M_MP_1_2   0X37
+#define BM1684X_M_2   0X3b
 #define SE7Q	0x38
 
 #define SM7CUSTV1       0x3a

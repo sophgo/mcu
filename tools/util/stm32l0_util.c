@@ -90,6 +90,7 @@ static struct {
 	{"SM7MSE6M",    {SM7MSE6M, -1}},
 	{"SM7M_MP_1_1",		{SM7M_MP_1_1, -1}},
 	{"SM7_HK",         {SM7_HK, -1}},
+	{"BM1684X_M_2",     {BM1684X_M_2, -1}},
 };
 
 struct fwinfo {

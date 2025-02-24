@@ -157,6 +157,7 @@ struct {
 	{"BM1690EVB", {BM1690EVB}},
 	{"BM2044REVB", {BM2044REVB}},
 	{"SC11FP300", {SC11FP300}},
+	{"BM1684X_M_2", {BM1684X_M_2}},
 };
 
 const char *mcu_family[] = {"STM32L0", "GD32E50"};
