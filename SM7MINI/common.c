@@ -6,7 +6,7 @@
 #include <tick.h>
 #include <eeprom.h>
 
-#define MCU_SW_VER	8
+#define MCU_SW_VER	9
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
