@@ -5,6 +5,7 @@
  *      Author: weic
  */
 #include <libopencmsis/core_cm3.h>
+#include <libopencm3/stm32/i2c.h>
 #include <stdio.h>
 #include <string.h>
 #include <i2c_slave.h>
@@ -134,10 +135,12 @@ void wdt_reset(void)
 void wdt_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
+		i2c_peripheral_disable(I2C1);
 		chip_disable();
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		mcu_raise_interrupt(MCU_INT_WDT_RST);
 		wdt_reset();	/* reset to initial state */
+		i2c_peripheral_enable(I2C1);
 		chip_popd_reset();
 	}
 }

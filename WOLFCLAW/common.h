@@ -4,7 +4,7 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	1
+#define MCU_SW_VER	2
 
 #define SLAVE_I2C	I2C1
 #define SLAVE_DEFAULT_ADDR	0x50

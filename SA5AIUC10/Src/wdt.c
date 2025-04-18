@@ -10,6 +10,7 @@
 #include "i2c_slave.h"
 #include "lptim.h"
 #include "stm32l0xx_hal.h"
+#include "stm32l0xx_hal_i2c.h"
 #include "soc_eeprom.h"
 #include "tca6416a.h"
 #include "pic.h"
@@ -133,6 +134,7 @@ void wdt_reset(void)
 void soc_wdt_reset_process(void)
 {
 	if (wdt_ctx.enable && wdt_ctx.counter == 0) {
+		__HAL_I2C_DISABLE(&hi2c3); 
 		eeprom_log_power_off_reason(EEPROM_POWER_OFF_REASON_WATCHDOG);
 		if (i2c_regs.vender == VENDER_SE5 &&
 		    (is_pic_available || is_tca6416a_available))
@@ -140,6 +142,7 @@ void soc_wdt_reset_process(void)
 		else
 			BM1684_RST();
 		i2c_regs.intr_status1 = WDT_RST;
+		__HAL_I2C_ENABLE(&hi2c3); 
 	}
 }
 
