@@ -9,7 +9,7 @@
 #include <mcu-e2prom.h>
 #include <debug.h>
 
-#define MCU_SW_VER	0
+#define MCU_SW_VER	2
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;

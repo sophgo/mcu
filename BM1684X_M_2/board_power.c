@@ -82,7 +82,7 @@ struct power_node board_power_nodes[14] = {
     {(unsigned long)sys_rst_deassert_on, (unsigned long)sys_rst_deassert_off},
     },
 
-    {"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 50000,
+    {"SYS-RST-ASSERT", NODE_TYPE_FUNCTION, POWER_STATUS_OFF, 1000,
     {(unsigned long)sys_rst_assert_on, (unsigned long)sys_rst_assert_off},
     },
 

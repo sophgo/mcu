@@ -56,30 +56,21 @@ int main(void)
 	led_set_frequency(0);
 	i2c_master_init(I2C1);
 	i2c_master_init(I2C2);
-	debug("i2c init done\n");
 	mp5475_init();
-	debug("mp5475_init done\n");
 
 	timer_udelay(50*1000);
 	power_init();
-	debug("power_init done\n");
 	timer_udelay(1000);
 	// mp5475_init();
-	debug("enter power\n");
+
+
 	power_on();
-	debug("power done\n");
 	chip_init();
 	debug("%s %s working at ",
 	      get_board_type_name(),
 	      get_stage() == RUN_STAGE_LOADER ? "loader" : "application");
-	if (get_work_mode() == WORK_MODE_SOC)
-		debug("soc mode\n");
-	else if (get_work_mode() == WORK_MODE_PCIE)
+	if (get_work_mode() == WORK_MODE_PCIE)
 		debug("pcie mode\n");
-	else if (get_work_mode() == WORK_MODE_MIXED)
-		debug("mix mode\n");
-	else
-		debug("unkown mode\n");
 
 	nvic_enable_irq(NVIC_I2C1_IRQ);
 	i2c_slave_init(&i2c1_slave_ctx, (void *)I2C1_BASE,
@@ -100,15 +91,9 @@ int main(void)
 	// 	sm7_init();
 	// }
 
-	/* start i2c slaves */
 	i2c_slave_start(&i2c1_slave_ctx);
-	debug("\n\ni2c_slave_start done\n");
-	if (get_work_mode() == WORK_MODE_SOC){
-		chip_enable_and_ddr_pg();
-		debug("\n\nchip_enable_and_ddr_pg done\n");
-	}
-	else
-		pcie_init();
+	/* start i2c slaves */
+	pcie_init();
 
 	// debug("\n\nenter init_mpm3695\n");
 	init_mpm3695();
