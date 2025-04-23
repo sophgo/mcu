@@ -68,8 +68,8 @@ void init_pwm(void)
 {
     tim22_pwm_init();
     // vddc
-    pwm_set_duty_cycle(380);
+    pwm_set_duty_cycle(340);
     tim2_pwm_init();
     // tpu
-    pwm_set_t2_duty_cycle(700);
+    pwm_set_t2_duty_cycle(660);
 }

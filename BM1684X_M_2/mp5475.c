@@ -80,7 +80,7 @@ int mp5475_init(void)
 	mp5475_voltage_config(0, 0x24);//850
 	mp5475_voltage_config(1, 0x14);//650
 	mp5475_voltage_config(2, 0x40);//1200
-	// mp5475_voltage_config(3, 0x70);//1800
+	 mp5475_voltage_config(3, 0x70);//1800
 	mp5475_write_byte(0x22, 0x18);
 	return 0;
 }
