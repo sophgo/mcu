@@ -191,47 +191,29 @@ void mon_init(void)
 	I12V_ADC_CHANNEL};
 
 	/* init adc and dma */
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_power_off(ADC1);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_set_clk_source(ADC1, ADC_CFGR2_CKMODE_PCLK_DIV2);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_calibrate(ADC1);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_set_single_conversion_mode(ADC1);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_enable_discontinuous_mode(ADC1);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_set_right_aligned(ADC1);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_set_resolution(ADC1, 0);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_set_regular_sequence(ADC1, ARRAY_SIZE(channels), channels);
-	debug("%s :%d\n",__func__, __LINE__);
 	
 	/* set conversion speed to fastest */
 	adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_160DOT5);
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_power_on(ADC1);
-	debug("%s :%d\n",__func__, __LINE__);
 	pcb_ver = adc2ver(adc_read());
-	debug("%s :%d\n",__func__, __LINE__);
 	bom_ver = adc2ver(adc_read());
-	debug("%s :%d\n",__func__, __LINE__);
 
 	last_time = tick_get();
-	debug("%s :%d\n",__func__, __LINE__);
 	filter_init(&i12v, adc_read());
 
-	debug("%s :%d\n",__func__, __LINE__);
 	adc2tmp(adc_read());
 
 	/* donnot get version again */
-	debug("%s :%d\n",__func__, __LINE__);
 	channels[0] = I12V_ADC_CHANNEL;
-	debug("%s :%d\n",__func__, __LINE__);
 	adc_set_regular_sequence(ADC1, 1, channels);
-	debug("%s :%d\n",__func__, __LINE__);
 	loop_add(mon_process);
 }
 /*它通过配置 ADC 读取电压、电流和温度，并使用滤波器对数据进行平滑处理，同时定期更新数据*/
