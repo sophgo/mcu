@@ -11,11 +11,20 @@ void pmic_dcdc_1_off(void);
 int pmic_dcdc_5_on(void);
 void pmic_dcdc_5_off(void);
 
+int pmic_dcdc_6_on(void);
+void pmic_dcdc_6_off(void);
+
 int pmic_dcdc_4_on(void);
 void pmic_dcdc_4_off(void);
 
 int pmic_dcdc_3_on(void);
 void pmic_dcdc_3_off(void);
+
+int pmic_dcdc_2_3_on(void);
+void pmic_dcdc_2_3_off(void);
+
+int pmic_dcdc_4_6_on(void);
+void pmic_dcdc_4_6_off(void);
 
 int pciee_rst_x_mcu_on(void);
 void pciee_rst_x_mcu_off(void);
@@ -26,19 +35,11 @@ void sys_rst_deassert_off(void);
 int sys_rst_assert_on(void);
 void sys_rst_assert_off(void);
 
-struct power_node const board_power_nodes[21] = {
+struct power_node const board_power_nodes[] = {
 
 	{"PMIC-VDD-1.8V", NODE_TYPE_FUNCTION, 1000,
 	 {(unsigned long)pmic_dcdc_1_on, (unsigned long)pmic_dcdc_1_off},
 	 },
-
-	// {"VDD-3.3V", NODE_TYPE_ENABLE, 1000,
-	//  {(unsigned long)EN_VDD3V3_PORT, (unsigned long)EN_VDD3V3_PIN},
-	//  },
-
-	// {"VDD-5V", NODE_TYPE_ENABLE, 1000,
-	//  {(unsigned long)EN_VDDIO5_PORT, (unsigned long)EN_VDDIO5_PIN},
-	//  },
 
 	{"VDD-1.8V", NODE_TYPE_ENABLE, 3000,
 	 {(unsigned long)EN_VDDIO18_PORT, (unsigned long)EN_VDDIO18_PIN},
@@ -64,14 +65,6 @@ struct power_node const board_power_nodes[21] = {
 	 {(unsigned long)GPIO2_PORT, (unsigned long)GPIO2_PIN},
 	 },
 
-	// {"ACK-3V3", NODE_TYPE_ENABLE, 1000,
-	//  {(unsigned long)PG_VDD3V3_PORT, (unsigned long)PG_VDD3V3_PIN},
-	//  },
-
-	// {"ACK-VDDIO5", NODE_TYPE_ENABLE, 1000,
-	//  {(unsigned long)PG_VDDIO5_PORT, (unsigned long)PG_VDDIO5_PIN},
-	//  },
-
 	{"VDD-TPU", NODE_TYPE_ENABLE, 1000,
 	 {(unsigned long)EN_VDD_TPU_PORT, (unsigned long)EN_VDD_TPU_PIN},
 	 },
@@ -81,11 +74,11 @@ struct power_node const board_power_nodes[21] = {
 	 },
 
 	{"DDR-VDDQ", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_dcdc_4_on, (unsigned long)pmic_dcdc_4_off},
+	 {(unsigned long)pmic_dcdc_2_3_on, (unsigned long)pmic_dcdc_2_3_off},
 	 },
 
 	{"DDR-VDDQLP", NODE_TYPE_FUNCTION, 1000,
-	 {(unsigned long)pmic_dcdc_3_on, (unsigned long)pmic_dcdc_3_off},
+	 {(unsigned long)pmic_dcdc_6_on, (unsigned long)pmic_dcdc_6_off},
 	 },
 
 	{"VQPS-1.8V", NODE_TYPE_ENABLE, 4000,

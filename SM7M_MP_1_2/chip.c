@@ -58,6 +58,14 @@ void chip_popd_reset(void)
 	chip_enable();
 }
 
+void chip_popd_reset_end(void)
+{
+	power_on();
+	uptime = 0;
+	++reset_times;
+	chip_enable();
+}
+
 static void chip_process(void)
 {
 	if (chip_enabled)

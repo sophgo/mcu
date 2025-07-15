@@ -36,8 +36,7 @@ void slave_init(void)
 	mcu_init(&i2c2_slave_ctx, &i2c0_slave_ctx);
 	eeprom_init(&i2c2_slave_ctx);
 	wdt_init(&i2c2_slave_ctx);
-	// tmp451_init(&i2c2_slave_ctx);
-
+	tmp451_init(&i2c2_slave_ctx);
 	if (pic_available()) {
 		kbd_init(&i2c2_slave_ctx);
 		pic_init(&i2c2_slave_ctx);

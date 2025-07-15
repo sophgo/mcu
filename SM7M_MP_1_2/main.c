@@ -18,7 +18,7 @@
 #include <tca6416a.h>
 #include <pic.h>
 #include <se5.h>
-#include <sm5.h>
+#include <sm7.h>
 #include <pcie.h>
 #include <rst_key.h>
 #include <stdio.h>
@@ -40,11 +40,9 @@ int main(void)
 
 	led_init();
 	gpio_bit_set(EN_VDDIO5_PORT, EN_VDDIO5_PIN);
-	if (tca6416a_probe())
-		debug("\ntca6416a is active!\n");
 	pic_probe();
-	//power_init();
 	axp15060_init();
+	timer_mdelay(30);
 	power_on();
 	chip_init();
 	board_init();
@@ -58,7 +56,7 @@ int main(void)
 
 	/* but chip reset still be asserted */
 	if (get_work_mode() == WORK_MODE_SOC) {
-		sm5_init();
+		sm7_init();
 	}
 
 	mon_init();

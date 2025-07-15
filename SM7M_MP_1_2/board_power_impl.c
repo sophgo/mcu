@@ -34,16 +34,48 @@ void pmic_dcdc_4_off(void)
 	axp15060_channel_off(AXP15060_DCDC4);
 }
 
+int  pmic_dcdc_2_3_on(void)
+{
+	axp15060_2channel_on(AXP15060_DCDC2, AXP15060_DCDC3);
+	return 0;
+}
+
+void pmic_dcdc_2_3_off(void)
+{
+	axp15060_2channel_off(AXP15060_DCDC2, AXP15060_DCDC3);
+}
+
+int pmic_dcdc_4_6_on(void)
+{
+	axp15060_2channel_on(AXP15060_DCDC4, AXP15060_DCDC6);
+	return 0;
+}
+
+void pmic_dcdc_4_6_off(void)
+{
+	axp15060_2channel_off(AXP15060_DCDC4, AXP15060_DCDC6);
+}
+
 int pmic_dcdc_5_on(void)
 {
 	axp15060_channel_on(AXP15060_DCDC5);
 	return 0;
 }
 
-int pmic_dcdc_5_off(void)
+void pmic_dcdc_5_off(void)
 {
 	axp15060_channel_off(AXP15060_DCDC5);
+}
+
+int pmic_dcdc_6_on(void)
+{
+	axp15060_channel_on(AXP15060_DCDC6);
 	return 0;
+}
+
+void pmic_dcdc_6_off(void)
+{
+	axp15060_channel_off(AXP15060_DCDC6);
 }
 
 int pmic_aldo_1_on(void)

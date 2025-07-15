@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <debug.h>
 #include <timer.h>
+#define TIMER6_COUNTER_MAX	65535
 
 void timer_start(unsigned long us)
 {
@@ -30,6 +31,8 @@ int timer_is_timeout(void)
 	return timeout;
 }
 
+void timer_udelay(unsigned long us);
+
 void timer_mdelay(unsigned long ms)
 {
 	int i;
@@ -42,7 +45,12 @@ void timer_udelay(unsigned long us)
 {
 	if (us == 0)
 		return;
-
+	while(us > TIMER6_COUNTER_MAX){
+		timer_start(TIMER6_COUNTER_MAX);
+		while (!timer_is_timeout())
+			;
+		us -= TIMER6_COUNTER_MAX;
+	}
 	timer_start(us);
 	while (!timer_is_timeout())
 		;

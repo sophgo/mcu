@@ -51,6 +51,10 @@
 
 #define MCU_EEPROM_DATA_MAX	0x20
 
+#define REG_CRITICAL_ACTIONS 0x65
+#define REG_CTRITICAL_TEMP	 0x66
+#define REG_REPOWERON_TEMP	 0x67
+
 #define REG_FLASH_CMD		0x63
 #define REG_FLASH_OFFSET	0x7c
 #define REG_FLASH_DATA		0x80
@@ -74,6 +78,9 @@ struct mcu_ctx {
 	int flash_flush;
 
 	uint16_t tmp;
+	uint8_t critical_action;
+	uint8_t	repoweron_temp;
+	uint8_t critical_temp;
 };
 
 static struct mcu_ctx mcu_ctx;
@@ -249,6 +256,15 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_FLASH_CMD:
 		flash_exec_cmd(ctx, data);
 		break;
+	case REG_CRITICAL_ACTIONS:
+		ctx->critical_action = data;
+		break;
+	case REG_REPOWERON_TEMP:
+		ctx->repoweron_temp = data;
+		break;
+	case REG_CTRITICAL_TEMP:
+		ctx->critical_temp = data;
+		break;
 	case REG_FLASH_OFFSET + 0:
 		ctx->flash_offset[0] = data;
 		break;
@@ -364,6 +380,15 @@ static uint8_t mcu_read(void *priv)
 	case REG_EEPROM_LOCK:
 		ret = eeprom_get_lock_status();
 		break;
+	case REG_CRITICAL_ACTIONS:
+		ret = ctx->critical_action;
+		break;
+	case REG_REPOWERON_TEMP:
+		ret = ctx->repoweron_temp;
+		break;
+	case REG_CTRITICAL_TEMP:
+		ret = ctx->critical_temp;
+		break;
 	case REG_FLASH_OFFSET + 0:
 		ret = ctx->flash_offset[0];
 		break;
@@ -430,8 +455,28 @@ static struct i2c01_slave_op slave01 = {
 void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx,
 	      struct i2c01_slave_ctx *i2c01_slave_ctx)
 {
+	mcu_ctx.critical_action = CRITICAL_ACTION_REBOOT;
+	if (get_hardware_version() == 0x12)
+		mcu_ctx.critical_temp = 120;
+	else
+		mcu_ctx.critical_temp = 95;
+	mcu_ctx.repoweron_temp = 80;
 	loop_add(mcu_process);
 	i2c_slave_register(i2c_slave_ctx, &slave);
 	i2c01_slave_register(i2c01_slave_ctx, &slave01);
 }
 
+uint8_t get_critical_action(void)
+{
+	return mcu_ctx.critical_action;
+}
+
+uint8_t get_critical_temp(void)
+{
+	return mcu_ctx.critical_temp;
+}
+
+uint8_t get_repoweron_temp(void)
+{
+	return mcu_ctx.repoweron_temp;
+}

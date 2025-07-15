@@ -11,5 +11,6 @@ void chip_popd_reset(void);
 uint32_t chip_uptime(void);
 uint32_t chip_reset_times(void);
 int chip_is_enabled(void);
+void chip_popd_reset_end(void);
 
 #endif

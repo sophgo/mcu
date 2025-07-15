@@ -34,6 +34,8 @@ int axp15060_init(void);
 void axp15060_destroy(void);
 int axp15060_channel_on(unsigned int channel);
 void axp15060_channel_off(unsigned int channel);
+int axp15060_2channel_on(unsigned int ch1, unsigned int ch2);
+void axp15060_2channel_off(unsigned int ch1, unsigned int ch2);
 int axp15060_voltage_config(unsigned int channel, unsigned int voltage);
 unsigned long axp15060_output_current(unsigned int channel);
 unsigned long axp15060_output_voltage(unsigned int channel);

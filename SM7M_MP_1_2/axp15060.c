@@ -218,6 +218,33 @@ void axp15060_channel_off(unsigned int channel)
 
 }
 
+int axp15060_2channel_on(unsigned int ch1, unsigned int ch2)
+{
+	uint8_t reg, val, shift1, shift2;
+
+	reg = axp15060_channel_info[ch1].en_reg;
+	shift1 = axp15060_channel_info[ch1].en_shift;
+	shift2 = axp15060_channel_info[ch2].en_shift;
+
+	val = axp15060_read_byte(reg);
+	val |= (1 << shift1 | 1 << shift2);
+	axp15060_write_byte(reg, val);
+	return 0;
+}
+
+void axp15060_2channel_off(unsigned int ch1, unsigned int ch2)
+{
+	uint8_t reg, val, shift1, shift2;
+
+	reg = axp15060_channel_info[ch1].en_reg;
+	shift1 = axp15060_channel_info[ch1].en_shift;
+	shift2 = axp15060_channel_info[ch2].en_shift;
+
+	val = axp15060_read_byte(reg);
+	val &= ~(1 << shift1 | 1 << shift2);
+	axp15060_write_byte(reg, val);
+}
+
 int axp15060_voltage_config(unsigned int channel, unsigned int voltage)
 {
 	int base = axp15060_channel_info[channel].vol_base;
@@ -235,23 +262,27 @@ int axp15060_init(void)
 	axp15060_write_byte(0x10, 0);
 	axp15060_write_byte(0x11, 0);
 	axp15060_write_byte(0x12, 0);
+	axp15060_write_byte(0x1a, 0);
 
 	/* set dcdc4 and dcdc6 to poly-phase mode */
-	axp15060_write_byte(0x1a, 1 << 7);
+	// axp15060_write_byte(0x1a, 1 << 7);
+    // axp15060_write_byte(0x1a, 3 << 6); /*set dcdc4 and dcdc6, dcdc2 and dcdc3 to poly-phase */
+    axp15060_write_byte(0x1a, 1 << 6); /*set dcdc2 and dcdc3 to poly-phase */
 	/* set all dcdc to pwm mode */
 	axp15060_write_byte(0x1b, 0x3f);
 
 	axp15060_voltage_config(AXP15060_DCDC1, 1800);
-	axp15060_voltage_config(AXP15060_DCDC2, 830);
+	axp15060_voltage_config(AXP15060_DCDC2, 1100);
 
 	/* LPDDR4 and LPDDR4X are supported */
 	if (get_ddr_type() == DDR_TYPE_LPDDR4)
-		axp15060_voltage_config(AXP15060_DCDC3, 1120);
+		axp15060_voltage_config(AXP15060_DCDC3, 1100);
 	else
-		axp15060_voltage_config(AXP15060_DCDC3, 610);
+		axp15060_voltage_config(AXP15060_DCDC3, 1110);
 
-	axp15060_voltage_config(AXP15060_DCDC4, 1120);
+	axp15060_voltage_config(AXP15060_DCDC4, 600);
 	axp15060_voltage_config(AXP15060_DCDC5, 830);
+	axp15060_voltage_config(AXP15060_DCDC6, 600);
 	axp15060_voltage_config(AXP15060_ALDO1, 1800);
 
 	return 0;
