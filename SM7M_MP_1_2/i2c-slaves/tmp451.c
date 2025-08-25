@@ -6,9 +6,12 @@
 #include <power.h>
 #include <common.h>
 #include <mon.h>
+#include <mcu.h>
+#include <debug.h>
 #include <stdlib.h>
 
 #define TMP451_REG_MAX	(23)
+#define TMP451_OVER_TEMP_MAX  (5)
 
 #define PTRNA	(-1)	/* operation not apply */
 #define PORNA	(-1)	/* power-on reset value not apply */
@@ -23,6 +26,7 @@ struct tmp451_reg {
 static struct tmp451_ctx {
 	int set_ptr;
 	int soc, board;	/* soc and board temperature */
+	int over_temp;
 	volatile uint8_t *rptr, *wptr;
 	struct tmp451_reg map[TMP451_REG_MAX];
 } tmp451_ctx = {
@@ -160,7 +164,7 @@ static struct i2c_slave_op tmp451_slave = {
 	.read = tmp451_read,
 };
 
-#define TMP451_COLLECT_INTERVAL	1000
+#define TMP451_COLLECT_INTERVAL	2000
 
 #define I2C			I2C1
 #define SMBTO			1
@@ -179,57 +183,30 @@ static struct i2c_slave_op tmp451_slave = {
 #define TMP451_RT	(1)
 
 static unsigned long last_time;
+static unsigned char set_needpower_on;
 static void tmp451_process(void)
 {
 	unsigned long current_time = tick_get();
 	unsigned char tmp;
-	int soc, board, critical;
-
-	if (last_time == 0) {
-		/* enable tmp451 smbus timeout, set tmp451 working at extended
-		 * mode
-		 */
-		i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-					   TMP451_ALERT, &tmp);
-		if ((tmp & TMP451_SMBTO_MASK) == 0) {
-			/* tmp451 has not enabled smbus timeout feature,
-			 * enable it */
-			tmp |= TMP451_SMBTO_MASK;
-			i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR,
-				SMBTO, TMP451_ALERT, tmp);
-		}
-		/* enable extended mode */
-		i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-			TMP451_CONFIG_RD_ADDR, &tmp);
-		tmp |= TMP451_RANGE_MASK;
-		i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-			TMP451_CONFIG_WR_ADDR, tmp);
-
-		last_time = current_time;
-
-		/* default temperature */
-		tmp451_ctx.soc = 20 + 5;
-		tmp451_ctx.board = 20;
-
-		set_soc_temp(tmp451_ctx.soc - 5);
-		set_board_temp(tmp451_ctx.board);
-		return;
-	}
+	int soc, board;
 
 	if (current_time - last_time < TMP451_COLLECT_INTERVAL)
 		return;
 
-	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-				   TMP451_LT, &tmp);
-
+	if(i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				   TMP451_LT, &tmp) != 0){
+		debug("sre\n");
+	}
+	// debug("[dbg]soc_rt=%d, ", tmp);
 	board = (int)tmp - 64;
 	soc = board + 5;
 
-	if (chip_is_enabled()) {
-		i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
-					   TMP451_RT, &tmp);
-		soc = (int)tmp - 64;
+	if(i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+					TMP451_RT, &tmp) !=0){
+		debug("bre\n");
 	}
+	// debug("brd_rt=%d\n", tmp);
+	soc = (int)tmp - 64;
 
 	tmp451_ctx.soc = soc;
 	tmp451_ctx.board = board;
@@ -239,19 +216,56 @@ static void tmp451_process(void)
 	set_soc_temp(soc);
 	set_board_temp(board);
 
-	if (get_hardware_version() == 0x12)
-		critical = 120;
-	else
-		critical = 95;
+	if (set_needpower_on == 1) {
+		if (soc < get_repoweron_temp() && board < 80) {
+			chip_popd_reset_end();
+			set_needpower_on = 0;
+		}
+	}
 
-	if (power_status() && soc > critical)
-		power_off();
-
+	if (soc > get_critical_temp()) {
+		++tmp451_ctx.over_temp;
+		if (tmp451_ctx.over_temp > TMP451_OVER_TEMP_MAX) {
+			chip_disable();
+			power_off();
+			tmp451_ctx.over_temp = 0;
+			debug("Over Temperature\n");
+			if (get_critical_action() == CRITICAL_ACTION_REBOOT) {
+				set_needpower_on = 1;
+				debug("Reboot\n");
+			} else {
+				debug("Power OFF\n");
+			}
+		}
+	}
 	last_time = current_time;
 }
 
 void tmp451_init(struct i2c_slave_ctx *i2c_slave_ctx)
 {
+	uint8_t tmp;
+	/* enable smbus timeout */
+	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				   TMP451_ALERT, &tmp);
+	tmp |= TMP451_SMBTO_MASK;
+	i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR,
+				    SMBTO, TMP451_ALERT, tmp);
+	/* enable extended mode */
+	i2c_master_smbus_read_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				   TMP451_CONFIG_RD_ADDR, &tmp);
+	tmp |= TMP451_RANGE_MASK;
+	i2c_master_smbus_write_byte(I2C, TMP451_SLAVE_ADDR, SMBTO,
+				    TMP451_CONFIG_WR_ADDR, tmp);
+	/* wait untill next conversion, tmp451 default conversion rate is 16, so
+	 * it takes at most 62.5ms till next conversion
+	 */
+	mdelay(65);
+	tmp451_ctx.soc = 20 + 5;
+	tmp451_ctx.board = 20;
+
+	set_soc_temp(tmp451_ctx.soc - 5);
+	set_board_temp(tmp451_ctx.board);
+
 	software_reset();
 	i2c_slave_register(i2c_slave_ctx, &tmp451_slave);
 	loop_add(tmp451_process);

@@ -5,7 +5,7 @@
 
 #define TCA6416A_ADDR	0x20
 
-#define TCA6416A_I2C	I2C0
+#define TCA6416A_I2C	I2C1
 
 /* in ms */
 #define TCA6416A_SMBTO	(1)
@@ -21,7 +21,7 @@ int tca6416a_available(void)
 /* true if 6416 is active */
 int tca6416a_probe(void)
 {
-	int err;
+	int err = -1;
 	uint8_t tmp;
 
 	err = i2c_master_smbus_read_byte(

@@ -37,6 +37,26 @@ void __weak pmic_dcdc_4_off(void)
 	/* add customer code here */
 }
 
+int __weak pmic_dcdc_2_3_on(void)
+{
+	return 0;
+}
+
+void __weak pmic_dcdc_2_3_off(void)
+{
+
+}
+
+int __weak pmic_dcdc_4_6_on(void)
+{
+	return 0;
+}
+
+void __weak pmic_dcdc_4_6_off(void)
+{
+
+}
+
 int __weak pmic_dcdc_3_on(void)
 {
 	/* add customer code here */
