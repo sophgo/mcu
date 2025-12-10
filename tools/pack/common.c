@@ -125,7 +125,7 @@ void print_efie(struct efie *efie)
 
 struct {
 	char *name;
-	int id[16];
+	int id[32];
 } firmware_table[] = {
 	{"EVB",		{EVB, SC5}},
 	{"SA5",		{SA5, SE5, SM5P, SM5S}},
@@ -136,6 +136,7 @@ struct {
 	{"SE5LITE",	{SE5LITE}},
 	{"SC7PRO",  {SC7PRO}},
 	{"BM1684XEVB", {BM1684XEVB}},
+	{"BM1684XeEVB", {BM1684XeEVB}},
 	{"SM7CUSTV1", {SM7CUSTV1}},
 	{"SG2042EVB", {SG2042EVB}},
 	{"SG2042REVB", {SG2042REVB}},
