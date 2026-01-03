@@ -138,10 +138,13 @@ int main(void)
                 set_soc_forever();
 	 	set_board_type(SM7M_MP_1_1);
 	}
+	else if (tca6416a_available()){
+		set_board_type(SE7_V3_0);
+	}
 	else{
 		set_board_type(SM7M_MP_1_1);
 	}
-	
+
 	mcu_init(&i2c1_slave_ctx);
 	mcu_eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);
