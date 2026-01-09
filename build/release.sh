@@ -166,6 +166,10 @@ function version()
         dir="$top/BM1690EVB"
         key_word='MCU_SW_VER'
         ;;
+    bm1690eevb)
+        dir="$top/BM1690eEVB"
+        key_word='MCU_SW_VER'
+        ;;
     sm7_hk)
         dir="$top/SM7_HK"
         key_word='MCU_SW_VER'
