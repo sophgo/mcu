@@ -1,5 +1,6 @@
-TARGET = gd32e50x_hd
+TARGET ?= gd32e50x_hd
 DEBUG ?= 0
+SERIES ?= GD32E50x
 
 CROSS_COMPILE := arm-none-eabi-
 
@@ -12,15 +13,30 @@ else
 endif
 
 OUTDIR = build
-SRCDIR = GD32E50x_standard_peripheral/Source	\
-	 CMSIS/GD/GD32E50x/Source	\
-
-STARTUP = CMSIS/GD/GD32E50x/Source/GCC/vector.c	\
-	  CMSIS/GD/GD32E50x/Source/GCC/crt.c
-
-INCDIR = GD32E50x_standard_peripheral/Include	\
-	 CMSIS \
-	 CMSIS/GD/GD32E50x/Include
+ifeq ($(SERIES),GD32E50x)
+	SRCDIR = GD32E50x_standard_peripheral/Source	\
+		 CMSIS/GD/GD32E50x/Source	\
+	
+	STARTUP = CMSIS/GD/GD32E50x/Source/GCC/vector.c	\
+		  CMSIS/GD/GD32E50x/Source/GCC/crt.c
+	
+	INCDIR = GD32E50x_standard_peripheral/Include	\
+		 CMSIS \
+		 CMSIS/GD/GD32E50x/Include
+else ifeq ($(SERIES),GD32F4xx)
+	TARGET = gd32f4xx_hd
+	SRCDIR = GD32F4xx_standard_peripheral/Source	\
+		 CMSIS_f4xx/GD/GD32F4xx/Source	\
+	
+	STARTUP = CMSIS_f4xx/GD/GD32F4xx/Source/GCC/vector.c	\
+		  CMSIS_f4xx/GD/GD32F4xx/Source/GCC/crt.c
+	
+	INCDIR = GD32F4xx_standard_peripheral/Include	\
+		 CMSIS_f4xx \
+		 CMSIS_f4xx/GD/GD32F4xx/Include
+else
+	$(error Unsupported SERIES: $(SERIES). Supported: GD32E50x, GD32F4xx)
+endif
 
 C_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.c))
 S_SRCS = $(foreach dir, $(SRCDIR), $(wildcard $(dir)/*.s))
@@ -34,15 +50,24 @@ VPATH = $(sort $(dir $(SRCS)))
 OBJS := $(sort $(OBJS))
 DEPS := $(patsubst %.o, %.d, $(OBJS))
 
-OPT_CFLAGS = -g -O2
-ARCH_CFLAGS = -mthumb -mcpu=cortex-m33
+#OPT_CFLAGS = -g -O2
+OPT_CFLAGS = -g -Os
+ifeq ($(SERIES),GD32E50x)
+	ARCH_CFLAGS = -mthumb -mcpu=cortex-m33
+else ifeq ($(SERIES),GD32F4xx)
+	ARCH_CFLAGS = -mthumb -mcpu=cortex-m4
+endif
 
 CPPFLAGS = $(foreach dir, $(INCDIR), -I$(dir))
 CFLAGS = $(CPPFLAGS) $(OPT_CFLAGS) $(ARCH_CFLAGS) \
 	  -std=gnu11 -ffunction-sections -fdata-sections -Wall -Werror \
 	  $(foreach dir, $(INCDIR), -I$(dir))
 
-CFLAGS += -DGD32E50X -DGD32E50X_HD
+ifeq ($(SERIES),GD32E50x)
+	CFLAGS += -DGD32E50X -DGD32E50X_HD
+else ifeq ($(SERIES),GD32F4xx)
+	CFLAGS += -DGD32F4xx
+endif
 # use internal rc clock
 RC_CLOCK ?= -D__SYSTEM_CLOCK_180M_PLL_IRC8M
 CFLAGS += $(RC_CLOCK)

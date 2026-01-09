@@ -1,6 +1,8 @@
 #!/bin/bash
 list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1684xevb bm1684xeevb sc7pro sc7hp75 sc7hp75_1 sc7fp150 sg2042evb sg2042revb wolfclaw sg2042x4 sm7mini sm7mqy athena2evb athena2acp sm7g sm7m_mp_1_1 sm7m_mp_1_2 sm7_hk bm2044revb bm1690evb sc11fp300 bm1684x_m_2'
 top="$PWD/.."
+#mcu_list='STM32L0 GD32E50x GD32F4xx'
+mcu_list='GD32F4xx'
 
 unset rm
 
@@ -162,6 +164,10 @@ function version()
 	dir="$top/SC11FP300"
 	key_word='MCU_SW_VER'
 	;;
+    sc11efp300)
+	dir="$top/SC11EFP300"
+	key_word='MCU_SW_VER'
+	;;
     bm1690evb)
         dir="$top/BM1690EVB"
         key_word='MCU_SW_VER'
@@ -202,7 +208,7 @@ function build()
 
     # build libgd first
     pushd ../libgd
-        make clean && make
+        make clean && make SERIES=$1
     popd
 
     date=`date '+%Y-%m-%d-%H-%M-%S'`
@@ -236,13 +242,13 @@ function build_util()
         make clean && make CROSS_COMPILE=aarch64-linux-gnu-
         cp mcu-util $top/build/release/mcu-util-aarch64
         # build riscv64 util
-        make clean && make CROSS_COMPILE=riscv64-unknown-linux-gnu-
-        cp mcu-util $top/build/release/mcu-util-riscv64
+#        make clean && make CROSS_COMPILE=riscv64-linux-gnu-
+#        cp mcu-util $top/build/release/mcu-util-riscv64
     popd
 }
 
 clean
 build_util
-build
+build $mcu_list
 # append release notes
 cp $top/ReleaseNotes.md $top/build/release

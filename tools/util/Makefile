@@ -15,7 +15,8 @@ SRC = $(C_SRC) $(S_SRC)
 OBJ = $(addsuffix .o, $(basename $(SRC)))
 SU = $(addsuffix .su, $(basename $(SRC)))
 
-OPT_CFLAGS = -g -O2
+#OPT_CFLAGS = -g -O2
+OPT_CFLAGS = -g -Os
 
 INCDIR = . 
 

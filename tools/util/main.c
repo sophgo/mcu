@@ -22,6 +22,8 @@ void stm32l0_usage(void);
 int stm32l0_main(int argc, char *argv[]);
 void gd32e50_usage(void);
 int gd32e50_main(int argc, char *argv[]);
+void gd32f4_usage(void);
+int gd32f4_main(int argc, char *argv[]);
 
 struct mcu_family {
 	char *name;
@@ -31,6 +33,7 @@ struct mcu_family {
 } mcu_family_table[] = {
 	{"STM32L0", 0, stm32l0_usage, stm32l0_main},
 	{"GD32E50", 1, gd32e50_usage, gd32e50_main},
+	{"GD32F4", 2, gd32f4_usage, gd32f4_main},
 };
 
 static void usage(void)

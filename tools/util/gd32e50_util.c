@@ -363,7 +363,7 @@ static int mcu_erase(int i2c, unsigned int off, unsigned int len)
 	return 0;
 }
 
-int flash_write(int i2c, void *data, unsigned int off, unsigned int len)
+static int flash_write(int i2c, void *data, unsigned int off, unsigned int len)
 {
 	/* send address */
 	const int flash_data_max = 128;

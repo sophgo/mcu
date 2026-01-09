@@ -159,9 +159,11 @@ struct {
 	{"BM2044REVB", {BM2044REVB}},
 	{"SC11FP300", {SC11FP300}},
 	{"BM1684X_M_2", {BM1684X_M_2}},
+	{"BM1690eEVB", {BM1690eEVB}},
+	{"SC11EFP300", {SC11EFP300}},
 };
 
-const char *mcu_family[] = {"STM32L0", "GD32E50"};
+const char *mcu_family[] = {"STM32L0", "GD32E50", "GD32F4"};
 
 int get_firmware_type(char *name)
 {

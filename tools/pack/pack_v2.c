@@ -179,8 +179,9 @@ int pack_v2(int argc, char *argv[])
 		goto err_xml;
 	}
 
-	if (mcu_family == GD32E50)
+	if (mcu_family == GD32E50 || mcu_family == GD32F4){
 		memset(img->img, 0xff, firmware_size);
+	}
 
 	struct fwinfo fwinfo;
 	init_fwinfo(&fwinfo);

@@ -38,6 +38,7 @@ struct comp {
 enum {
 	STM32L0 = 0,
 	GD32E50,
+	GD32F4,
 };
 
 void checksum(void *out, void *in, unsigned long len);
