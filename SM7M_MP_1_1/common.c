@@ -8,7 +8,7 @@
 #include <i2c_master.h>
 #include <mcu-e2prom.h>
 
-#define MCU_SW_VER	6
+#define MCU_SW_VER	7
 #define DDR_TYPE	DDR_TYPE_LPDDR4X
 
 static uint8_t board_type;
@@ -52,6 +52,8 @@ char *get_board_type_name()
 		return "SM7M24";
 	case SM7MSE6M:
 		return "SM7MSE8M ";
+	case SE7_V3_0:
+		return "SE7_V3_0";
 	};
 	/* U means unknown type */
 	return "SM7M U";

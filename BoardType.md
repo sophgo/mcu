@@ -248,6 +248,12 @@ Chip：Athena2
 
 ATHENA2ACP
 
+## 0x41
+
+Chip：BM1684X
+
+元智SE7(SE7_V3_0)在自研SM7上的新增板类型
+
 ## 0x80
 
 Chip: SG2042
