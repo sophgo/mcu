@@ -36,6 +36,7 @@
 #define SM7M_MP_1_2     0X37
 #define SE7Q            0x38
 #define BM1684X_M_2     0X3b
+#define SE7_V3_0        0X41
 
 #define SM7CUSTV1       0x3a
 #define ATHENA2EVB	0x40
