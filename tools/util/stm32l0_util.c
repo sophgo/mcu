@@ -89,7 +89,7 @@ static struct {
 	{"SM7MQY",      {SM7MQY, SE7Q, -1}},
 	{"SE7",         {SE7, -1}},
 	{"SM7MSE6M",    {SM7MSE6M, -1}},
-	{"SM7M_MP_1_1",		{SM7M_MP_1_1, -1}},
+	{"SM7M_MP_1_1",		{SM7M_MP_1_1, SE7_V3_0, -1}},
 	{"SM7_HK",         {SM7_HK, -1}},
 	{"BM1684X_M_2",     {BM1684X_M_2, -1}},
 };
@@ -515,8 +515,11 @@ static int is_valid_firmware(void *image, unsigned long size)
 	firmware_type = fwinfo->type;
 
 	for (i = 0; i < ARRAY_SIZE(firmware_table); ++i) {
-		if (firmware_table[i].id[0] == firmware_type)
+		if (firmware_table[i].id[0] == firmware_type) {
+			printf("detected firmware type %s\n",
+			       firmware_table[i].name);
 			break;
+		}
 	}
 
 	if (i == ARRAY_SIZE(firmware_table)) {
@@ -526,8 +529,10 @@ static int is_valid_firmware(void *image, unsigned long size)
 	}
 
 	for (j = 0; firmware_table[i].id[j] >= 0; ++j) {
-		if (firmware_table[i].id[j] == board_type)
+		if (firmware_table[i].id[j] == board_type) {
+			printf("detected board type %d\n", board_type);
 			return true;
+		}
 	}
 
 	fprintf(stderr, "firmware and board not match\n");

@@ -63,6 +63,7 @@ static inline void led_init(void)
 		case SM7MQY:
 		case SE7Q:
 		case SM7M_MP_1_1:
+		case SE7_V3_0:
 		case SM7_HK:
 		case SE7:
 		case SM7MSE6M:

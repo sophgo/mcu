@@ -88,12 +88,14 @@ static struct mcu_family *get_mcu_family(int bus, int addr)
 		perror("error reason: ");
 		goto out;
 	}
+	printf("detected mcu family id %d\n", err);
 
 	/* some old stm32 firmware may return 0xff on mcu family register */
 	err = (err == 0xff ? 0 : err);
 
 	for (i = 0; i < ARRAY_SIZE(mcu_family_table); ++i) {
 		if (mcu_family_table[i].id == err) {
+			printf("get mcu family %s\n", mcu_family_table[i].name);
 			mcuf = &mcu_family_table[i];
 			break;
 		}
