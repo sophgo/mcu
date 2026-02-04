@@ -33,8 +33,8 @@ DEPS := $(patsubst %.o, %.d, $(OBJS))
 
 LDSCRIPT = target.ld
 
+#OPT_CFLAGS = -g -O2
 OPT_CFLAGS = -g -Os
-#OPT_CFLAGS = -Os
 ARCH_CFLAGS = -mthumb -mcpu=cortex-m33
 SPEC_CFLAGS = -specs=nano.specs
 
@@ -56,7 +56,7 @@ endif
 ASFLAGS = $(CFLAGS) -x assembler-with-cpp -Wa,--no-warn
 
 LDFLAGS = $(SPEC_CFLAGS) $(ARCH_CFLAGS) $(OPT_CFLAGS) -static \
-	   -nostartfiles -Wl,--cref -Wl,--gc-sections \
+	   -nostartfiles -Wl,--cref -Wl,--gc-sections -Wl,--strip-all \
 	   -L$(TOP)/libgd/build -lgd32e50x_hd
 
 CROSS_COMPILE = arm-none-eabi-

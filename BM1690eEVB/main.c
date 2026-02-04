@@ -16,7 +16,7 @@
 #include <board_power_impl.h>
 #include <pcie.h>
 #include <i2c-slaves/ct7451.h>
-#include <stdio.h>
+#include <isl68224.h>
 
 
 int main(void)
@@ -43,6 +43,9 @@ int main(void)
 	slave_init();
 	/* 检测pcie复位信号，为1690e解复位 */
 	pcie_init();
+
+	/* 初始化 RAA */
+	isl68224_init();
 	/* 配置串口调试 */
 	console_add();
 

@@ -16,6 +16,7 @@
 #include <loop.h>
 #include <board_power_impl.h>
 #include <project.h>
+#include <isl68224.h>
 
 static struct ecdc_console *console;
 extern int power_is_on;
@@ -169,8 +170,86 @@ static void cmd_enprint(void *hint, int argc, char const *argv[])
 		printf(cmd_enprint_usage);
 	}
 }
-
 */
+
+static const char * const cmd_volt_usage =
+"volt\n"
+" get voltage of 1690e from isl68224\n";
+
+static void cmd_volt(void *hint, int argc, char const *argv[])
+{
+	int page = 0;
+	unsigned long val;
+
+	if(argc != 1){
+		dbg_printf("invalid usage\n");
+		return;
+	}
+
+	/* isl68224 read voltage*/
+	val = isl68224_output_voltage(page);
+	dbg_printf("volt val = %ld\n", val);
+}
+
+static const char * const cmd_volt_set_usage =
+"volt_set [val]\n"
+" set voltage for 1690e chip\n";
+
+static void cmd_volt_set(void *hint, int argc, char const *argv[])
+{
+	int page = 0;
+	int val;
+
+	if(argc != 2){
+		dbg_printf("invalid usage\n");
+		return;
+	}
+
+	/* raa228234 set voltage*/
+	val = atoi(argv[1]);
+	dbg_printf("val = %d\n", val);
+	isl68224_set_out_voltage(page, val);
+}
+
+static const char * const cmd_rdroop_usage =
+"rdroop\n"
+" get rdroop from isl68224\n";
+
+static void cmd_rdroop(void *hint, int argc, char const *argv[])
+{
+	int page = 0;
+	unsigned long val;
+
+	if(argc != 1){
+		dbg_printf("invalid usage\n");
+		return;
+	}
+
+	/* isl68224 read rdroop*/
+	val = isl68224_out_droop(page);
+	dbg_printf("rdroop val = %ld\n", val);
+}
+
+static const char * const cmd_rdroop_set_usage =
+"rdroop_set [val]\n"
+" set rdroop for 1690e chip\n";
+
+static void cmd_rdroop_set(void *hint, int argc, char const *argv[])
+{
+	int page = 0;
+	int val;
+
+	if(argc != 2){
+		dbg_printf("invalid usage\n");
+		return;
+	}
+
+	/* raa228234 set rdroop*/
+	val = atoi(argv[1]);
+	isl68224_set_out_droop(page,val);
+}
+
+
 static const char * const cmd_upgrade_usage =
 "upgrade\n"
 "    enter uart upgrade mode\n";
@@ -221,6 +300,10 @@ static struct command command_list[] = {
 	{"upgrade", NULL, cmd_upgrade_usage, cmd_upgrade},
 	{"reset", NULL, cmd_reset_usage, cmd_reset},
 	{"pg_check", NULL, cmd_pg_usage, cmd_pg},
+	{"volt", NULL, cmd_volt_usage, cmd_volt},
+	{"volt_set", NULL, cmd_volt_set_usage, cmd_volt_set},
+	{"rdroop", NULL, cmd_rdroop_usage, cmd_rdroop},
+	{"rdroop_set", NULL, cmd_rdroop_set_usage, cmd_rdroop_set},
 };
 
 void print_usage(struct command *cmd)

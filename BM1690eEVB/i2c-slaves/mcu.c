@@ -1,7 +1,6 @@
 #include <gd32e50x_i2c.h>
 #include <mcu.h>
 #include <adc.h>
-//#include <stdio.h>
 #include <i2c_slave.h>
 #include <i2c01_slave.h>
 #include <slave.h>
@@ -15,6 +14,8 @@
 #include <upgrade.h>
 #include <loop.h>
 #include <board_power_impl.h>
+#include <isl68224.h>
+#include <system.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -87,6 +88,14 @@
 #define REG_CRITICAL_ACTIONS		0x65
 #define REG_CTRITICAL_TEMP		0x66
 #define REG_REPOWERON_TEMP		0x67
+#define REG_VDDR_VOLT_L		0x68
+#define REG_VDDR_VOLT_H		0x69
+#define REG_SET_VOLT_L		0x6a
+#define REG_SET_VOLT_H		0x6b
+#define REG_DROOP_L		0x6c
+#define REG_DROOP_H		0x6d
+#define REG_SET_DROOP_L		0x6e
+#define REG_SET_DROOP_H		0x6f
 
 #define REG_FLASH_CMD		0x63
 #define REG_FLASH_OFFSET	0x7c
@@ -113,6 +122,9 @@ struct filter {
 };
 
 static struct filter adc_averge_tab[16];
+static unsigned char set_vddr_val[2];
+static uint8_t vddr_volt[2];
+static uint8_t droop_val[2];
 
 static unsigned long filter_init(struct filter *f, unsigned long d)
 {
@@ -172,6 +184,15 @@ static inline void idx_set(struct mcu_ctx *ctx, uint8_t idx)
 static inline void idx_inc(struct mcu_ctx *ctx)
 {
 	ctx->idx = (ctx->idx + 1) % MCU_REG_MAX;
+}
+
+static inline uint16_t byte2u16(void *byte)
+{
+	uint8_t *p;
+
+	p = byte;
+
+	return p[1] << 8 | p[0];
 }
 
 static inline uint32_t flash_byte2u32(void *byte)
@@ -280,6 +301,12 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		if (ctx->idx == REG_FLASH_FLUSH)
 			ctx->flash_flush = true;
 		break;
+	case REG_SET_VOLT_L:
+		set_vddr_val[0] = data;
+		break;
+	case REG_SET_VOLT_H:
+		set_vddr_val[1] = data;
+		break;
 	default:
 		break;
 	}
@@ -315,6 +342,18 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_BOARD_TMP:
 		ret = get_board_temp();
+		break;
+	case REG_VDDR_VOLT_L:
+		ret = vddr_volt[1];
+		break;
+	case REG_VDDR_VOLT_H:
+		ret = vddr_volt[0];
+		break;
+	case REG_DROOP_L:
+		ret = droop_val[1];
+		break;
+	case REG_DROOP_H:
+		ret = droop_val[0];
 		break;
 	case REG_INT_STATUS1:
 		ret = ctx->int_status[0];
@@ -516,12 +555,15 @@ void mcu_x8_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 #define CMD_RESET		0x03	// drag reset pin
 #define CMD_REBOOT		0x07	// power off - power on
 #define CMD_UPDATE		0x08
+#define CMD_CHIP_VDDR		0x09
+#define CMD_CHIP_DROOP		0x10
 extern int power_is_on;
 
 void mcu_process(void)
 {
-	unsigned long current_time, adc_date;
+	unsigned long current_time, adc_date, temp_data;
 	int i;
+	unsigned short temp;
 
 	current_time = tick_get();
 
@@ -530,6 +572,15 @@ void mcu_process(void)
 			adc_date = adc_read((unsigned long)i);
 			filter_in(&adc_averge_tab[i], adc_date);
 		}
+
+		/* collect volt and droop */
+		temp_data = isl68224_output_voltage(0);
+		vddr_volt[0] = (temp_data >> 8) & 0xff;
+		vddr_volt[1] = temp_data & 0xff;
+		temp_data = isl68224_out_droop(0);
+		droop_val[0] = (temp_data >> 8) & 0xff;
+		droop_val[1] = temp_data & 0xff;
+
 		last_time_collect = current_time;
 	}
 
@@ -571,6 +622,17 @@ void mcu_process(void)
 		nvic_enable_irq(I2C2_EV_IRQn);
 		i2c_upgrade_start();
 		break;
+	case CMD_CHIP_VDDR:
+		temp = byte2u16(set_vddr_val);
+		isl68224_set_out_voltage(0, (int)temp);
+		temp_data = isl68224_output_voltage(0);
+		vddr_volt[0] = (temp_data >> 8) & 0xff;
+		vddr_volt[1] = temp_data & 0xff;
+		break;
+	case CMD_CHIP_DROOP:
+		temp = byte2u16(set_vddr_val);
+		isl68224_set_out_droop(0, temp);
+		break;
 	default:
 		break;
 	}
@@ -580,7 +642,7 @@ void mcu_process(void)
 	i2c_enable(I2C2);
 	slave_init();
 }
-/*
+
 void current_print_func(void)
 {
 	int V_5V = adc_averge_tab[8].value * 3300 / 4096;
@@ -598,28 +660,29 @@ void current_print_func(void)
 	int V_VDDC = adc_averge_tab[13].value * 3300 / 4096;
 	int V_VDDIO18 = adc_averge_tab[15].value * 3300 / 4096;
 	int V_VQPS18 = adc_averge_tab[4].value * 3300 / 4096;
-	printf("V_5V = %d(mV)\n", V_5V);
-	printf("V_DDR_VDD_0V8 = %d(mV)\n", V_DDR_VDD_0V8);
-	printf("V_DDR01_VDDQ_1V2 = %d(mV)\n", V_DDR01_VDDQ_1V2);
-	printf("V_DDR23_VDDQ_1V2 = %d(mV)\n", V_DDR23_VDDQ_1V2);
-	printf("V_VDD_12V = %d(mV)\n", V_VDD_12V);
-	printf("V_VDD_EMMC_1V8 = %d(mV)\n", V_VDD_EMMC_1V8);
-	printf("V_VDD_EMMC_3V3 = %d(mV)\n", V_VDD_EMMC_3V3);
-	printf("V_VDD_PCIE_C_0V8 = %d(mV)\n", V_VDD_PCIE_C_0V8);
-	printf("V_VDD_PCIE_D_0V8 = %d(mV)\n", V_VDD_PCIE_D_0V8);
-	printf("V_VDD_PCIE_H_1V8 = %d(mV)\n", V_VDD_PCIE_H_1V8);
-	printf("V_VDD_PLL_0V8 = %d(mV)\n", V_VDD_PLL_0V8);
-	printf("V_VDD_RGMII_1V8 = %d(mV)\n", V_VDD_RGMII_1V8);
-	printf("V_VDDC = %d(mV)\n", V_VDDC);
-	printf("V_VDDIO18 = %d(mV)\n", V_VDDIO18);
-	printf("V_VQPS18 = %d(mV)\n", V_VQPS18);
-	printf("temp:soc:%d Cel board:%d Cel\n", get_soc_temp(), get_board_temp());
+	dbg_printf("V_5V = %d(mV)\n", V_5V);
+	dbg_printf("V_DDR_VDD_0V8 = %d(mV)\n", V_DDR_VDD_0V8);
+	dbg_printf("V_DDR01_VDDQ_1V2 = %d(mV)\n", V_DDR01_VDDQ_1V2);
+	dbg_printf("V_DDR23_VDDQ_1V2 = %d(mV)\n", V_DDR23_VDDQ_1V2);
+	dbg_printf("V_VDD_12V = %d(mV)\n", V_VDD_12V);
+	dbg_printf("V_VDD_EMMC_1V8 = %d(mV)\n", V_VDD_EMMC_1V8);
+	dbg_printf("V_VDD_EMMC_3V3 = %d(mV)\n", V_VDD_EMMC_3V3);
+	dbg_printf("V_VDD_PCIE_C_0V8 = %d(mV)\n", V_VDD_PCIE_C_0V8);
+	dbg_printf("V_VDD_PCIE_D_0V8 = %d(mV)\n", V_VDD_PCIE_D_0V8);
+	dbg_printf("V_VDD_PCIE_H_1V8 = %d(mV)\n", V_VDD_PCIE_H_1V8);
+	dbg_printf("V_VDD_PLL_0V8 = %d(mV)\n", V_VDD_PLL_0V8);
+	dbg_printf("V_VDD_RGMII_1V8 = %d(mV)\n", V_VDD_RGMII_1V8);
+	dbg_printf("V_VDDC = %d(mV)\n", V_VDDC);
+	dbg_printf("V_VDDIO18 = %d(mV)\n", V_VDDIO18);
+	dbg_printf("V_VQPS18 = %d(mV)\n", V_VQPS18);
+	dbg_printf("temp:soc:%d Cel board:%d Cel\n", get_soc_temp(), get_board_temp());
 }
-*/
 
+/*
 void current_print_func(void)
 {
 }
+*/
 
 uint8_t get_critical_action(void)
 {
