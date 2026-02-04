@@ -1,6 +1,5 @@
 #include <gd32f4xx_i2c.h>
 #include <common.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <i2c01_slave.h>

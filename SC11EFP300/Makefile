@@ -14,8 +14,8 @@ else
 endif
 
 OUTDIR = build
-SRCDIR = . ecdc
-INCDIR = . ecdc \
+SRCDIR = . ecdc dvfs
+INCDIR = . ecdc dvfs \
 	$(TOP)/libgd/GD32F4xx_standard_peripheral/Include	\
 	$(TOP)/libgd/CMSIS_f4xx \
 	$(TOP)/libgd/CMSIS_f4xx/GD/GD32F4xx/Include
@@ -33,7 +33,8 @@ DEPS := $(patsubst %.o, %.d, $(OBJS))
 
 LDSCRIPT = target.ld
 
-OPT_CFLAGS = -Os -g
+#OPT_CFLAGS = -Os -g
+OPT_CFLAGS = -Os
 ARCH_CFLAGS = -mthumb -mcpu=cortex-m4
 SPEC_CFLAGS = -specs=nano.specs
 

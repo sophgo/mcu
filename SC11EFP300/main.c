@@ -15,6 +15,9 @@
 #include <mon.h>
 #include <slave.h>
 #include <aw95124.h>
+#include <pcie.h>
+#include <mcu.h>
+#include <dvfs.h>
 
 void HardFault_Handler(void)
 {
@@ -57,47 +60,42 @@ int main()
 
 	/*set board power*/
 	board_power_init();
-	dbg_printf("after power on\n");
 
 	/* pca9848 init */
 	pca9848_init();
-	dbg_printf("pca9848 init done\n");
 
 	/* CT7451 init */
 	ct7451_init(0);
 	ct7451_init(1);
 	ct7451_init(2);
 	ct7451_init(3);
-	dbg_printf("ct7451 init done\n");
 
 	/* set process to collect basic info including temperature*/
 	mon_init();
 	dbg_printf("mon process init done\n");
 
-	/* init aw95124 for power good check*/
-//	aw95124_init();
-
 	/* set console for debug */
 	console_init();
-	dbg_printf("console init done\n");
 
 	slave_init();
-	debug("slave init done\n");
-//	pcie_init();
-//	dvfs_init();
+	pcie_init();
+	dvfs_init();
 
 	/* raa228234 init, instead of isl68224*/
 	raa228234_init();
-	debug("raa228234 init done\n");
+
+
+	check_gpio_power_good();
+	check_pg_node();
 
 	while(1) {
-//		if (chip_enable()) {
-//			mon_process();
-//		}
+		if (chip_enable()) {
+			mon_process();
+		}
 
 		ct7451_process();
 		mdelay(1);
-//		mcu_process();
+		mcu_process();
 		console_poll();
 //		dvfs_process();
 	}

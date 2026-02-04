@@ -2,7 +2,6 @@
 #include <tick.h>
 #include <timer.h>
 #include <debug.h>
-#include <stdio.h>
 #include <common.h>
 #include <chip.h>
 #include <system.h>

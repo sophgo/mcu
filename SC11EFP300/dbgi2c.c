@@ -1,7 +1,4 @@
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 #include <i2c_master.h>
 #include <i2c_slave.h>
 #include <chip.h>

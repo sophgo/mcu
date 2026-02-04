@@ -1,5 +1,4 @@
 #include <pca9848.h>
-#include <stdio.h>
 #include <common.h>
 #include <gd32f4xx_i2c.h>
 #include <system.h>

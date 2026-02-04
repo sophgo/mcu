@@ -1,7 +1,6 @@
 #include <gd32f4xx_i2c.h>
 #include <mcu.h>
 #include <adc.h>
-#include <stdio.h>
 #include <i2c_slave.h>
 #include <i2c01_slave.h>
 #include <slave.h>
@@ -17,7 +16,7 @@
 #include <mon.h>
 #include <system.h>
 #include <raa228234.h>
-//#include <dvfs.h>
+#include <dvfs.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -107,7 +106,7 @@ static unsigned char set_vddr_val[2];
 static uint8_t vddr_volt[4][2];
 static unsigned char set_droop_val[2];
 static uint8_t droop_val[4][2];
-//extern uint8_t dvfs_p_enable;
+extern uint8_t dvfs_p_enable;
 extern uint8_t atx_300W;
 
 static unsigned long filter_init(struct filter *f, unsigned long d)
@@ -281,13 +280,13 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_SET_VOLT_H:
 		set_vddr_val[1] = data;
 		break;
-//	case REG_DVFS_ENABLE:
-//		dvfs_p_enable = data;
-//		break;
-//	case REG_POWER_LIMIT:
-//		atx_300W = data;
-//		dvfs_p_threshold();
-//		break;
+	case REG_DVFS_ENABLE:
+		dvfs_p_enable = data;
+		break;
+	case REG_POWER_LIMIT:
+		atx_300W = data;
+		dvfs_p_threshold();
+		break;
 	case REG_SET_DROOP_L:
 		set_droop_val[0] = data;
 		break;
@@ -419,12 +418,12 @@ static uint8_t mcu_read(void *priv)
 	case REG_MCU_FAMILY:
 		ret = MCU_FAMILY_GD32E50;
 		break;
-//	case REG_DVFS_ENABLE:
-//		ret = dvfs_p_enable;
-//		break;
-//	case REG_POWER_LIMIT:
-//		ret = atx_300W;
-//		break;
+	case REG_DVFS_ENABLE:
+		ret = dvfs_p_enable;
+		break;
+	case REG_POWER_LIMIT:
+		ret = atx_300W;
+		break;
 	case REG_SET_DROOP_L:
 		ret = set_droop_val[0];
 		break;

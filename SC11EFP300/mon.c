@@ -1,5 +1,4 @@
 #include <gd32f4xx_usart.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <adc.h>

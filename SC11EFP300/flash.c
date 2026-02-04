@@ -1,8 +1,7 @@
 #include <gd32f4xx_fmc.h>
 #include <flash.h>
 #include <stdint.h>
-#include <string.h>
-#include <stdio.h>
+//#include <string.h>
 #include <system.h>
 #include <common.h>
 
@@ -118,8 +117,8 @@ static void __attribute__((unused))
 	unsigned long i;
 
 	for (p = hex, i = 0; i < len; ++i)
-		printf("%02x", p[i]);
-	printf("\n");
+		dbg_printf("%02x", p[i]);
+	dbg_printf("\n");
 }
 
 // int check_firmware(unsigned long size)

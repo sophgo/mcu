@@ -1,5 +1,4 @@
 #include <gd32f4xx_misc.h>
-#include <stdio.h>
 #include <common.h>
 #include <tick.h>
 

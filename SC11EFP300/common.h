@@ -1,8 +1,8 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
-#include <pin.h>
 #include <gd32f4xx.h>
+#include <pin.h>
 
 #define MCU_SW_VER      0
 #define SOC_NUM         4

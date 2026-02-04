@@ -5,7 +5,6 @@
  * Author: Donghao Zhao <donghao.zhao@sophgo.com>
  */
 
-#include <stdio.h>
 #include <i2c_master.h>
 #include <i2c_slave.h>
 #include <tick.h>
@@ -13,7 +12,7 @@
 #include <power.h>
 #include <common.h>
 #include <mon.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <debug.h>
 #include <pca9848.h>
 #include <timer.h>

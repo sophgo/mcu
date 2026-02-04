@@ -1,5 +1,5 @@
+#include <gd32f4xx.h>
 #include <ecdc/ecdc.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <system.h>
 #include <string.h>
@@ -12,7 +12,6 @@
 #include <timer.h>
 #include <pin.h>
 #include <raa228234.h>
-#include <gd32f4xx.h>
 #include <adc.h>
 #include <project.h>
 #include <aw95124.h>
@@ -33,10 +32,10 @@ static void console_putc(void *console_hint, char c)
 	uart_putc(c);
 }
 
-static void cmd_hello(void *hint, int argc, char const *argv[])
-{
-	printf("Hello SOPHON SC11E-FP300\n");
-}
+//static void cmd_hello(void *hint, int argc, char const *argv[])
+//{
+//	dbg_printf("Hello SOPHON SC11E-FP300\n");
+//}
 
 static const char * const cmd_volt_usage =
 "volt\n"
@@ -50,7 +49,7 @@ static void cmd_volt(void *hint, int argc, char const *argv[])
 	unsigned long val;
 
 	if(argc != 1){
-		printf("invalid usage\n");
+		dbg_printf("invalid usage\n");
 		return;
 	}
 
@@ -58,7 +57,7 @@ static void cmd_volt(void *hint, int argc, char const *argv[])
 	for(i = 0; i < 4; i++){
 		raa228234_index = i / 2;
 		page = i % 2;
-		dbg_printf("index = %d, page = %d\n", raa228234_index, page);
+		//dbg_printf("index = %d, page = %d\n", raa228234_index, page);
 		val = raa228234_output_voltage(raa228234_index, page);
 		dbg_printf("chip-%d volt val = %ld\n", i, val);
 	}
@@ -76,7 +75,7 @@ static void cmd_volt_set(void *hint, int argc, char const *argv[])
 	int val;
 
 	if(argc != 3){
-		printf("invalid usage\n");
+		dbg_printf("invalid usage\n");
 		return;
 	}
 
@@ -100,7 +99,7 @@ static void cmd_rdroop(void *hint, int argc, char const *argv[])
 	unsigned long val;
 
 	if(argc != 1){
-		printf("invalid usage\n");
+		dbg_printf("invalid usage\n");
 		return;
 	}
 
@@ -125,7 +124,7 @@ static void cmd_rdroop_set(void *hint, int argc, char const *argv[])
 	int val;
 
 	if(argc != 3){
-		printf("invalid usage\n");
+		dbg_printf("invalid usage\n");
 		return;
 	}
 
@@ -149,20 +148,20 @@ static void cmd_sn(void *hint, int argc, char const *argv[])
 	volatile uint8_t *p_sn = (uint8_t *) SN_BASE;
 
 	if (argc > 2)
-		printf("invalid usage\n");
+		dbg_printf("invalid usage\n");
 	else if (argc == 1) {
 		/* read sn out */
 		for (i = 0; i < EEPROM_CELL_SIZE; ++i) {
 			tmp = p_sn[i];
 			if (tmp) {
 				if (isprint(tmp))
-					printf("%c", tmp);
+					dbg_printf("%c", tmp);
 				else
-					printf(".");
+					dbg_printf(".");
 			} else
 				break;
 		}
-		printf("\n");
+		dbg_printf("\n");
 	}
 	else {
 			for (i = 0; i < FLASH_PAGE_SIZE; i++){
@@ -195,14 +194,14 @@ static void cmd_low(void *hint, int argc, char const *argv[])
 {
 	uint32_t pin = 0;
 	if (argc != 2) {
-		printf("error cmd\n");
+		dbg_printf("error cmd\n");
 		return;
 	}
 
 	pin = strtol(argv[1], NULL, 0);
 	gpio_clear(sys_rst_pin_list[pin][0], sys_rst_pin_list[pin][1]);
 
-	printf("set chip%lu low\n", pin);
+	dbg_printf("set chip%lu low\n", pin);
 
 }
 
@@ -210,29 +209,29 @@ static void cmd_high(void *hint, int argc, char const *argv[])
 {
 	uint32_t pin = 0;
 	if (argc != 2) {
-		printf("error cmd\n");
+		dbg_printf("error cmd\n");
 		return;
 	}
 
 	pin = strtol(argv[1], NULL, 0);
 	gpio_set(sys_rst_pin_list[pin][0], sys_rst_pin_list[pin][1]);
 
-	printf("set chip%lu high\n", pin);
+	dbg_printf("set chip%lu high\n", pin);
 }
 
-static const char * const cmd_pg_usage =
-"pg_check\n"
-	"check power good from aw95124 by i2c switch\n";
-
-static void cmd_pg(void *hint, int argc, char const *argv[])
-{
-	if(argc != 1){
-		dbg_printf("invalid usage\n");
-	}
-
-	check_gpio_power_good();
-	check_pg_node();
-}
+//static const char * const cmd_pg_usage =
+//"pg_check\n"
+//	"check power good from aw95124 by i2c switch\n";
+//
+//static void cmd_pg(void *hint, int argc, char const *argv[])
+//{
+//	if(argc != 1){
+//		dbg_printf("invalid usage\n");
+//	}
+//
+//	check_gpio_power_good();
+//	check_pg_node();
+//}
 
 static const char * const cmd_power_usage =
 "power\n"
@@ -250,7 +249,7 @@ static void cmd_power(void *hint, int argc, char const *argv[])
 	pcie_3v3_power = adc_read_pcie_i3v3() * 33 / 10;
 	atx_12v_power = adc_read_sys_i12v() * 12;
 
-	printf("pcie 3v3 power: %lu mW, pcie 12v power: %lu mW, atx 12v power: %lu mW\n",pcie_3v3_power, pcie_12v_power, atx_12v_power);
+	dbg_printf("pcie 3v3 power: %lu mW, pcie 12v power: %lu mW, atx 12v power: %lu mW\n",pcie_3v3_power, pcie_12v_power, atx_12v_power);
 }
 
 #if 0
@@ -261,7 +260,7 @@ static void cmd_devmem(void *hint, int argc, char const *argv[])
 
 	addr = (uint32_t)strtol(argv[1], NULL, 16);
 	reg_val = REG32(addr);
-	printf("0x%x",reg_val);
+	dbg_printf("0x%x",reg_val);
 }
 #endif
 
@@ -271,10 +270,10 @@ static const char * const cmd_info_usage =
 
 static void cmd_info(void *hint, int argc, char const *argv[])
 {
-	printf("Chip type: BM1690E\n");
-	printf("PCB Version: %d\n", get_pcb_ver());
-	printf("Board type: %s\n", "SC11EFP300");
-	printf("MCU_SW_VER: %d\n", MCU_SW_VER);
+	dbg_printf("Chip type: BM1690E\n");
+	dbg_printf("PCB Version: %d\n", get_pcb_ver());
+	dbg_printf("Board type: %s\n", "SC11EFP300");
+	dbg_printf("MCU_SW_VER: %d\n", MCU_SW_VER);
 }
 
 static const char * const cmd_temp_usage =
@@ -282,28 +281,24 @@ static const char * const cmd_temp_usage =
 "    temp soc&board\n";
 static void cmd_temp(void *hint, int argc, char const *argv[])
 {
-	int boardtemp0, soctemp0, boardtemp1, soctemp1;
+	int boardtemp0, soctemp0, boardtemp1, soctemp1, boardtemp2, soctemp2, boardtemp3, soctemp3;
 
 
 	boardtemp0 = get_board_temp(0);
 	soctemp0 = get_soc_temp(0);
 	boardtemp1 = get_board_temp(1);
 	soctemp1 = get_soc_temp(1);
+	boardtemp2 = get_board_temp(2);
+	soctemp2 = get_soc_temp(2);
+	boardtemp3 = get_board_temp(3);
+	soctemp3 = get_soc_temp(3);
 	if (argc == 1){
-		printf("CHIP0: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp0, boardtemp0);
-		printf("CHIP1: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp1, boardtemp1);
-	}else if (argc == 2){
-		if (strcmp(argv[1], "soc") == 0){
-			printf("chip0:soc temp = %d(C)\n", soctemp0);
-			printf("chip1:soc temp = %d(C)\n", soctemp1);
-		}else if (strcmp(argv[1], "board") == 0){
-			printf("chip0:board temp = %d(C)\n", boardtemp0);
-			printf("chip1 board temp = %d(C)\n", boardtemp1);
-		}
-		else
-			printf("get %s temp failed\n", argv[1]);
+		dbg_printf("CHIP0: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp0, boardtemp0);
+		dbg_printf("CHIP1: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp1, boardtemp1);
+		dbg_printf("CHIP2: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp2, boardtemp2);
+		dbg_printf("CHIP3: soc temp = %d(C)\tboard temp = %d(C)\n", soctemp3, boardtemp3);
 	}else {
-		printf(cmd_temp_usage);
+		dbg_printf(cmd_temp_usage);
 	}
 }
 
@@ -316,7 +311,7 @@ static void cmd_help(void *hint, int argc, char const *argv[]);
 
 static struct command command_list[] = {
 	{"help", NULL , NULL, cmd_help},
-	{"hello", NULL , NULL, cmd_hello},
+//	{"hello", NULL , NULL, cmd_hello},
 	{"info", NULL, cmd_info_usage, cmd_info},
 	{"temp", NULL, cmd_temp_usage, cmd_temp},
 	{"volt", NULL, cmd_volt_usage, cmd_volt},
@@ -324,7 +319,7 @@ static struct command command_list[] = {
 	{"rdroop", NULL, cmd_rdroop_usage, cmd_rdroop},
 	{"rdroop_set", NULL, cmd_rdroop_set_usage, cmd_rdroop_set},
 	{"sn", NULL, cmd_sn_usage, cmd_sn},
-	{"pg_check", NULL, cmd_pg_usage, cmd_pg},
+//	{"pg_check", NULL, cmd_pg_usage, cmd_pg},
 	{"power", NULL, cmd_power_usage, cmd_power},
 	{"low", NULL, NULL, cmd_low},
 	{"high", NULL, NULL, cmd_high},
@@ -364,10 +359,10 @@ static void cmd_help(void *hint, int argc, char const *argv[])
 		if (cmd)
 			print_usage(cmd);
 		else
-			printf("\'%s\' not found\n", argv[1]);
+			dbg_printf("\'%s\' not found\n", argv[1]);
 	} else {
-		printf("invalid usage\n");
-		printf("help [command]");
+		dbg_printf("invalid usage\n");
+		dbg_printf("help [command]");
 	}
 }
 
@@ -377,7 +372,7 @@ int console_init(void)
 
 	console = ecdc_alloc_console(NULL, console_getc, console_putc, 128, 4);
 	if (console == NULL) {
-		printf("create console failed\n");
+		dbg_printf("create console failed\n");
 		return -1;
 	}
 	ecdc_configure_console(console, ECDC_MODE_ANSI, ECDC_SET_LOCAL_ECHO);

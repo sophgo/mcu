@@ -50,21 +50,6 @@ struct PGLine {
 
 static uint8_t aw95124_channel[1] = {4};
 
-#if 0
-void aw95124_init(void)
-{
-	/* select channel 5 of i2c siwtch */
-	pca9848_set(PCA9848_1, 1 << aw95124_channel[0]);
-
-	/* config port 0,1,2 as input*/
-	uint8_t cfg_input = 0xff;
-	if(!i2c_master_smbus_write_byte(I2C1, AW95124_SLAVE, 1, CFG0_REGISTER, cfg_input)) dbg_printf("write cfg0 failed\n");
-	if(!i2c_master_smbus_write_byte(I2C1, AW95124_SLAVE, 1, CFG1_REGISTER, cfg_input)) dbg_printf("write cfg1 failed\n");
-	if(!i2c_master_smbus_write_byte(I2C1, AW95124_SLAVE, 1, CFG2_REGISTER, cfg_input)) dbg_printf("write cfg2 failed\n");
-}
-#endif
-
-
 static int aw95124_read_inputs(int i2c, uint32_t *value)
 {
 	uint8_t in0,in1,in2;
@@ -149,16 +134,3 @@ void check_pg_node(void)
 		dbg_printf("Read aw95124 input register failed\n");
 	}
 }
-
-//void check_aw95124_slave(void)
-//{
-//	pca9848_set(PCA9848_1, 1 << 5);
-//	uint8_t addr;
-//	for(addr = 0x08; addr <= 0x77; ++addr){
-//		if(i2c_master_smbus_write_byte(I2C1,addr,1,0,0)){
-//			dbg_printf("Find device at 0x%02x\n",addr);
-//		}
-//	}
-//
-//	dbg_printf("I2c master scan done\n");
-//}

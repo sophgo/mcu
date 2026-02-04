@@ -141,10 +141,10 @@ struct power_node const board_power_nodes[29] = {
 	  (unsigned long)EN_DDR_VDDQ_BM23_PIN},
 	 },
 
-	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)chip_assert_n_on,
-	  (unsigned long)chip_deassert_n_off},
-	 },
+//	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 0,
+//	 {(unsigned long)chip_assert_n_on,
+//	  (unsigned long)chip_deassert_n_off},
+//	 },
 
 //	{"CHIP_DEASSERT_N", NODE_TYPE_FUNCTION, 0,
 //	 {(unsigned long)sys_rst_x_h_bm1_on,
