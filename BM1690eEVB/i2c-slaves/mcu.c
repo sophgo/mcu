@@ -23,24 +23,35 @@
 #define REG_CMD		0x03
 #define REG_BM1690_TMP		0x04
 #define REG_BOARD_TMP		0x05
-#define REG_INT_STATUS1		0x06
-#define REG_INT_STATUS2		0x07
-#define REG_INT_MASK1		0x08
-#define REG_INT_MASK2 		0x09
-
-#define REG_SOC_RST_TIMES		0x0a
-#define REG_UPTIME_LO		0x0b
-#define REG_UPTIME_HI		0x0c
-#define REG_POWEROFF_REASON		0x0d
-
-#define RTC_SECONDS		0x0e
-#define RTC_MINUTES		0x0f
-#define RTC_HOURS		0x10
-#define RTC_DATE		0x11
-#define RTC_MONTH		0x12
-#define RTC_YEAR		0x13
-
+#define REG_VDDR_VOLT_L		0x08
+#define REG_VDDR_VOLT_H		0x09
+#define REG_I12V_L		0x0c
+#define REG_I12V_H		0x0d
+#define REG_SYS_I12V_L		0x0e
+#define REG_SYS_I12V_H		0x0f
+#define REG_PCIE_I12V_L		0x10
+#define REG_PCIE_I12V_H		0x11
+#define REG_PCIE_I3V3_L		0x12
+#define REG_PCIE_I3V3_H		0x13
 #define REG_MCU_FAMILY		0x18
+#define REG_DVFS_ENABLE		0x19
+#define REG_POWER_LIMIT		0x1a
+//#define REG_INT_STATUS1		0x06
+//#define REG_INT_STATUS2		0x07
+//#define REG_INT_MASK1		0x08
+//#define REG_INT_MASK2 		0x09
+
+//#define REG_SOC_RST_TIMES		0x0a
+//#define REG_UPTIME_LO		0x0b
+//#define REG_UPTIME_HI		0x0c
+//#define REG_POWEROFF_REASON		0x0d
+
+//#define RTC_SECONDS		0x0e
+//#define RTC_MINUTES		0x0f
+//#define RTC_HOURS		0x10
+//#define RTC_DATE		0x11
+//#define RTC_MONTH		0x12
+//#define RTC_YEAR		0x13
 
 #define BM1690_TMP_OVER_REPORT			1<<0
 #define POWER_68127_TMP_OVER_REPORT		1<<1
@@ -55,6 +66,13 @@
 #define TEST_INT						1<<1
 
 #define I_12V_ATX_L		0x28
+#define REG_SET_DROOP_L		0x50
+#define REG_SET_DROOP_H		0x51
+#define REG_DROOP_L		0x58
+#define REG_DROOP_H		0x59
+#define REG_SET_VOLT_L		0x60
+#define REG_SET_VOLT_H		0x61
+#if 0
 #define REG_I_5V_H		0x29
 #define REG_I_5V_L		0x30
 #define REG_I_DDR_VDD_0V8_H		0x31
@@ -65,37 +83,22 @@
 #define REG_I_DDR23_VDDQ_1V2_L		0x36
 #define REG_I_VDD_12V_H		0x37
 #define REG_I_VDD_12V_L		0x38
-#define REG_I_VDD_EMMC_1V8_H		0x39
-#define REG_I_VDD_EMMC_1V8_L		0x40
-#define REG_I_VDD_EMMC_3V3_H		0x41
-#define REG_I_VDD_EMMC_3V3_L		0x42
-#define REG_I_VDD_PCIE_C_0V8_H		0x43
-#define REG_I_VDD_PCIE_C_0V8_L		0x44
-#define REG_I_VDD_PCIE_D_0V8_H		0x45
-#define REG_I_VDD_PCIE_D_0V8_L		0x46
-#define REG_I_VDD_PCIE_H_1V8_H		0x47
-#define REG_I_VDD_PCIE_H_1V8_L		0x48
-#define REG_I_VDD_PLL_0V8_H		0x49
-#define REG_I_VDD_PLL_0V8_L		0x50
-#define REG_I_VDD_RGMII_1V8_H		0x51
-#define REG_I_VDD_RGMII_1V8_L		0x52
+#define REG_I_VDD_PCIE_C_0V75_H		0x43
+#define REG_I_VDD_PCIE_C_0V75_L		0x44
+#define REG_I_VDD_PCIE_D_0V75_H		0x45
+#define REG_I_VDD_PCIE_D_0V75_L		0x46
+#define REG_I_VDD_PCIE_H_1V2_H		0x47
+#define REG_I_VDD_PCIE_H_1V2_L		0x48
+#define REG_I_VDD_PLL_0V75_H		0x49
+#define REG_I_VDD_PLL_0V75_L		0x50
 #define REG_I_VDDC_H		0x53
 #define REG_I_VDDC_L		0x54
-#define REG_I_VDDIO18_H		0x55
-#define REG_I_VDDIO18_L		0x56
-#define REG_I_VQPS18_H		0x57
-#define REG_I_VQPS18_L		0x58
+#define REG_I_VDDIO12_H		0x55
+#define REG_I_VDDIO12_L		0x56
+#endif
 #define REG_CRITICAL_ACTIONS		0x65
 #define REG_CTRITICAL_TEMP		0x66
 #define REG_REPOWERON_TEMP		0x67
-#define REG_VDDR_VOLT_L		0x68
-#define REG_VDDR_VOLT_H		0x69
-#define REG_SET_VOLT_L		0x6a
-#define REG_SET_VOLT_H		0x6b
-#define REG_DROOP_L		0x6c
-#define REG_DROOP_H		0x6d
-#define REG_SET_DROOP_L		0x6e
-#define REG_SET_DROOP_H		0x6f
 
 #define REG_FLASH_CMD		0x63
 #define REG_FLASH_OFFSET	0x7c
@@ -125,6 +128,9 @@ static struct filter adc_averge_tab[16];
 static unsigned char set_vddr_val[2];
 static uint8_t vddr_volt[2];
 static uint8_t droop_val[2];
+//static uint8_t i12v_power[2];
+static uint8_t dbfs_p_enable;
+static uint8_t atx_300W;
 
 static unsigned long filter_init(struct filter *f, unsigned long d)
 {
@@ -250,6 +256,28 @@ static void flash_exec_cmd(struct mcu_ctx *ctx, int cmd)
 	fmc_flag_clear(FMC_FLAG_END);
 }
 
+/* unit: W*/
+unsigned int get_12v_power(void)
+{
+	return adc_averge_tab[0].value * 12 / 1000 ;
+}
+
+/* unit: W*/
+unsigned char get_12v_power_l(void)
+{
+	unsigned int power;
+	power = get_12v_power();
+	return power & 0xff;
+}
+
+/* unit: W*/
+unsigned char get_12v_power_h(void)
+{
+	unsigned int power;
+	power = get_12v_power();
+	return power >> 8;
+}
+
 static void mcu_match(void *priv, int dir)
 {
 	struct mcu_ctx *ctx = priv;
@@ -307,6 +335,12 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_SET_VOLT_H:
 		set_vddr_val[1] = data;
 		break;
+	case REG_POWER_LIMIT:
+		atx_300W = data;
+		break;
+	case REG_DVFS_ENABLE:
+		dbfs_p_enable = data;
+		break;
 	default:
 		break;
 	}
@@ -355,33 +389,22 @@ static uint8_t mcu_read(void *priv)
 	case REG_DROOP_H:
 		ret = droop_val[0];
 		break;
-	case REG_INT_STATUS1:
-		ret = ctx->int_status[0];
+	case REG_I12V_H:
+		ret = (adc_averge_tab[0].value >> 8);
 		break;
-	case REG_INT_STATUS2:
-		ret = ctx->int_status[1];
+	case REG_I12V_L:
+		ret = (adc_averge_tab[0].value & 0xff);
 		break;
-	case REG_INT_MASK1:
-		ret = ctx->int_mask[0];
+	case REG_POWER_LIMIT:
+		ret = atx_300W;
 		break;
-	case REG_INT_MASK2:
-		ret = ctx->int_mask[1];
+	case REG_DVFS_ENABLE:
+		ret = dbfs_p_enable;
 		break;
-	case REG_SOC_RST_TIMES:
-		ret = chip_reset_times() & 0xff;
-		break;
-	case REG_UPTIME_LO:
-		ctx->tmp = chip_uptime();
-		ret = ctx->tmp & 0xff;
-		break;
-	case REG_UPTIME_HI:
-		ret = (ctx->tmp >> 8) & 0xff;
-		break;
-	case REG_POWEROFF_REASON:
-		ret = ctx->poweroff_reason;
 	case REG_MCU_FAMILY:
 		ret = MCU_FAMILY_GD32E50;
 		break;
+#if 0
 	case REG_I_5V_H:
 		ret = (adc_averge_tab[8].value >> 8);
 		break;
@@ -412,47 +435,29 @@ static uint8_t mcu_read(void *priv)
 	case REG_I_VDD_12V_L:
 		ret = (adc_averge_tab[9].value & 0xff);
 		break;
-	case REG_I_VDD_EMMC_1V8_H:
-		ret = (adc_averge_tab[11].value >> 8);
-		break;
-	case REG_I_VDD_EMMC_1V8_L:
-		ret = (adc_averge_tab[11].value & 0xff);
-		break;
-	case REG_I_VDD_EMMC_3V3_H:
-		ret = (adc_averge_tab[12].value >> 8);
-		break;
-	case REG_I_VDD_EMMC_3V3_L:
-		ret = (adc_averge_tab[12].value & 0xff);
-		break;
-	case REG_I_VDD_PCIE_C_0V8_H:
+	case REG_I_VDD_PCIE_C_0V75_H:
 		ret = (adc_averge_tab[7].value >> 8);
 		break;
-	case REG_I_VDD_PCIE_C_0V8_L:
+	case REG_I_VDD_PCIE_C_0V75_L:
 		ret = (adc_averge_tab[7].value & 0xff);
 		break;
-	case REG_I_VDD_PCIE_D_0V8_H:
+	case REG_I_VDD_PCIE_D_0V75_H:
 		ret = (adc_averge_tab[6].value >> 8);
 		break;
-	case REG_I_VDD_PCIE_D_0V8_L:
+	case REG_I_VDD_PCIE_D_0V75_L:
 		ret = (adc_averge_tab[6].value & 0xff);
 		break;
-	case REG_I_VDD_PCIE_H_1V8_H:
+	case REG_I_VDD_PCIE_H_1V2_H:
 		ret = (adc_averge_tab[14].value >> 8);
 		break;
-	case REG_I_VDD_PCIE_H_1V8_L:
+	case REG_I_VDD_PCIE_H_1V2_L:
 		ret = (adc_averge_tab[14].value & 0xff);
 		break;
-	case REG_I_VDD_PLL_0V8_H:
+	case REG_I_VDD_PLL_0V75_H:
 		ret = (adc_averge_tab[5].value >> 8);
 		break;
-	case REG_I_VDD_PLL_0V8_L:
+	case REG_I_VDD_PLL_0V75_L:
 		ret = (adc_averge_tab[5].value & 0xff);
-		break;
-	case REG_I_VDD_RGMII_1V8_H:
-		ret = (adc_averge_tab[10].value >> 8);
-		break;
-	case REG_I_VDD_RGMII_1V8_L:
-		ret = (adc_averge_tab[10].value & 0xff);
 		break;
 	case REG_I_VDDC_H:
 		ret = (adc_averge_tab[13].value >> 8);
@@ -460,18 +465,13 @@ static uint8_t mcu_read(void *priv)
 	case REG_I_VDDC_L:
 		ret = (adc_averge_tab[13].value & 0xff);
 		break;
-	case REG_I_VDDIO18_H:
+	case REG_I_VDDIO12_H:
 		ret = (adc_averge_tab[15].value >> 8);
 		break;
-	case REG_I_VDDIO18_L:
+	case REG_I_VDDIO12_L:
 		ret = (adc_averge_tab[15].value & 0xff);
 		break;
-	case REG_I_VQPS18_H:
-		ret = (adc_averge_tab[4].value >> 8);
-		break;
-	case REG_I_VQPS18_L:
-		ret = (adc_averge_tab[4].value & 0xff);
-		break;
+#endif
 	case REG_CRITICAL_ACTIONS:
 		ret = ctx->critical_action;
 		break;
@@ -551,27 +551,36 @@ void mcu_x8_init(struct i2c01_slave_ctx *i2c_slave_ctx)
 	loop_add(mcu_process);
 }
 
-#define CMD_POWER_OFF		0x02
-#define CMD_RESET		0x03	// drag reset pin
+#define CMD_CHIP_VDDR		0x01
+#define CMD_CHIP_DROOP		0x11
+#define CMD_POWER_OFF		0x05
+#define CMD_RESET		0x06	// drag reset pin
 #define CMD_REBOOT		0x07	// power off - power on
 #define CMD_UPDATE		0x08
-#define CMD_CHIP_VDDR		0x09
-#define CMD_CHIP_DROOP		0x10
 extern int power_is_on;
 
 void mcu_process(void)
 {
-	unsigned long current_time, adc_date, temp_data;
-	int i;
+	unsigned long current_time, adc_data, temp_data;
 	unsigned short temp;
 
 	current_time = tick_get();
 
 	if (current_time - last_time_collect > COLLECT_INTERVAL) {
-		for (i = 0; i < 16; ++i) {
-			adc_date = adc_read((unsigned long)i);
-			filter_in(&adc_averge_tab[i], adc_date);
-		}
+
+		adc_data = adc_read_i12v();
+		filter_in(&adc_averge_tab[0], adc_data);
+		adc_data =  get_i12v_atx();
+		filter_in(&adc_averge_tab[1], adc_data);
+		adc_data =  get_i12v_pcie();
+		filter_in(&adc_averge_tab[2], adc_data);
+		adc_data =  get_i3v3_pcie();
+		filter_in(&adc_averge_tab[3], adc_data);
+
+		/* collect board power */
+//		temp_data = adc_read_atx_12v_current() + adc_read_pcie_12v_current() + adc_read_pcie_3v3_current();
+//		i12v_power[0] = (temp_data >> 8) & 0xff;
+//		i12v_power[1] = temp_data & 0xff;
 
 		/* collect volt and droop */
 		temp_data = isl68224_output_voltage(0);
@@ -582,13 +591,6 @@ void mcu_process(void)
 		droop_val[1] = temp_data & 0xff;
 
 		last_time_collect = current_time;
-	}
-
-	if (is_print_enabled == 1) {
-		if(current_time - last_time_output > OUTPUT_CURRENT_INTERVAL) {
-			current_print_func();
-			last_time_output = current_time;
-		}
 	}
 
 	if (mcu_ctx.cmd == 0)
@@ -642,47 +644,6 @@ void mcu_process(void)
 	i2c_enable(I2C2);
 	slave_init();
 }
-
-void current_print_func(void)
-{
-	int V_5V = adc_averge_tab[8].value * 3300 / 4096;
-	int V_DDR_VDD_0V8 = adc_averge_tab[0].value * 3300 / 4096;
-	int V_DDR01_VDDQ_1V2 = adc_averge_tab[1].value * 3300 / 4096;
-	int V_DDR23_VDDQ_1V2 = adc_averge_tab[2].value * 3300 / 4096;
-	int V_VDD_12V = adc_averge_tab[9].value * 3300 / 4096;
-	int V_VDD_EMMC_1V8 = adc_averge_tab[11].value * 3300 / 4096;
-	int V_VDD_EMMC_3V3 = adc_averge_tab[12].value * 3300 / 4096;
-	int V_VDD_PCIE_C_0V8 = adc_averge_tab[7].value * 3300 / 4096;
-	int V_VDD_PCIE_D_0V8 = adc_averge_tab[6].value * 3300 / 4096;
-	int V_VDD_PCIE_H_1V8 = adc_averge_tab[14].value * 3300 / 4096;
-	int V_VDD_PLL_0V8 = adc_averge_tab[5].value * 3300 / 4096;
-	int V_VDD_RGMII_1V8 = adc_averge_tab[10].value * 3300 / 4096;
-	int V_VDDC = adc_averge_tab[13].value * 3300 / 4096;
-	int V_VDDIO18 = adc_averge_tab[15].value * 3300 / 4096;
-	int V_VQPS18 = adc_averge_tab[4].value * 3300 / 4096;
-	dbg_printf("V_5V = %d(mV)\n", V_5V);
-	dbg_printf("V_DDR_VDD_0V8 = %d(mV)\n", V_DDR_VDD_0V8);
-	dbg_printf("V_DDR01_VDDQ_1V2 = %d(mV)\n", V_DDR01_VDDQ_1V2);
-	dbg_printf("V_DDR23_VDDQ_1V2 = %d(mV)\n", V_DDR23_VDDQ_1V2);
-	dbg_printf("V_VDD_12V = %d(mV)\n", V_VDD_12V);
-	dbg_printf("V_VDD_EMMC_1V8 = %d(mV)\n", V_VDD_EMMC_1V8);
-	dbg_printf("V_VDD_EMMC_3V3 = %d(mV)\n", V_VDD_EMMC_3V3);
-	dbg_printf("V_VDD_PCIE_C_0V8 = %d(mV)\n", V_VDD_PCIE_C_0V8);
-	dbg_printf("V_VDD_PCIE_D_0V8 = %d(mV)\n", V_VDD_PCIE_D_0V8);
-	dbg_printf("V_VDD_PCIE_H_1V8 = %d(mV)\n", V_VDD_PCIE_H_1V8);
-	dbg_printf("V_VDD_PLL_0V8 = %d(mV)\n", V_VDD_PLL_0V8);
-	dbg_printf("V_VDD_RGMII_1V8 = %d(mV)\n", V_VDD_RGMII_1V8);
-	dbg_printf("V_VDDC = %d(mV)\n", V_VDDC);
-	dbg_printf("V_VDDIO18 = %d(mV)\n", V_VDDIO18);
-	dbg_printf("V_VQPS18 = %d(mV)\n", V_VQPS18);
-	dbg_printf("temp:soc:%d Cel board:%d Cel\n", get_soc_temp(), get_board_temp());
-}
-
-/*
-void current_print_func(void)
-{
-}
-*/
 
 uint8_t get_critical_action(void)
 {

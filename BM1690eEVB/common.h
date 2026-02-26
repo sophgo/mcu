@@ -4,12 +4,15 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	0
+#define MCU_SW_VER	1
 
 #define PCIE_RESET_PORT	PCIE_RST_X_PORT
 #define PCIE_RESET_PIN	PCIE_RST_X_PIN
 #define PCIE_RESET_EXTI	PCIE_RST_X_EXTI
 #define PCIE_RESET_NVIC	EXTI2_IRQn
+
+#define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
+#define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
 
 #define false 0
 #define true 1
@@ -21,8 +24,18 @@
 #define FLASH_PAGE_SIZE	(8 * 1024)
 #define FLASH_PAGE_MASK	(FLASH_PAGE_SIZE - 1)
 
-#define ARRAY_SIZE(array)	(sizeof(array) / sizeof(array[0]))
-#define ROUND_UP(x, n)		(((x) + ((n) - 1)) / n)
+#define EEPROM_BASE	(FLASH_BASE + (FLASH_SIZE - FLASH_PAGE_SIZE * 2) )
+#define EEPROM_SIZE	FLASH_PAGE_SIZE
+
+#define EEPROM_CELL_SIZE	32
+#define EEPROM_CELL_OFFSET(n)	(EEPROM_CELL_SIZE * n)
+#define EEPROM_CELL_ADDR(n)	(EEPROM_BASE + EEPROM_CELL_OFFSET(n))
+
+#define SN_BASE			(FLASH_BASE + FLASH_SIZE - FLASH_PAGE_SIZE)
+#define SN_BASE_OFFSET		(FLASH_SIZE - FLASH_PAGE_SIZE)
+#define SN_CELL_SIZE		32
+#define SN_CELL_OFFSET(n)	(SN_CELL_SIZE * n)
+
 
 #define MCU_SLAVE_ADDR		0x17
 
@@ -55,6 +68,8 @@ void check_gpio_pin(char* name, uint32_t port, uint16_t pin);
 #define gpio_clear	gpio_bit_reset
 #define gpio_set	gpio_bit_set
 #define gpio_get	gpio_input_bit_get
+
+#define DEBUG_I2C_IRQ		I2C2_EV_IRQn
 
 #define nvic_disable_irq(irq)	nvic_irq_disable(irq)
 #define nvic_enable_irq(irq)	nvic_irq_enable(irq, 0, 0)

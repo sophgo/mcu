@@ -1,4 +1,5 @@
 #include <gd32e50x_adc.h>
+#include <stdint.h>
 #include <system.h>
 #include <common.h>
 #include <tick.h>
@@ -14,6 +15,10 @@
 
 static unsigned int pcb_ver;
 static unsigned int bom_ver;
+
+static unsigned int i12v_atx;
+static unsigned int i12v_pcie;
+static unsigned int i3v3_pcie;
 
 uint8_t get_pcb_version(void)
 {
@@ -33,6 +38,11 @@ uint8_t get_bom_version(void)
 void set_bom_version(uint8_t version)
 {
 	bom_ver = version;
+}
+
+uint8_t get_hardware_version(void)
+{
+	return (pcb_ver << 4) | bom_ver;
 }
 
 /* channel: ADC_CHANNEL_x */
@@ -120,12 +130,37 @@ unsigned long adc_read_pcie_12v_current(void)
 {
 	unsigned long adc_data = adc_read(PCIE_12V_CHANNEL);
 
-	return (adc_data * 66000 / 4096);
+	return (adc_data * 11000 / 4096);
 }
 
 unsigned long adc_read_pcie_3v3_current(void)
 {
 	unsigned long adc_data = adc_read(PCIE_3V3_CHANNEL);
 
-	return (adc_data * 66000 / 4096);
+	return (adc_data * 1650 / 4096);
+}
+
+unsigned long adc_read_i12v(void)
+{
+	i12v_atx = adc_read_atx_12v_current();
+	i12v_pcie = adc_read_pcie_12v_current();
+	i3v3_pcie = adc_read_pcie_3v3_current();
+
+	return i12v_atx + i12v_pcie + i3v3_pcie;
+}
+
+unsigned int get_i12v_atx(void)
+{
+	return i12v_atx;
+}
+
+unsigned int get_i12v_pcie(void)
+{
+	return i12v_pcie;
+}
+
+/* pcie 3v3 real value*/
+unsigned int get_i3v3_pcie(void)
+{
+	return i3v3_pcie * 4;
 }

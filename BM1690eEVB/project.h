@@ -20,6 +20,8 @@
 #define BM1690EVB	0Xb2
 #define BM1690eEVB	0Xb4
 
+#define BOARD_TYPE	BM1690eEVB
+
 /* MCU Family */
 enum {
 	MCU_FAMILY_STM32L0	= 0,
