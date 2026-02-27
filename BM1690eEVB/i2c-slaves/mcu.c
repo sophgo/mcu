@@ -16,6 +16,7 @@
 #include <board_power_impl.h>
 #include <isl68224.h>
 #include <system.h>
+#include <ddr.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -36,6 +37,7 @@
 #define REG_MCU_FAMILY		0x18
 #define REG_DVFS_ENABLE		0x19
 #define REG_POWER_LIMIT		0x1a
+#define REG_DDR_SIZE		0x20
 //#define REG_INT_STATUS1		0x06
 //#define REG_INT_STATUS2		0x07
 //#define REG_INT_MASK1		0x08
@@ -403,6 +405,9 @@ static uint8_t mcu_read(void *priv)
 		break;
 	case REG_MCU_FAMILY:
 		ret = MCU_FAMILY_GD32E50;
+		break;
+	case REG_DDR_SIZE:
+		ret = get_ddr_size();
 		break;
 #if 0
 	case REG_I_5V_H:

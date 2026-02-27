@@ -17,6 +17,7 @@
 #include <pcie.h>
 #include <i2c-slaves/ct7451.h>
 #include <isl68224.h>
+#include <ddr.h>
 
 
 int main(void)
@@ -48,6 +49,8 @@ int main(void)
 	isl68224_init();
 	/* 配置串口调试 */
 	console_add();
+
+	ddr_size_init(DDR_SIZE_2R_64G);
 
 	/* never return */
 	/* 持续性任务循环执行 */

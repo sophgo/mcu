@@ -4,7 +4,7 @@
 #include <pin.h>
 #include <gd32e50x.h>
 
-#define MCU_SW_VER	1
+#define MCU_SW_VER	2
 
 #define PCIE_RESET_PORT	PCIE_RST_X_PORT
 #define PCIE_RESET_PIN	PCIE_RST_X_PIN
