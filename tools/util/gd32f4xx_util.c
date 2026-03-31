@@ -73,6 +73,7 @@ static struct {
 	int filesize;
 } firmware_table[] = {
 	{"SC11EFP300",	{SC11EFP300, -1},			FILE_SIZE_80KB},
+	{"HD12",	{HD12, -1},			FILE_SIZE_80KB},
 };
 
 static const char *mcu_family_table[] = {"GD32F4"};

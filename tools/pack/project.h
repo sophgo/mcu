@@ -56,5 +56,6 @@
 #define SC11FP300	0xb3
 #define BM1690eEVB	0xb4
 #define SC11EFP300	0xb5
+#define HD12		0xb6
 
 #endif
