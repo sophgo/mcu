@@ -17,6 +17,7 @@
 #include <aw95124.h>
 #include <pcie.h>
 #include <mcu.h>
+#include <bmc_interface.h>
 #include <dvfs.h>
 #include <ddr.h>
 
@@ -47,8 +48,6 @@ int main()
 	/* set board power */
 	board_power_init();
 
-	pcie_init();
-
 	check_gpio_power_good();
 	/* pca9848 init */
 	pca9848_init();
@@ -75,6 +74,7 @@ int main()
 	//multiphase_init();
 
 	ddr_size_init(DDR_SIZE_2R_128G);
+	// set_chip_enable();
 
 	while(1) {
 		if (chip_enable()) {
@@ -83,6 +83,7 @@ int main()
 
 		ct7451_process();
 		mdelay(1);
+		check_chip_status();
 		mcu_process();
 		console_poll();
 		dvfs_process();

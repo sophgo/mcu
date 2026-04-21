@@ -73,10 +73,11 @@ void tmp_i2c_read(int idx)
 	if(ret)
 		debug("ct7451%d_init read lt reg fail!(read)\n",idx);
 	ct7451_ctx[idx].local_temp = (int)tmp - 64;
-	i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
+
+	ret = i2c_master_smbus_read_byte(I2C, CT7451_SLAVE_ADDR, SMBTO,
 			CT7451_RT, &tmp);
 	if(ret)
-		debug("ct7451%d_init read lt reg fail!(read)\n",idx);
+		debug("ct7451%d_init read rt reg fail!(read)\n",idx);
 	ct7451_ctx[idx].remote_temp = (int)tmp - 64;
 
 	set_soc_temp(idx, round(ct7451_ctx[idx].remote_temp * 1.2058f - 31.819f));

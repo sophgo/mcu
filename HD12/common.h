@@ -5,7 +5,7 @@
 #include <pin.h>
 #include <stdint.h>
 
-#define MCU_SW_VER      2
+#define MCU_SW_VER      3
 #define SOC_NUM         2
 
 #define false	0

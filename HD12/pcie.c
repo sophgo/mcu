@@ -44,14 +44,20 @@ void pcie_init(void)
 {
 	is_chip_ready = 1;
 
+	dbg_printf("pcie_init\n");
 //	gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOE, GPIO_PIN_SOURCE_2);
 	exti_init(PCIE_RESET_EXTI, EXTI_INTERRUPT, EXTI_TRIG_BOTH);
 	exti_interrupt_flag_clear(PCIE_RESET_EXTI);
 
 	nvic_enable_irq(PCIE_RESET_NVIC);
 
-	if (gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN))
+	if (gpio_get(PCIE_RESET_PORT, PCIE_RESET_PIN)) {
+		dbg_printf("pcie_init high pcie rst found\n");
 		sys_rst_enable();
+	} else {
+		dbg_printf("pcie_init low pcie rst found\n");
+		sys_rst_disable();
+	}
 
 	pcie_task = tick_register_task(pcie_process, 0);
 }

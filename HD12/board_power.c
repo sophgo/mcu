@@ -10,7 +10,7 @@ void chip_assert_n_off(void);
 int chip_deassert_n_on(void);
 void chip_deassert_n_off(void);
 
-struct power_node const board_power_nodes[26] = {
+struct power_node const board_power_nodes[25] = {
 
 	{"MODULE_12V_EN", NODE_TYPE_ENABLE, 3000,
 	 {(unsigned long)MODULE_EN_PORT, (unsigned long)MODULE_EN_PIN},
@@ -113,10 +113,10 @@ struct power_node const board_power_nodes[26] = {
 	  (unsigned long)chip_deassert_n_off},
 	 },
 
-	{"CHIP_ASSERT_N", NODE_TYPE_FUNCTION, 0,
-	 {(unsigned long)chip_assert_n_off,
-	  (unsigned long)chip_deassert_n_on},
-	 },
+	// {"CHIP_ASSERT_N", NODE_TYPE_FUNCTION, 0,
+	//  {(unsigned long)chip_assert_n_off,
+	//   (unsigned long)chip_deassert_n_on},
+	//  },
 
 };
 
