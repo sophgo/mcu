@@ -1,4 +1,4 @@
-APP_ROOT = $(TOP)/ATHENA2EVB
+APP_ROOT = $(TOP)/CV84X6EVB
 TOOLS = $(TOP)/tools
 PACK_ROOT = $(TOOLS)/pack
 PACK = $(PACK_ROOT)/pack
@@ -13,7 +13,7 @@ $(TARGET): FORCE
 	$(Q)cd $(UTILROOT) && make clean && make && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-amd64
 	$(Q)cd $(UTILROOT) && make clean && make CROSS_COMPILE=$(AARCH64_CROSS_COMPILE) && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-aarch64
 # 	$(Q)cd $(UTILROOT) && make clean && make CROSS_COMPILE=$(RISCV64_CROSS_COMPILE) && cd - && cp $(UPGRADE) $(OUTPUT)/mcu-util-riscv64
-	$(PACK) athena2evb-layout.xml $@ $(E) && mv $@ $(OUTPUT)/
+	$(PACK) cv84x6evb-layout.xml $@ $(E) && mv $@ $(OUTPUT)/
 
 clean: FORCE
 	$(Q)cd $(APP_ROOT) && make clean
