@@ -323,7 +323,7 @@ static uint8_t mcu_read(void *priv)
 
 	switch (ctx->idx) {
 	case REG_BOARD_TYPE:
-		ret = HD12;
+		ret = get_board_type();
 		break;
 	case REG_SW_VER:
 		ret = get_firmware_version();

@@ -94,7 +94,7 @@ static uint8_t bmc_i2c_slave_read(void *priv)
 		data = get_board_temp(soc);
 		break;
 	case BMC_SOC_INFO_BOARD_TYPE:
-		data = HD12;
+		data = get_board_type();
 		break;
 	case BMC_SOC_INFO_VERSION_L:
 		data = get_firmware_version();

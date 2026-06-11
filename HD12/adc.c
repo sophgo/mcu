@@ -44,7 +44,8 @@ static unsigned long adc_read(unsigned int channel)
 }
 
 const static unsigned short version_table[] = {
-	23, 819, 1229, 1638, 2048, 2458, 2867, 3277, 3686
+	// 23, 819, 1229, 1638, 2048, 2458, 2867, 3277, 3686
+	101, 264, 402, 545, 689, 821, 966, 1120, 1314, 1486
 };
 
 static int adc2ver(unsigned short adc)

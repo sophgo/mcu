@@ -4,6 +4,7 @@
 #include <timer.h>
 #include <common.h>
 #include <project.h>
+#include <ddr.h>
 #include <debug.h>
 #include <system.h>
 #include <chip.h>
@@ -215,17 +216,26 @@ int dbgi2c_write(int idx, uint64_t addr, void *data, int len)
 
 /* i2c master operations */
 #define DBGI2C_MCU_INFO_BASE	0x7010000000ULL
-#define BOARD_TPYE_BASE 	0x70500001c8ULL
+#define BOARD_TYPE_BASE 		0x70500001c8ULL
+#define C2C_LINK_BASE 			0x705000020cULL
 void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 {
-	// int i;
+	int __maybe_unused val = 0;
 
 	// for (i = 0; i < sizeof(struct dbgi2c_info) / 4; ++i) {
 	// 	dbgi2c_write32(idx, DBGI2C_MCU_INFO_BASE + i * 4,
 	// 		       ((uint32_t *)info)[i]);
 	// }
 
-	dbgi2c_write32(idx, BOARD_TPYE_BASE, BOARD_TPYE);
+	dbgi2c_write32(idx, BOARD_TYPE_BASE,
+		      (get_ddr_size() << 8) | get_board_type());
+
+	if (get_board_type() == RHS12) {
+		val |= (idx << 21) | (get_module_id() << 17) | get_board_type();
+		dbgi2c_write32(idx, C2C_LINK_BASE, val);
+	}
+//	dbgi2c_write32(idx, BOARD_TPYE_BASE,
+//		       get_board_type());
 
 	// if (idx == 0)
 	// 	dbgi2c_collect();
@@ -235,13 +245,14 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 #define RESIZE_BAR_32M		0x1ffffffULL
 #define RESIZE_BAR_128M		0x7ffffffULL
 #define RESIZE_BAR_256M		0xfffffffULL
+#define RESIZE_BAR_1G		0x3fffffffULL
 #define RESIZE_BAR_4G		0xffffffffULL
 #define RESIZE_BAR_8G		0x1ffffffffULL
 #define RESIZE_BAR_16G		0x3ffffffffULL
 #define RESIZE_BAR_32G		0x7ffffffffULL
 #define RESIZE_BAR_64G		0xfffffffffULL
 #define RESIZE_BAR_128G		0x1fffffffffULL
-#define RESIZE_BAR_LENGTH	RESIZE_BAR_32G
+#define RESIZE_BAR_LENGTH	RESIZE_BAR_128G
 
 #define PCIE_C2C4_X8_DBI2	0x6C08500020ULL
 #define PCIE_C2C4_X4_DBI2	0x6C08900020ULL

@@ -2,6 +2,7 @@
 #include <gd32f4xx_gpio.h>
 #include <system.h>
 #include <pin.h>
+#include <project.h>
 #include <common.h>
 #include <console.h>
 #include <power.h>
@@ -21,6 +22,7 @@
 #include <dvfs.h>
 #include <ddr.h>
 #include <dbgi2c.h>
+#include <adc.h>
 
 void HardFault_Handler(void)
 {
@@ -48,6 +50,9 @@ int main()
 
 	/* set board power */
 	board_power_init();
+
+	/* detect board type (HD12 or RHS12) */
+	board_type_init();
 	check_gpio_power_good();
 
     pcie_init();
@@ -76,7 +81,12 @@ int main()
 	/* multiphase init, instead of isl68224*/
 	//multiphase_init();
 
-	ddr_size_init(DDR_SIZE_2R_128G);
+	if (get_pcb_ver() >= PCB_VER_V2_0)
+		ddr_size_init(DDR_SIZE_2R_128G);
+		// ddr_size_init(DDR_SIZE_1R_32G);
+	else
+		ddr_size_init(DDR_SIZE_2R_128G);
+
 
 	while(1) {
 		if (chip_enable()) {

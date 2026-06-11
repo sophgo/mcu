@@ -5,8 +5,12 @@
 #include <pin.h>
 #include <stdint.h>
 
-#define MCU_SW_VER      4
+#define MCU_SW_VER      13
 #define SOC_NUM         2
+
+#ifndef __maybe_unused
+#define __maybe_unused __attribute__((unused))
+#endif
 
 #define false	0
 #define true	1
@@ -134,5 +138,7 @@ void led_set_frequency(unsigned long freq);
 uint8_t get_firmware_version(void);
 void set_module_id(void);
 uint8_t get_module_id(void);
+void board_type_init(void);
+uint8_t get_board_type(void);
 
 #endif
