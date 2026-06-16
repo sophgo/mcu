@@ -9,7 +9,8 @@
 #include <stdio.h>
 #include <common/common.h>
 
-#define HCLK		(180 * 1000 * 1000)
+/* CV84: PLL 200MHz, AHB /2 -> HCLK 100MHz */
+#define HCLK		(100 * 1000 * 1000)
 #define SYSTICK_CLK	(HCLK / 8)
 #define SYSTICK_HZ	(1000)
 #define TICK_TASK_MAX	8

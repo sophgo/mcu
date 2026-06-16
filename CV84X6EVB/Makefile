@@ -60,7 +60,6 @@ ASFLAGS = $(CFLAGS) -x assembler-with-cpp -Wa,--no-warn
 
 LDFLAGS = $(SPEC_CFLAGS) $(ARCH_CFLAGS) $(OPT_CFLAGS) -static \
 	   -nostartfiles -Wl,--cref -Wl,--gc-sections \
-	   --specs=nosys.specs \
 	   -L$(TOP)/libgd/build -lgd32e50x_hd
 
 CROSS_COMPILE = arm-none-eabi-

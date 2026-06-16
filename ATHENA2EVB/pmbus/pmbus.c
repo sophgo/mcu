@@ -43,6 +43,7 @@ void pmbus_read_string(uint8_t addr, uint8_t cmd_reg, char *buf, int len)
 	buf[len - 1] = '\0';
 }
 
+/* Linear mode: VOUT_MODE[4:0] 为 5-bit 有符号指数 */
 static int pmbus_linear_exponent(void)
 {
 	uint8_t mode;
@@ -73,6 +74,7 @@ int pmbus_read_vout_raw(uint16_t *raw)
 				       PMBUS_READ_VOUT, raw) == 0)
 		return 0;
 
+	/* 部分芯片只支持读 VOUT_COMMAND */
 	return i2c_master_smbus_read_word(I2C0, pmbus_def_addr, TIMEOUT,
 					  PMBUS_VOUT_CMD, raw);
 }

@@ -2,7 +2,7 @@
  * console.c: CV84X6EVB 串口命令行交互
  *
  * 命令列表 (wishlist):
- *   pintest  -w func_name 0/1   GPIO 引脚控制
+ *   pintest  -w/-r/-l func_name GPIO 引脚控制/回读
  *   powerseq -u/-d/-w d1..d5    上电时序控制
  *   iictest  -f/-r/-w/-d        I2C 设备读写
  *   pmbus    -r/-w val          PMBus 电压读写
@@ -16,6 +16,7 @@
 #include <ctype.h>
 #include <system/system.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <common/common.h>
 #include <pin.h>
@@ -28,6 +29,10 @@
 #include <pmbus/pmbus.h>
 #include <pwm/pwm.h>
 #include <i2c/i2c_master/i2c_master.h>
+#include <gd32e50x_i2c.h>
+
+/* iictest -w 需 5 个参数，powerseq -w 需 7 个；ecdc 默认 4 不够 */
+#define CONSOLE_MAX_ARGC	10
 
 static struct ecdc_console *console;
 
@@ -66,70 +71,117 @@ static void console_putc(void *console_hint, char c)
 }
 
 /* ================================================================
- * pintest -w <func_name> <0|1>
+ * pintest -w / -r / -l
  * ================================================================ */
 static const char cmd_pintest_usage[] =
-	"pintest -w <func_name> <0|1>\n"
-	"  Set output GPIO high(1) or low(0)\n"
+	"pintest -w <func_name> <0|1>  set GPIO high(1) or low(0)\n"
+	"pintest -r <func_name>        read GPIO (OCTL + pin level)\n"
+	"pintest -l                    list all GPIOs and state\n"
 	"  func_name: PCIE_SEL EN_12V0 POWEREN1 POWEREN2 POWEREN3\n"
 	"             SYS_RSTN_H PWR_RSTN_H PWR_BUTTON1_H PWR_ON_H PWR_WAKEUP_H\n";
+
+static void pintest_print_state(struct gpio_node *node)
+{
+	bool octl = gpio_read_output(node);
+	bool pin = gpio_get(node);
+
+	printf("  %-14s OCTL=%d ISTAT=%d (%s)\n",
+	       node->name, octl ? 1 : 0, pin ? 1 : 0,
+	       pin ? "HIGH" : "LOW");
+}
 
 static void cmd_pintest(void *hint, int argc, char const *argv[])
 {
 	struct gpio_node *node;
 
-	if (argc != 4 || strcmp(argv[1], "-w") != 0) {
+	if (argc < 2) {
 		printf("%s", cmd_pintest_usage);
 		return;
 	}
+
+	if (strcmp(argv[1], "-l") == 0) {
+		int i;
+
+		printf("GPIO nodes:\n");
+		for (i = 0; i < ARRAY_SIZE(all_output_nodes); ++i)
+			pintest_print_state(all_output_nodes[i]);
+		return;
+	}
+
+	if (argc != 4 && !(argc == 3 && strcmp(argv[1], "-r") == 0)) {
+		printf("%s", cmd_pintest_usage);
+		return;
+	}
+
 	node = find_output_by_name(argv[2]);
 	if (!node) {
 		printf("Unknown pin: %s\n", argv[2]);
 		return;
 	}
-	if (atoi(argv[3]))
-		gpio_set(node);
-	else
-		gpio_clear(node);
-	printf("%s = %s\n", node->name, atoi(argv[3]) ? "HIGH" : "LOW");
+
+	if (strcmp(argv[1], "-w") == 0) {
+		if (atoi(argv[3]))
+			gpio_set(node);
+		else
+			gpio_clear(node);
+		printf("%s = %s\n", node->name,
+		       atoi(argv[3]) ? "HIGH" : "LOW");
+		pintest_print_state(node);
+	} else if (strcmp(argv[1], "-r") == 0) {
+		pintest_print_state(node);
+	} else {
+		printf("%s", cmd_pintest_usage);
+	}
 }
 
 /* ================================================================
  * powerseq -u / -d / -w d1 d2 d3 d4 d5
  * ================================================================ */
 static const char cmd_powerseq_usage[] =
-	"powerseq -u                     all pins UP with current delays\n"
-	"powerseq -d                     all pins DOWN\n"
-	"powerseq -w d1 d2 d3 d4 d5      set 5 gap delays (ms), then UP\n";
+	"powerseq -u                     step UP, gap(us) before each pin\n"
+	"powerseq -d                     all seq pins DOWN immediately\n"
+	"powerseq -w d1 d2 d3 d4 d5      set 5 gaps (us), then run -u\n";
+
+static void powerseq_print_gaps(void)
+{
+	unsigned int gaps[POWER_SEQ_GAP_NUM];
+	int i;
+
+	power_seq_get_gaps_us(gaps);
+	printf("gaps (us):");
+	for (i = 0; i < POWER_SEQ_GAP_NUM; ++i)
+		printf(" %u", gaps[i]);
+	printf("\n");
+}
 
 static void cmd_powerseq(void *hint, int argc, char const *argv[])
 {
-	unsigned int delays[POWER_SEQ_NUM - 1];
+	unsigned int gaps[POWER_SEQ_GAP_NUM];
 	int i;
 
 	if (argc < 2) {
 		printf("%s", cmd_powerseq_usage);
+		powerseq_print_gaps();
 		return;
 	}
 
 	if (strcmp(argv[1], "-d") == 0) {
 		power_seq_off();
-		printf("Power DOWN done\n");
+		printf("Power DOWN done (6 seq pins -> LOW)\n");
 	} else if (strcmp(argv[1], "-u") == 0) {
 		power_seq_on();
-		printf("Power UP done, delay=%ums\n", power_seq_get_delay_ms());
+		printf("Power UP done\n");
+		powerseq_print_gaps();
 	} else if (strcmp(argv[1], "-w") == 0) {
 		if (argc != 7) {
-			printf("Usage: powerseq -w d1 d2 d3 d4 d5\n");
+			printf("Usage: powerseq -w d1 d2 d3 d4 d5  (us)\n");
 			return;
 		}
-		for (i = 0; i < POWER_SEQ_NUM - 1; ++i)
-			delays[i] = (unsigned int)atoi(argv[i + 2]);
-		power_seq_on_with_delays(delays);
-		printf("Power UP done with delays:");
-		for (i = 0; i < POWER_SEQ_NUM - 1; ++i)
-			printf(" %u", delays[i]);
-		printf("\n");
+		for (i = 0; i < POWER_SEQ_GAP_NUM; ++i)
+			gaps[i] = (unsigned int)strtoul(argv[2 + i], NULL, 0);
+		power_seq_set_gaps_us(gaps);
+		printf("Gaps set (us), run powerseq -u to apply\n");
+		powerseq_print_gaps();
 	} else {
 		printf("%s", cmd_powerseq_usage);
 	}
@@ -197,7 +249,9 @@ static void cmd_iictest(void *hint, int argc, char const *argv[])
 		}
 		addr = (uint8_t)strtol(argv[2], NULL, 0);
 		printf("Dump I2C[0x%02X]:\n", addr);
-		for (reg = 0; reg < 256; ++reg) {
+		/* reg 不可用 uint8_t 做 0..255 循环，++ 后会回绕死循环 */
+		for (unsigned int i = 0; i < 256; ++i) {
+			reg = (uint8_t)i;
 			rv = i2c_master_smbus_read_byte(I2C0, addr, 5, reg, &val);
 			if (rv == 0 && val != 0xFF) {
 				printf("  [0x%02X] = 0x%02X\n", reg, val);
@@ -228,11 +282,24 @@ static void cmd_pmbus(void *hint, int argc, char const *argv[])
 	}
 
 	if (strcmp(argv[1], "-r") == 0) {
-		mv = pmbus_get_voltage();
-		if (mv)
+		uint16_t raw;
+		uint8_t mode;
+
+		if (pmbus_get_voltage_mv(&mv) == 0) {
 			printf("VOUT = %u mV\n", mv);
-		else
-			printf("PMBus read failed\n");
+			if (pmbus_read_vout_raw(&raw) == 0)
+				printf("  raw=0x%04x addr=0x%02x\n",
+				       raw, pmbus_get_addr());
+		} else {
+			printf("PMBus read failed (addr=0x%02x)\n",
+			       pmbus_get_addr());
+			if (i2c_master_smbus_read_byte(I2C0, pmbus_get_addr(),
+						       50, PMBUS_VOUT_MODE,
+						       &mode) == 0)
+				printf("  VOUT_MODE=0x%02x (I2C OK)\n", mode);
+			else
+				printf("  VOUT_MODE read failed (check I2C0/addr)\n");
+		}
 	} else if (strcmp(argv[1], "-w") == 0) {
 		if (argc != 3) {
 			printf("Usage: pmbus -w <mV>\n");
@@ -430,7 +497,8 @@ int console_init(void)
 {
 	int i;
 
-	console = ecdc_alloc_console(NULL, console_getc, console_putc, 128, 4);
+	console = ecdc_alloc_console(NULL, console_getc, console_putc, 128,
+				     CONSOLE_MAX_ARGC);
 	if (console == NULL) {
 		printf("Create Console Failed\n");
 		return -1;

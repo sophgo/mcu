@@ -17,9 +17,13 @@ void pmbus_read_word(uint8_t addr, uint8_t cmd_reg, uint16_t *val);
 void pmbus_write_word(uint8_t addr, uint8_t cmd_reg, uint16_t val);
 void pmbus_read_string(uint8_t addr, uint8_t cmd_reg, char *buf, int len);
 
+/* 读 READ_VOUT 原始值, 0=成功 */
 int pmbus_read_vout_raw(uint16_t *raw);
+
+/* 读电压 mV, 0=成功 -1=I2C失败 */
 int pmbus_get_voltage_mv(unsigned int *mv);
 
+/* 兼容旧接口: 失败返回 0 */
 unsigned int pmbus_get_voltage(void);
 void pmbus_set_voltage(unsigned int mv);
 

@@ -236,10 +236,12 @@ function build()
             suffix=bin
         fi
         version $proj
-        file_name=$proj-mcu-v$fw_ver-$date.$suffix
+        #file_name=$proj-mcu-v$fw_ver-$date.$suffix
+	file_name=mcu-fw.$suffix
         cp $proj/$proj-mcu.$suffix $proj/$file_name
         md5sum $proj/$file_name
         cp -r $proj/$file_name release
+	cp $proj
     done
 }
 

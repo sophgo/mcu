@@ -21,6 +21,7 @@
 #include <loop/loop.h>
 #include <board/board.h>
 #include <gpio/gpio.h>
+#include <power_seq/power_seq.h>
 #include <i2c-slaves/ds1307/ds1307.h>
 #include <debug.h>
 
@@ -32,6 +33,7 @@ int main(void)
 	debug("[ Firmware built on: %s - %s ]\n", __DATE__, __TIME__);
 
 	power_init();
+	power_seq_init();
 	board_init();
 	chip_init();
 	ds1307_init();

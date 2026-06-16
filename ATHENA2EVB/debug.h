@@ -16,7 +16,9 @@
 
 #else
 
-#define debug(...)	do {} while (0)
+#include <stdio.h>
+
+#define debug(...)	printf(__VA_ARGS__)
 
 #endif
 

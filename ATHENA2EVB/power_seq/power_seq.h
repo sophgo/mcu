@@ -1,11 +1,5 @@
 /*
- * power_seq.h: CV84x6 上电时序控制
- *
- * -u: gap(us) 后依次拉高 6 个引脚
- * -d: 6 个引脚立即全部拉低
- * -w: 仅设置 5 个间隔 (us)，需再执行 -u
- *
- * (C) Copyright 2024 Sophgo Technology
+ * power_seq.h: CV84 兼容上电时序 (ATHENA2 引脚映射)
  */
 #ifndef __POWER_SEQ_H__
 #define __POWER_SEQ_H__

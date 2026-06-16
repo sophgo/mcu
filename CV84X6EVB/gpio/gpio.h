@@ -38,6 +38,7 @@ extern struct gpio_node pg_5v;
 void gpio_set(struct gpio_node *node);
 void gpio_clear(struct gpio_node *node);
 bool gpio_get(struct gpio_node *node);
+bool gpio_read_output(struct gpio_node *node);
 void pg_detect(void);
 void gpio_control_init(void);
 

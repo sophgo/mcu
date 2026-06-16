@@ -8,8 +8,20 @@
 #include <gd32e50x_rcu.h>
 #include <gd32e50x_i2c.h>
 #include <gd32e50x_misc.h>
+#include <i2c/i2c_master/i2c_master.h>
+#include <tick/tick.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/unistd.h>
+#include <system/system.h>
 #include <pin.h>
 #include <debug.h>
+
+#define DEBUG_UART	USART2
+#define DEFAULT_BAUD_RATE	115200
 
 static void system_gpio_init(void)
 {
@@ -19,6 +31,9 @@ static void system_gpio_init(void)
 	rcu_periph_clock_enable(RCU_GPIOC);
 	rcu_periph_clock_enable(RCU_GPIOD);
 	rcu_periph_clock_enable(RCU_GPIOE);
+	rcu_periph_clock_enable(RCU_AF);
+
+	gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
 
 	/* 输出引脚默认低电平 */
 	gpio_bit_reset(PG_IND_PORT, PG_IND_PIN);
@@ -80,19 +95,28 @@ static void system_uart_init(void)
 	rcu_periph_clock_enable(RCU_GPIOD);
 
 	/* PD5 = USART2_TX, PD6 = USART2_RX */
-	gpio_init(GPIOD, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_5);
-	gpio_init(GPIOD, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_6);
+	gpio_init(MCU_UART_TX_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ,
+		  MCU_UART_TX_PIN);
+	gpio_init(MCU_UART_RX_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ,
+		  MCU_UART_RX_PIN);
 
-	usart_deinit(USART2);
-	usart_baudrate_set(USART2, 115200);
-	usart_word_length_set(USART2, USART_WL_8BIT);
-	usart_stop_bit_set(USART2, USART_STB_1BIT);
-	usart_parity_config(USART2, USART_PM_NONE);
-	usart_hardware_flow_rts_config(USART2, USART_RTS_DISABLE);
-	usart_hardware_flow_cts_config(USART2, USART_CTS_DISABLE);
-	usart_receive_config(USART2, USART_RECEIVE_ENABLE);
-	usart_transmit_config(USART2, USART_TRANSMIT_ENABLE);
-	usart_enable(USART2);
+	usart_deinit(DEBUG_UART);
+	usart_baudrate_set(DEBUG_UART, DEFAULT_BAUD_RATE);
+	usart_word_length_set(DEBUG_UART, USART_WL_8BIT);
+	usart_stop_bit_set(DEBUG_UART, USART_STB_1BIT);
+	usart_parity_config(DEBUG_UART, USART_PM_NONE);
+	usart_hardware_flow_rts_config(DEBUG_UART, USART_RTS_DISABLE);
+	usart_hardware_flow_cts_config(DEBUG_UART, USART_CTS_DISABLE);
+	usart_receive_config(DEBUG_UART, USART_RECEIVE_ENABLE);
+	usart_transmit_config(DEBUG_UART, USART_TRANSMIT_ENABLE);
+	usart_enable(DEBUG_UART);
+}
+
+static void system_timer_init(void)
+{
+	rcu_periph_clock_enable(RCU_TIMER6);
+	rcu_periph_reset_enable(RCU_TIMER6RST);
+	rcu_periph_reset_disable(RCU_TIMER6RST);
 }
 
 void system_i2c0_init(void)
@@ -100,12 +124,12 @@ void system_i2c0_init(void)
 	rcu_periph_clock_enable(RCU_GPIOB);
 	rcu_periph_clock_enable(RCU_I2C0);
 
-	/* PB6 = I2C0_SCL, PB7 = I2C0_SDA */
+	gpio_pin_remap_config(GPIO_I2C0_REMAP, DISABLE);
+
 	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_50MHZ, GPIO_PIN_6 | GPIO_PIN_7);
 
-	i2c_clock_config(I2C0, 100000, I2C_DTCY_2);
-	i2c_mode_addr_config(I2C0, I2C_I2CMODE_ENABLE, I2C_ADDFORMAT_7BITS, 0);
-	i2c_enable(I2C0);
+	i2c_deinit(I2C0);
+	i2c_master_init(I2C0);
 }
 
 void system_i2c1_init(void)
@@ -113,22 +137,30 @@ void system_i2c1_init(void)
 	rcu_periph_clock_enable(RCU_GPIOB);
 	rcu_periph_clock_enable(RCU_I2C1);
 
-	/* PB10 = I2C1_SCL, PB11 = I2C1_SDA */
-	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_50MHZ, GPIO_PIN_10 | GPIO_PIN_11);
+	gpio_init(GPIOB, GPIO_MODE_AF_OD, GPIO_OSPEED_50MHZ,
+		  GPIO_PIN_10 | GPIO_PIN_11);
 
-	/* I2C1 配置为 slave，在 slave_init() 中完成具体配置 */
+	i2c_deinit(I2C1);
+	i2c_enable(I2C1);
+}
+
+static int usart_is_recv_ready(uint32_t usart_periph)
+{
+	return USART_STAT0(usart_periph) & USART_STAT0_RBNE;
 }
 
 void uart_putc(char c)
 {
-	while (usart_flag_get(USART2, USART_FLAG_TBE) == RESET);
-	usart_data_transmit(USART2, (uint8_t)c);
+	usart_data_transmit(DEBUG_UART, (uint8_t)c);
+	while (!usart_flag_get(DEBUG_UART, USART_FLAG_TBE))
+		;
 }
 
 char uart_getc(void)
 {
-	while (usart_flag_get(USART2, USART_FLAG_RBNE) == RESET);
-	return (char)usart_data_receive(USART2);
+	if (usart_is_recv_ready(DEBUG_UART))
+		return (char)usart_data_receive(DEBUG_UART);
+	return -1;
 }
 
 void system_init(void)
@@ -136,6 +168,93 @@ void system_init(void)
 	clock_init();
 	system_gpio_init();
 	system_uart_init();
+	system_timer_init();
 	system_i2c0_init();
 	system_i2c1_init();
+	tick_init();
+}
+
+/* newlib stub */
+
+static unsigned long heap_start;
+static unsigned long heap_end;
+
+extern char __ld_bss_end[0];
+
+void *_sbrk(unsigned long inc)
+{
+	void *last;
+
+	if (heap_start == 0) {
+		heap_start = (unsigned long)__ld_bss_end;
+		heap_end = heap_start;
+	}
+	last = (void *)heap_end;
+	heap_end += inc;
+	return last;
+}
+
+_ssize_t _write_r(struct _reent *ptr, int fd,
+		  const void *buf, size_t cnt)
+{
+	size_t i;
+	uint8_t ch;
+
+	(void)ptr;
+	(void)fd;
+
+	for (i = 0; i < cnt; ++i) {
+		ch = ((uint8_t *)buf)[i];
+		if (ch == '\n')
+			uart_putc('\r');
+		uart_putc((char)ch);
+	}
+
+	return cnt;
+}
+
+int _close_r(struct _reent *reent, int fd)
+{
+	(void)reent;
+	(void)fd;
+	return 0;
+}
+
+int _fstat_r(struct _reent *reent, int fd, struct stat *stat)
+{
+	(void)reent;
+
+	if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
+		memset(stat, 0, sizeof(struct stat));
+		stat->st_mode = S_IFCHR;
+		return 0;
+	}
+
+	errno = EBADF;
+	return -errno;
+}
+
+int _isatty_r(struct _reent *reent, int fd)
+{
+	(void)reent;
+	(void)fd;
+	return 1;
+}
+
+off_t _lseek_r(struct _reent *reent, int fd, off_t offset, int pos)
+{
+	(void)reent;
+	(void)fd;
+	(void)offset;
+	(void)pos;
+	return 0;
+}
+
+_ssize_t _read_r(struct _reent *reent, int fd, void *buf, size_t len)
+{
+	(void)reent;
+	(void)fd;
+	(void)buf;
+	(void)len;
+	return 0;
 }

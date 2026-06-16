@@ -81,6 +81,11 @@ bool gpio_get(struct gpio_node *node)
 	return gpio_input_bit_get(node->port, node->pin) != 0;
 }
 
+bool gpio_read_output(struct gpio_node *node)
+{
+	return gpio_output_bit_get(node->port, node->pin) != RESET;
+}
+
 /* ================================================================
  * Power Good 检测
  * 当 PE2, PE3, PE4, PE5 全部高电平时，点亮 PC9 LED
