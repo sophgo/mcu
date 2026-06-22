@@ -74,6 +74,7 @@ int main(void)
 		timer_udelay(1);
 		console_poll();
 		dvfs_process();
+		//resize_bar_enable();
 	}
 
 	return 0;

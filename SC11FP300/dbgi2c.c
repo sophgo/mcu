@@ -250,6 +250,76 @@ void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 
 }
 
+#define RESIZE_BAR_32G		0x7ffffffffULL
+#define RESIZE_BAR_64G		0xfffffffffULL
+#define RESIZE_BAR_128G		0x1fffffffffULL
+#define RESIZE_BAR_LENGTH	RESIZE_BAR_128G
+
+#define PCIE_C2C1_X8_1_DBI2	0x6C02100020ULL
+#define PCIE_C2C0_X8_0_DBI2	0x6C00500020ULL
+
+#define FUNC_NUM		2
+#define FUNC1_OFFSET		16
+
+#define MAX_RETRIES 100
+#define RETRY_DELAY_US 10
+/* wait pcie clk ready*/
+#define PCIE_CLK_READY_TIME	50
+static volatile int resize_bar_flag;
+
+static void resize_bar(int idx)
+{
+	int ret;
+	int retry_count;
+	int func_num;
+	uint64_t dbi2_base_addr;
+
+	if (idx == 0) {
+		dbi2_base_addr = PCIE_C2C1_X8_1_DBI2;
+		func_num = 2;
+	} else if (idx == 1) {
+		dbi2_base_addr = PCIE_C2C0_X8_0_DBI2;
+		func_num = 1;
+	}
+		
+	
+	for (int i = 0; i < func_num; i++) {
+		retry_count = 0;
+		while ((ret = dbgi2c_write32(idx, dbi2_base_addr + (i << FUNC1_OFFSET), 
+					RESIZE_BAR_LENGTH & 0xffffffff)) != 0) {
+			if (++retry_count >= MAX_RETRIES) {
+				dbg_printf("chip%d func%d pcie mask reg wirte fail, ret= %d\n", idx, i, ret);
+				break;
+			}
+			timer_udelay(RETRY_DELAY_US);
+		}
+		
+		retry_count = 0;
+		while ((ret = dbgi2c_write32(idx, dbi2_base_addr + 0x4 + (i << FUNC1_OFFSET), 
+						(RESIZE_BAR_LENGTH >> 32) & 0xffffffff)) != 0) {
+			if (++retry_count >= MAX_RETRIES) {
+				dbg_printf("chip%d func%d pcie mask reg wirte fail, ret= %d\n", idx, i, ret);
+				break;
+			}
+			timer_udelay(RETRY_DELAY_US); 
+		}
+	}
+}
+
+void resize_bar_enable(void)
+{
+	if (!resize_bar_flag && chip_enable() && (tick64_get() > PCIE_CLK_READY_TIME)) {
+		resize_bar_flag = 1;
+		dbg_printf("resize_bar start\n");
+		resize_bar(0);
+		dbg_printf("resize_bar end\n");
+	}
+
+	if (!chip_enable())
+		resize_bar_flag = 0;
+		
+}
+
 /* i2c slave operations */
 
 #define DBGI2C_SLAVE_BASE	0x60
