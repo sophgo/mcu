@@ -61,12 +61,6 @@ int chip_enable(void)
 	return is_chip_enabled;
 }
 
-void set_chip_enable(void)
-{
-	dbg_printf("set chip_enable = true\n");
-	is_chip_enabled = true;
-}
-
 void c2c_rst_enbale(void)
 {
 	gpio_bit_set(BM0_C2C2_L0_ERST_H_PORT, BM0_C2C2_L0_ERST_H_PIN);

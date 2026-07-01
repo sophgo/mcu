@@ -25,4 +25,5 @@
 #define SM7G   0x35
 #define SM7M_MP_1_1   0x36
 #define SM7M_MP_SE8M  0x40
+#define SE7_V3_0   0x41
 #endif

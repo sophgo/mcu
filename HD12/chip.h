@@ -13,7 +13,6 @@ int chip_enable(void);
 void sys_rst_enable(void);
 void set_vddr_wake_status(int chip, int flag);
 int get_chip_vddr_status(int chip);
-void set_chip_enable(void);
 
 #define BN_SYS_RST_ENABLE(n)					\
 	do {							\

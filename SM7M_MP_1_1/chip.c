@@ -9,11 +9,13 @@
 #include <common.h>
 #include <loop.h>
 #include <power.h>
+#include <i2c_slave.h>
 
 static uint32_t uptime;
 static uint32_t reset_times;
 static int chip_enabled;
 static int needpoweron;
+extern struct i2c_slave_ctx i2c1_slave_ctx;
 
 uint32_t chip_reset_times(void)
 {
@@ -34,6 +36,7 @@ void chip_disable(void)
 
 void chip_enable(void)
 {
+	i2c_slave_reset(&i2c1_slave_ctx);
 	gpio_set(SYS_RST_PORT, SYS_RST_PIN);
 	chip_enabled = true;
 }

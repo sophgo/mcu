@@ -37,7 +37,7 @@
 #include <se6.h>
 #include <mcu-e2prom.h>
 
-static struct i2c_slave_ctx i2c1_slave_ctx;
+struct i2c_slave_ctx i2c1_slave_ctx;
 static struct i2c_slave_ctx i2c2_slave_ctx;
 
 int main(void)
@@ -138,10 +138,13 @@ int main(void)
                 set_soc_forever();
 	 	set_board_type(SM7M_MP_1_1);
 	}
+	else if (tca6416a_available()){
+		set_board_type(SE7_V3_0);
+	}
 	else{
 		set_board_type(SM7M_MP_1_1);
 	}
-	
+
 	mcu_init(&i2c1_slave_ctx);
 	mcu_eeprom_init(&i2c1_slave_ctx);
 	wdt_init(&i2c1_slave_ctx);

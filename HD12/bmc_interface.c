@@ -28,12 +28,9 @@
 #define BMC_SOC_INFO_12V_POWER_H		6
 #define SN_START_ADDR				7
 #define SN_END_ADDR				23
-#define CHIP_STATUS_ADDR			24
 
 #define BMC_SOC_INFO_ADDR(reg)	(BMC_SOC_INFO_BASE +	\
 					 BMC_SOC_INFO_ ## reg ## _OFFSET)
-
-#define CHIP_TEMP_THRESHOLD		45
 
 
 struct bmc_i2c_ctx {
@@ -52,35 +49,6 @@ static uint8_t get_sn_bit(int i)
 
 	return tmp;
 
-}
-
-static volatile int chip_status = 0;
-
-int get_chip_status(void)
-{
-	return chip_status;
-}
-
-void reset_chip_status(void)
-{
-	chip_status = 0;
-}
-
-void check_chip_status(void)
-{
-	int i;
-
-	if (chip_status)
-		return;
-
-	for (i = 0; i < SOC_NUM; ++i) {
-		if (get_soc_temp(i) < CHIP_TEMP_THRESHOLD)
-			return;
-	}
-
-	chip_status = 1;
-	dbg_printf("chip_status = 1, chip-0: %d, chip-1: %d\n", get_soc_temp(0), get_soc_temp(1));
-	pcie_init();
 }
 
 static inline void idx_set(uint8_t idx)
@@ -142,9 +110,6 @@ static uint8_t bmc_i2c_slave_read(void *priv)
 		break;
 	case SN_START_ADDR ...  SN_END_ADDR:
 		data = get_sn_bit(ctx.idx - SN_START_ADDR);
-		break;
-	case CHIP_STATUS_ADDR:
-		data = chip_status;
 		break;
 	default:
 		data = 0xff;

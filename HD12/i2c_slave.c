@@ -164,7 +164,7 @@ void i2c_slave_isr(struct i2c_slave_ctx *ctx)
 
 	sts = ctx->reg->sr1;
 	if (sts & ERR_MASK) {
-		dbg_printf("bus error occor, slave addr = 0x%02x, error = 0x%02x\n",ctx->reg->oar1 >> 1, sts);
+		dbg_printf("bus error occor\n");
 		/* reset i2c controller */
 		ctx->reg->cr1 &= ~CR1_PE;
 		timer_udelay(10);

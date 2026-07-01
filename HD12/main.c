@@ -69,14 +69,12 @@ int main()
 	// debug_check_vector_table();
 
 	slave_init();
-	pcie_init();
 	dvfs_init();
 
 	/* multiphase init, instead of isl68224*/
 	//multiphase_init();
 
 	ddr_size_init(DDR_SIZE_2R_128G);
-	// set_chip_enable();
 
 	while(1) {
 		if (chip_enable()) {
