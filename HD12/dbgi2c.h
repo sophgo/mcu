@@ -23,5 +23,6 @@ int dbgi2c_write32(int idx, uint64_t addr, uint32_t value);
 int dbgi2c_read32(int idx, uint64_t addr, uint32_t *value);
 int dbgi2c_read(int idx, uint64_t addr, void *data, int len);
 void dbgi2c_broadcast(int idx, struct dbgi2c_info *info);
+void resize_bar_enable(void);
 
 #endif
