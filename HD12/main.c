@@ -20,6 +20,7 @@
 #include <bmc_interface.h>
 #include <dvfs.h>
 #include <ddr.h>
+#include <dbgi2c.h>
 
 void HardFault_Handler(void)
 {
@@ -68,6 +69,7 @@ int main()
 	// debug_check_vector_table();
 
 	slave_init();
+	pcie_init();
 	dvfs_init();
 
 	/* multiphase init, instead of isl68224*/
@@ -87,6 +89,7 @@ int main()
 		mcu_process();
 		console_poll();
 		dvfs_process();
+		resize_bar_enable();
 	}
 
 	return 0;
