@@ -1,7 +1,6 @@
 #!/bin/bash
 #list='sm5g se5lite sm5gd32 bm1684evb sa5 sc5h sc5plus sm5mini sc5pro bm1684xevb bm1684xeevb sc7pro sc7hp75 sc7hp75_1 sc7fp150 sg2042evb sg2042revb wolfclaw sg2042x4 sm7mini sm7mqy athena2evb athena2acp sm7g sm7m_mp_1_1 sm7m_mp_1_2 sm7_hk bm2044revb bm1690evb sc11fp300 bm1684x_m_2'
 top="$PWD/.."
-#list="sm5mini"
 list="cv84x6evb"
 #list="bm1690eevb"
 mcu_list='STM32L0 GD32E50x GD32F4xx'
@@ -236,12 +235,10 @@ function build()
             suffix=bin
         fi
         version $proj
-        #file_name=$proj-mcu-v$fw_ver-$date.$suffix
-	file_name=mcu-fw.$suffix
+        file_name=$proj-mcu-v$fw_ver-$date.$suffix
         cp $proj/$proj-mcu.$suffix $proj/$file_name
         md5sum $proj/$file_name
         cp -r $proj/$file_name release
-	cp $proj
     done
 }
 

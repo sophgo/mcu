@@ -20,7 +20,7 @@
 #include <pin.h>
 #include <debug.h>
 
-#define DEBUG_UART	USART2
+#define DEBUG_UART	USART1
 #define DEFAULT_BAUD_RATE	115200
 
 static void system_gpio_init(void)
@@ -38,7 +38,7 @@ static void system_gpio_init(void)
 	/* 输出引脚默认低电平 */
 	gpio_bit_reset(PG_IND_PORT, PG_IND_PIN);
 	gpio_bit_reset(PCIE_SEL_PORT, PCIE_SEL_PIN);
-	gpio_bit_reset(EN_12V0_PORT, EN_12V0_PIN);
+	gpio_bit_set(EN_12V0_PORT, EN_12V0_PIN);
 	gpio_bit_reset(POWEREN1_PORT, POWEREN1_PIN);
 	gpio_bit_reset(POWEREN2_PORT, POWEREN2_PIN);
 	gpio_bit_reset(POWEREN3_PORT, POWEREN3_PIN);
@@ -73,11 +73,11 @@ static void system_gpio_init(void)
 
 static void clock_init(void)
 {
-	/* HXTAL 8MHz -> PLL 200MHz, SYSCLK = 200MHz, HCLK = 100MHz, APB1 = 50MHz, APB2 = 100MHz */
+	/* HXTAL 8MHz -> PLL 176MHz, SYSCLK = 176MHz, HCLK = 88MHz, APB1 = 44MHz, APB2 = 88MHz */
 	rcu_osci_on(RCU_HXTAL);
 	while (rcu_osci_stab_wait(RCU_HXTAL) != SUCCESS);
 
-	rcu_pll_config(RCU_PLLSRC_HXTAL_IRC48M, RCU_PLL_MUL25);
+	rcu_pll_config(RCU_PLLSRC_HXTAL_IRC48M, RCU_PLL_MUL22);
 	rcu_osci_on(RCU_PLL_CK);
 	while (rcu_osci_stab_wait(RCU_PLL_CK) != SUCCESS);
 
@@ -89,12 +89,15 @@ static void clock_init(void)
 	rcu_apb2_clock_config(RCU_APB2_CKAHB_DIV1);
 }
 
-static void system_uart_init(void)
+void system_uart_init(void)
 {
-	rcu_periph_clock_enable(RCU_USART2);
+	rcu_periph_clock_enable(RCU_USART1);
 	rcu_periph_clock_enable(RCU_GPIOD);
+	rcu_periph_clock_enable(RCU_AF);
 
-	/* PD5 = USART2_TX, PD6 = USART2_RX */
+	/* USART1 remap: PD5 = TX, PD6 = RX */
+	gpio_pin_remap_config(GPIO_USART1_REMAP, ENABLE);
+
 	gpio_init(MCU_UART_TX_PORT, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ,
 		  MCU_UART_TX_PIN);
 	gpio_init(MCU_UART_RX_PORT, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ,
