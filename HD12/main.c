@@ -48,8 +48,10 @@ int main()
 
 	/* set board power */
 	board_power_init();
-
 	check_gpio_power_good();
+
+    pcie_init();
+
 	/* pca9848 init */
 	pca9848_init();
 
@@ -83,7 +85,6 @@ int main()
 
 		ct7451_process();
 		mdelay(1);
-		check_chip_status();
 		mcu_process();
 		console_poll();
 		dvfs_process();
