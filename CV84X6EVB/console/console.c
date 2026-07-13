@@ -190,10 +190,11 @@ static void cmd_powerseq(void *hint, int argc, char const *argv[])
 /* ================================================================
  * iictest -f / -w addr reg val / -r addr reg / -d addr
  *
- * 扫描 Bus 0 即可 (I2C0)
+ * 扫描 I2C1 Bus (PB10/PB11)
  * ================================================================ */
 static const char cmd_iictest_usage[] =
-	"iictest -f                     scan I2C0 bus for devices\n"
+		"iictest                         I2C1 bus scan / read / write / dump\n"
+	"iictest -f                     scan I2C1 bus for devices\n"
 	"iictest -w <addr> <reg> <val>  write byte to device register\n"
 	"iictest -r <addr> <reg>        read byte from device register\n"
 	"iictest -d <addr>              dump device registers 0x00-0xFF\n";
@@ -209,10 +210,10 @@ static void cmd_iictest(void *hint, int argc, char const *argv[])
 	}
 
 	if (strcmp(argv[1], "-f") == 0) {
-		/* 扫描 I2C0 总线 */
-		printf("I2C0 bus scan:\n");
+		/* 扫描 I2C1 总线 */
+		printf("I2C1 bus scan:\n");
 		for (addr = 0x08; addr < 0x78; addr += 2) {
-			rv = i2c_master_write_byte(I2C0, addr, 5, 0);
+			rv = i2c_master_write_byte(I2C1, addr, 5, 0);
 			if (rv == 0)
 				printf("  found device at 0x%02X\n", addr);
 		}
@@ -225,7 +226,7 @@ static void cmd_iictest(void *hint, int argc, char const *argv[])
 		addr = (uint8_t)strtol(argv[2], NULL, 0);
 		reg  = (uint8_t)strtol(argv[3], NULL, 0);
 		val  = (uint8_t)strtol(argv[4], NULL, 0);
-		rv = i2c_master_smbus_write_byte(I2C0, addr, 5, reg, val);
+		rv = i2c_master_smbus_write_byte(I2C1, addr, 5, reg, val);
 		if (rv == 0)
 			printf("I2C[0x%02X] reg 0x%02X <- 0x%02X\n", addr, reg, val);
 		else
@@ -237,7 +238,7 @@ static void cmd_iictest(void *hint, int argc, char const *argv[])
 		}
 		addr = (uint8_t)strtol(argv[2], NULL, 0);
 		reg  = (uint8_t)strtol(argv[3], NULL, 0);
-		rv = i2c_master_smbus_read_byte(I2C0, addr, 5, reg, &val);
+		rv = i2c_master_smbus_read_byte(I2C1, addr, 5, reg, &val);
 		if (rv == 0)
 			printf("I2C[0x%02X] reg 0x%02X = 0x%02X (%u)\n", addr, reg, val, val);
 		else
@@ -252,7 +253,7 @@ static void cmd_iictest(void *hint, int argc, char const *argv[])
 		/* reg 不可用 uint8_t 做 0..255 循环，++ 后会回绕死循环 */
 		for (unsigned int i = 0; i < 256; ++i) {
 			reg = (uint8_t)i;
-			rv = i2c_master_smbus_read_byte(I2C0, addr, 5, reg, &val);
+			rv = i2c_master_smbus_read_byte(I2C1, addr, 5, reg, &val);
 			if (rv == 0 && val != 0xFF) {
 				printf("  [0x%02X] = 0x%02X\n", reg, val);
 			}
@@ -293,12 +294,12 @@ static void cmd_pmbus(void *hint, int argc, char const *argv[])
 		} else {
 			printf("PMBus read failed (addr=0x%02x)\n",
 			       pmbus_get_addr());
-			if (i2c_master_smbus_read_byte(I2C0, pmbus_get_addr(),
+			if (i2c_master_smbus_read_byte(I2C1, pmbus_get_addr(),
 						       50, PMBUS_VOUT_MODE,
 						       &mode) == 0)
 				printf("  VOUT_MODE=0x%02x (I2C OK)\n", mode);
 			else
-				printf("  VOUT_MODE read failed (check I2C0/addr)\n");
+				printf("  VOUT_MODE read failed (check I2C1/addr)\n");
 		}
 	} else if (strcmp(argv[1], "-w") == 0) {
 		if (argc != 3) {
@@ -330,13 +331,17 @@ static const char cmd_gett_usage[] =
 
 static void gett_read_raw(void)
 {
-	uint8_t data;
+	uint8_t hi, lo;
 
 	printf("CT7451 Raw Registers:\n");
-	if (i2c_master_smbus_read_byte(I2C0, CT7451_SLAVE_ADDR, 5, 0x00, &data) == 0)
-		printf("  Local  [0x00] = 0x%02X (%d)\n", data, data);
-	if (i2c_master_smbus_read_byte(I2C0, CT7451_SLAVE_ADDR, 5, 0x01, &data) == 0)
-		printf("  Remote [0x01] = 0x%02X (%d)\n", data, data);
+	if (i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x00, &hi) == 0)
+		printf("  Local  HI [0x00] = 0x%02X\n", hi);
+	if (i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x15, &lo) == 0)
+		printf("  Local  LO [0x15] = 0x%02X\n", lo);
+	if (i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x01, &hi) == 0)
+		printf("  Remote HI [0x01] = 0x%02X\n", hi);
+	if (i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x10, &lo) == 0)
+		printf("  Remote LO [0x10] = 0x%02X\n", lo);
 }
 
 static void cmd_gett(void *hint, int argc, char const *argv[])
@@ -377,8 +382,8 @@ static void cmd_gett(void *hint, int argc, char const *argv[])
 		if (show_raw) {
 			gett_read_raw();
 		}
-		printf("Local  Temperature: %d C\n", ct7451_local_temp);
-		printf("Remote Temperature: %d C\n", ct7451_remote_temp);
+		printf("Local  Temperature: %d.%02d C\n", ct7451_local_temp / 100, abs(ct7451_local_temp % 100));
+		printf("Remote Temperature: %d.%02d C\n", ct7451_remote_temp / 100, abs(ct7451_remote_temp % 100));
 	}
 }
 

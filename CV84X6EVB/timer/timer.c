@@ -16,8 +16,8 @@ void timer_start(unsigned long us)
 {
 	timer_disable(TIMER6);
 
-	/* APB1=50MHz (TIMER6), prescale to ~1MHz */
-	timer_prescaler_config(TIMER6, 50 - 1, TIMER_PSC_RELOAD_NOW);
+	/* APB1 timer clk = 180MHz, prescale to ~1MHz */
+	timer_prescaler_config(TIMER6, 180 - 1, TIMER_PSC_RELOAD_NOW);
 	timer_autoreload_value_config(TIMER6, us);
 	timer_single_pulse_mode_config(TIMER6, TIMER_SP_MODE_SINGLE);
 

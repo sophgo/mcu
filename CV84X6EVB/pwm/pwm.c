@@ -3,7 +3,7 @@
  *
  * 使用 TIMER3 通道3 输出 PWM 信号控制 VDDC 电压
  * 默认频率 50kHz, 占空比 0~1000 (0%~100%)
- * APB1 = 50MHz, TIMER3 时钟 = 50MHz
+ * SYSCLK = 180MHz, APB1 timer clock = 180MHz, prescaler = 179 -> 1MHz
  *
  * pwm <freq> <duty>  频率(Hz) + 占空比(0~1000)
  *
@@ -15,7 +15,7 @@
 #include <pin.h>
 #include <pwm/pwm.h>
 
-static unsigned int pwm_period   = 999;	/* 50kHz default */
+static unsigned int pwm_period   = 19;	/* 50kHz default: 1MHz/(19+1) = 50kHz */
 static unsigned int pwm_freq_hz  = 50000;
 static unsigned int pwm_cur_duty;
 
@@ -32,7 +32,7 @@ void pwm_init(void)
 
 	/* TIMER3 基础配置, 默认 50kHz */
 	timer_struct_para_init(&timer_param);
-	timer_param.prescaler         = 0;
+	timer_param.prescaler         = 179;	/* 180MHz / (179+1) = 1MHz */
 	timer_param.alignedmode       = TIMER_COUNTER_EDGE;
 	timer_param.counterdirection  = TIMER_COUNTER_UP;
 	timer_param.period            = pwm_period;
@@ -65,8 +65,8 @@ void pwm_set(unsigned int freq_hz, unsigned int duty_permil)
 	if (freq_hz > 50000)
 		freq_hz = 50000;
 
-	/* period = 50MHz / freq_hz - 1 */
-	period = 50000000UL / freq_hz;
+	/* period = 1MHz / freq_hz - 1 */
+	period = 1000000UL / freq_hz;
 	if (period < 1)
 		period = 1;
 	if (period > 65535)

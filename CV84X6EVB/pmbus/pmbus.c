@@ -1,7 +1,7 @@
 /*
- * pmbus.c: PMBus (SMBus 1.1 over I2C0) 简易实现
+ * pmbus.c: PMBus (SMBus 1.1 over I2C1) 简易实现
  *
- * PMBus 基于 SMBus，使用 I2C0 master 通信
+ * PMBus 基于 SMBus，使用 I2C1 master 通信
  * 默认目标地址: 0x41
  *
  * (C) Copyright 2024 Sophgo Technology
@@ -27,19 +27,19 @@ uint8_t pmbus_get_addr(void)
 
 void pmbus_read_word(uint8_t addr, uint8_t cmd_reg, uint16_t *val)
 {
-	i2c_master_smbus_read_word(I2C0, addr, TIMEOUT, cmd_reg, val);
+	i2c_master_smbus_read_word(I2C1, addr, TIMEOUT, cmd_reg, val);
 }
 
 void pmbus_write_word(uint8_t addr, uint8_t cmd_reg, uint16_t val)
 {
-	i2c_master_smbus_write_word(I2C0, addr, TIMEOUT, cmd_reg, val);
+	i2c_master_smbus_write_word(I2C1, addr, TIMEOUT, cmd_reg, val);
 }
 
 void pmbus_read_string(uint8_t addr, uint8_t cmd_reg, char *buf, int len)
 {
 	uint8_t cmd = cmd_reg;
 
-	i2c_master_trans(I2C0, addr, TIMEOUT, &cmd, 1, (uint8_t *)buf, len - 1);
+	i2c_master_trans(I2C1, addr, TIMEOUT, &cmd, 1, (uint8_t *)buf, len - 1);
 	buf[len - 1] = '\0';
 }
 
@@ -48,7 +48,7 @@ static int pmbus_linear_exponent(void)
 	uint8_t mode;
 	int exp;
 
-	if (i2c_master_smbus_read_byte(I2C0, pmbus_def_addr, TIMEOUT,
+	if (i2c_master_smbus_read_byte(I2C1, pmbus_def_addr, TIMEOUT,
 				       PMBUS_VOUT_MODE, &mode) != 0)
 		return -9;
 
@@ -69,11 +69,11 @@ static unsigned int pmbus_raw_to_mv(uint16_t raw, int exp)
 
 int pmbus_read_vout_raw(uint16_t *raw)
 {
-	if (i2c_master_smbus_read_word(I2C0, pmbus_def_addr, TIMEOUT,
+	if (i2c_master_smbus_read_word(I2C1, pmbus_def_addr, TIMEOUT,
 				       PMBUS_READ_VOUT, raw) == 0)
 		return 0;
 
-	return i2c_master_smbus_read_word(I2C0, pmbus_def_addr, TIMEOUT,
+	return i2c_master_smbus_read_word(I2C1, pmbus_def_addr, TIMEOUT,
 					  PMBUS_VOUT_CMD, raw);
 }
 
@@ -114,6 +114,6 @@ void pmbus_set_voltage(unsigned int mv)
 	else
 		raw = (uint16_t)((unsigned long)mv * (1U << (unsigned int)(-exp)) / 1000U);
 
-	i2c_master_smbus_write_word(I2C0, pmbus_def_addr, TIMEOUT,
+	i2c_master_smbus_write_word(I2C1, pmbus_def_addr, TIMEOUT,
 				    PMBUS_VOUT_CMD, raw);
 }
