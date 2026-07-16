@@ -10,6 +10,7 @@
 #include <gd32e50x_misc.h>
 #include <i2c/i2c_master/i2c_master.h>
 #include <tick/tick.h>
+#include <timer/timer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -39,10 +40,15 @@ static void system_gpio_init(void)
 	gpio_bit_reset(PG_IND_PORT, PG_IND_PIN);
 	gpio_bit_reset(PCIE_SEL_PORT, PCIE_SEL_PIN);
 	gpio_bit_set(EN_12V0_PORT, EN_12V0_PIN);
+	timer_delay_us(50000);	/* EN12V -> PWREN1: 50ms */
 	gpio_bit_set(POWEREN1_PORT, POWEREN1_PIN);
+	timer_delay_us(2000);	/* PWREN1 -> PWREN2: 2ms */
 	gpio_bit_set(POWEREN2_PORT, POWEREN2_PIN);
+	timer_delay_us(2000);	/* PWREN2 -> PWREN3: 2ms */
 	gpio_bit_set(POWEREN3_PORT, POWEREN3_PIN);
+	timer_delay_us(2000);
 	gpio_bit_set(SYS_RSTN_H_PORT, SYS_RSTN_H_PIN);
+	timer_delay_us(2000);
 	gpio_bit_set(PWR_RSTN_H_PORT, PWR_RSTN_H_PIN);
 	gpio_bit_set(PWR_BUTTON1_H_PORT, PWR_BUTTON1_H_PIN);
 	gpio_bit_reset(PWR_ON_H_PORT, PWR_ON_H_PIN);
@@ -150,9 +156,9 @@ int uart_getc(void)
 
 void system_init(void)
 {
+	system_timer_init();
 	system_gpio_init();
 	system_uart_init();
-	system_timer_init();
 	system_i2c0_init();
 	system_i2c1_init();
 	tick_init();
