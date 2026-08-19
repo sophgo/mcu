@@ -142,7 +142,10 @@ void mcu_raise_interrupt(uint8_t reg_idx, uint8_t interrupts)
 void mcu_clear_interrupt(uint8_t reg_idx, uint8_t interrupts)
 {
 	mcu_ctx.int_status[reg_idx] &= ~interrupts;
-	if ((mcu_ctx.int_status[0]&(~mcu_ctx.int_mask[0] == 0)) && (mcu_ctx.int_status[1]&(~mcu_ctx.int_mask[1] == 0)))
+	/* mirror mcu_raise_interrupt: only deassert MCU_INT when no
+	 * unmasked interrupt remains in either status register */
+	if (((mcu_ctx.int_status[0] & ~mcu_ctx.int_mask[0]) == 0) &&
+	    ((mcu_ctx.int_status[1] & ~mcu_ctx.int_mask[1]) == 0))
 		gpio_clear(MCU_INT_PORT, MCU_INT_PIN);
 }
 
@@ -191,11 +194,23 @@ bool mcu_get_se6_aiucore(void)
 
 void mcu_process(void)
 {
+	uint32_t i2c;
+	uint8_t irqn;
+
 	if (mcu_ctx.cmd == 0)
 		return;
 
-	i2c_peripheral_disable(I2C1);
-	nvic_disable_irq(NVIC_I2C1_IRQ);
+	/* in test mode the slave (0x38) sits on I2C2, otherwise on I2C1 */
+	if (mcu_ctx.test_mode) {
+		i2c = I2C2;
+		irqn = NVIC_I2C2_IRQ;
+	} else {
+		i2c = I2C1;
+		irqn = NVIC_I2C1_IRQ;
+	}
+
+	i2c_peripheral_disable(i2c);
+	nvic_disable_irq(irqn);
 	switch (mcu_ctx.cmd) {
 	case CMD_POWER_OFF:
 		mcu_eeprom_power_off_reason(EEPROM_POWER_OFF_REASON_POWER_OFF);
@@ -214,6 +229,9 @@ void mcu_process(void)
 		wdt_reset();
 		break;
 	case CMD_UPDATE:
+		/* hardcoded I2C1: upgrade only runs in normal mode where the
+		 * host talks over I2C1. If upgrade ever needs to work in test
+		 * mode (I2C2), change this to irqn. */
 		nvic_enable_irq(NVIC_I2C1_IRQ);
 		i2c_upgrade_start();
 		break;
@@ -226,8 +244,8 @@ void mcu_process(void)
 	}
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
-	i2c_peripheral_enable(I2C1);
-	nvic_enable_irq(NVIC_I2C1_IRQ);
+	i2c_peripheral_enable(i2c);
+	nvic_enable_irq(irqn);
 }
 
 static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)
@@ -453,7 +471,29 @@ static void mcu_stop(void *priv)
 static void mcu_reset(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
+
+	/* preserve fields that must survive an i2c slave reset
+	 * (triggered by chip_reset / pcie e-reset / wdt reset):
+	 *  - thermal thresholds: clearing them to 0 makes ct7451 thermal
+	 *    guard immediately trigger power-off, and would also drop any
+	 *    value the host configured at runtime
+	 *  - se6 aiu state: board id/ip and aiucore flag are persistent */
+	uint8_t critical_action = ctx->critical_action;
+	uint8_t critical_temp = ctx->critical_temp;
+	uint8_t repoweron_temp = ctx->repoweron_temp;
+	uint8_t brd_id = ctx->brd_id;
+	uint8_t brd_ip[4];
+	bool is_se6_aiucore = ctx->is_se6_aiucore;
+	memcpy(brd_ip, ctx->brd_ip, sizeof(brd_ip));
+
 	memset(ctx, 0x00, sizeof(*ctx));
+
+	ctx->critical_action = critical_action;
+	ctx->critical_temp = critical_temp;
+	ctx->repoweron_temp = repoweron_temp;
+	ctx->brd_id = brd_id;
+	ctx->is_se6_aiucore = is_se6_aiucore;
+	memcpy(ctx->brd_ip, brd_ip, sizeof(ctx->brd_ip));
 }
 
 static struct i2c_slave_op slave = {

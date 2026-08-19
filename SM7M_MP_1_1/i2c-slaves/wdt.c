@@ -11,6 +11,7 @@
 #include <i2c_slave.h>
 #include <loop.h>
 #include <chip.h>
+#include <debug.h>
 #include <mcu.h>
 #include <eeprom.h>
 #include <tick.h>
@@ -144,8 +145,10 @@ void wdt_process(void)
 		wdt_reset();	/* reset to initial state */
 		if (get_board_type() == SM5ME)
 			se5_reset_board();
-		else
+		else {
+			debug("wdt reset chip!\n");
 			chip_reset();
+		}
 		i2c_peripheral_enable(I2C1);
 	}
 }
