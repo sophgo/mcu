@@ -7,6 +7,9 @@
 #include <chip.h>
 #include <tick.h>
 #include <wdt.h>
+#include <i2c_slave.h>
+
+extern struct i2c_slave_ctx i2c1_slave_ctx;
 
 static volatile int is_chip_ready;
 static int pcie_task;
@@ -28,8 +31,10 @@ void exti4_15_isr(void)
 	}
 
 	if (hi > lo) {
-		if (is_chip_ready)
+		if (is_chip_ready) {
+			i2c_slave_reset(&i2c1_slave_ctx);
 			chip_enable();
+		}
 		debug("pcie e-reset raising edge\n");
 	} else {
 		is_chip_ready = false;

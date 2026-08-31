@@ -219,11 +219,23 @@ static void mcu_match(void *priv, int dir)
 
 void mcu_process(void)
 {
+	uint32_t i2c;
+	uint8_t irqn;
+
 	if (mcu_ctx.cmd == 0)
 		return;
 
-	i2c_peripheral_disable(I2C1);
-	nvic_disable_irq(NVIC_I2C1_IRQ);
+	/* in test mode the slave (0x38) sits on I2C2, otherwise on I2C1 */
+	if (mcu_ctx.test_mode) {
+		i2c = I2C2;
+		irqn = NVIC_I2C2_IRQ;
+	} else {
+		i2c = I2C1;
+		irqn = NVIC_I2C1_IRQ;
+	}
+
+	i2c_peripheral_disable(i2c);
+	nvic_disable_irq(irqn);
 	switch (mcu_ctx.cmd) {
 	case CMD_SE6_AIU_POWER_ON:
 		mcu_set_test_mode(false);
@@ -255,6 +267,9 @@ void mcu_process(void)
 		wdt_reset();
 		break;
 	case CMD_UPDATE:
+		/* hardcoded I2C1: upgrade only runs in normal mode where the
+		 * host talks over I2C1. If upgrade ever needs to work in test
+		 * mode (I2C2), change this to irqn. */
 		nvic_enable_irq(NVIC_I2C1_IRQ);
 		i2c_upgrade_start();
 		break;
@@ -263,8 +278,8 @@ void mcu_process(void)
 	}
 	mcu_ctx.cmd = 0;
 	mcu_ctx.cmd_tmp = 0;
-	i2c_peripheral_enable(I2C1);
-	nvic_enable_irq(NVIC_I2C1_IRQ);
+	i2c_peripheral_enable(i2c);
+	nvic_enable_irq(irqn);
 }
 
 static inline uint16_t eeprom_offset(struct mcu_ctx *ctx)
@@ -457,7 +472,21 @@ static void mcu_stop(void *priv)
 static void mcu_reset(void *priv)
 {
 	struct mcu_ctx *ctx = priv;
+
+	/* preserve fields that must survive an i2c slave reset (triggered by
+	 * chip_reset / wdt reset): the se6 aiu state — board id/ip and the
+	 * aiucore flag — is set by the host during test mode and read later
+	 * for board type detection, losing it would misidentify the board */
+	uint8_t brd_id = ctx->brd_id;
+	uint8_t brd_ip[4];
+	bool is_se6_aiucore = ctx->is_se6_aiucore;
+	memcpy(brd_ip, ctx->brd_ip, sizeof(brd_ip));
+
 	memset(ctx, 0x00, sizeof(*ctx));
+
+	ctx->brd_id = brd_id;
+	ctx->is_se6_aiucore = is_se6_aiucore;
+	memcpy(ctx->brd_ip, brd_ip, sizeof(ctx->brd_ip));
 }
 
 static struct i2c_slave_op slave = {

@@ -35,7 +35,11 @@ void chip_disable(void)
 
 void chip_enable(void)
 {
-	i2c_slave_reset(&i2c1_slave_ctx);
+	/* 
+	 * do not reset i2c slave here, because this function is called in powerup
+	 * process and may lead to powerup failure
+	*/
+	// i2c_slave_reset(&i2c1_slave_ctx);
 	gpio_set(SYS_RST_PORT, SYS_RST_PIN);
 	chip_enabled = true;
 }
@@ -46,6 +50,7 @@ void chip_reset(void)
 	mdelay(30);
 	uptime = 0;
 	++reset_times;
+	i2c_slave_reset(&i2c1_slave_ctx);
 	chip_enable();
 }
 
