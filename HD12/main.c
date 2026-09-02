@@ -55,6 +55,8 @@ int main()
 	board_type_init();
 	check_gpio_power_good();
 
+	host_powergood_init();
+
     pcie_init();
 
 	/* pca9848 init */
@@ -81,16 +83,19 @@ int main()
 	/* multiphase init, instead of isl68224*/
 	//multiphase_init();
 
-	if (get_pcb_ver() >= PCB_VER_V2_0)
-		ddr_size_init(DDR_SIZE_2R_128G);
-		// ddr_size_init(DDR_SIZE_1R_32G);
-	else
-		ddr_size_init(DDR_SIZE_2R_128G);
+	// if (get_pcb_ver() >= PCB_VER_V2_0)
+	// 	// ddr_size_init(DDR_SIZE_2R_128G);
+	// 	ddr_size_init(DDR_SIZE_1R_32G);
+	// else
+	// 	ddr_size_init(DDR_SIZE_2R_128G);
+	ddr_size_init();
 
 
 	while(1) {
 		if (chip_enable()) {
 			mon_process();
+			reset_c2c();
+			c2c_check();
 		}
 
 		ct7451_process();

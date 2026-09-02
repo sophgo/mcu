@@ -6,6 +6,7 @@
 // #define BOARD_TYPE	HD12
 
 /* V2.0 threshold: PCB version >= 2 means V2.0 hardware */
+#define PCB_VER_V1_0	1
 #define PCB_VER_V2_0	2
 
 /* MCU Family */

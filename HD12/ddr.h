@@ -5,5 +5,5 @@
 #define DDR_SIZE_2R_64G		2 // x16 16Gb
 #define DDR_SIZE_1R_32G		1 // x16 16Gb
 
-void ddr_size_init(int mode);
+void ddr_size_init();
 int get_ddr_size();
