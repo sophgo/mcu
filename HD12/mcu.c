@@ -18,6 +18,7 @@
 #include <multiphase.h>
 #include <dvfs.h>
 #include <ddr.h>
+#include <logbuf.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -45,6 +46,9 @@
 #define REG_MODULE_LOCATION	0x1b
 #define REG_DDR_SIZE		0x20
 #define REG_C2C_LINK		0x21
+#define REG_LOG_LEN		0x22
+#define REG_LOG_DATA		0x23
+#define REG_LOG_RESET		0x24
 
 // #define BM1690_TMP_OVER_REPORT			1<<0
 // #define POWER_68127_TMP_OVER_REPORT		1<<1
@@ -166,6 +170,7 @@ struct mcu_ctx {
 	uint8_t __attribute__((aligned(4))) flash_offset[4];
 	uint8_t __attribute__((aligned(4))) flash_data[128];
 	int flash_flush;
+	uint32_t log_cur;
 };
 
 static struct mcu_ctx mcu_ctx;
@@ -309,6 +314,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		if (ctx->idx == REG_FLASH_FLUSH)
 			ctx->flash_flush = true;
 		break;
+	case REG_LOG_RESET:
+		ctx->log_cur = 0;
+		break;
 	default:
 		break;
 	}
@@ -444,6 +452,15 @@ static uint8_t mcu_read(void *priv)
 	case REG_FLASH_DATA ... REG_FLASH_FLUSH:
 		ret = flash_read_byte(ctx);
 		break;
+	case REG_LOG_LEN: {
+		uint32_t n = logbuf_avail(ctx->log_cur);
+		ret = n > 255 ? 255 : n;
+		break;
+	}
+	case REG_LOG_DATA: {
+		uint8_t c;
+		return logbuf_read(&ctx->log_cur, &c) ? c : 0x00;
+	}
 	default:
 		ret = 0xff;
 		break;

@@ -43,7 +43,7 @@ int main()
 	/* set led on */
 	led_init();
 
-	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
+	dbg_printf(" firmware build time:%s-%s\n", __DATE__, __TIME__);
 
 	// check_clk_buffer();
 	// check_host_pwrgd();
