@@ -103,7 +103,7 @@ void board_type_init(void)
 	else
 		board_type = HD12;
 	
-    dbg_printf("%s, board_type = 0x%08x\n", __func__, board_type);
+    dbg_printf("%s, board_type = 0x%x\n", __func__, board_type);
 }
 
 uint8_t get_board_type(void)

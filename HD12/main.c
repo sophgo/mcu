@@ -83,11 +83,6 @@ int main()
 	/* multiphase init, instead of isl68224*/
 	//multiphase_init();
 
-	// if (get_pcb_ver() >= PCB_VER_V2_0)
-	// 	// ddr_size_init(DDR_SIZE_2R_128G);
-	// 	ddr_size_init(DDR_SIZE_1R_32G);
-	// else
-	// 	ddr_size_init(DDR_SIZE_2R_128G);
 	ddr_size_init();
 
 
