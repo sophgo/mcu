@@ -180,10 +180,11 @@ static uint8_t mcu_read(void *priv)
 		data = MCU_FAMILY_GD32E50;
 		break;
 	case REG_TEMP_LOCAL:
-		data = (uint8_t)ct7451_local_temp;
+		/* 上报整数摄氏度, 有符号(-55~+125°C), 接收端按 int8_t 解析 */
+		data = (uint8_t)(int8_t)(ct7451_local_temp / 100);
 		break;
 	case REG_TEMP_REMOTE:
-		data = (uint8_t)ct7451_remote_temp;
+		data = (uint8_t)(int8_t)(ct7451_remote_temp / 100);
 		break;
 	case REG_FLASH_OFFSET + 0:
 	case REG_FLASH_OFFSET + 1:

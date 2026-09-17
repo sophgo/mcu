@@ -36,39 +36,55 @@ static void system_gpio_init(void)
 
 	gpio_pin_remap_config(GPIO_SWJ_SWDPENABLE_REMAP, ENABLE);
 
-	/* 输出引脚默认电平 */
-	gpio_bit_reset(PG_IND_PORT, PG_IND_PIN);
-	gpio_bit_reset(PCIE_SEL_PORT, PCIE_SEL_PIN);
-	gpio_bit_set(EN_12V0_PORT, EN_12V0_PIN);
-	timer_delay_us(50000);	/* EN12V -> PWREN1: 50ms */
-	gpio_bit_set(POWEREN1_PORT, POWEREN1_PIN);
-	timer_delay_us(2000);	/* PWREN1 -> PWREN2: 2ms */
-	gpio_bit_set(POWEREN2_PORT, POWEREN2_PIN);
-	timer_delay_us(2000);	/* PWREN2 -> PWREN3: 2ms */
-	gpio_bit_set(POWEREN3_PORT, POWEREN3_PIN);
-	timer_delay_us(2000);
-	gpio_bit_set(SYS_RSTN_H_PORT, SYS_RSTN_H_PIN);
-	timer_delay_us(2000);
-	gpio_bit_set(PWR_RSTN_H_PORT, PWR_RSTN_H_PIN);
-	gpio_bit_set(PWR_BUTTON1_H_PORT, PWR_BUTTON1_H_PIN);
-	gpio_bit_reset(PWR_ON_H_PORT, PWR_ON_H_PIN);
-	gpio_bit_reset(PWR_WAKEUP_H_PORT, PWR_WAKEUP_H_PIN);
-	gpio_bit_reset(PWM_VDDC_PORT, PWM_VDDC_PIN);
+	/*
+	 * 先配 gpio_init，再 gpio_bit_set + delay。
+	 * 否则 gpio_bit_set 只写了 ODR，引脚尚未配置为输出，物理电平不会变，
+	 * 等到后面连续 gpio_init 时所有引脚同时输出 ODR 值，delay 就白费了。
+	 */
 
-	/* LED 推挽输出 */
+	/* LED */
+	gpio_bit_reset(PG_IND_PORT, PG_IND_PIN);
 	gpio_init(PG_IND_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, PG_IND_PIN);
 
-	/* GPIO 控制输出 */
+	/* PCIE_SEL */
+	gpio_bit_reset(PCIE_SEL_PORT, PCIE_SEL_PIN);
 	gpio_init(PCIE_SEL_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, PCIE_SEL_PIN);
+
+	/* 上电时序: EN12V -> PWREN1 -> PWREN2 -> PWREN3 -> SYS_RSTN -> PWR_RSTN */
+	gpio_bit_set(EN_12V0_PORT, EN_12V0_PIN);
 	gpio_init(EN_12V0_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, EN_12V0_PIN);
+	timer_delay_us(40000);	/* EN12V -> PWREN1: 40ms */
+
+	gpio_bit_set(POWEREN1_PORT, POWEREN1_PIN);
 	gpio_init(POWEREN1_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, POWEREN1_PIN);
+	timer_delay_us(2000);	/* PWREN1 -> PWREN2: 2ms */
+
+	gpio_bit_set(POWEREN2_PORT, POWEREN2_PIN);
 	gpio_init(POWEREN2_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, POWEREN2_PIN);
+	timer_delay_us(2000);	/* PWREN2 -> PWREN3: 2ms */
+
+	gpio_bit_set(POWEREN3_PORT, POWEREN3_PIN);
 	gpio_init(POWEREN3_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, POWEREN3_PIN);
+	timer_delay_us(2000);	/* PWREN3 -> SYS_RSTN: 2ms */
+
+	gpio_bit_set(SYS_RSTN_H_PORT, SYS_RSTN_H_PIN);
 	gpio_init(SYS_RSTN_H_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, SYS_RSTN_H_PIN);
+	timer_delay_us(2000);	/* SYS_RSTN -> PWR_RSTN: 2ms */
+
+	gpio_bit_set(PWR_RSTN_H_PORT, PWR_RSTN_H_PIN);
 	gpio_init(PWR_RSTN_H_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, PWR_RSTN_H_PIN);
+
+	/* 其他控制引脚 (无时序要求，可连续) */
+	gpio_bit_set(PWR_BUTTON1_H_PORT, PWR_BUTTON1_H_PIN);
 	gpio_init(PWR_BUTTON1_H_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, PWR_BUTTON1_H_PIN);
+
+	gpio_bit_reset(PWR_ON_H_PORT, PWR_ON_H_PIN);
 	gpio_init(PWR_ON_H_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, PWR_ON_H_PIN);
+
+	gpio_bit_reset(PWR_WAKEUP_H_PORT, PWR_WAKEUP_H_PIN);
 	gpio_init(PWR_WAKEUP_H_PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_2MHZ, PWR_WAKEUP_H_PIN);
+
+	gpio_bit_reset(PWM_VDDC_PORT, PWM_VDDC_PIN);
 
 	/* Power Good 检测引脚，输入上拉 */
 	gpio_init(PG_VDD_CORE_PORT, GPIO_MODE_IPU, GPIO_OSPEED_2MHZ, PG_VDD_CORE_PIN);

@@ -323,11 +323,8 @@ static void cmd_pmbus(void *hint, int argc, char const *argv[])
  * -v    显示寄存器原始值
  * ================================================================ */
 static const char cmd_gett_usage[] =
-	"gett                  read temperature once\n"
-	"gett -t <s>           read every <s> seconds\n"
-	"gett -t <s> -c <n>   read <n> times, every <s> seconds\n"
-	"gett -t <s> -c <n> -v read raw register values\n"
-	"gett -v               read once, show raw values\n";
+	"gett [-t s] [-c n] [-v]  read temperature\n"
+	"  -t s: interval  -c n: count  -v: raw regs\n";
 
 static void gett_read_raw(void)
 {
@@ -383,7 +380,64 @@ static void cmd_gett(void *hint, int argc, char const *argv[])
 			gett_read_raw();
 		}
 		printf("Local  Temperature: %d.%02d C\n", ct7451_local_temp / 100, abs(ct7451_local_temp % 100));
-		printf("Remote Temperature: %d.%02d C\n", ct7451_remote_temp / 100, abs(ct7451_remote_temp % 100));
+		printf("Remote Temperature (raw): %d.%02d C\n", ct7451_remote_temp_raw / 100, abs(ct7451_remote_temp_raw % 100));
+		printf("Remote Temperature (cal): %d.%02d C\n", ct7451_remote_temp / 100, abs(ct7451_remote_temp % 100));
+
+		{
+			uint8_t cfg = 0, off_hi = 0, off_lo = 0, nfact = 0;
+			i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x03, &cfg);
+			i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x11, &off_hi);
+			i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x12, &off_lo);
+			i2c_master_smbus_read_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x23, &nfact);
+			printf("RANGE [0x03]=0x%02X (RANGE=%d, %s)\n",
+			       cfg, (cfg >> 2) & 1,
+			       (cfg >> 2) & 1 ? "-64~+191 C" : "0~+127 C");
+			printf("Remote Offset HI [0x11]=0x%02X, LO [0x12]=0x%02X\n", off_hi, off_lo);
+			printf("n-Factor [0x23]=0x%02X\n", nfact);
+		}
+	}
+}
+
+/* ================================================================
+ * sett -o <hi> [lo] | -n <val>
+ *
+ * 设置 CT7451 校准寄存器 (立即生效, 掉电丢失)
+ * -o hi [lo]  设置 Remote Offset (0x11=hi, 0x12=lo)
+ * -n val      设置 n-Factor (0x23=val)
+ * ================================================================ */
+static const char cmd_sett_usage[] =
+	"sett -o <hi> [lo]   set Remote Offset (0x11,0x12), hex\n"
+	"sett -n <val>       set n-Factor (0x23), hex\n"
+	"  Offset: HI=signed 1C, LO[7:4]=0.0625C\n"
+	"  e.g. sett -o 05 00 (+5C), sett -o FB 00 (-5C)\n";
+
+static void cmd_sett(void *hint, int argc, char const *argv[])
+{
+	int idx = 1;
+
+	if (argc < 3) {
+		printf("%s", cmd_sett_usage);
+		return;
+	}
+
+	while (idx < argc) {
+		if (strcmp(argv[idx], "-o") == 0 && idx + 1 < argc) {
+			uint8_t hi = (uint8_t)strtoul(argv[idx + 1], NULL, 16);
+			uint8_t lo = 0;
+			idx += 2;
+			if (idx < argc && argv[idx][0] != '-')
+				lo = (uint8_t)strtoul(argv[idx++], NULL, 16);
+			i2c_master_smbus_write_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x11, hi);
+			i2c_master_smbus_write_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x12, lo);
+			printf("Remote Offset set: HI=0x%02X, LO=0x%02X\n", hi, lo);
+		} else if (strcmp(argv[idx], "-n") == 0 && idx + 1 < argc) {
+			uint8_t val = (uint8_t)strtoul(argv[idx + 1], NULL, 16);
+			idx += 2;
+			i2c_master_smbus_write_byte(I2C1, CT7451_SLAVE_ADDR, 5, 0x23, val);
+			printf("n-Factor set: 0x%02X\n", val);
+		} else {
+			idx++;
+		}
 	}
 }
 
@@ -449,6 +503,7 @@ static struct command command_list[] = {
 	{"iictest",  cmd_iictest_usage,  cmd_iictest},
 	{"pmbus",    cmd_pmbus_usage,    cmd_pmbus},
 	{"gett",     cmd_gett_usage,     cmd_gett},
+	{"sett",     cmd_sett_usage,     cmd_sett},
 	{"pwm",      cmd_pwm_usage,      cmd_pwm},
 };
 

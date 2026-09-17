@@ -105,10 +105,10 @@ static void pg_detect_process(void)
 		last_pg_status = all_good;
 		if (all_good) {
 			gpio_set(&pg_ind_led);
-			debug("PG: all good, LED ON\n");
+			/* debug("PG: all good, LED ON\n"); */
 		} else {
 			gpio_clear(&pg_ind_led);
-			debug("PG: not all good, LED OFF\n");
+			/* debug("PG: not all good, LED OFF\n"); */
 		}
 	}
 }

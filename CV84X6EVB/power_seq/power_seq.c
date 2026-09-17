@@ -46,6 +46,7 @@ void power_seq_init(void)
 	power_is_on = 0;
 	for (i = 0; i < POWER_SEQ_GAP_NUM; ++i)
 		seq_gaps_us[i] = POWER_SEQ_DEFAULT_GAP_US;
+	seq_gaps_us[0] = POWER_SEQ_FIRST_GAP_US;	/* EN12V->PWREN1: 80ms */
 }
 
 void power_seq_on(void)

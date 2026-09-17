@@ -10,6 +10,7 @@ void ct7451_init(void);
 void ct7451_process(void);
 
 extern int ct7451_remote_temp;
+extern int ct7451_remote_temp_raw;
 extern int ct7451_local_temp;
 
 #endif /* __CT7451_H__ */

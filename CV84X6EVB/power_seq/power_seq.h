@@ -13,6 +13,7 @@
 #define POWER_SEQ_NUM		6
 #define POWER_SEQ_GAP_NUM	(POWER_SEQ_NUM - 1)
 #define POWER_SEQ_DEFAULT_GAP_US	2000U	/* 默认 2ms */
+#define POWER_SEQ_FIRST_GAP_US		80000U	/* 第一个间隔默认 80ms (EN12V->PWREN1) */
 
 void power_seq_init(void);
 void power_seq_on(void);
