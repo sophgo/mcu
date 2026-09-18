@@ -161,7 +161,7 @@ struct {
 	{"BM1684X_M_2", {BM1684X_M_2}},
 	{"BM1690eEVB", {BM1690eEVB}},
 	{"SC11EFP300", {SC11EFP300}},
-	{"HD12", {HD12, RH12}},
+	{"HD12", {HD12, RHS12}},
 	{"CV84X6EVB", {CV84X6EVB}},
 };
 
