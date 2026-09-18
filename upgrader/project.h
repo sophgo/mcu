@@ -52,5 +52,6 @@
 
 
 #define SC11FP300	0xb3
+#define CV84X6EVB	0x51
 
 #endif
