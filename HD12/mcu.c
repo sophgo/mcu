@@ -18,6 +18,7 @@
 #include <multiphase.h>
 #include <dvfs.h>
 #include <ddr.h>
+#include <logbuf.h>
 
 #define REG_BOARD_TYPE		0x00
 #define REG_SW_VER		0x01
@@ -44,6 +45,10 @@
 #define REG_POWER_LIMIT		0x1a
 #define REG_MODULE_LOCATION	0x1b
 #define REG_DDR_SIZE		0x20
+#define REG_C2C_LINK		0x21
+#define REG_LOG_LEN		0x22
+#define REG_LOG_DATA		0x23
+#define REG_LOG_RESET		0x24
 
 // #define BM1690_TMP_OVER_REPORT			1<<0
 // #define POWER_68127_TMP_OVER_REPORT		1<<1
@@ -98,6 +103,7 @@ static unsigned char set_droop_val[2];
 static uint8_t droop_val[2][2];
 extern uint8_t dvfs_p_enable;
 extern uint8_t atx_300W;
+static uint8_t c2c_link_status;
 
 static unsigned long filter_init(struct filter *f, unsigned long d)
 {
@@ -164,6 +170,7 @@ struct mcu_ctx {
 	uint8_t __attribute__((aligned(4))) flash_offset[4];
 	uint8_t __attribute__((aligned(4))) flash_data[128];
 	int flash_flush;
+	uint32_t log_cur;
 };
 
 static struct mcu_ctx mcu_ctx;
@@ -284,6 +291,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 	case REG_SET_DROOP_H:
 		set_droop_val[1] = data;
 		break;
+	case REG_C2C_LINK:
+		c2c_link_status = data;
+		break;
 	case REG_FLASH_CMD:
 		flash_exec_cmd(ctx, data);
 		break;
@@ -304,6 +314,9 @@ static void mcu_write(void *priv, volatile uint8_t data)
 		if (ctx->idx == REG_FLASH_FLUSH)
 			ctx->flash_flush = true;
 		break;
+	case REG_LOG_RESET:
+		ctx->log_cur = 0;
+		break;
 	default:
 		break;
 	}
@@ -323,7 +336,7 @@ static uint8_t mcu_read(void *priv)
 
 	switch (ctx->idx) {
 	case REG_BOARD_TYPE:
-		ret = HD12;
+		ret = get_board_type();
 		break;
 	case REG_SW_VER:
 		ret = get_firmware_version();
@@ -397,6 +410,9 @@ static uint8_t mcu_read(void *priv)
 	case REG_DDR_SIZE:
 		ret = get_ddr_size();
 		break;
+	case REG_C2C_LINK:
+		ret = c2c_link_status;
+		break;
 	case REG_SET_DROOP_L:
 		ret = set_droop_val[0];
 		break;
@@ -436,6 +452,15 @@ static uint8_t mcu_read(void *priv)
 	case REG_FLASH_DATA ... REG_FLASH_FLUSH:
 		ret = flash_read_byte(ctx);
 		break;
+	case REG_LOG_LEN: {
+		uint32_t n = logbuf_avail(ctx->log_cur);
+		ret = n > 255 ? 255 : n;
+		break;
+	}
+	case REG_LOG_DATA: {
+		uint8_t c;
+		return logbuf_read(&ctx->log_cur, &c) ? c : 0x00;
+	}
 	default:
 		ret = 0xff;
 		break;
@@ -495,10 +520,26 @@ void mcu_init(struct i2c_slave_ctx *i2c_slave_ctx)
 #define CMD_CHIP1_VDDR		0x02
 #define CMD_CHIP0_DROOP		0x11
 #define CMD_CHIP1_DROOP		0x12
+#define CMD_C2C_LINK_START	0x13
+#define CMD_C2C_LINK_CLEAN	0x14
 #define CMD_REBOOT		0x07
 #define CMD_UPDATE		0x08
 
 extern int power_is_on;
+
+static void c2c_link_start(void)
+{
+	if (c2c_link_status == 0x5a) {
+		gpio_bit_set(HOST_PWRGD_PORT, HOST_PWRGD_PIN);
+		dbg_printf("RECEIVE C2C LINK SIGNAL, pull up HOST_PWRGD\n");
+	}
+}
+
+static void c2c_link_clean(void)
+{
+	c2c_link_status = 0x0;
+	dbg_printf("[C2C]: c2c link status cleaned\n");
+}
 
 void mcu_process(void)
 {
@@ -555,6 +596,12 @@ void mcu_process(void)
 	case CMD_CHIP1_DROOP:
 		temp = byte2u16(set_droop_val);
 		multiphase_set_out_voltage(0, 1, (int)temp);
+		break;
+	case CMD_C2C_LINK_START:
+		c2c_link_start();
+		break;
+	case CMD_C2C_LINK_CLEAN:
+		c2c_link_clean();
 		break;
 	case CMD_UPDATE:
 		nvic_enable_irq(I2C0_EV_IRQn);

@@ -12,10 +12,6 @@
 #include <common.h>
 #include <mon.h>
 
-#ifndef __maybe_unused
-#define __maybe_unused __attribute__((unused))
-#endif
-
 // #define FILTER_DISABLE
 
 static int board_temp[2], soc_temp[2];
@@ -84,7 +80,7 @@ void mon_init(void)
 	filter_init(&i12v, 0);
 
 	pkg.id = 0x0;
-	pkg.type = HD12;
+	pkg.type = get_board_type();
 	pkg.sw_ver = MCU_SW_VER;
 	pkg.hw_ver = get_hardware_version();
 
