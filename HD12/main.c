@@ -2,6 +2,7 @@
 #include <gd32f4xx_gpio.h>
 #include <system.h>
 #include <pin.h>
+#include <project.h>
 #include <common.h>
 #include <console.h>
 #include <power.h>
@@ -21,6 +22,7 @@
 #include <dvfs.h>
 #include <ddr.h>
 #include <dbgi2c.h>
+#include <adc.h>
 
 void HardFault_Handler(void)
 {
@@ -41,7 +43,7 @@ int main()
 	/* set led on */
 	led_init();
 
-	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
+	dbg_printf(" firmware build time:%s-%s\n", __DATE__, __TIME__);
 
 	// check_clk_buffer();
 	// check_host_pwrgd();
@@ -49,7 +51,14 @@ int main()
 	/* set board power */
 	board_power_init();
 
+	/* detect board type (HD12 or RHS12) */
+	board_type_init();
 	check_gpio_power_good();
+
+	host_powergood_init();
+
+    pcie_init();
+
 	/* pca9848 init */
 	pca9848_init();
 
@@ -74,16 +83,18 @@ int main()
 	/* multiphase init, instead of isl68224*/
 	//multiphase_init();
 
-	ddr_size_init(DDR_SIZE_2R_128G);
+	ddr_size_init();
+
 
 	while(1) {
 		if (chip_enable()) {
 			mon_process();
+			reset_c2c();
+			c2c_check();
 		}
 
 		ct7451_process();
 		mdelay(1);
-		check_chip_status();
 		mcu_process();
 		console_poll();
 		dvfs_process();

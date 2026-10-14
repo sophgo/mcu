@@ -12,6 +12,7 @@
 #include <sys/unistd.h>
 #include <system.h>
 #include <stdarg.h>
+#include <logbuf.h>
 
 static void system_uart_init(void)
 {
@@ -409,8 +410,10 @@ int dbg_printf(const char *fmt, ...)
 
 	char *q;
 
-	for (q = p; *q; ++q)
+	for (q = p; *q; ++q) {
+		logbuf_push(*q);
 		dbg_putc(*q);
+	}
 
 	return len;
 }

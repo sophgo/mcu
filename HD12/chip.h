@@ -13,6 +13,9 @@ int chip_enable(void);
 void sys_rst_enable(void);
 void set_vddr_wake_status(int chip, int flag);
 int get_chip_vddr_status(int chip);
+void host_powergood_init(void);
+void reset_c2c(void);
+void c2c_check(void);
 
 #define BN_SYS_RST_ENABLE(n)					\
 	do {							\

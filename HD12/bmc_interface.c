@@ -10,6 +10,7 @@
 #include <adc.h>
 #include <pcie.h>
 #include <system.h>
+#include <logbuf.h>
 
 
 /* i2c slave operations */
@@ -28,6 +29,9 @@
 #define BMC_SOC_INFO_12V_POWER_H		6
 #define SN_START_ADDR				7
 #define SN_END_ADDR				23
+#define BMC_LOG_LEN		0x18
+#define BMC_LOG_DATA		0x19
+#define BMC_LOG_RESET		0x1a
 
 #define BMC_SOC_INFO_ADDR(reg)	(BMC_SOC_INFO_BASE +	\
 					 BMC_SOC_INFO_ ## reg ## _OFFSET)
@@ -37,6 +41,7 @@ struct bmc_i2c_ctx {
 	int set_idx;
 	uint8_t idx;
 	int soc;
+	uint32_t log_cur;
 } ctx;
 
 
@@ -76,7 +81,14 @@ static void bmc_i2c_slave_write(void *priv, uint8_t data)
 		return;
 	}
 
-	/* ignore write, just increase index */
+	switch (ctx.idx) {
+	case BMC_LOG_RESET:
+		ctx.log_cur = 0;
+		break;
+	default:
+		/* ignore write, just increase index */
+		break;
+	}
 
 	idx_inc();
 }
@@ -94,7 +106,7 @@ static uint8_t bmc_i2c_slave_read(void *priv)
 		data = get_board_temp(soc);
 		break;
 	case BMC_SOC_INFO_BOARD_TYPE:
-		data = HD12;
+		data = get_board_type();
 		break;
 	case BMC_SOC_INFO_VERSION_L:
 		data = get_firmware_version();
@@ -111,6 +123,15 @@ static uint8_t bmc_i2c_slave_read(void *priv)
 	case SN_START_ADDR ...  SN_END_ADDR:
 		data = get_sn_bit(ctx.idx - SN_START_ADDR);
 		break;
+	case BMC_LOG_LEN: {
+		uint32_t n = logbuf_avail(ctx.log_cur);
+		data = n > 255 ? 255 : n;
+		break;
+	}
+	case BMC_LOG_DATA: {
+		uint8_t c;
+		return logbuf_read(&ctx.log_cur, &c) ? c : 0x00;
+	}
 	default:
 		data = 0xff;
 		break;

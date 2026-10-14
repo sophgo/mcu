@@ -19,6 +19,7 @@
 #include <freq.h>
 #include <i2c_master.h>
 #include <efuse.h>
+#include <ddr.h>
 
 static struct ecdc_console *console;
 
@@ -229,8 +230,11 @@ static const char * const cmd_info_usage =
 static void cmd_info(void *hint, int argc, char const *argv[])
 {
 	dbg_printf("firmware build time:%s-%s\n", __DATE__, __TIME__);
-	dbg_printf("PCB Version: %d\n", get_pcb_ver());
+	dbg_printf("HW Version: %d\n", get_pcb_ver());
+	dbg_printf("Prod Version: %d\n", get_bom_ver());
 	dbg_printf("MCU_SW_VER: %d\n", MCU_SW_VER);
+    dbg_printf("Board Type: 0x%08x\n", get_board_type());
+    dbg_printf("DDR SIZE type: 0x%08x\n", get_ddr_size());
 }
 
 static const char * const cmd_temp_usage =

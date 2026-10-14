@@ -5,9 +5,13 @@
 #include <common.h>
 #include <chip.h>
 #include <system.h>
+#include <dbgi2c.h>
 
 /* wait debug i2c ready */
 #define CHIP_BOOT_TIME	1500
+#define C2C_LINK_STATUS 0x7050000208
+#define C2C_START       0xdeadbeef
+#define C2C_PULLUP      0x5a5a5a5a
 
 static volatile int is_chip_ready;
 static volatile int is_chip_enabled;
@@ -78,7 +82,7 @@ void set_vddr_wake_status(int chip, int flag)
 		if (chip == 0)
 			gpio_bit_reset(BM0_VDDR_WAKE_PORT, BM0_VDDR_WAKE_PIN);
 		else
-			gpio_bit_reset(BM0_VDDR_WAKE_PORT, BM0_VDDR_WAKE_PIN);
+			gpio_bit_reset(BM1_VDDR_WAKE_PORT, BM1_VDDR_WAKE_PIN);
 	}
 
 	chip_vddr_status &= 1 << chip;
@@ -87,5 +91,70 @@ void set_vddr_wake_status(int chip, int flag)
 int get_chip_vddr_status(int chip)
 {
 	return (chip_vddr_status & 1 << chip);
+}
+
+void host_powergood_init(void)
+{
+	gpio_mode_set(HOST_PWRGD_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN, HOST_PWRGD_PIN);
+	gpio_output_options_set(HOST_PWRGD_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, HOST_PWRGD_PIN);
+	gpio_bit_reset(HOST_PWRGD_PORT, HOST_PWRGD_PIN);
+	dbg_printf("HOST_PWRGD after power sequence: %d\n", gpio_output_bit_get(HOST_PWRGD_PORT, HOST_PWRGD_PIN));
+}
+
+void reset_c2c(void)
+{
+	uint32_t val;
+	int i, retry;
+
+	if (!gpio_output_bit_get(HOST_PWRGD_PORT, HOST_PWRGD_PIN))
+		return;
+
+	for (i = 0; i < SOC_NUM; i++) {
+		for (retry = 0; retry < 3; retry++) {
+			if (dbgi2c_read32(i, C2C_LINK_STATUS, &val) == 0) {
+				if (val != 0x0)
+					return;
+				break;
+			}
+			mdelay(1);
+		}
+		if (retry >= 3) {
+			dbg_printf("C2C I2C read failed on SOC%d, assume link down\n", i);
+			return;
+		}
+	}
+
+	gpio_bit_reset(HOST_PWRGD_PORT, HOST_PWRGD_PIN);
+	dbg_printf("C2C link down, pull down HOST_PWRGD\n");
+}
+
+void c2c_check(void)
+{
+	uint32_t val = 0x0;
+	int i, retry;
+
+	if (gpio_output_bit_get(HOST_PWRGD_PORT, HOST_PWRGD_PIN))
+		return;
+
+	for (i = 0; i < SOC_NUM; i++) {
+		for (retry = 0; retry < 3; retry++) {
+			if (dbgi2c_read32(i, C2C_LINK_STATUS, &val) == 0) {
+				if (val == C2C_START)
+					break;
+				return;
+			}
+			mdelay(1);
+		}
+		if (retry >= 3)
+			return;
+	}
+
+	gpio_bit_set(HOST_PWRGD_PORT, HOST_PWRGD_PIN);
+	dbg_printf("C2C link start, pull up HOST_PWRGD\n");
+
+	for (i = 0; i < SOC_NUM; i++) {
+		if (dbgi2c_write32(i, C2C_LINK_STATUS, C2C_PULLUP))
+			dbg_printf("C2C PULLUP write failed on SOC%d\n", i);
+	}
 }
 
