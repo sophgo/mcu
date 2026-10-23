@@ -3,6 +3,7 @@
 #include <tca6416a.h>
 #include <tick.h>
 #include <loop.h>
+#include <project.h>
 
 /* count in ms */
 #define SM7_POWER_OFF_DELAY	5000
@@ -26,7 +27,11 @@
 #define POWER_BUTTON_PORT	0
 #define POWER_BUTTON_PIN	5
 
+/* SE7_V3_0 routes P0.6/P0.7 to the SOC as spare inputs */
+#define SE7_V3_EXTRA_IN_PINS	((1 << 6) | (1 << 7))
+
 #define P0_CFG		(1 << POWER_BUTTON_PIN)
+#define P0_CFG_SE7_V3	(P0_CFG | SE7_V3_EXTRA_IN_PINS)
 #define P0_OUT		((POWER_ENABLE_DEFAULT << POWER_ENABLE_PIN) | \
 			 (LED0_DEFAULT << LED0_PIN) | \
 			 (LED1_DEFAULT << LED1_PIN))
@@ -112,9 +117,14 @@ static void sm7_process(void)
 
 void sm7_init(void)
 {
+	uint8_t p0_cfg = P0_CFG;
+
+	if (get_board_type() == SE7_V3_0)
+		p0_cfg = P0_CFG_SE7_V3;
+
 	tca6416a_write(TCA6416A_P0_OUT, P0_OUT);
 	tca6416a_write(TCA6416A_P1_OUT, P1_OUT);
-	tca6416a_write(TCA6416A_P0_CFG, P0_CFG);
+	tca6416a_write(TCA6416A_P0_CFG, p0_cfg);
 	tca6416a_write(TCA6416A_P1_CFG, P1_CFG);
 	tca6416a_write(TCA6416A_P0_POL, P0_POL);
 	tca6416a_write(TCA6416A_P1_POL, P1_POL);
