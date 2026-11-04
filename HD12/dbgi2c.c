@@ -12,7 +12,7 @@
 
 #define DBGI2C_ADDR_BASE	0x41
 #define DBGI2C_I2C_MASTER	I2C1
-#define DBGI2C_I2C_TIMEOUT	1
+#define DBGI2C_I2C_TIMEOUT	5	/* ms: a 9-byte block takes ~0.9ms at 100kHz */
 
 static uint8_t dbg_channel[2] = {0, 1};
 
@@ -218,28 +218,59 @@ int dbgi2c_write(int idx, uint64_t addr, void *data, int len)
 #define DBGI2C_MCU_INFO_BASE	0x7010000000ULL
 #define BOARD_TYPE_BASE 		0x70500001c8ULL
 #define C2C_LINK_BASE 			0x705000020cULL
+/*
+ * The chip only learns its board type / DDR size from these debug-i2c writes,
+ * and a chip that is being reset can NAK or hold the bus. Write, read back and
+ * retry so a single lost transfer does not leave the register stale until the
+ * next broadcast (up to BROADCAST_INTERVAL later).
+ */
+static int dbgi2c_write32_verify(int idx, uint64_t addr, uint32_t value, int tries)
+{
+	uint32_t rb;
+	int i, err = -1;
+
+	for (i = 0; i < tries; ++i) {
+		err = dbgi2c_write32(idx, addr, value);
+		if (err)
+			continue;
+		if (dbgi2c_read32(idx, addr, &rb) == 0 && rb == value)
+			return 0;
+		err = -1;
+	}
+
+	return err;
+}
+
+static unsigned int bcast_err_cnt[2];
+static int bcast_failing[2];
+
 void dbgi2c_broadcast(int idx, struct dbgi2c_info *info)
 {
-	int __maybe_unused val = 0;
+	int err;
 
-	// for (i = 0; i < sizeof(struct dbgi2c_info) / 4; ++i) {
-	// 	dbgi2c_write32(idx, DBGI2C_MCU_INFO_BASE + i * 4,
-	// 		       ((uint32_t *)info)[i]);
-	// }
+	(void)info;
 
-	dbgi2c_write32(idx, BOARD_TYPE_BASE,
-		      (get_ddr_size() << 8) | get_board_type());
+	err = dbgi2c_write32_verify(idx, BOARD_TYPE_BASE,
+				    (get_ddr_size() << 8) | get_board_type(), 3);
+	if (err) {
+		++bcast_err_cnt[idx];
+		if (!bcast_failing[idx]) {
+			bcast_failing[idx] = 1;
+			dbg_printf("chip%d board info broadcast FAILED (err %d)\n",
+				   idx, err);
+		}
+	} else if (bcast_failing[idx]) {
+		bcast_failing[idx] = 0;
+		dbg_printf("chip%d board info broadcast recovered after %u failures\n",
+			   idx, bcast_err_cnt[idx]);
+		bcast_err_cnt[idx] = 0;
+	}
 
 	if (get_board_type() == RHS12) {
-		val |= (idx << 21) | (get_module_id() << 17) | get_board_type();
-		dbgi2c_write32(idx, C2C_LINK_BASE, val);
+		uint32_t val = (idx << 21) | (get_module_id() << 17) | get_board_type();
+
+		dbgi2c_write32_verify(idx, C2C_LINK_BASE, val, 3);
 	}
-//	dbgi2c_write32(idx, BOARD_TPYE_BASE,
-//		       get_board_type());
-
-	// if (idx == 0)
-	// 	dbgi2c_collect();
-
 }
 
 #define RESIZE_BAR_32M		0x1ffffffULL
