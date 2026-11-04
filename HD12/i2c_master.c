@@ -4,6 +4,7 @@
 #include <timer.h>
 #include <stddef.h>
 #include <common.h>
+#include <gd32f4xx.h>
 
 #define I2C_SPEED	(100 * 1000)
 
@@ -29,6 +30,46 @@ int i2c_master_destroy(int i2c)
 {
 	i2c_disable(i2c);
 	return 0;
+}
+
+/*
+ * A slave that is reset in the middle of a transfer can hold SDA low. The
+ * peripheral cannot recover from that on its own (re-init leaves the bus
+ * stuck), so clock SCL by hand on the shared debug bus until the slave lets
+ * go, then hand the pins back to the i2c controller.
+ */
+static void i2c1_bus_recover(void)
+{
+	int i;
+
+	gpio_af_set(GPIOB, GPIO_AF_4, GPIO_PIN_10 | GPIO_PIN_11);
+
+	/* scl: open-drain output, sda: input with pull-up */
+	gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO_PIN_10);
+	gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO_PIN_10);
+	gpio_bit_set(GPIOB, GPIO_PIN_10);
+	gpio_mode_set(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO_PIN_11);
+
+	for (i = 0; i < 9; ++i) {
+		gpio_bit_reset(GPIOB, GPIO_PIN_10);
+		timer_udelay(5);
+		gpio_bit_set(GPIOB, GPIO_PIN_10);
+		timer_udelay(5);
+	}
+
+	/* stop condition: sda low -> scl high -> sda high */
+	gpio_mode_set(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, GPIO_PIN_11);
+	gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO_PIN_11);
+	gpio_bit_reset(GPIOB, GPIO_PIN_11);
+	timer_udelay(5);
+	gpio_bit_set(GPIOB, GPIO_PIN_10);
+	timer_udelay(5);
+	gpio_bit_set(GPIOB, GPIO_PIN_11);
+	timer_udelay(5);
+
+	/* back to alternate function */
+	gpio_mode_set(GPIOB, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO_PIN_10 | GPIO_PIN_11);
+	gpio_output_options_set(GPIOB, GPIO_OTYPE_OD, GPIO_OSPEED_25MHZ, GPIO_PIN_10 | GPIO_PIN_11);
 }
 
 int i2c_transfer7_timeout(uint32_t i2c, uint8_t addr, unsigned int timeout,
@@ -309,6 +350,8 @@ out:
 		/* wait stop signal done */
 		timer_udelay(10);
 		i2c_deinit(i2c);
+		if (i2c == I2C1)
+			i2c1_bus_recover();
 		i2c_master_init(i2c);
 	}
 

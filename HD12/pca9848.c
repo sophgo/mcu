@@ -28,8 +28,13 @@ void pca9848_init(void)
 void pca9848_set(int id, unsigned int mask)
 {
 	if (ctx[id].mask != mask) {
-		if (i2c_master_smbus_write(ctx[id].i2c, ctx[id].slave_addr, 1, mask))
+		if (i2c_master_smbus_write(ctx[id].i2c, ctx[id].slave_addr, 1, mask)) {
 			debug("pca9548a smbus write failed\n");
-		ctx[id].mask = mask;
+			/* the mux is in an unknown state now: force a rewrite on
+			 * the next call instead of trusting the cached mask */
+			ctx[id].mask = ~0U;
+		} else {
+			ctx[id].mask = mask;
+		}
 	}
 }
